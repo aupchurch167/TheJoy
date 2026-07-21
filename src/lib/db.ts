@@ -17,10 +17,15 @@ function createPool(): Pool | null {
   if (!url) return null;
 
   // Railway/most managed Postgres need SSL; local dev usually does not.
+  // Explicit opt-out (PGSSL=false or sslmode=disable) always wins, so a local
+  // Postgres without SSL works even in production mode.
+  const sslDisabled =
+    process.env.PGSSL === "false" || /\bsslmode=disable\b/.test(url);
   const needsSsl =
-    process.env.PGSSL === "true" ||
-    /\bsslmode=require\b/.test(url) ||
-    process.env.NODE_ENV === "production";
+    !sslDisabled &&
+    (process.env.PGSSL === "true" ||
+      /\bsslmode=require\b/.test(url) ||
+      process.env.NODE_ENV === "production");
 
   return new Pool({
     connectionString: url,

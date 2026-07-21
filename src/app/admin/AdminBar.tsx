@@ -14,11 +14,11 @@ export default function AdminBar({ email }: { email?: string | null }) {
           <Link href="/admin" className="text-ink-soft hover:text-clay">
             Posts
           </Link>
-          <Link
-            href="/admin/posts/new"
-            className="text-ink-soft hover:text-clay"
-          >
-            New post
+          <Link href="/admin/leads" className="text-ink-soft hover:text-clay">
+            Leads
+          </Link>
+          <Link href="/admin/emails" className="text-ink-soft hover:text-clay">
+            Emails
           </Link>
           <Link href="/" className="text-ink-soft hover:text-clay">
             View site

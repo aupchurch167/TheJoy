@@ -135,8 +135,10 @@ emails with unsubscribe, and the SEO basics (meta, schema.org, sitemap, robots).
 @joyseniorcare.com), the blog with a full editor, AI-assisted drafting, public
 blog pages with SEO, and Webflow migration tooling. See section 9 below.
 
-**Next (Phases 3-5):** lead nurture emails, family communications, the photo
-gallery, and automation.
+**Built now (Phase 3):** automatic lead nurture emails, one-off/scheduled
+emails to leads, and a source-attribution report. See section 10 below.
+
+**Next (Phases 4-5):** family communications, the photo gallery, and automation.
 
 ---
 
@@ -196,3 +198,57 @@ can still paste an image URL into the hero field or a Markdown image link.
 This preserves each post's slug, converts the content to the editor's format,
 and writes `db/redirects.json` so old links **301** to the new `/blog/<slug>`.
 Redirects apply on the next deploy, so **redeploy after importing**.
+
+---
+
+## 10. Lead emails and attribution (Phase 3)
+
+### What sends automatically
+
+Every new lead from the site is entered into a **nurture drip**: a short series
+of honest, in-voice emails (welcome, then what makes Joy different, then a real
+family word, then a tour invitation), spaced out over about a week. Every email
+has an unsubscribe link, and anyone who unsubscribes is skipped from then on.
+This all runs on its own once the scheduled worker is set up (below).
+
+### Sending a one-off email to leads
+
+From `/admin`, click **Emails > New email**. Write a subject and a Markdown
+message (Preview tab shows how it looks), then either **Send now** or pick a
+date/time to **Schedule**. It goes to every subscribed lead. Unsubscribe is
+added automatically, and opted-out leads are never included. The same voice and
+compliance rules apply (no em-dashes, no banned words, personal care home).
+
+### Seeing where leads come from (attribution)
+
+`/admin > Leads` shows a **By source** table: how many leads each channel
+brought in, and how many **toured** or **moved in**. Keep it accurate by
+setting each lead's **Stage** (New / Toured / Moved in / Lost) in the list as
+things progress. This is how you see which sources actually work, so you can
+lean less on any single one (like A Place for Mom).
+
+Leads are tagged by `source` (`homepage_form` today; TalkFurther webhook and
+APFM import land in Phase 5).
+
+### The scheduled worker (Railway cron) — required for Phase 3
+
+Drip emails and scheduled sends are driven by a small worker at `/api/cron`.
+Set it up once:
+
+1. Set `CRON_SECRET` in Railway (generate: `openssl rand -hex 24`).
+2. Add a Railway **Cron** (Project > New > Cron, or a cron schedule on a
+   service) that runs, say, every 15 minutes and calls the endpoint:
+
+       curl -fsS -H "Authorization: Bearer $CRON_SECRET" https://joyseniorcare.com/api/cron
+
+   (Every 15 minutes is plenty; the worker only sends what is actually due.)
+
+The endpoint refuses to run without the correct secret, so it can never be
+triggered by a stranger. It returns how many drip and broadcast emails it sent
+on each run.
+
+### Email delivery
+
+All of the above needs `RESEND_API_KEY` (and a verified `joyseniorcare.com`
+sending domain in Resend). Without it, leads are still saved and drips/broadcasts
+just wait; you can compose and save, but nothing sends until Resend is set.

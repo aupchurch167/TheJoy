@@ -153,10 +153,13 @@ if (!url) {
   console.error("DATABASE_URL is not set. Set it, or re-run with --dry.");
   process.exit(1);
 }
+const sslDisabled =
+  process.env.PGSSL === "false" || /\bsslmode=disable\b/.test(url);
 const needsSsl =
-  process.env.PGSSL === "true" ||
-  /\bsslmode=require\b/.test(url) ||
-  process.env.NODE_ENV === "production";
+  !sslDisabled &&
+  (process.env.PGSSL === "true" ||
+    /\bsslmode=require\b/.test(url) ||
+    process.env.NODE_ENV === "production");
 
 const client = new pg.Client({
   connectionString: url,

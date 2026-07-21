@@ -2,7 +2,8 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { hasDatabase } from "@/lib/db";
 import { insertLead } from "@/lib/leads";
-import { notifyNewLead, sendLeadWelcome } from "@/lib/email";
+import { notifyNewLead } from "@/lib/email";
+import { enrollLead } from "@/lib/drip";
 
 // Always run on the Node runtime (pg needs Node, not Edge).
 export const runtime = "nodejs";
@@ -66,8 +67,9 @@ export async function POST(request: Request) {
       consent: parsed.data.consent ?? true,
     });
 
-    // Emails are best-effort; a mail failure must not fail the submission.
-    await Promise.allSettled([sendLeadWelcome(lead), notifyNewLead(lead)]);
+    // Enroll in the nurture drip (sends the welcome now) and alert the team.
+    // Best-effort; a mail failure must not fail the submission.
+    await Promise.allSettled([enrollLead(lead), notifyNewLead(lead)]);
 
     return NextResponse.json({ ok: true });
   } catch (err) {

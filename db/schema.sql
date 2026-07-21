@@ -64,3 +64,53 @@ CREATE TABLE IF NOT EXISTS redirects (
   status_code INTEGER NOT NULL DEFAULT 301,
   created_at  TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+
+-- ==========================================================================
+-- Phase 3: lead nurture emails + source attribution
+-- ==========================================================================
+
+-- Lifecycle stage, so we can report booked-tours / move-ins by source.
+-- ADD COLUMN IF NOT EXISTS keeps this safe to re-run on an existing leads table.
+ALTER TABLE leads
+  ADD COLUMN IF NOT EXISTS stage TEXT NOT NULL DEFAULT 'new'
+    CHECK (stage IN ('new', 'toured', 'moved_in', 'lost'));
+ALTER TABLE leads ADD COLUMN IF NOT EXISTS stage_updated_at TIMESTAMPTZ;
+
+-- Nurture drip position. drip_step = how many drip emails this lead has been
+-- sent; drip_status controls whether the drip keeps running.
+ALTER TABLE leads ADD COLUMN IF NOT EXISTS drip_step INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE leads ADD COLUMN IF NOT EXISTS drip_status TEXT NOT NULL DEFAULT 'active'
+  CHECK (drip_status IN ('active', 'completed', 'paused'));
+ALTER TABLE leads ADD COLUMN IF NOT EXISTS last_drip_at TIMESTAMPTZ;
+
+CREATE INDEX IF NOT EXISTS leads_stage_idx ON leads (stage);
+
+-- One-off / scheduled emails the admin composes and sends to the leads audience.
+-- Body is Markdown (rendered to HTML at send time). status flows
+-- draft -> scheduled -> sending -> sent.
+CREATE TABLE IF NOT EXISTS broadcasts (
+  id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  subject       TEXT NOT NULL,
+  body          TEXT NOT NULL DEFAULT '',
+  audience      TEXT NOT NULL DEFAULT 'leads'
+                  CHECK (audience IN ('leads')),
+  status        TEXT NOT NULL DEFAULT 'draft'
+                  CHECK (status IN ('draft', 'scheduled', 'sending', 'sent')),
+  scheduled_at  TIMESTAMPTZ,
+  sent_at       TIMESTAMPTZ,
+  sent_count    INTEGER NOT NULL DEFAULT 0,
+  created_at    TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at    TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS broadcasts_status_idx ON broadcasts (status, scheduled_at);
+
+-- Per-recipient log, for idempotency (never send the same broadcast twice to
+-- one lead) and for reporting.
+CREATE TABLE IF NOT EXISTS broadcast_recipients (
+  broadcast_id UUID NOT NULL REFERENCES broadcasts(id) ON DELETE CASCADE,
+  lead_id      UUID NOT NULL REFERENCES leads(id) ON DELETE CASCADE,
+  sent_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
+  error        TEXT,
+  PRIMARY KEY (broadcast_id, lead_id)
+);

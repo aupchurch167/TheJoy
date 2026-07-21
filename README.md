@@ -80,10 +80,11 @@ See the `src/lib/site.ts` header comment for the full lists.
 
 ## Status
 
-Phase 1 (flagship homepage + lead capture) and Phase 2 (blog/CMS + Google admin
-login + AI drafting + Webflow migration) are complete. Phases 3-5 (lead nurture
-emails, family communications + photo gallery, automation) are planned; see the
-build brief.
+Phases 1-3 are complete: the flagship homepage + lead capture (1); the blog/CMS
+with Google admin login, AI drafting, and Webflow migration (2); and lead
+nurture emails, admin one-off/scheduled sends, and source attribution driven by
+a Railway cron worker (3). Phases 4-5 (family communications + photo gallery,
+automation) are planned; see the build brief.
 
 ### Admin auth note
 

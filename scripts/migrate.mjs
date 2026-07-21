@@ -17,10 +17,13 @@ if (!url) {
 
 const sql = readFileSync(join(__dirname, "..", "db", "schema.sql"), "utf8");
 
+const sslDisabled =
+  process.env.PGSSL === "false" || /\bsslmode=disable\b/.test(url);
 const needsSsl =
-  process.env.PGSSL === "true" ||
-  /\bsslmode=require\b/.test(url) ||
-  process.env.NODE_ENV === "production";
+  !sslDisabled &&
+  (process.env.PGSSL === "true" ||
+    /\bsslmode=require\b/.test(url) ||
+    process.env.NODE_ENV === "production");
 
 const client = new pg.Client({
   connectionString: url,

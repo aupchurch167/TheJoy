@@ -1,5 +1,6 @@
 import { Resend } from "resend";
-import { BUSINESS, SITE_URL } from "./site";
+import { marked } from "marked";
+import { BUSINESS, BUSINESS_ADDRESS_ONE_LINE, SITE_URL } from "./site";
 import type { Lead } from "./leads";
 
 /**
@@ -18,42 +19,62 @@ const resend = process.env.RESEND_API_KEY
   ? new Resend(process.env.RESEND_API_KEY)
   : null;
 
-const FROM =
-  process.env.EMAIL_FROM || `${BUSINESS.name} <${BUSINESS.email}>`;
+const FROM = process.env.EMAIL_FROM || `${BUSINESS.name} <${BUSINESS.email}>`;
 
 export function emailEnabled(): boolean {
   return resend !== null;
 }
 
-/** Confirmation to the family, with an unsubscribe link (required on all sends). */
-export async function sendLeadWelcome(lead: Lead): Promise<void> {
+function unsubscribeUrl(token: string): string {
+  return `${SITE_URL}/unsubscribe?token=${token}`;
+}
+
+/** Wrap rendered content in a simple, warm, branded HTML shell. */
+function wrapEmail(innerHtml: string, unsubUrl: string): string {
+  return `<!doctype html><html><body style="margin:0;background:#fbf6ee;padding:24px 0;font-family:Georgia,'Times New Roman',serif;color:#2b2620;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td align="center">
+    <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#ffffff;border:1px solid #e6ddcd;border-radius:12px;overflow:hidden;">
+      <tr><td style="padding:24px 32px 8px;border-bottom:1px solid #e6ddcd;">
+        <div style="font-size:20px;font-weight:600;color:#2b2620;">${BUSINESS.name}</div>
+        <div style="font-size:12px;color:#8a8072;">Loganville, Georgia</div>
+      </td></tr>
+      <tr><td style="padding:24px 32px;font-size:16px;line-height:1.7;color:#5c5347;">
+        ${innerHtml}
+      </td></tr>
+      <tr><td style="padding:16px 32px 28px;border-top:1px solid #e6ddcd;font-size:12px;color:#8a8072;line-height:1.6;">
+        ${BUSINESS.name} (a personal care home), ${BUSINESS_ADDRESS_ONE_LINE}. ${BUSINESS.phone}.<br/>
+        You are receiving this because you contacted us. <a href="${unsubUrl}" style="color:#b0532b;">Unsubscribe</a>.
+      </td></tr>
+    </table>
+  </td></tr></table>
+</body></html>`;
+}
+
+/**
+ * Send one marketing email to a lead. Renders the Markdown body to HTML, wraps
+ * it in the branded shell, and ALWAYS includes an unsubscribe link + the
+ * List-Unsubscribe header. No-ops (returns false) when email is not configured.
+ */
+export async function sendMarketingEmail(
+  lead: Lead,
+  subject: string,
+  markdownBody: string
+): Promise<boolean> {
   if (!resend) {
-    console.info("[email] RESEND_API_KEY not set; skipping welcome email.");
-    return;
+    console.info("[email] RESEND_API_KEY not set; skipping send to", lead.email);
+    return false;
   }
-  const unsubscribeUrl = `${SITE_URL}/unsubscribe?token=${lead.unsubscribe_token}`;
+  const unsubUrl = unsubscribeUrl(lead.unsubscribe_token);
+  const inner = marked.parse(markdownBody, { async: false }) as string;
 
   await resend.emails.send({
     from: FROM,
     to: lead.email,
-    subject: `Thank you for reaching out to ${BUSINESS.name}`,
-    text: [
-      `Hi ${lead.name.split(" ")[0] || "there"},`,
-      "",
-      `Thank you for reaching out to ${BUSINESS.name}. Someone here will get back to you soon.`,
-      "",
-      `If you would like to talk sooner, you can call us at ${BUSINESS.phone}.`,
-      "",
-      `Warmly,`,
-      `${BUSINESS.director.name}, ${BUSINESS.director.title}`,
-      `${BUSINESS.name}`,
-      "",
-      `If you did not mean to contact us, you can unsubscribe here: ${unsubscribeUrl}`,
-    ].join("\n"),
-    headers: {
-      "List-Unsubscribe": `<${unsubscribeUrl}>`,
-    },
+    subject,
+    html: wrapEmail(inner, unsubUrl),
+    headers: { "List-Unsubscribe": `<${unsubUrl}>` },
   });
+  return true;
 }
 
 /** Internal alert so Adam/Mellissa see a new lead right away. */
