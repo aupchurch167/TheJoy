@@ -42,7 +42,7 @@ CREATE TABLE IF NOT EXISTS posts (
   author           TEXT NOT NULL DEFAULT 'Joy Senior Living',
   category         TEXT,
   status           TEXT NOT NULL DEFAULT 'draft'
-                     CHECK (status IN ('draft', 'published')),
+                     CHECK (status IN ('draft', 'scheduled', 'published')),
   -- SEO overrides. If null, the public pages fall back to title/excerpt.
   meta_title       TEXT,
   meta_description TEXT,
@@ -144,3 +144,33 @@ CREATE TABLE IF NOT EXISTS photos (
 );
 
 CREATE INDEX IF NOT EXISTS photos_posted_idx ON photos (posted_at DESC);
+
+-- ==========================================================================
+-- Phase 5: automation + cron + polish
+-- ==========================================================================
+
+-- Existing databases created posts with a draft/published-only status check.
+-- Widen it so posts can be 'scheduled' (published_at in the future; the cron
+-- promotes them to 'published' when due).
+ALTER TABLE posts DROP CONSTRAINT IF EXISTS posts_status_check;
+ALTER TABLE posts
+  ADD CONSTRAINT posts_status_check
+  CHECK (status IN ('draft', 'scheduled', 'published'));
+
+-- Nightly SEO rank snapshots (trend view). One row per keyword per check.
+-- position is NULL when the domain was not found in the results. url is the
+-- ranking page found (if any).
+CREATE TABLE IF NOT EXISTS rank_snapshots (
+  id         UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  keyword    TEXT NOT NULL,
+  position   INTEGER,
+  url        TEXT,
+  checked_on DATE NOT NULL DEFAULT (now() AT TIME ZONE 'UTC')::date,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- One snapshot per keyword per day (re-running the cron just updates it).
+CREATE UNIQUE INDEX IF NOT EXISTS rank_snapshots_kw_day
+  ON rank_snapshots (keyword, checked_on);
+CREATE INDEX IF NOT EXISTS rank_snapshots_kw_idx
+  ON rank_snapshots (keyword, checked_on DESC);

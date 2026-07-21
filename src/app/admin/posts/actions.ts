@@ -23,7 +23,9 @@ const PostSchema = z.object({
   category: z.string().trim().max(80).optional(),
   meta_title: z.string().trim().max(200).optional(),
   meta_description: z.string().trim().max(400).optional(),
-  status: z.enum(["draft", "published"]),
+  status: z.enum(["draft", "scheduled", "published"]),
+  // ISO datetime; required when status is "scheduled".
+  scheduled_at: z.string().trim().optional(),
 });
 
 export type SaveResult =
@@ -38,6 +40,19 @@ export async function savePost(input: unknown): Promise<SaveResult> {
     return { ok: false, error: parsed.error.issues[0]?.message ?? "Invalid." };
   }
   const data = parsed.data;
+
+  // Scheduling: a scheduled post needs a future publish time.
+  let scheduledAt: string | null = null;
+  if (data.status === "scheduled") {
+    if (!data.scheduled_at) {
+      return { ok: false, error: "Pick a date and time to schedule." };
+    }
+    const when = new Date(data.scheduled_at);
+    if (isNaN(when.getTime())) {
+      return { ok: false, error: "That schedule time is not valid." };
+    }
+    scheduledAt = when.toISOString();
+  }
 
   // Slug: use provided, else derive from title. Ensure uniqueness.
   let slug = data.slug ? slugify(data.slug) : slugify(data.title);
@@ -60,6 +75,7 @@ export async function savePost(input: unknown): Promise<SaveResult> {
     meta_title: data.meta_title || null,
     meta_description: data.meta_description || null,
     status: data.status as PostStatus,
+    scheduled_at: scheduledAt,
   };
 
   try {

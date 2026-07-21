@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { hasDatabase } from "@/lib/db";
 import { runDrip } from "@/lib/drip";
 import { processDueBroadcasts } from "@/lib/broadcast-runner";
+import { publishDueScheduledPosts } from "@/lib/posts";
+import { recordRanks } from "@/lib/ranks";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -9,7 +11,8 @@ export const maxDuration = 300;
 
 /**
  * The scheduled worker. Railway cron hits this on an interval (see OPERATIONS).
- * It sends any due drip steps and any scheduled broadcasts, honoring opt-outs.
+ * It sends due drip steps and scheduled broadcasts (honoring opt-outs),
+ * publishes any scheduled posts whose time has come, and logs SEO ranks.
  *
  * SECURITY: requires CRON_SECRET. Send it as "Authorization: Bearer <secret>"
  * or "?key=<secret>". Without CRON_SECRET set, the endpoint refuses to run so
@@ -41,12 +44,21 @@ async function handle(request: Request) {
     );
   }
 
+  // Publish scheduled posts first (cheap), then send email, then log ranks.
+  const postsPublished = await publishDueScheduledPosts();
   const [dripSent, broadcastSent] = await Promise.all([
     runDrip(),
     processDueBroadcasts(),
   ]);
+  const ranksLogged = await recordRanks();
 
-  return NextResponse.json({ ok: true, dripSent, broadcastSent });
+  return NextResponse.json({
+    ok: true,
+    postsPublished,
+    dripSent,
+    broadcastSent,
+    ranksLogged,
+  });
 }
 
 export async function GET(request: Request) {

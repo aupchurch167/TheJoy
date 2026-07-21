@@ -62,6 +62,23 @@ export const AWARD = {
   year: "2026",
 } as const;
 
+/**
+ * Keywords tracked by the nightly SEO rank logger (§5 cluster). Edit freely.
+ * The cron records each one's Google position (needs a SERPAPI_KEY; otherwise
+ * it no-ops). The admin SEO page shows the trend.
+ */
+export const TRACKED_KEYWORDS: string[] = [
+  "the joy senior living of loganville",
+  "joy senior living reviews",
+  "joy assisted living",
+  "assisted living loganville ga",
+  "assisted living in loganville ga",
+  "assisted living loganville",
+  "memory care loganville ga",
+  "small assisted living georgia",
+  "personal care home loganville ga",
+];
+
 /* ------------------------------------------------------------------ */
 /* HOMEPAGE COPY                                                        */
 /* ------------------------------------------------------------------ */

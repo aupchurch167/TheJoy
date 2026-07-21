@@ -7,6 +7,9 @@ export type LeadInput = {
   message?: string | null;
   source?: string;
   consent?: boolean;
+  // 'active' enrolls the lead in the nurture drip (homepage default).
+  // 'completed' skips the drip (e.g. TalkFurther leads have their own sequence).
+  dripStatus?: DripStatus;
 };
 
 export type LeadStage = "new" | "toured" | "moved_in" | "lost";
@@ -39,8 +42,8 @@ export type Lead = {
 /** Insert a lead and return the stored row (including its unsubscribe token). */
 export async function insertLead(input: LeadInput): Promise<Lead> {
   const rows = await query<Lead>(
-    `INSERT INTO leads (name, email, phone, message, source, consent)
-     VALUES ($1, $2, $3, $4, $5, $6)
+    `INSERT INTO leads (name, email, phone, message, source, consent, drip_status)
+     VALUES ($1, $2, $3, $4, $5, $6, $7)
      RETURNING *`,
     [
       input.name,
@@ -49,9 +52,22 @@ export async function insertLead(input: LeadInput): Promise<Lead> {
       input.message ?? null,
       input.source ?? "homepage_form",
       input.consent ?? true,
+      input.dripStatus ?? "active",
     ]
   );
   return rows[0];
+}
+
+/** True if a lead already exists for this source + email (webhook dedupe). */
+export async function leadExists(
+  source: string,
+  email: string
+): Promise<boolean> {
+  const rows = await query<{ id: string }>(
+    `SELECT id FROM leads WHERE source = $1 AND lower(email) = lower($2) LIMIT 1`,
+    [source, email]
+  );
+  return rows.length > 0;
 }
 
 /** Mark a lead unsubscribed by its token. Returns true if a row was updated. */

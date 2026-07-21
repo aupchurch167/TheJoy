@@ -1,7 +1,12 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Fraunces, Inter } from "next/font/google";
 import "./globals.css";
 import { BUSINESS, SITE_URL } from "@/lib/site";
+import Analytics from "@/components/Analytics";
+
+export const viewport: Viewport = {
+  themeColor: "#fbf6ee",
+};
 
 const fraunces = Fraunces({
   variable: "--font-fraunces",
@@ -39,6 +44,7 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col bg-paper text-ink">
         {children}
+        <Analytics />
       </body>
     </html>
   );

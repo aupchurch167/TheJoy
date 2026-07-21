@@ -38,27 +38,43 @@ export default function PostEditor({ post }: { post?: Post | null }) {
   const router = useRouter();
   const [f, setF] = useState<Fields>(fromPost(post));
   const [tab, setTab] = useState<"write" | "preview">("write");
+  const [schedule, setSchedule] = useState("");
   const [message, setMessage] = useState<string>("");
   const [error, setError] = useState<string>("");
   const [pending, startTransition] = useTransition();
   const bodyRef = useRef<HTMLTextAreaElement>(null);
 
   const isPublished = post?.status === "published";
+  const isScheduled = post?.status === "scheduled";
 
   function set<K extends keyof Fields>(key: K, value: Fields[K]) {
     setF((prev) => ({ ...prev, [key]: value }));
   }
 
-  function save(status: "draft" | "published") {
+  function save(status: "draft" | "scheduled" | "published") {
     setError("");
     setMessage("");
+    if (status === "scheduled" && !schedule) {
+      setError("Pick a date and time to schedule.");
+      return;
+    }
     startTransition(async () => {
-      const res = await savePost({ ...f, status });
+      const res = await savePost({
+        ...f,
+        status,
+        scheduled_at: status === "scheduled" ? schedule : undefined,
+      });
       if (!res.ok) {
         setError(res.error);
         return;
       }
-      setMessage(status === "published" ? "Published." : "Saved as draft.");
+      setMessage(
+        status === "published"
+          ? "Published."
+          : status === "scheduled"
+            ? "Scheduled. It goes live automatically at that time."
+            : "Saved as draft."
+      );
       if (!f.id) {
         router.replace(`/admin/posts/${res.id}`);
       } else {
@@ -162,6 +178,31 @@ export default function PostEditor({ post }: { post?: Post | null }) {
             {isPublished ? "Update" : "Publish"}
           </button>
         </div>
+      </div>
+
+      {/* Scheduling */}
+      <div className="mb-4 flex flex-wrap items-center gap-3 rounded-lg border border-line bg-white px-4 py-3 text-sm">
+        <span className="font-medium text-ink-soft">
+          {isScheduled ? "Scheduled to publish:" : "Publish later:"}
+        </span>
+        <input
+          type="datetime-local"
+          value={schedule}
+          onChange={(e) => setSchedule(e.target.value)}
+          className="rounded-lg border border-line bg-white px-3 py-1.5 text-ink outline-none focus:border-clay"
+        />
+        <button
+          onClick={() => save("scheduled")}
+          disabled={pending}
+          className="rounded-full border border-clay px-3 py-1.5 font-semibold text-clay hover:bg-clay/5 disabled:opacity-60"
+        >
+          Schedule
+        </button>
+        {isScheduled && post?.published_at && (
+          <span className="text-ink-faint">
+            (currently {new Date(post.published_at).toLocaleString()})
+          </span>
+        )}
       </div>
 
       {(message || error) && (

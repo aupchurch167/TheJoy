@@ -6,8 +6,8 @@ export default function robots(): MetadataRoute.Robots {
     rules: {
       userAgent: "*",
       allow: "/",
-      // Keep the unsubscribe page and internal APIs out of the index.
-      disallow: ["/unsubscribe", "/api/"],
+      // Keep admin, the unsubscribe page, and internal APIs out of the index.
+      disallow: ["/admin", "/unsubscribe", "/api/"],
     },
     sitemap: `${SITE_URL}/sitemap.xml`,
     host: SITE_URL,

@@ -58,10 +58,14 @@ export default async function AdminDashboard() {
                   className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-medium ${
                     p.status === "published"
                       ? "bg-sage/15 text-sage"
-                      : "bg-line/70 text-ink-faint"
+                      : p.status === "scheduled"
+                        ? "bg-gold/15 text-gold"
+                        : "bg-line/70 text-ink-faint"
                   }`}
                 >
-                  {p.status}
+                  {p.status === "scheduled" && p.published_at
+                    ? `scheduled ${new Date(p.published_at).toLocaleDateString()}`
+                    : p.status}
                 </span>
               </Link>
             </li>

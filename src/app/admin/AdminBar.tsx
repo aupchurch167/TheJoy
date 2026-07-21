@@ -26,6 +26,9 @@ export default function AdminBar({ email }: { email?: string | null }) {
           <Link href="/admin/gallery" className="text-ink-soft hover:text-clay">
             Gallery
           </Link>
+          <Link href="/admin/seo" className="text-ink-soft hover:text-clay">
+            SEO
+          </Link>
           <Link href="/" className="text-ink-soft hover:text-clay">
             View site
           </Link>

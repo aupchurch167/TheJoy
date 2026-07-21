@@ -1,6 +1,6 @@
 import { query } from "./db";
 
-export type PostStatus = "draft" | "published";
+export type PostStatus = "draft" | "scheduled" | "published";
 
 export type Post = {
   id: string;
@@ -32,6 +32,8 @@ export type PostInput = {
   status?: PostStatus;
   meta_title?: string | null;
   meta_description?: string | null;
+  // For scheduled posts: when to go live. Ignored for draft/published.
+  scheduled_at?: string | null;
 };
 
 /** Make a URL-safe slug from a title. */
@@ -50,7 +52,9 @@ export function slugify(input: string): string {
 export async function getPublishedPosts(limit?: number): Promise<Post[]> {
   const rows = await query<Post>(
     `SELECT * FROM posts
-      WHERE status = 'published' AND published_at IS NOT NULL
+      WHERE status = 'published'
+        AND published_at IS NOT NULL
+        AND published_at <= now()
       ORDER BY published_at DESC
       ${limit ? "LIMIT $1" : ""}`,
     limit ? [limit] : []
@@ -63,7 +67,10 @@ export async function getPublishedPostBySlug(
 ): Promise<Post | null> {
   const rows = await query<Post>(
     `SELECT * FROM posts
-      WHERE slug = $1 AND status = 'published' AND published_at IS NOT NULL
+      WHERE slug = $1
+        AND status = 'published'
+        AND published_at IS NOT NULL
+        AND published_at <= now()
       LIMIT 1`,
     [slug]
   );
@@ -94,9 +101,24 @@ export async function slugExists(
 
 /* ---------------- Writes ---------------- */
 
+/** Resolve published_at from the requested status (+ optional schedule time). */
+function resolvePublishedAt(
+  input: PostInput,
+  existing?: string | null
+): string | null {
+  if (input.status === "published") {
+    // First publish stamps now; keep the existing date on re-publish.
+    return existing ?? new Date().toISOString();
+  }
+  if (input.status === "scheduled") {
+    return input.scheduled_at ?? existing ?? null;
+  }
+  // draft: keep any prior date for reference (post is hidden by status).
+  return existing ?? null;
+}
+
 export async function createPost(input: PostInput): Promise<Post> {
-  const publishedAt =
-    input.status === "published" ? new Date().toISOString() : null;
+  const publishedAt = resolvePublishedAt(input);
   const rows = await query<Post>(
     `INSERT INTO posts
        (slug, title, excerpt, body, hero_image, hero_image_alt, author,
@@ -125,18 +147,10 @@ export async function updatePost(
   id: string,
   input: PostInput
 ): Promise<Post | null> {
-  // Set published_at the first time a post becomes published; keep it after.
   const existing = await getPostById(id);
   if (!existing) return null;
 
-  let publishedAt = existing.published_at;
-  if (input.status === "published" && !existing.published_at) {
-    publishedAt = new Date().toISOString();
-  }
-  if (input.status === "draft") {
-    // Unpublishing hides it again but we keep the original date for reference.
-    publishedAt = existing.published_at;
-  }
+  const publishedAt = resolvePublishedAt(input, existing.published_at);
 
   const rows = await query<Post>(
     `UPDATE posts SET
@@ -167,4 +181,20 @@ export async function updatePost(
 
 export async function deletePost(id: string): Promise<void> {
   await query(`DELETE FROM posts WHERE id = $1`, [id]);
+}
+
+/**
+ * Promote scheduled posts whose time has arrived. Called by the cron worker.
+ * Returns how many posts went live.
+ */
+export async function publishDueScheduledPosts(): Promise<number> {
+  const rows = await query<{ id: string }>(
+    `UPDATE posts
+       SET status = 'published', updated_at = now()
+     WHERE status = 'scheduled'
+       AND published_at IS NOT NULL
+       AND published_at <= now()
+     RETURNING id`
+  );
+  return rows.length;
 }

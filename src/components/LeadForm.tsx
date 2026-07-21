@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { track } from "@/lib/analytics";
 
 type Status = "idle" | "submitting" | "success" | "error";
 
@@ -36,6 +37,7 @@ export default function LeadForm() {
         return;
       }
       form.reset();
+      track("Lead form submit");
       setStatus("success");
     } catch {
       setError(

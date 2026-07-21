@@ -141,7 +141,9 @@ emails to leads, and a source-attribution report. See section 10 below.
 **Built now (Phase 4):** community emails to current families and a public
 photo gallery. See section 11 below.
 
-**Next (Phase 5):** automation, TalkFurther webhook reconciliation, analytics.
+**Built now (Phase 5):** scheduled blog publishing, TalkFurther leads flowing
+into Postgres, nightly SEO rank logging, and privacy-friendly analytics. See
+section 12 below.
 
 ---
 
@@ -286,3 +288,47 @@ Click **Choose photo** to upload (needs the S3 / Cloudflare R2 setup from §9;
 otherwise paste an image URL), add a caption and a short description, and click
 **Add to gallery**. Remove a photo anytime. Real photos of Joy only, no stock.
 The public gallery is linked in the site footer.
+
+---
+
+## 12. Automation and polish (Phase 5)
+
+Everything here rides on the same scheduled worker from §10. Once the Railway
+cron is calling `/api/cron`, it also does the jobs below on each run. Its
+response now reports `postsPublished`, `dripSent`, `broadcastSent`, and
+`ranksLogged`.
+
+### Scheduling a blog post
+
+In the post editor there is a **Publish later** row: pick a date and time and
+click **Schedule**. The post stays hidden until then, and the cron publishes it
+automatically when the time comes (it shows as "scheduled" in the post list).
+
+### TalkFurther leads in one place
+
+TalkFurther used to keep its leads separate. Now they flow into the same leads
+list and attribution report (tagged `source = talkfurther`). Set up once:
+
+1. Set `TALKFURTHER_WEBHOOK_SECRET` in Railway (generate: `openssl rand -hex 24`).
+2. In TalkFurther, add a webhook to
+   `https://joyseniorcare.com/api/webhooks/talkfurther` and include the secret
+   (as a Bearer token, an `x-webhook-secret` header, or `?key=<secret>`).
+
+TalkFurther leads are not added to the nurture drip (TalkFurther has its own
+follow-up), but they count in the source report and can receive broadcasts.
+Repeat deliveries are ignored, so it is safe if TalkFurther retries.
+
+### SEO rank tracking
+
+`/admin > SEO` shows the Google position for the keywords we chase, logged
+nightly. It needs a `SERPAPI_KEY` (from serpapi.com); without it the page stays
+empty and nothing is charged. The tracked keywords live in `src/lib/site.ts`
+(`TRACKED_KEYWORDS`) if you want to change them.
+
+### Analytics (optional)
+
+Set `NEXT_PUBLIC_PLAUSIBLE_DOMAIN` to `joyseniorcare.com` to turn on Plausible
+(privacy-friendly, no cookies). It records page views plus two conversions:
+**Tour click** (any Book-a-tour button) and **Lead form submit**. Leave it unset
+for no analytics. Note: the lead form and TalkFurther are still the source of
+truth for actual leads; analytics is just for traffic and click trends.
