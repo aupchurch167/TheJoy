@@ -93,7 +93,7 @@ CREATE TABLE IF NOT EXISTS broadcasts (
   subject       TEXT NOT NULL,
   body          TEXT NOT NULL DEFAULT '',
   audience      TEXT NOT NULL DEFAULT 'leads'
-                  CHECK (audience IN ('leads')),
+                  CHECK (audience IN ('leads', 'families')),
   status        TEXT NOT NULL DEFAULT 'draft'
                   CHECK (status IN ('draft', 'scheduled', 'sending', 'sent')),
   scheduled_at  TIMESTAMPTZ,
@@ -114,3 +114,33 @@ CREATE TABLE IF NOT EXISTS broadcast_recipients (
   error        TEXT,
   PRIMARY KEY (broadcast_id, lead_id)
 );
+
+-- ==========================================================================
+-- Phase 4: family communications + photo gallery
+-- ==========================================================================
+
+-- The `leads` table doubles as the SUBSCRIBERS table. `audience` separates
+-- the two groups: 'leads' (families researching Joy) and 'families' (current
+-- residents' families, added by an admin, opt-in). Both share unsubscribe.
+ALTER TABLE leads ADD COLUMN IF NOT EXISTS audience TEXT NOT NULL DEFAULT 'leads'
+  CHECK (audience IN ('leads', 'families'));
+CREATE INDEX IF NOT EXISTS leads_audience_idx ON leads (audience);
+
+-- Existing Phase 3 databases created broadcasts with a leads-only audience
+-- check. Widen it so family broadcasts are allowed.
+ALTER TABLE broadcasts DROP CONSTRAINT IF EXISTS broadcasts_audience_check;
+ALTER TABLE broadcasts
+  ADD CONSTRAINT broadcasts_audience_check CHECK (audience IN ('leads', 'families'));
+
+-- Public photo gallery. Real photos only (uploaded via admin). posted_at drives
+-- the public ordering.
+CREATE TABLE IF NOT EXISTS photos (
+  id         UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  image_url  TEXT NOT NULL,
+  image_alt  TEXT,
+  caption    TEXT,
+  posted_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS photos_posted_idx ON photos (posted_at DESC);

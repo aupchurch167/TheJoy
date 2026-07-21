@@ -11,7 +11,12 @@ export type LeadInput = {
 
 export type LeadStage = "new" | "toured" | "moved_in" | "lost";
 export type DripStatus = "active" | "completed" | "paused";
+export type Audience = "leads" | "families";
 
+/**
+ * The `leads` table doubles as the subscribers table. `audience` separates
+ * prospective families ('leads') from current residents' families ('families').
+ */
 export type Lead = {
   id: string;
   name: string;
@@ -19,6 +24,7 @@ export type Lead = {
   phone: string | null;
   message: string | null;
   source: string;
+  audience: Audience;
   consent: boolean;
   unsubscribe_token: string;
   unsubscribed_at: string | null;
@@ -66,7 +72,8 @@ export async function unsubscribeByToken(token: string): Promise<boolean> {
 export async function getAllLeads(source?: string): Promise<Lead[]> {
   return query<Lead>(
     `SELECT * FROM leads
-      ${source ? "WHERE source = $1" : ""}
+      WHERE audience = 'leads'
+      ${source ? "AND source = $1" : ""}
       ORDER BY created_at DESC`,
     source ? [source] : []
   );
@@ -105,22 +112,61 @@ export async function advanceDrip(
  * lead's current step, whether the specific step's delay has elapsed.
  */
 export async function getDripCandidates(): Promise<Lead[]> {
+  // Only the prospective-families audience gets the nurture drip.
   return query<Lead>(
     `SELECT * FROM leads
-      WHERE drip_status = 'active'
+      WHERE audience = 'leads'
+        AND drip_status = 'active'
         AND unsubscribed_at IS NULL
         AND consent = TRUE
       ORDER BY created_at ASC`
   );
 }
 
-/** Active, opted-in leads for a broadcast (the "leads" audience). */
-export async function getSubscribedLeads(): Promise<Lead[]> {
+/** Active, opted-in subscribers for a given audience (broadcast recipients). */
+export async function getSubscribedByAudience(
+  audience: Audience
+): Promise<Lead[]> {
   return query<Lead>(
     `SELECT * FROM leads
-      WHERE unsubscribed_at IS NULL AND consent = TRUE
-      ORDER BY created_at ASC`
+      WHERE audience = $1 AND unsubscribed_at IS NULL AND consent = TRUE
+      ORDER BY created_at ASC`,
+    [audience]
   );
+}
+
+/* ---------------- Phase 4: family members (families audience) ---------------- */
+
+export async function insertFamilyMember(
+  name: string,
+  email: string
+): Promise<Lead> {
+  const rows = await query<Lead>(
+    `INSERT INTO leads (name, email, source, audience, consent, drip_status)
+     VALUES ($1, $2, 'family_add', 'families', TRUE, 'completed')
+     RETURNING *`,
+    [name, email.toLowerCase()]
+  );
+  return rows[0];
+}
+
+export async function getFamilyMembers(): Promise<Lead[]> {
+  return query<Lead>(
+    `SELECT * FROM leads WHERE audience = 'families' ORDER BY created_at DESC`
+  );
+}
+
+/** Remove a subscriber row (used to remove a family member). */
+export async function deleteSubscriber(id: string): Promise<void> {
+  await query(`DELETE FROM leads WHERE id = $1`, [id]);
+}
+
+export async function familyEmailExists(email: string): Promise<boolean> {
+  const rows = await query<{ id: string }>(
+    `SELECT id FROM leads WHERE audience = 'families' AND lower(email) = lower($1)`,
+    [email]
+  );
+  return rows.length > 0;
 }
 
 export type SourceReportRow = {
@@ -146,6 +192,7 @@ export async function getSourceReport(): Promise<SourceReportRow[]> {
             COUNT(*) FILTER (WHERE stage = 'moved_in') AS moved_in,
             COUNT(*) FILTER (WHERE stage = 'lost') AS lost
        FROM leads
+      WHERE audience = 'leads'
       GROUP BY source
       ORDER BY total DESC`
   );

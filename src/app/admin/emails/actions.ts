@@ -17,14 +17,20 @@ const BaseSchema = z.object({
   id: z.string().uuid().optional(),
   subject: z.string().trim().min(1, "A subject is required.").max(200),
   body: z.string().max(50000).optional(),
+  audience: z.enum(["leads", "families"]).default("leads"),
 });
 
-async function upsert(id: string | undefined, subject: string, body: string) {
+async function upsert(
+  id: string | undefined,
+  subject: string,
+  body: string,
+  audience: "leads" | "families"
+) {
   if (id) {
     const updated = await updateBroadcast(id, subject, body);
     if (updated) return updated.id;
   }
-  const created = await createBroadcast(subject, body);
+  const created = await createBroadcast(subject, body, audience);
   return created.id;
 }
 
@@ -38,7 +44,12 @@ export async function saveDraft(input: unknown): Promise<ActionResult> {
   if (!parsed.success)
     return { ok: false, error: parsed.error.issues[0]?.message ?? "Invalid." };
   try {
-    const id = await upsert(parsed.data.id, parsed.data.subject, parsed.data.body ?? "");
+    const id = await upsert(
+      parsed.data.id,
+      parsed.data.subject,
+      parsed.data.body ?? "",
+      parsed.data.audience
+    );
     revalidatePath("/admin/emails");
     return { ok: true, id, message: "Saved as draft." };
   } catch (err) {
@@ -67,7 +78,12 @@ export async function sendOrSchedule(input: unknown): Promise<ActionResult> {
   }
 
   try {
-    const id = await upsert(parsed.data.id, parsed.data.subject, parsed.data.body ?? "");
+    const id = await upsert(
+      parsed.data.id,
+      parsed.data.subject,
+      parsed.data.body ?? "",
+      parsed.data.audience
+    );
 
     const now = new Date();
     const when = parsed.data.when ? new Date(parsed.data.when) : now;

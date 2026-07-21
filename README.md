@@ -80,11 +80,17 @@ See the `src/lib/site.ts` header comment for the full lists.
 
 ## Status
 
-Phases 1-3 are complete: the flagship homepage + lead capture (1); the blog/CMS
-with Google admin login, AI drafting, and Webflow migration (2); and lead
-nurture emails, admin one-off/scheduled sends, and source attribution driven by
-a Railway cron worker (3). Phases 4-5 (family communications + photo gallery,
-automation) are planned; see the build brief.
+Phases 1-4 are complete: the flagship homepage + lead capture (1); the blog/CMS
+with Google admin login, AI drafting, and Webflow migration (2); lead nurture
+emails, admin one-off/scheduled sends, and source attribution driven by a
+Railway cron worker (3); and community emails to current families plus a public
+photo gallery (4). Phase 5 (automation, TalkFurther webhook reconciliation,
+analytics) is planned; see the build brief.
+
+The `leads` table doubles as the subscribers table, with an `audience` column
+separating prospective families (`leads`) from current residents' families
+(`families`). Broadcasts target one audience; only the `leads` audience gets the
+nurture drip.
 
 ### Admin auth note
 

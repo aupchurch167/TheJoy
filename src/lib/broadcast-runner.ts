@@ -1,5 +1,5 @@
 import { sendMarketingEmail, emailEnabled } from "./email";
-import { getSubscribedLeads } from "./leads";
+import { getSubscribedByAudience } from "./leads";
 import {
   getDueBroadcasts,
   markBroadcastSending,
@@ -11,7 +11,7 @@ import {
 
 /** Send one broadcast to every subscribed lead not already sent. */
 async function sendOne(broadcast: Broadcast): Promise<number> {
-  const leads = await getSubscribedLeads();
+  const leads = await getSubscribedByAudience(broadcast.audience);
   const already = await alreadySentLeadIds(broadcast.id);
   let count = 0;
 

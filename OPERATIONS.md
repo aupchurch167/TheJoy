@@ -138,7 +138,10 @@ blog pages with SEO, and Webflow migration tooling. See section 9 below.
 **Built now (Phase 3):** automatic lead nurture emails, one-off/scheduled
 emails to leads, and a source-attribution report. See section 10 below.
 
-**Next (Phases 4-5):** family communications, the photo gallery, and automation.
+**Built now (Phase 4):** community emails to current families and a public
+photo gallery. See section 11 below.
+
+**Next (Phase 5):** automation, TalkFurther webhook reconciliation, analytics.
 
 ---
 
@@ -252,3 +255,34 @@ on each run.
 All of the above needs `RESEND_API_KEY` (and a verified `joyseniorcare.com`
 sending domain in Resend). Without it, leads are still saved and drips/broadcasts
 just wait; you can compose and save, but nothing sends until Resend is set.
+
+---
+
+## 11. Family emails and the photo gallery (Phase 4)
+
+### The family list
+
+`/admin > Families` is the list of current residents' families who get
+community emails. Add someone with their name and email, and check the box to
+confirm they agreed to receive emails (opt-in). They can unsubscribe from any
+email, and unsubscribed people are always skipped.
+
+### Emailing families
+
+Community emails go out the same way as lead emails: `/admin > Emails > New
+email`, but choose **Families** as the audience. Use the **Photo** button to
+add pictures right into the message. Send now or schedule.
+
+**Scope, on purpose:** family emails are community-wide only. Birthday and
+holiday invites, family nights, a monthly note from Mellissa, event photos.
+**Never** individual resident information, and **never** anything urgent or an
+emergency. Those stay a phone call: faster, more reliable, and more humane. The
+composer reminds you of this whenever the Families audience is selected.
+
+### The public photo gallery
+
+`/admin > Gallery` manages the photos shown at **/gallery** on the public site.
+Click **Choose photo** to upload (needs the S3 / Cloudflare R2 setup from §9;
+otherwise paste an image URL), add a caption and a short description, and click
+**Add to gallery**. Remove a photo anytime. Real photos of Joy only, no stock.
+The public gallery is linked in the site footer.

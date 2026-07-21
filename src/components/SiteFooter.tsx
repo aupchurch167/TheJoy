@@ -49,6 +49,11 @@ export default function SiteFooter() {
               </Link>
             </li>
             <li>
+              <Link href="/gallery" className="hover:text-clay">
+                Photos
+              </Link>
+            </li>
+            <li>
               <a href={BUSINESS.phoneHref} className="hover:text-clay">
                 Book a tour
               </a>

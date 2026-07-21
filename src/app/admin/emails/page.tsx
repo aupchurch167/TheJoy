@@ -70,6 +70,7 @@ export default async function EmailsPage() {
                     {b.subject || "(no subject)"}
                   </span>
                   <span className="block text-sm text-ink-faint">
+                    {b.audience === "families" ? "Families" : "Leads"} ·{" "}
                     {b.status === "sent"
                       ? `Sent to ${b.sent_count}`
                       : b.status === "scheduled"

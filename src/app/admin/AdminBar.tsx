@@ -20,6 +20,12 @@ export default function AdminBar({ email }: { email?: string | null }) {
           <Link href="/admin/emails" className="text-ink-soft hover:text-clay">
             Emails
           </Link>
+          <Link href="/admin/families" className="text-ink-soft hover:text-clay">
+            Families
+          </Link>
+          <Link href="/admin/gallery" className="text-ink-soft hover:text-clay">
+            Gallery
+          </Link>
           <Link href="/" className="text-ink-soft hover:text-clay">
             View site
           </Link>

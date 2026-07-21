@@ -1,12 +1,14 @@
 import { query } from "./db";
 
+import type { Audience } from "./leads";
+
 export type BroadcastStatus = "draft" | "scheduled" | "sending" | "sent";
 
 export type Broadcast = {
   id: string;
   subject: string;
   body: string;
-  audience: "leads";
+  audience: Audience;
   status: BroadcastStatus;
   scheduled_at: string | null;
   sent_at: string | null;
@@ -28,11 +30,12 @@ export async function getBroadcastById(id: string): Promise<Broadcast | null> {
 
 export async function createBroadcast(
   subject: string,
-  body: string
+  body: string,
+  audience: Audience = "leads"
 ): Promise<Broadcast> {
   const rows = await query<Broadcast>(
-    `INSERT INTO broadcasts (subject, body) VALUES ($1, $2) RETURNING *`,
-    [subject, body]
+    `INSERT INTO broadcasts (subject, body, audience) VALUES ($1, $2, $3) RETURNING *`,
+    [subject, body, audience]
   );
   return rows[0];
 }
