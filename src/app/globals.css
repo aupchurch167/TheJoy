@@ -1,0 +1,71 @@
+@import "tailwindcss";
+
+/*
+  Joy Senior Living design tokens.
+  Warm, calm, human. Committed light theme (no auto dark mode): the site
+  should look the same for every family, and warm cream reads better than
+  a surprise dark flip for our audience.
+*/
+
+:root {
+  --paper: #fbf6ee; /* warm cream page background */
+  --card: #ffffff;
+  --ink: #2b2620; /* warm near-black body text */
+  --ink-soft: #5c5347; /* secondary text */
+  --ink-faint: #8a8072;
+  --clay: #b0532b; /* primary accent / CTA (warm terracotta) */
+  --clay-dark: #8f4020;
+  --sage: #5f6b4e; /* secondary accent */
+  --line: #e6ddcd; /* soft borders */
+  --gold: #a8812f; /* award badge */
+}
+
+@theme inline {
+  --color-paper: var(--paper);
+  --color-card: var(--card);
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-ink-faint: var(--ink-faint);
+  --color-clay: var(--clay);
+  --color-clay-dark: var(--clay-dark);
+  --color-sage: var(--sage);
+  --color-line: var(--line);
+  --color-gold: var(--gold);
+  --font-display: var(--font-fraunces);
+  --font-sans: var(--font-inter);
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-inter), Georgia, serif;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* Reader-facing prose: generous line height, comfortable measure. */
+.prose-joy p {
+  line-height: 1.75;
+}
+
+/* Respect motion preferences. */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  * {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+/* Visible focus for keyboard users (older visitors, screen readers). */
+:where(a, button, input, textarea, select):focus-visible {
+  outline: 3px solid var(--clay);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
