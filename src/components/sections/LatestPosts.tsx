@@ -1,8 +1,13 @@
 import Link from "next/link";
 import { LATEST_POSTS } from "@/lib/site";
 
-export default function LatestPosts() {
-  if (LATEST_POSTS.length === 0) return null;
+export type PostCard = { title: string; excerpt: string; href: string };
+
+export default function LatestPosts({ posts }: { posts?: PostCard[] }) {
+  // Use real published posts when available; otherwise the static teasers.
+  const cards: PostCard[] =
+    posts && posts.length > 0 ? posts : LATEST_POSTS;
+  if (cards.length === 0) return null;
 
   return (
     <section id="stories" className="bg-white/60 py-16 sm:py-20">
@@ -20,7 +25,7 @@ export default function LatestPosts() {
         </div>
 
         <div className="mt-8 grid gap-6 md:grid-cols-3">
-          {LATEST_POSTS.slice(0, 3).map((post, i) => (
+          {cards.slice(0, 3).map((post, i) => (
             <Link
               key={i}
               href={post.href}

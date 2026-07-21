@@ -8,6 +8,10 @@ import FinalCta from "@/components/sections/FinalCta";
 import { localBusinessJsonLd } from "@/lib/schema";
 import type { Metadata } from "next";
 import { BUSINESS } from "@/lib/site";
+import { hasDatabase } from "@/lib/db";
+import { getPublishedPosts } from "@/lib/posts";
+
+export const dynamic = "force-dynamic";
 
 // Homepage SEO. Description carries the §5 homepage keyword cluster in Joy
 // voice and §4 compliance: senior living / personal care home / memory care,
@@ -36,7 +40,16 @@ export const metadata: Metadata = {
   },
 };
 
-export default function Home() {
+export default async function Home() {
+  // Pull the 3 latest published posts for the Stories section (falls back to
+  // the static teasers in site.ts when there are none yet).
+  const dbPosts = hasDatabase() ? await getPublishedPosts(3) : [];
+  const postCards = dbPosts.map((p) => ({
+    title: p.title,
+    excerpt: p.excerpt || "",
+    href: `/blog/${p.slug}`,
+  }));
+
   return (
     <>
       {/* schema.org structured data for local SEO (SeniorCare/LocalBusiness). */}
@@ -51,7 +64,7 @@ export default function Home() {
       <MeetMellissa />
       <Testimonials />
       <CommunityPhotos />
-      <LatestPosts />
+      <LatestPosts posts={postCards} />
       <FinalCta />
     </>
   );

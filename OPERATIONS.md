@@ -131,7 +131,68 @@ Meet Mellissa, family testimonials, community photos, latest stories, and the
 contact + tour section), the lead form saving to Postgres, optional Resend
 emails with unsubscribe, and the SEO basics (meta, schema.org, sitemap, robots).
 
-**Next (Phase 2):** admin login (Google sign-in restricted to
-@joyseniorcare.com), the blog/CMS, and AI-assisted drafting. The `/blog` page is
-a placeholder until then. Phases 3-5 add lead emails, family communications, the
-photo gallery, and automation.
+**Built now (Phase 2):** admin login (Google sign-in restricted to
+@joyseniorcare.com), the blog with a full editor, AI-assisted drafting, public
+blog pages with SEO, and Webflow migration tooling. See section 9 below.
+
+**Next (Phases 3-5):** lead nurture emails, family communications, the photo
+gallery, and automation.
+
+---
+
+## 9. The blog and admin (Phase 2)
+
+### Signing in
+
+Go to `/admin` and sign in with your **@joyseniorcare.com** Google account.
+Only verified accounts on that domain get in (checked on our server, not just
+by Google). If you want to lock it down to specific people, set
+`ADMIN_ALLOWLIST` (see `.env.example`).
+
+One-time setup Adam does:
+
+1. In Google Cloud, create an **OAuth 2.0 Client** (type: Web application).
+2. Set the authorized redirect URI to
+   `https://joyseniorcare.com/api/auth/callback/google`.
+3. Set the OAuth consent screen to **Internal** (Workspace org only).
+4. Put the client ID/secret into Railway as `AUTH_GOOGLE_ID` /
+   `AUTH_GOOGLE_SECRET`, and set `AUTH_SECRET` (run `openssl rand -base64 32`).
+
+### Writing a post
+
+From `/admin`, click **New post**. You get a title, a Markdown editor with a
+formatting toolbar and a live **Preview** tab, an excerpt, a category, a hero
+image, and SEO fields. Two buttons:
+
+- **Save draft** keeps it private (not on the site).
+- **Publish** puts it live at `/blog/<slug>` and on the homepage.
+
+The same voice and compliance rules apply to posts: no em-dashes, no banned
+words, and Joy is a **personal care home** (never "assisted living" as our
+label). Name Mellissa when care is discussed.
+
+### Draft with AI
+
+Click **Draft with AI**, give it a topic (and optionally an angle), and it
+writes a full draft in Joy's voice and within the compliance rules, then fills
+the editor. **It never publishes on its own.** Always read and edit before
+publishing. This needs `ANTHROPIC_API_KEY` set (see `.env.example`); without
+it, you just write posts by hand.
+
+### Images
+
+To upload images (hero or inside a post), set up an S3-compatible bucket
+(Cloudflare R2 is the easy choice) with the `S3_*` env vars. Without that, you
+can still paste an image URL into the hero field or a Markdown image link.
+
+### Moving the old Webflow posts over (one-time)
+
+1. Export your blog from Webflow (CSV is fine).
+2. Set `OLD_BLOG_BASE` to whatever path Webflow used for posts (e.g. `/post`).
+3. Preview first:  `node scripts/import-webflow.mjs your-export.csv --dry`
+4. Import for real (with `DATABASE_URL` set):
+   `npm run import:webflow your-export.csv`
+
+This preserves each post's slug, converts the content to the editor's format,
+and writes `db/redirects.json` so old links **301** to the new `/blog/<slug>`.
+Redirects apply on the next deploy, so **redeploy after importing**.
