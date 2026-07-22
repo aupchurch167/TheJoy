@@ -1,8 +1,18 @@
 import Link from "next/link";
 import { BUSINESS } from "@/lib/site";
+import { getSettings, toTelHref } from "@/lib/settings";
 import TourButton from "./TourButton";
 
-export default function SiteHeader() {
+const NAV = [
+  { href: "/", label: "Home" },
+  { href: "/about", label: "About" },
+  { href: "/services", label: "Services" },
+  { href: "/blog", label: "Blog" },
+];
+
+export default async function SiteHeader() {
+  const settings = await getSettings();
+
   return (
     <header className="sticky top-0 z-40 border-b border-line/70 bg-paper/90 backdrop-blur">
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-5 py-3.5">
@@ -10,19 +20,37 @@ export default function SiteHeader() {
           <span className="font-display text-xl font-semibold text-ink">
             {BUSINESS.name}
           </span>
-          <span className="text-xs text-ink-faint">
-            Loganville, Georgia
-          </span>
+          <span className="text-xs text-ink-faint">Loganville, Georgia</span>
         </Link>
 
-        <div className="flex items-center gap-5">
+        <nav className="hidden items-center gap-6 text-sm font-medium text-ink-soft lg:flex">
+          {NAV.map((item) => (
+            <Link key={item.href} href={item.href} className="hover:text-clay">
+              {item.label}
+            </Link>
+          ))}
+          {settings.careers_url && (
+            <a
+              href={settings.careers_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-clay"
+            >
+              Careers
+            </a>
+          )}
+        </nav>
+
+        <div className="flex items-center gap-4">
           <a
-            href={BUSINESS.phoneHref}
+            href={toTelHref(settings.phone)}
             className="hidden text-sm font-medium text-ink-soft hover:text-clay sm:inline"
           >
-            {BUSINESS.phone}
+            {settings.phone}
           </a>
-          <TourButton className="px-5 py-2.5 text-sm">Book a tour</TourButton>
+          <TourButton href={settings.talkfurther_url} className="px-5 py-2.5 text-sm">
+            Book a tour
+          </TourButton>
         </div>
       </div>
     </header>

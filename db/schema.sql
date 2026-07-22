@@ -174,3 +174,28 @@ CREATE UNIQUE INDEX IF NOT EXISTS rank_snapshots_kw_day
   ON rank_snapshots (keyword, checked_on);
 CREATE INDEX IF NOT EXISTS rank_snapshots_kw_idx
   ON rank_snapshots (keyword, checked_on DESC);
+
+-- ==========================================================================
+-- Change Set 01: admin-editable site settings
+-- ==========================================================================
+
+-- General key/value store for values that should not be hardcoded (contact
+-- facts, the careers link, the tour link). The admin Site Settings screen edits
+-- these; header/footer/pages read them at render time. Adding a future key
+-- needs no code: insert a row here (or via the admin screen once a key exists).
+CREATE TABLE IF NOT EXISTS site_settings (
+  key        TEXT PRIMARY KEY,
+  value      TEXT NOT NULL DEFAULT '',
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- Seed the known keys. DO NOTHING keeps existing edited values on re-run.
+-- careers_url and talkfurther_url are intentionally blank until Adam sets them
+-- in the admin screen (an empty careers_url hides the Careers link).
+INSERT INTO site_settings (key, value) VALUES
+  ('phone',           '(470) 684-3569'),
+  ('email',           'hello@joyseniorcare.com'),
+  ('address',         '434 Conyers Rd, Loganville, GA 30052'),
+  ('careers_url',     ''),
+  ('talkfurther_url', '')
+ON CONFLICT (key) DO NOTHING;

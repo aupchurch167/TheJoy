@@ -332,3 +332,44 @@ Set `NEXT_PUBLIC_PLAUSIBLE_DOMAIN` to `joyseniorcare.com` to turn on Plausible
 **Tour click** (any Book-a-tour button) and **Lead form submit**. Leave it unset
 for no analytics. Note: the lead form and TalkFurther are still the source of
 truth for actual leads; analytics is just for traffic and click trends.
+
+---
+
+## 13. Site settings, About & Services pages (Change Set 01)
+
+### Editable settings (no redeploy)
+
+`/admin > Settings` is a screen with editable fields for values used across the
+site: **phone, email, address, the Careers link, and the tour (TalkFurther)
+link**. Change one, click **Save settings**, and the live site updates within a
+moment (the header and footer read these on every page).
+
+- **Careers link**: paste your Indeed ads URL to show a **Careers** link in the
+  header and footer (it opens in a new tab). Leave it blank to hide the link.
+- **Tour link**: paste your TalkFurther URL. Blank falls back to the phone
+  number so the button never dead-ends.
+- URL fields must be a real http(s) link (or blank); the others cannot be blank.
+
+Two of these seed blank on purpose and are yours to fill in the admin screen the
+first time: **Careers link** (your Indeed URL) and **Tour link** (TalkFurther).
+
+Adding a brand-new setting key later is a one-line change in `src/lib/settings.ts`
+(and `settings-meta.ts` for its label); no other code is needed.
+
+### Cloudflare note
+
+Because Cloudflare caches pages, give the site a short edge cache TTL (or a
+cache rule that respects the app) so edits appear promptly. The app already
+refreshes its own render on save; the short TTL covers Cloudflare's layer.
+
+### About and Services pages
+
+- **/about** is the story/trust page (why Joy exists, what a small home feels
+  like, Mellissa as the anchor). Its copy lives in `src/lib/site.ts` under
+  `ABOUT`.
+- **/services** describes what Joy offers as a personal care home, with memory
+  care, and the search-context framing for "assisted living" (§4). Copy lives
+  under `SERVICES`. The memory-care section only shows when `MEMORY_CARE.enabled`
+  is true (confirm it is within the license first).
+
+Both are in the header and footer navigation.

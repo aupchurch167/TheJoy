@@ -1,6 +1,10 @@
 import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
 
+// Render dynamically so admin edits to site settings (contact facts, careers
+// link, tour link) in the shared header/footer show up promptly.
+export const dynamic = "force-dynamic";
+
 // Layout for the public marketing site (home, blog, unsubscribe).
 // Admin routes use their own layout with different chrome.
 export default function SiteLayout({

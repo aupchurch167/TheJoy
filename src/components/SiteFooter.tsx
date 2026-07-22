@@ -1,7 +1,9 @@
 import Link from "next/link";
-import { BUSINESS, BUSINESS_ADDRESS_ONE_LINE } from "@/lib/site";
+import { BUSINESS } from "@/lib/site";
+import { getSettings, toTelHref, toMailHref } from "@/lib/settings";
 
-export default function SiteFooter() {
+export default async function SiteFooter() {
+  const settings = await getSettings();
   const year = 2026; // update yearly; kept static to avoid build-time drift
 
   return (
@@ -20,17 +22,14 @@ export default function SiteFooter() {
         <div className="text-sm text-ink-soft">
           <p className="font-semibold text-ink">Visit or call</p>
           <address className="mt-2 not-italic leading-relaxed">
-            {BUSINESS.address.street}
+            {settings.address}
             <br />
-            {BUSINESS.address.city}, {BUSINESS.address.state}{" "}
-            {BUSINESS.address.zip}
-            <br />
-            <a href={BUSINESS.phoneHref} className="hover:text-clay">
-              {BUSINESS.phone}
+            <a href={toTelHref(settings.phone)} className="hover:text-clay">
+              {settings.phone}
             </a>
             <br />
-            <a href={BUSINESS.emailHref} className="hover:text-clay">
-              {BUSINESS.email}
+            <a href={toMailHref(settings.email)} className="hover:text-clay">
+              {settings.email}
             </a>
           </address>
         </div>
@@ -39,8 +38,13 @@ export default function SiteFooter() {
           <p className="font-semibold text-ink">On this site</p>
           <ul className="mt-2 space-y-1.5">
             <li>
-              <Link href="/" className="hover:text-clay">
-                Home
+              <Link href="/about" className="hover:text-clay">
+                About
+              </Link>
+            </li>
+            <li>
+              <Link href="/services" className="hover:text-clay">
+                Services
               </Link>
             </li>
             <li>
@@ -53,11 +57,18 @@ export default function SiteFooter() {
                 Photos
               </Link>
             </li>
-            <li>
-              <a href={BUSINESS.phoneHref} className="hover:text-clay">
-                Book a tour
-              </a>
-            </li>
+            {settings.careers_url && (
+              <li>
+                <a
+                  href={settings.careers_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:text-clay"
+                >
+                  Careers
+                </a>
+              </li>
+            )}
           </ul>
         </div>
       </div>
@@ -65,7 +76,7 @@ export default function SiteFooter() {
       <div className="border-t border-line/70">
         <p className="mx-auto max-w-6xl px-5 py-5 text-xs text-ink-faint">
           &copy; {year} {BUSINESS.name}. Licensed as a personal care home in the
-          State of Georgia. {BUSINESS_ADDRESS_ONE_LINE}.
+          State of Georgia. {settings.address}.
         </p>
       </div>
     </footer>

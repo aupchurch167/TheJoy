@@ -203,3 +203,58 @@ export const LATEST_POSTS: {
     href: "/blog",
   },
 ];
+
+/* ------------------------------------------------------------------ */
+/* ABOUT PAGE (/about)                                                  */
+/* ------------------------------------------------------------------ */
+
+export const ABOUT = {
+  heading: "About Joy",
+  lede: `Joy started with a simple idea: a person does not stop being themselves because they need help.`,
+  story: [
+    `Later life still holds mornings worth getting up for. A favorite chair by the window. A joke told the same way for forty years. A good home protects those things, and builds the day around them.`,
+    `Joy has ${BUSINESS.beds} beds. We chose that number and we guard it. Small is not a limitation here, it is the whole design. It is what lets ${BUSINESS.director.name} and her team learn your mother in a week, not a season: how she takes her coffee, which songs she hums, when she gets tired.`,
+  ],
+  dayHeading: "What a day here feels like",
+  day: [
+    `A day at Joy is quiet in the way a home is quiet. Coffee in the morning. The smell of lunch from a real kitchen. Someone sitting with your father while he tells a story you have heard before and they have not.`,
+    `Because the same people are here every day, they notice the small things: a harder night, a lost appetite, a word that would not come. At a larger place those signs get missed. Here they get caught, and ${BUSINESS.director.name} hears about them that day.`,
+  ],
+  mellissaHeading: "The person who sets the tone",
+  mellissa: [
+    `${BUSINESS.director.name} leads Joy as ${BUSINESS.director.title}. She is usually the first person a family meets, and often the last one they call at night with a question. She sets the standard everyone here follows: treat each resident like a parent, because to someone they are.`,
+  ],
+  licenseNote: `Joy is licensed by the State of Georgia as a personal care home. That license shapes what we do: help with the daily tasks of living, medications, meals, and steady human company, in a setting small enough to stay personal.`,
+  photos: [
+    { src: "/images/community-1.jpg", alt: "The front porch at Joy Senior Living in Loganville" },
+    { src: "/images/community-4.jpg", alt: "The common living room at Joy Senior Living" },
+  ],
+} as const;
+
+/* ------------------------------------------------------------------ */
+/* SERVICES PAGE (/services)                                           */
+/* ------------------------------------------------------------------ */
+
+export const SERVICES = {
+  heading: "What Joy offers",
+  lede: `Joy is a personal care home in Loganville offering senior living and memory care. Here is what that means in plain terms.`,
+  careHeading: "Personal care, day to day",
+  care: [
+    `Joy helps with the things that get harder to do alone: bathing, dressing, grooming, moving safely from room to room. Medications are given on time, by staff who know each resident, not handed from a cart to strangers.`,
+    `Meals are cooked here and eaten at a shared table, because sitting down together is part of the care, not separate from it. Someone is awake and on-site around the clock.`,
+  ],
+  // §4: memory care is an allowed claim; confirm it is within the license
+  // before launch (MEMORY_CARE.enabled gates it site-wide, see OPERATIONS.md).
+  memoryHeading: "Memory care, within our personal care home",
+  memory: [
+    `For families facing memory loss, Joy offers memory care inside our personal care home. The setting is the same small one, with the same familiar faces, which matters more for a person living with dementia than almost anything else.`,
+    `${BUSINESS.director.name} can walk you through what memory care at Joy looks like for your parent, honestly, before you decide anything.`,
+  ],
+  scaleHeading: "Why the small scale changes everything",
+  scale: [
+    `The difference at Joy is not a longer list of services. It is the scale. ${BUSINESS.beds} residents means the person helping your mother today is the same one who helped her yesterday and will tomorrow. It means a change in her gets noticed by someone who knows her, not logged by someone passing through.`,
+  ],
+  // §4 search-context framing: assisted living named only as the search
+  // category, followed by what Joy actually is.
+  assistedLivingContext: `If you are looking for assisted living in Loganville, it helps to know the difference. Joy is a personal care home, a distinct Georgia license. Families searching for assisted living near Loganville often find that a smaller personal care home like Joy is a better fit for a parent who would feel lost in a large building.`,
+} as const;

@@ -1,8 +1,11 @@
-import { BUSINESS, BUSINESS_ADDRESS_ONE_LINE } from "@/lib/site";
+import { BUSINESS } from "@/lib/site";
+import { getSettings, toTelHref, toMailHref } from "@/lib/settings";
 import TourButton from "@/components/TourButton";
 import LeadForm from "@/components/LeadForm";
 
-export default function FinalCta() {
+export default async function FinalCta() {
+  const settings = await getSettings();
+
   return (
     <section id="contact" className="bg-ink py-16 text-white sm:py-24">
       <div className="mx-auto grid max-w-6xl gap-12 px-5 lg:grid-cols-2">
@@ -16,7 +19,9 @@ export default function FinalCta() {
           </p>
 
           <div className="mt-8">
-            <TourButton variant="light">Book a tour</TourButton>
+            <TourButton variant="light" href={settings.talkfurther_url}>
+              Book a tour
+            </TourButton>
           </div>
 
           <dl className="mt-10 space-y-4 text-white/90">
@@ -25,8 +30,8 @@ export default function FinalCta() {
                 Call
               </dt>
               <dd className="mt-1 text-xl font-semibold">
-                <a href={BUSINESS.phoneHref} className="hover:text-white">
-                  {BUSINESS.phone}
+                <a href={toTelHref(settings.phone)} className="hover:text-white">
+                  {settings.phone}
                 </a>
               </dd>
             </div>
@@ -37,13 +42,13 @@ export default function FinalCta() {
               <dd className="mt-1 text-lg">
                 <a
                   href={`https://maps.google.com/?q=${encodeURIComponent(
-                    BUSINESS.name + " " + BUSINESS_ADDRESS_ONE_LINE
+                    BUSINESS.name + " " + settings.address
                   )}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="hover:text-white"
                 >
-                  {BUSINESS_ADDRESS_ONE_LINE}
+                  {settings.address}
                 </a>
               </dd>
             </div>
@@ -52,8 +57,8 @@ export default function FinalCta() {
                 Email
               </dt>
               <dd className="mt-1 text-lg">
-                <a href={BUSINESS.emailHref} className="hover:text-white">
-                  {BUSINESS.email}
+                <a href={toMailHref(settings.email)} className="hover:text-white">
+                  {settings.email}
                 </a>
               </dd>
             </div>

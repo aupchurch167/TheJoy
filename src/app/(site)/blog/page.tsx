@@ -55,11 +55,25 @@ export default async function BlogIndex() {
                 <div className="hidden sm:block" />
               )}
               <div>
-                {post.category && (
-                  <span className="text-xs font-semibold uppercase tracking-wide text-clay">
-                    {post.category}
-                  </span>
-                )}
+                <div className="flex flex-wrap items-center gap-x-3 text-xs">
+                  {post.category && (
+                    <span className="font-semibold uppercase tracking-wide text-clay">
+                      {post.category}
+                    </span>
+                  )}
+                  {post.published_at && (
+                    <time
+                      dateTime={post.published_at}
+                      className="text-ink-faint"
+                    >
+                      {new Date(post.published_at).toLocaleDateString("en-US", {
+                        year: "numeric",
+                        month: "long",
+                        day: "numeric",
+                      })}
+                    </time>
+                  )}
+                </div>
                 <h2 className="mt-1 font-display text-2xl font-semibold text-ink group-hover:text-clay">
                   {post.title}
                 </h2>
