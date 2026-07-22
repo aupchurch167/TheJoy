@@ -3,7 +3,12 @@ import PostEditor from "../PostEditor";
 
 export const dynamic = "force-dynamic";
 
-export default async function NewPostPage() {
+export default async function NewPostPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ ai?: string }>;
+}) {
   await requireAdmin();
-  return <PostEditor />;
+  const { ai } = await searchParams;
+  return <PostEditor aiStart={ai === "1"} />;
 }

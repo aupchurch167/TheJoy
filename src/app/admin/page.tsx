@@ -26,12 +26,20 @@ export default async function AdminDashboard() {
     <div className="mx-auto max-w-3xl px-5 py-10">
       <div className="mb-6 flex items-center justify-between">
         <h1 className="font-display text-2xl font-semibold text-ink">Posts</h1>
-        <Link
-          href="/admin/posts/new"
-          className="rounded-full bg-clay px-4 py-2 text-sm font-semibold text-white hover:bg-clay-dark"
-        >
-          New post
-        </Link>
+        <div className="flex items-center gap-2">
+          <Link
+            href="/admin/posts/new?ai=1"
+            className="rounded-full bg-sage px-4 py-2 text-sm font-semibold text-white hover:opacity-90"
+          >
+            ✨ Write with AI
+          </Link>
+          <Link
+            href="/admin/posts/new"
+            className="rounded-full border border-clay px-4 py-2 text-sm font-semibold text-clay hover:bg-clay/5"
+          >
+            New post
+          </Link>
+        </div>
       </div>
 
       {posts.length === 0 ? (

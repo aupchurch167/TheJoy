@@ -34,7 +34,13 @@ function fromPost(p?: Post | null): Fields {
   };
 }
 
-export default function PostEditor({ post }: { post?: Post | null }) {
+export default function PostEditor({
+  post,
+  aiStart = false,
+}: {
+  post?: Post | null;
+  aiStart?: boolean;
+}) {
   const router = useRouter();
   const [f, setF] = useState<Fields>(fromPost(post));
   const [tab, setTab] = useState<"write" | "preview">("write");
@@ -217,6 +223,7 @@ export default function PostEditor({ post }: { post?: Post | null }) {
       )}
 
       <AiDraftPanel
+        defaultOpen={aiStart && !post}
         onDraft={(d) => {
           setF((prev) => ({
             ...prev,
@@ -469,6 +476,7 @@ function UploadButton({
 function AiDraftPanel({
   onDraft,
   onError,
+  defaultOpen = false,
 }: {
   onDraft: (d: {
     title?: string;
@@ -478,8 +486,9 @@ function AiDraftPanel({
     meta_description?: string;
   }) => void;
   onError: (msg: string) => void;
+  defaultOpen?: boolean;
 }) {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(defaultOpen);
   const [topic, setTopic] = useState("");
   const [angle, setAngle] = useState("");
   const [busy, setBusy] = useState(false);
@@ -515,17 +524,19 @@ function AiDraftPanel({
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
-        className="text-sm font-semibold text-sage"
+        className="flex items-center gap-2 text-sm font-semibold text-sage"
       >
-        {open ? "Hide" : "Draft with AI"}
+        <span aria-hidden="true">✨</span>
+        {open ? "Write with AI (hide)" : "Write this post with AI"}
       </button>
       {open && (
         <div className="mt-3 grid gap-3">
           <p className="text-xs text-ink-faint">
-            The AI writes in Joy&apos;s voice and stays compliant (personal care
-            home, never &ldquo;assisted living&rdquo; as Joy&apos;s label). It
-            fills the fields below. Nothing publishes on its own. Always read and
-            edit before publishing.
+            Give the AI a topic and it writes the whole post (title, body,
+            excerpt, category, SEO) in Joy&apos;s voice and within the compliance
+            rules (personal care home, never &ldquo;assisted living&rdquo; as
+            Joy&apos;s label). It fills the fields below for you to review.
+            Nothing publishes on its own. Always read and edit before publishing.
           </p>
           <input
             value={topic}
