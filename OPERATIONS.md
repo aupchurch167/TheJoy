@@ -218,17 +218,21 @@ can still paste an image URL into the hero field or a Markdown image link.
 2. Set `OLD_BLOG_BASE` to whatever path Webflow used for posts (e.g. `/post`).
 3. Preview first:  `node scripts/import-webflow.mjs your-export.csv --dry`
 4. Import for real (with `DATABASE_URL` set):
-   `npm run import:webflow your-export.csv`
+   `node scripts/import-webflow.mjs your-export.csv`
 
 This preserves each post's slug, converts the content to the editor's format,
 and writes `db/redirects.json` so old links **301** to the new `/blog/<slug>`.
 Redirects apply on the next deploy, so **redeploy after importing**.
 
 **Your export is already in the repo** at `data/webflow-blog-export.csv` (32
-published posts). Once the app is deployed with a database, run this once from a
-Railway shell (or locally with the production `DATABASE_URL` set):
+published posts). Once the app is running with a database connected, open a shell
+in the **app service** (Railway console, or `railway ssh`) and run this once:
 
-    OLD_BLOG_BASE=/post  npm run import:webflow data/webflow-blog-export.csv
+    OLD_BLOG_BASE=/post node scripts/import-webflow.mjs data/webflow-blog-export.csv
+
+(Run it in the app service, not the Postgres service, so `DATABASE_URL` and the
+code are both present. Use `node scripts/...`, not `npm run import:webflow` with
+a file argument, since npm does not forward the filename.)
 
 The importer was verified end to end against this file: all 32 posts import,
 render, keep their slugs/dates/authors/hero images, and generate matching 301s.
