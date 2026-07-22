@@ -93,18 +93,20 @@ failing silently.
 
 ## 6. Setting up the database (once)
 
-1. In Railway, add the **Postgres** plugin to the project.
-2. Make sure `DATABASE_URL` is available to the app service.
-3. Create the tables by running the migration once:
+1. In Railway, add the **Postgres** service to the project (you have this).
+2. Point the app at it: open the **app service > Variables**, click **Add
+   Reference Variable**, choose the Postgres service's `DATABASE_URL`, and name
+   it `DATABASE_URL`. (Railway shows it as `${{Postgres.DATABASE_URL}}`.)
+3. **Redeploy the app.** The tables are created **automatically on startup** (the
+   schema is idempotent), so there is nothing else to run. On boot you'll see
+   `[migrate] Schema applied (tables ready).` in the logs.
 
-       npm run migrate
-
-   You can run this from Railway's shell, or locally with `DATABASE_URL` set.
-   It is safe to run again; it will not delete anything.
+If you'd rather run migrations by hand, set `AUTO_MIGRATE=false` and run
+`npm run migrate` yourself (from Railway's shell or locally with `DATABASE_URL`
+set). Either way it is safe to run again and never deletes anything.
 
 Leads from the homepage form land in the `leads` table, tagged
-`source = homepage_form`. TalkFurther keeps its own leads for now; Phase 5
-reconciles the two.
+`source = homepage_form`.
 
 ---
 
