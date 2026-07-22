@@ -29,6 +29,10 @@ export function passwordLoginEnabled(): boolean {
   return !!process.env.ADMIN_PASSWORD;
 }
 
+export function googleLoginEnabled(): boolean {
+  return !!(process.env.AUTH_GOOGLE_ID && process.env.AUTH_GOOGLE_SECRET);
+}
+
 function passwordMatches(input: string): boolean {
   const expected = process.env.ADMIN_PASSWORD;
   if (!expected) return false;
@@ -43,31 +47,42 @@ function adminIdentityEmail(): string {
   return (process.env.ADMIN_EMAIL || `admin@${ALLOWED_DOMAIN}`).toLowerCase();
 }
 
-export const { handlers, auth, signIn, signOut } = NextAuth({
-  trustHost: true,
-  session: { strategy: "jwt" },
-  providers: [
+// Build the provider list from what is actually configured. Registering a
+// half-configured OAuth provider (Google with no client ID/secret) makes
+// Auth.js throw a "server configuration" error on every auth request, so the
+// Google provider is only added when its credentials are present.
+const providers = [];
+if (googleLoginEnabled()) {
+  providers.push(
     Google({
       // Ask Google for a fresh account chooser each time.
       authorization: { params: { prompt: "select_account" } },
-    }),
-    Credentials({
-      id: "password",
-      name: "Admin password",
-      credentials: { password: { label: "Password", type: "password" } },
-      authorize(credentials) {
-        const pw =
-          typeof credentials?.password === "string" ? credentials.password : "";
-        if (!passwordMatches(pw)) return null;
-        // A valid admin identity so the existing domain checks pass.
-        return {
-          id: "admin",
-          name: "Joy Admin",
-          email: adminIdentityEmail(),
-        };
-      },
-    }),
-  ],
+    })
+  );
+}
+providers.push(
+  Credentials({
+    id: "password",
+    name: "Admin password",
+    credentials: { password: { label: "Password", type: "password" } },
+    authorize(credentials) {
+      const pw =
+        typeof credentials?.password === "string" ? credentials.password : "";
+      if (!passwordMatches(pw)) return null;
+      // A valid admin identity so the existing domain checks pass.
+      return {
+        id: "admin",
+        name: "Joy Admin",
+        email: adminIdentityEmail(),
+      };
+    },
+  })
+);
+
+export const { handlers, auth, signIn, signOut } = NextAuth({
+  trustHost: true,
+  session: { strategy: "jwt" },
+  providers,
   pages: {
     signIn: "/admin/login",
     error: "/admin/login",
