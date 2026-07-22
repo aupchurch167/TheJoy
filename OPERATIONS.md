@@ -222,6 +222,23 @@ This preserves each post's slug, converts the content to the editor's format,
 and writes `db/redirects.json` so old links **301** to the new `/blog/<slug>`.
 Redirects apply on the next deploy, so **redeploy after importing**.
 
+**Your export is already in the repo** at `data/webflow-blog-export.csv` (32
+published posts). Once the app is deployed with a database, run this once from a
+Railway shell (or locally with the production `DATABASE_URL` set):
+
+    OLD_BLOG_BASE=/post  npm run import:webflow data/webflow-blog-export.csv
+
+The importer was verified end to end against this file: all 32 posts import,
+render, keep their slugs/dates/authors/hero images, and generate matching 301s.
+`OLD_BLOG_BASE=/post` assumes the old Webflow blog lived at `/post/<slug>`. If it
+was `/blog/<slug>` (or anything else), change that value and re-run so the
+redirects match. It is safe to run again; it updates rather than duplicates.
+
+Note: the imported posts are your original Webflow copy, unchanged. A few use
+words the Joy voice guide avoids ("loved ones", "vibrant", "journey", etc.) and
+some use em-dashes. None wrongly call Joy an assisted living community. Edit any
+post in `/admin` if you want to bring older ones fully in-voice.
+
 ---
 
 ## 10. Lead emails and attribution (Phase 3)
