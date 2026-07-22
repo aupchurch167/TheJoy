@@ -156,6 +156,24 @@ Only verified accounts on that domain get in (checked on our server, not just
 by Google). If you want to lock it down to specific people, set
 `ADMIN_ALLOWLIST` (see `.env.example`).
 
+### Temporary password login (until Google is set up)
+
+Google OAuth needs a Google Cloud setup (below) before it works. To get into
+the admin **right now**, set a password instead:
+
+1. In Railway, set `ADMIN_PASSWORD` to a strong secret
+   (generate one: `openssl rand -base64 24`). Also set `AUTH_SECRET` if you have
+   not yet.
+2. Redeploy. Now `/admin/login` shows a password box under the Google button.
+   Type the password and you are in.
+
+This is a bridge only. When Google sign-in is working, **remove `ADMIN_PASSWORD`**
+(unsetting it hides the password box and disables password login), leaving the
+domain-restricted Google sign-in your brief calls for. Keep the password
+private; anyone with it can reach the admin.
+
+### Google sign-in (the permanent method)
+
 One-time setup Adam does:
 
 1. In Google Cloud, create an **OAuth 2.0 Client** (type: Web application).
