@@ -137,10 +137,12 @@ export const MELLISSA = {
 } as const;
 
 /**
- * Section 4: real testimonials. Lead with Mike S., then Cathy's fall story.
- * ONLY real quotes ship. Entries with an empty `quote` are skipped, so the
- * section never shows a fabricated testimonial. Paste the real wording from
- * the current site (see OPERATIONS.md) to turn each one on.
+ * Section 4: real testimonials from families (owner-supplied). These are real
+ * people's words and are kept faithful to what they wrote, which is why a few
+ * contain phrasing the Joy house voice otherwise avoids (e.g. "loved one").
+ * Do not paraphrase a testimonial. Entries with an empty `quote` are skipped,
+ * so the section never shows a fabricated testimonial. Lead with Mike S. and
+ * Cathy (§3).
  */
 export const TESTIMONIALS: {
   quote: string;
@@ -148,16 +150,34 @@ export const TESTIMONIALS: {
   context?: string;
 }[] = [
   {
-    // Real, verbatim. Keep first.
-    quote: "I like my new home.",
+    quote: `We moved my dad to the memory care section of The Joy... if you're considering moving your loved one, it can be pretty stressful for everyone. Walking into The Joy with my dad was like walking into a sanctuary of caring and calm... I was sitting with my dad in his room enjoying a cup of coffee together and, unprompted, he said: "I like my new home." ... So grateful for everyone at The Joy!`,
     name: "Mike S.",
-    context: "Resident",
+    context: "Resident's son",
   },
   {
-    // Cathy's fall story. Paste her real testimonial from the current site.
-    quote: "",
+    quote: `Dad had been living in a large luxury senior facility for two years, but his memory became really bad... along with his balance!! He had multiple falls... He needed a higher level of care. We found The Joy through Caring.com. What a blessing!! ... The staff is fabulous and since all the rooms are only steps away from the central "nurse's station" they are easily able to keep a vigilant eye on my independent Dad. Thank you, Angels, for guiding us to The Joy!!`,
     name: "Cathy",
+    context: "Resident's daughter",
+  },
+  {
+    quote: `My mother has been a resident at Joy for several months. I can't say enough good things about this facility. The caring staff have made my mother feel like she is in her home and loved. They have fostered a family environment and hosted family gatherings. It is truly a 'joy' to have found this facility.`,
+    name: "Theresa",
+    context: "Resident's daughter",
+  },
+  {
+    quote: `I have seen a lot of communities and this one by far was the absolute BEST!!! From the moment when we first walked in until it was all complete was truly a pleasure. We immediately felt welcomed... I tell everybody about this lovely community, and we are so happy we moved our mom in here.`,
+    name: "Sidney",
     context: "Resident's family",
+  },
+  {
+    quote: `We have decided to move my mom into Joy after touring several facilities in the area. At the end of the day, their staff was the most engaging and caring. On top of that, it's a brand new building so everything was clean and smelled nice.`,
+    name: "Nicole",
+    context: "Resident's daughter",
+  },
+  {
+    quote: `I have a wonderful friend here and I love going to see her. The staff is amazing! If you're looking for a special place this is it!`,
+    name: "Jacquie",
+    context: "Friend of a resident",
   },
 ];
 
