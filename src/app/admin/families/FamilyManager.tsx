@@ -4,146 +4,172 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { addFamilyMember, removeFamilyMember } from "./actions";
 import type { Lead } from "@/lib/leads";
+import { formatDate, orDash } from "@/lib/format";
+import {
+  Card,
+  Field,
+  Input,
+  Button,
+  Badge,
+  EmptyState,
+  TableWrap,
+  Th,
+  Td,
+  SectionLabel,
+} from "@/components/admin/ui";
+import ConfirmButton from "@/components/admin/ConfirmButton";
+import { useToast } from "@/components/admin/Toast";
 
 export default function FamilyManager({ members }: { members: Lead[] }) {
   const router = useRouter();
+  const { success, error: toastError } = useToast();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [optIn, setOptIn] = useState(false);
   const [error, setError] = useState("");
-  const [message, setMessage] = useState("");
   const [pending, start] = useTransition();
 
   function onAdd(e: React.FormEvent) {
     e.preventDefault();
     setError("");
-    setMessage("");
     start(async () => {
       const res = await addFamilyMember({ name, email, optIn });
-      if (!res.ok) return setError(res.error);
+      if (!res.ok) {
+        setError(res.error);
+        return;
+      }
       setName("");
       setEmail("");
       setOptIn(false);
-      setMessage("Added.");
+      success(`${name.trim() || "Family member"} added to the list.`);
       router.refresh();
     });
   }
 
-  function onRemove(id: string, memberName: string) {
-    if (!confirm(`Remove ${memberName} from the family list?`)) return;
-    start(async () => {
-      await removeFamilyMember(id);
-      router.refresh();
-    });
+  async function onRemove(id: string, memberName: string) {
+    const res = await removeFamilyMember(id);
+    if (res && "ok" in res && !res.ok) {
+      toastError("Could not remove that person. Please try again.");
+      return;
+    }
+    success(`${memberName} removed from the family list.`);
+    router.refresh();
   }
 
   return (
     <div>
-      <form
-        onSubmit={onAdd}
-        className="rounded-lg border border-line bg-white p-5"
-      >
-        <div className="grid gap-4 sm:grid-cols-2">
-          <label className="block">
-            <span className="text-sm font-medium text-ink-soft">Name</span>
+      <Card>
+        <SectionLabel>Add a family member</SectionLabel>
+        <form onSubmit={onAdd} className="mt-4">
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Field label="Name" htmlFor="fm-name">
+              <Input
+                id="fm-name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Jane Smith"
+              />
+            </Field>
+            <Field label="Email" htmlFor="fm-email">
+              <Input
+                id="fm-email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="jane@example.com"
+              />
+            </Field>
+          </div>
+
+          <label className="mt-4 flex items-start gap-2.5 text-sm text-ink-soft">
             <input
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className="mt-1 w-full rounded-lg border border-line bg-paper px-4 py-2.5 text-ink outline-none focus:border-clay"
-              placeholder="Jane Smith"
+              type="checkbox"
+              checked={optIn}
+              onChange={(e) => setOptIn(e.target.checked)}
+              className="mt-0.5 h-4 w-4 accent-clay"
             />
+            <span>
+              This family member agreed to receive community emails from Joy
+              (invitations, a monthly note, event photos). They can unsubscribe
+              anytime.
+            </span>
           </label>
-          <label className="block">
-            <span className="text-sm font-medium text-ink-soft">Email</span>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="mt-1 w-full rounded-lg border border-line bg-paper px-4 py-2.5 text-ink outline-none focus:border-clay"
-              placeholder="jane@example.com"
+
+          {error && (
+            <p className="mt-3 text-sm font-medium text-danger" role="alert">
+              {error}
+            </p>
+          )}
+
+          <div className="mt-5">
+            <Button type="submit" disabled={pending}>
+              {pending ? "Adding…" : "Add family member"}
+            </Button>
+          </div>
+        </form>
+      </Card>
+
+      <div className="mt-8">
+        <SectionLabel>
+          On the list {members.length > 0 && `(${members.length})`}
+        </SectionLabel>
+        <div className="mt-3">
+          {members.length === 0 ? (
+            <EmptyState
+              icon="👪"
+              title="No family members yet"
+              description="Add a resident's family member above to include them in community emails. Add them only with their permission."
             />
-          </label>
-        </div>
-
-        <label className="mt-4 flex items-start gap-2 text-sm text-ink-soft">
-          <input
-            type="checkbox"
-            checked={optIn}
-            onChange={(e) => setOptIn(e.target.checked)}
-            className="mt-1"
-          />
-          <span>
-            This family member agreed to receive community emails from Joy
-            (invitations, a monthly note, event photos). They can unsubscribe
-            anytime.
-          </span>
-        </label>
-
-        {(error || message) && (
-          <p
-            className={`mt-3 text-sm ${error ? "text-clay-dark" : "text-sage"}`}
-            role="alert"
-          >
-            {error || message}
-          </p>
-        )}
-
-        <button
-          type="submit"
-          disabled={pending}
-          className="mt-4 rounded-full bg-clay px-5 py-2 text-sm font-semibold text-white hover:bg-clay-dark disabled:opacity-60"
-        >
-          Add family member
-        </button>
-      </form>
-
-      <div className="mt-8 overflow-x-auto rounded-lg border border-line bg-white">
-        <table className="w-full text-sm">
-          <thead className="border-b border-line text-left text-ink-faint">
-            <tr>
-              <th className="px-4 py-2 font-medium">Name</th>
-              <th className="px-4 py-2 font-medium">Email</th>
-              <th className="px-4 py-2 font-medium">Status</th>
-              <th className="px-4 py-2"></th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-line">
-            {members.length === 0 ? (
-              <tr>
-                <td colSpan={4} className="px-4 py-6 text-center text-ink-faint">
-                  No family members yet.
-                </td>
-              </tr>
-            ) : (
-              members.map((m) => (
-                <tr key={m.id}>
-                  <td className="px-4 py-2 font-medium text-ink">{m.name}</td>
-                  <td className="px-4 py-2 text-ink-soft">{m.email}</td>
-                  <td className="px-4 py-2">
-                    {m.unsubscribed_at ? (
-                      <span className="rounded-full bg-line/70 px-2 py-0.5 text-xs text-ink-faint">
-                        unsubscribed
-                      </span>
-                    ) : (
-                      <span className="rounded-full bg-sage/15 px-2 py-0.5 text-xs text-sage">
-                        subscribed
-                      </span>
-                    )}
-                  </td>
-                  <td className="px-4 py-2 text-right">
-                    <button
-                      onClick={() => onRemove(m.id, m.name)}
-                      disabled={pending}
-                      className="text-clay-dark hover:underline"
-                    >
-                      Remove
-                    </button>
-                  </td>
+          ) : (
+            <TableWrap>
+              <thead>
+                <tr className="border-b border-line">
+                  <Th>Name</Th>
+                  <Th>Email</Th>
+                  <Th>Added</Th>
+                  <Th>Status</Th>
+                  <Th className="text-right">Actions</Th>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+              </thead>
+              <tbody className="divide-y divide-line">
+                {members.map((m) => (
+                  <tr key={m.id} className="transition-colors hover:bg-surface">
+                    <Td className="font-medium text-ink">{orDash(m.name)}</Td>
+                    <Td className="break-all text-ink-soft">{orDash(m.email)}</Td>
+                    <Td className="whitespace-nowrap text-ink-faint">
+                      {formatDate(m.created_at)}
+                    </Td>
+                    <Td>
+                      {m.unsubscribed_at ? (
+                        <Badge tone="neutral">unsubscribed</Badge>
+                      ) : (
+                        <Badge tone="success">subscribed</Badge>
+                      )}
+                    </Td>
+                    <Td className="text-right">
+                      <ConfirmButton
+                        variant="ghost"
+                        size="sm"
+                        title="Remove family member?"
+                        message={
+                          <>
+                            {m.name || "This person"} will stop receiving
+                            community emails from Joy. You can add them again
+                            later.
+                          </>
+                        }
+                        confirmLabel="Remove"
+                        onConfirm={() => onRemove(m.id, m.name || "This person")}
+                      >
+                        Remove
+                      </ConfirmButton>
+                    </Td>
+                  </tr>
+                ))}
+              </tbody>
+            </TableWrap>
+          )}
+        </div>
       </div>
     </div>
   );

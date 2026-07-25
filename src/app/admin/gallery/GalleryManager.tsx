@@ -4,9 +4,13 @@ import { useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { addPhotoAction, removePhotoAction } from "./actions";
 import type { Photo } from "@/lib/photos";
+import { Card, Input, Button, EmptyState, SectionLabel } from "@/components/admin/ui";
+import ConfirmButton from "@/components/admin/ConfirmButton";
+import { useToast } from "@/components/admin/Toast";
 
 export default function GalleryManager({ photos }: { photos: Photo[] }) {
   const router = useRouter();
+  const { success, error: toastError } = useToast();
   const fileRef = useRef<HTMLInputElement>(null);
   const [imageUrl, setImageUrl] = useState("");
   const [caption, setCaption] = useState("");
@@ -41,126 +45,145 @@ export default function GalleryManager({ photos }: { photos: Photo[] }) {
     }
     start(async () => {
       const res = await addPhotoAction({ imageUrl, caption, alt });
-      if (!res.ok) return setError(res.error);
+      if (!res.ok) {
+        setError(res.error);
+        return;
+      }
       setImageUrl("");
       setCaption("");
       setAlt("");
+      success("Photo added to the gallery.");
       router.refresh();
     });
   }
 
-  function onRemove(id: string) {
-    if (!confirm("Remove this photo from the gallery?")) return;
-    start(async () => {
-      await removePhotoAction(id);
-      router.refresh();
-    });
+  async function onRemove(id: string) {
+    const res = await removePhotoAction(id);
+    if (res && "ok" in res && !res.ok) {
+      toastError("Could not remove that photo. Please try again.");
+      return;
+    }
+    success("Photo removed from the gallery.");
+    router.refresh();
   }
 
   return (
     <div>
-      <form onSubmit={onAdd} className="rounded-lg border border-line bg-white p-5">
-        <div className="flex flex-wrap items-center gap-3">
-          <button
-            type="button"
-            onClick={() => fileRef.current?.click()}
-            disabled={uploading}
-            className="rounded-full border border-clay px-4 py-2 text-sm font-semibold text-clay hover:bg-clay/5 disabled:opacity-60"
-          >
-            {uploading ? "Uploading..." : "Choose photo"}
-          </button>
-          <input
-            ref={fileRef}
-            type="file"
-            accept="image/*"
-            className="hidden"
-            onChange={(e) => {
-              const f = e.target.files?.[0];
-              if (f) onPickFile(f);
-              e.target.value = "";
-            }}
-          />
-          <span className="text-sm text-ink-faint">or paste an image URL:</span>
-          <input
-            value={imageUrl}
-            onChange={(e) => setImageUrl(e.target.value)}
-            placeholder="https://..."
-            className="min-w-0 flex-1 rounded-lg border border-line bg-paper px-3 py-2 text-sm text-ink outline-none focus:border-clay"
-          />
-        </div>
-
-        {imageUrl && (
-          <div className="mt-4 flex gap-4">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={imageUrl}
-              alt=""
-              className="h-24 w-24 rounded-lg object-cover ring-1 ring-line"
-            />
-            <div className="flex-1 space-y-2">
-              <input
-                value={caption}
-                onChange={(e) => setCaption(e.target.value)}
-                placeholder="Caption (optional)"
-                className="w-full rounded-lg border border-line bg-paper px-3 py-2 text-sm text-ink outline-none focus:border-clay"
-              />
-              <input
-                value={alt}
-                onChange={(e) => setAlt(e.target.value)}
-                placeholder="Describe the photo (alt text, for accessibility)"
-                className="w-full rounded-lg border border-line bg-paper px-3 py-2 text-sm text-ink outline-none focus:border-clay"
-              />
-            </div>
-          </div>
-        )}
-
-        {error && (
-          <p className="mt-3 text-sm text-clay-dark" role="alert">
-            {error}
-          </p>
-        )}
-
-        <button
-          type="submit"
-          disabled={pending || uploading}
-          className="mt-4 rounded-full bg-clay px-5 py-2 text-sm font-semibold text-white hover:bg-clay-dark disabled:opacity-60"
-        >
-          Add to gallery
-        </button>
-      </form>
-
-      <div className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-3">
-        {photos.length === 0 ? (
-          <p className="col-span-full rounded-lg border border-line bg-white px-5 py-8 text-center text-ink-soft">
-            No photos yet.
-          </p>
-        ) : (
-          photos.map((p) => (
-            <div
-              key={p.id}
-              className="overflow-hidden rounded-lg border border-line bg-white"
+      <Card>
+        <SectionLabel>Add a photo</SectionLabel>
+        <form onSubmit={onAdd} className="mt-4">
+          <div className="flex flex-wrap items-center gap-3">
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => fileRef.current?.click()}
+              disabled={uploading}
             >
+              {uploading ? "Uploading…" : "Choose photo"}
+            </Button>
+            <input
+              ref={fileRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={(e) => {
+                const f = e.target.files?.[0];
+                if (f) onPickFile(f);
+                e.target.value = "";
+              }}
+            />
+            <span className="text-sm text-ink-faint">or paste an image URL:</span>
+            <Input
+              value={imageUrl}
+              onChange={(e) => setImageUrl(e.target.value)}
+              placeholder="https://…"
+              className="min-w-0 flex-1"
+            />
+          </div>
+
+          {imageUrl && (
+            <div className="mt-4 flex gap-4">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src={p.image_url}
-                alt={p.image_alt || ""}
-                className="aspect-square w-full object-cover"
+                src={imageUrl}
+                alt=""
+                className="h-24 w-24 rounded-lg object-cover ring-1 ring-line"
               />
-              <div className="p-3">
-                {p.caption && (
-                  <p className="text-sm text-ink-soft">{p.caption}</p>
-                )}
-                <button
-                  onClick={() => onRemove(p.id)}
-                  disabled={pending}
-                  className="mt-2 text-xs font-medium text-clay-dark hover:underline"
-                >
-                  Remove
-                </button>
+              <div className="flex-1 space-y-2">
+                <Input
+                  value={caption}
+                  onChange={(e) => setCaption(e.target.value)}
+                  placeholder="Caption (optional)"
+                />
+                <Input
+                  value={alt}
+                  onChange={(e) => setAlt(e.target.value)}
+                  placeholder="Describe the photo (alt text, for accessibility)"
+                />
               </div>
             </div>
-          ))
-        )}
+          )}
+
+          {error && (
+            <p className="mt-3 text-sm font-medium text-danger" role="alert">
+              {error}
+            </p>
+          )}
+
+          <div className="mt-5">
+            <Button type="submit" disabled={pending || uploading}>
+              {pending ? "Adding…" : "Add to gallery"}
+            </Button>
+          </div>
+        </form>
+      </Card>
+
+      <div className="mt-8">
+        <SectionLabel>
+          In the gallery {photos.length > 0 && `(${photos.length})`}
+        </SectionLabel>
+        <div className="mt-3">
+          {photos.length === 0 ? (
+            <EmptyState
+              icon="🖼️"
+              title="No photos yet"
+              description="Add a real photo of Joy above. It appears in the public gallery right away."
+            />
+          ) : (
+            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
+              {photos.map((p) => (
+                <div
+                  key={p.id}
+                  className="overflow-hidden rounded-xl border border-line bg-white shadow-sm"
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={p.image_url}
+                    alt={p.image_alt || ""}
+                    className="aspect-square w-full object-cover"
+                  />
+                  <div className="flex items-center justify-between gap-2 p-3">
+                    <p className="min-w-0 flex-1 truncate text-sm text-ink-soft">
+                      {p.caption || (
+                        <span className="text-ink-faint">No caption</span>
+                      )}
+                    </p>
+                    <ConfirmButton
+                      variant="ghost"
+                      size="sm"
+                      title="Remove photo?"
+                      message="This photo will be removed from the public gallery."
+                      confirmLabel="Remove"
+                      onConfirm={() => onRemove(p.id)}
+                    >
+                      Remove
+                    </ConfirmButton>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

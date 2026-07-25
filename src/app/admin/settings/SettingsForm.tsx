@@ -4,6 +4,8 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { saveSiteSettings } from "./actions";
 import { SETTING_META, type SettingKey } from "@/lib/settings-meta";
+import { Card, Field, Input, Button } from "@/components/admin/ui";
+import { useToast } from "@/components/admin/Toast";
 
 export default function SettingsForm({
   initial,
@@ -11,73 +13,66 @@ export default function SettingsForm({
   initial: { key: SettingKey; value: string }[];
 }) {
   const router = useRouter();
+  const { success, error: toastError } = useToast();
   const [values, setValues] = useState<Record<string, string>>(
     Object.fromEntries(initial.map((s) => [s.key, s.value]))
   );
-  const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [pending, start] = useTransition();
 
   function onSave(e: React.FormEvent) {
     e.preventDefault();
-    setMessage("");
     setError("");
     const entries = initial.map((s) => ({ key: s.key, value: values[s.key] ?? "" }));
     start(async () => {
       const res = await saveSiteSettings(entries);
-      if (!res.ok) return setError(res.error);
-      setMessage(res.message);
+      if (!res.ok) {
+        setError(res.error);
+        toastError(res.error);
+        return;
+      }
+      success(res.message || "Settings saved.");
       router.refresh();
     });
   }
 
   return (
-    <form onSubmit={onSave} className="grid gap-5">
-      {initial.map((s) => {
-        const meta = SETTING_META[s.key];
-        return (
-          <label key={s.key} className="block">
-            <span className="text-sm font-medium text-ink-soft">
-              {meta?.label ?? s.key}
-            </span>
-            {meta?.hint && (
-              <span className="ml-2 text-xs text-ink-faint">{meta.hint}</span>
-            )}
-            <input
-              type={meta?.type === "url" ? "url" : "text"}
-              value={values[s.key] ?? ""}
-              onChange={(e) =>
-                setValues((v) => ({ ...v, [s.key]: e.target.value }))
-              }
-              placeholder={
-                meta?.type === "url" ? "https://..." : undefined
-              }
-              className="mt-1 w-full rounded-lg border border-line bg-white px-4 py-2.5 text-ink outline-none focus:border-clay"
-            />
-          </label>
-        );
-      })}
+    <Card>
+      <form onSubmit={onSave} className="grid gap-5">
+        {initial.map((s) => {
+          const meta = SETTING_META[s.key];
+          return (
+            <Field
+              key={s.key}
+              label={meta?.label ?? s.key}
+              htmlFor={`setting-${s.key}`}
+              hint={meta?.hint}
+            >
+              <Input
+                id={`setting-${s.key}`}
+                type={meta?.type === "url" ? "url" : "text"}
+                value={values[s.key] ?? ""}
+                onChange={(e) =>
+                  setValues((v) => ({ ...v, [s.key]: e.target.value }))
+                }
+                placeholder={meta?.type === "url" ? "https://…" : undefined}
+              />
+            </Field>
+          );
+        })}
 
-      {(message || error) && (
-        <p
-          role="status"
-          className={`rounded-lg px-4 py-2.5 text-sm ${
-            error ? "bg-clay/10 text-clay-dark" : "bg-sage/15 text-sage"
-          }`}
-        >
-          {error || message}
-        </p>
-      )}
+        {error && (
+          <p className="text-sm font-medium text-danger" role="alert">
+            {error}
+          </p>
+        )}
 
-      <div>
-        <button
-          type="submit"
-          disabled={pending}
-          className="rounded-full bg-clay px-6 py-2.5 text-sm font-semibold text-white hover:bg-clay-dark disabled:opacity-60"
-        >
-          {pending ? "Saving..." : "Save settings"}
-        </button>
-      </div>
-    </form>
+        <div className="border-t border-line pt-5">
+          <Button type="submit" disabled={pending}>
+            {pending ? "Saving…" : "Save settings"}
+          </Button>
+        </div>
+      </form>
+    </Card>
   );
 }

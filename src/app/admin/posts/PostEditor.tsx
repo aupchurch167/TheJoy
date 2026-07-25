@@ -5,6 +5,14 @@ import { useRouter } from "next/navigation";
 import Markdown from "@/components/Markdown";
 import { savePost, removePost } from "./actions";
 import type { Post } from "@/lib/posts";
+import { btn, BackLink, Badge } from "@/components/admin/ui";
+import ConfirmButton from "@/components/admin/ConfirmButton";
+import { useToast } from "@/components/admin/Toast";
+import { formatDateTime } from "@/lib/format";
+
+// Shared input styling so every field in the editor matches the UI kit.
+const INPUT =
+  "w-full rounded-lg border border-line bg-white px-3 py-2.5 text-sm text-ink placeholder:text-ink-faint transition-colors focus:border-clay focus:outline-none focus:ring-2 focus:ring-clay/30";
 
 type Fields = {
   id?: string;
@@ -34,6 +42,12 @@ function fromPost(p?: Post | null): Fields {
   };
 }
 
+const STATUS_TONE = {
+  published: "success",
+  scheduled: "warning",
+  draft: "neutral",
+} as const;
+
 export default function PostEditor({
   post,
   aiStart = false,
@@ -42,14 +56,15 @@ export default function PostEditor({
   aiStart?: boolean;
 }) {
   const router = useRouter();
+  const { success, error: toastError } = useToast();
   const [f, setF] = useState<Fields>(fromPost(post));
   const [tab, setTab] = useState<"write" | "preview">("write");
   const [schedule, setSchedule] = useState("");
-  const [message, setMessage] = useState<string>("");
   const [error, setError] = useState<string>("");
   const [pending, startTransition] = useTransition();
   const bodyRef = useRef<HTMLTextAreaElement>(null);
 
+  const status = post?.status ?? "draft";
   const isPublished = post?.status === "published";
   const isScheduled = post?.status === "scheduled";
 
@@ -57,27 +72,27 @@ export default function PostEditor({
     setF((prev) => ({ ...prev, [key]: value }));
   }
 
-  function save(status: "draft" | "scheduled" | "published") {
+  function save(next: "draft" | "scheduled" | "published") {
     setError("");
-    setMessage("");
-    if (status === "scheduled" && !schedule) {
+    if (next === "scheduled" && !schedule) {
       setError("Pick a date and time to schedule.");
       return;
     }
     startTransition(async () => {
       const res = await savePost({
         ...f,
-        status,
-        scheduled_at: status === "scheduled" ? schedule : undefined,
+        status: next,
+        scheduled_at: next === "scheduled" ? schedule : undefined,
       });
       if (!res.ok) {
         setError(res.error);
+        toastError(res.error);
         return;
       }
-      setMessage(
-        status === "published"
-          ? "Published."
-          : status === "scheduled"
+      success(
+        next === "published"
+          ? "Post published."
+          : next === "scheduled"
             ? "Scheduled. It goes live automatically at that time."
             : "Saved as draft."
       );
@@ -89,14 +104,15 @@ export default function PostEditor({
     });
   }
 
-  function onDelete() {
+  async function onDelete() {
     if (!f.id) return;
-    if (!confirm("Delete this post? This cannot be undone.")) return;
-    startTransition(async () => {
-      const res = await removePost(f.id!);
-      if (res.ok) router.push("/admin");
-      else setError("Could not delete.");
-    });
+    const res = await removePost(f.id);
+    if (res.ok) {
+      success("Post deleted.");
+      router.push("/admin");
+    } else {
+      toastError("Could not delete the post.");
+    }
   }
 
   // Insert markdown around the current textarea selection.
@@ -106,9 +122,9 @@ export default function PostEditor({
     const start = ta.selectionStart;
     const end = ta.selectionEnd;
     const selected = f.body.slice(start, end) || placeholder;
-    const next =
+    const nextText =
       f.body.slice(0, start) + before + selected + after + f.body.slice(end);
-    set("body", next);
+    set("body", nextText);
     requestAnimationFrame(() => {
       ta.focus();
       ta.selectionStart = start + before.length;
@@ -121,8 +137,8 @@ export default function PostEditor({
     if (!ta) return;
     const start = ta.selectionStart;
     const lineStart = f.body.lastIndexOf("\n", start - 1) + 1;
-    const next = f.body.slice(0, lineStart) + prefix + f.body.slice(lineStart);
-    set("body", next);
+    const nextText = f.body.slice(0, lineStart) + prefix + f.body.slice(lineStart);
+    set("body", nextText);
     requestAnimationFrame(() => ta.focus());
   }
 
@@ -134,6 +150,7 @@ export default function PostEditor({
     const json = await res.json();
     if (!res.ok || !json.ok) {
       setError(json.error || "Upload failed.");
+      toastError(json.error || "Upload failed.");
       return;
     }
     if (forHero) {
@@ -144,50 +161,58 @@ export default function PostEditor({
   }
 
   return (
-    <div className="mx-auto max-w-5xl px-5 py-8">
-      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
-        <h1 className="font-display text-2xl font-semibold text-ink">
-          {f.id ? "Edit post" : "New post"}
-        </h1>
-        <div className="flex items-center gap-2 text-sm">
+    <div>
+      <BackLink href="/admin">All posts</BackLink>
+
+      <div className="mt-3 mb-6 flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <h1 className="font-display text-2xl font-semibold text-ink sm:text-3xl">
+            {f.id ? "Edit post" : "New post"}
+          </h1>
+          {f.id && <Badge tone={STATUS_TONE[status]}>{status}</Badge>}
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
           {isPublished && (
             <a
               href={`/blog/${f.slug}`}
               target="_blank"
               rel="noreferrer"
-              className="rounded-full border border-line px-3 py-1.5 text-ink-soft hover:bg-paper"
+              className={btn("ghost", "sm")}
             >
-              View live
+              View live ↗
             </a>
           )}
           {f.id && (
-            <button
-              onClick={onDelete}
-              disabled={pending}
-              className="rounded-full border border-line px-3 py-1.5 text-clay-dark hover:bg-clay/5"
+            <ConfirmButton
+              variant="ghost"
+              size="sm"
+              title="Delete this post?"
+              message="This permanently removes the post. This cannot be undone."
+              confirmLabel="Delete post"
+              onConfirm={onDelete}
             >
               Delete
-            </button>
+            </ConfirmButton>
           )}
           <button
             onClick={() => save("draft")}
             disabled={pending}
-            className="rounded-full border border-clay px-4 py-1.5 font-semibold text-clay hover:bg-clay/5 disabled:opacity-60"
+            className={btn("secondary", "sm")}
           >
             Save draft
           </button>
           <button
             onClick={() => save("published")}
             disabled={pending}
-            className="rounded-full bg-clay px-4 py-1.5 font-semibold text-white hover:bg-clay-dark disabled:opacity-60"
+            className={btn("primary", "sm")}
           >
-            {isPublished ? "Update" : "Publish"}
+            {pending ? "Saving…" : isPublished ? "Update" : "Publish"}
           </button>
         </div>
       </div>
 
       {/* Scheduling */}
-      <div className="mb-4 flex flex-wrap items-center gap-3 rounded-lg border border-line bg-white px-4 py-3 text-sm">
+      <div className="mb-4 flex flex-wrap items-center gap-3 rounded-xl border border-line bg-white px-4 py-3 text-sm shadow-sm">
         <span className="font-medium text-ink-soft">
           {isScheduled ? "Scheduled to publish:" : "Publish later:"}
         </span>
@@ -195,30 +220,28 @@ export default function PostEditor({
           type="datetime-local"
           value={schedule}
           onChange={(e) => setSchedule(e.target.value)}
-          className="rounded-lg border border-line bg-white px-3 py-1.5 text-ink outline-none focus:border-clay"
+          className="rounded-lg border border-line bg-white px-3 py-2 text-ink transition-colors focus:border-clay focus:outline-none focus:ring-2 focus:ring-clay/30"
         />
         <button
           onClick={() => save("scheduled")}
           disabled={pending}
-          className="rounded-full border border-clay px-3 py-1.5 font-semibold text-clay hover:bg-clay/5 disabled:opacity-60"
+          className={btn("secondary", "sm")}
         >
           Schedule
         </button>
         {isScheduled && post?.published_at && (
           <span className="text-ink-faint">
-            (currently {new Date(post.published_at).toLocaleString()})
+            (currently {formatDateTime(post.published_at)})
           </span>
         )}
       </div>
 
-      {(message || error) && (
+      {error && (
         <p
-          role="status"
-          className={`mb-4 rounded-lg px-4 py-2.5 text-sm ${
-            error ? "bg-clay/10 text-clay-dark" : "bg-sage/15 text-sage"
-          }`}
+          role="alert"
+          className="mb-4 rounded-lg border border-danger/30 bg-danger/10 px-4 py-2.5 text-sm font-medium text-danger"
         >
-          {error || message}
+          {error}
         </p>
       )}
 
@@ -233,9 +256,12 @@ export default function PostEditor({
             category: d.category || prev.category,
             meta_description: d.meta_description || prev.meta_description,
           }));
-          setMessage("Draft inserted. Review and edit before publishing.");
+          success("Draft inserted. Review and edit before publishing.");
         }}
-        onError={setError}
+        onError={(msg) => {
+          setError(msg);
+          toastError(msg);
+        }}
       />
 
       <div className="grid gap-5">
@@ -243,20 +269,17 @@ export default function PostEditor({
           <input
             value={f.title}
             onChange={(e) => set("title", e.target.value)}
-            className="w-full rounded-lg border border-line bg-white px-4 py-3 text-xl font-display text-ink outline-none focus:border-clay"
+            className="w-full rounded-lg border border-line bg-white px-4 py-3 font-display text-xl text-ink transition-colors focus:border-clay focus:outline-none focus:ring-2 focus:ring-clay/30"
             placeholder="What families are really asking"
           />
         </Field>
 
         <div className="grid gap-5 sm:grid-cols-2">
-          <Field
-            label="URL slug"
-            hint="Leave blank to build it from the title."
-          >
+          <Field label="URL slug" hint="Leave blank to build it from the title.">
             <input
               value={f.slug}
               onChange={(e) => set("slug", e.target.value)}
-              className="w-full rounded-lg border border-line bg-white px-4 py-2.5 text-ink outline-none focus:border-clay"
+              className={INPUT}
               placeholder="auto from title"
             />
           </Field>
@@ -264,7 +287,7 @@ export default function PostEditor({
             <input
               value={f.category}
               onChange={(e) => set("category", e.target.value)}
-              className="w-full rounded-lg border border-line bg-white px-4 py-2.5 text-ink outline-none focus:border-clay"
+              className={INPUT}
               placeholder="e.g. Choosing care"
             />
           </Field>
@@ -275,7 +298,7 @@ export default function PostEditor({
             value={f.excerpt}
             onChange={(e) => set("excerpt", e.target.value)}
             rows={2}
-            className="w-full rounded-lg border border-line bg-white px-4 py-2.5 text-ink outline-none focus:border-clay"
+            className={INPUT}
           />
         </Field>
 
@@ -285,7 +308,7 @@ export default function PostEditor({
             <input
               value={f.hero_image}
               onChange={(e) => set("hero_image", e.target.value)}
-              className="min-w-0 flex-1 rounded-lg border border-line bg-white px-4 py-2.5 text-ink outline-none focus:border-clay"
+              className={`${INPUT} min-w-0 flex-1`}
               placeholder="Paste an image URL or upload"
             />
             <UploadButton label="Upload" onFile={(file) => uploadInline(file, true)} />
@@ -301,7 +324,7 @@ export default function PostEditor({
               <input
                 value={f.hero_image_alt}
                 onChange={(e) => set("hero_image_alt", e.target.value)}
-                className="mt-2 w-full rounded-lg border border-line bg-white px-4 py-2 text-sm text-ink outline-none focus:border-clay"
+                className={`${INPUT} mt-2`}
                 placeholder="Describe the photo (alt text, for accessibility + SEO)"
               />
             </div>
@@ -311,17 +334,17 @@ export default function PostEditor({
         {/* Body editor */}
         <div>
           <div className="mb-2 flex items-center justify-between">
-            <label className="text-sm font-medium text-ink-soft">Body</label>
-            <div className="flex rounded-lg border border-line text-sm">
+            <label className="text-sm font-medium text-ink">Body</label>
+            <div className="flex overflow-hidden rounded-lg border border-line text-sm">
               <button
                 onClick={() => setTab("write")}
-                className={`rounded-l-lg px-3 py-1 ${tab === "write" ? "bg-clay text-white" : "text-ink-soft"}`}
+                className={`px-3 py-1.5 font-medium transition-colors ${tab === "write" ? "bg-clay text-white" : "text-ink-soft hover:bg-surface"}`}
               >
                 Write
               </button>
               <button
                 onClick={() => setTab("preview")}
-                className={`rounded-r-lg px-3 py-1 ${tab === "preview" ? "bg-clay text-white" : "text-ink-soft"}`}
+                className={`px-3 py-1.5 font-medium transition-colors ${tab === "preview" ? "bg-clay text-white" : "text-ink-soft hover:bg-surface"}`}
               >
                 Preview
               </button>
@@ -349,7 +372,7 @@ export default function PostEditor({
                 value={f.body}
                 onChange={(e) => set("body", e.target.value)}
                 rows={20}
-                className="w-full rounded-lg border border-line bg-white px-4 py-3 font-mono text-sm leading-relaxed text-ink outline-none focus:border-clay"
+                className="w-full rounded-lg border border-line bg-white px-4 py-3 font-mono text-sm leading-relaxed text-ink transition-colors focus:border-clay focus:outline-none focus:ring-2 focus:ring-clay/30"
                 placeholder="Write in Markdown. Short sentences. No em-dashes. Name Mellissa where care is discussed. Joy is a personal care home (never 'assisted living')."
               />
             </>
@@ -365,8 +388,8 @@ export default function PostEditor({
         </div>
 
         {/* SEO */}
-        <details className="rounded-lg border border-line bg-white px-4 py-3">
-          <summary className="cursor-pointer text-sm font-medium text-ink-soft">
+        <details className="rounded-xl border border-line bg-white px-4 py-3 shadow-sm">
+          <summary className="cursor-pointer text-sm font-medium text-ink">
             SEO settings (optional)
           </summary>
           <div className="mt-4 grid gap-4">
@@ -374,7 +397,7 @@ export default function PostEditor({
               <input
                 value={f.meta_title}
                 onChange={(e) => set("meta_title", e.target.value)}
-                className="w-full rounded-lg border border-line bg-white px-4 py-2.5 text-ink outline-none focus:border-clay"
+                className={INPUT}
               />
             </Field>
             <Field label="Meta description" hint="Defaults to the excerpt.">
@@ -382,7 +405,7 @@ export default function PostEditor({
                 value={f.meta_description}
                 onChange={(e) => set("meta_description", e.target.value)}
                 rows={2}
-                className="w-full rounded-lg border border-line bg-white px-4 py-2.5 text-ink outline-none focus:border-clay"
+                className={INPUT}
               />
             </Field>
           </div>
@@ -405,9 +428,9 @@ function Field({
 }) {
   return (
     <label className="block">
-      <span className="text-sm font-medium text-ink-soft">{label}</span>
+      <span className="text-sm font-medium text-ink">{label}</span>
       {hint && <span className="ml-2 text-xs text-ink-faint">{hint}</span>}
-      <div className="mt-1">{children}</div>
+      <div className="mt-1.5">{children}</div>
     </label>
   );
 }
@@ -423,7 +446,7 @@ function ToolbarBtn({
     <button
       type="button"
       onClick={onClick}
-      className="rounded border border-line bg-paper px-2.5 py-1 font-medium text-ink-soft hover:bg-white"
+      className="rounded-lg border border-line bg-white px-2.5 py-1.5 font-medium text-ink-soft transition-colors hover:bg-surface hover:text-ink"
     >
       {children}
     </button>
@@ -447,11 +470,11 @@ function UploadButton({
         type="button"
         onClick={() => ref.current?.click()}
         disabled={busy}
-        className={`rounded border border-line bg-paper font-medium text-ink-soft hover:bg-white disabled:opacity-60 ${
-          small ? "px-2.5 py-1 text-sm" : "px-4 py-2.5"
+        className={`rounded-lg border border-line bg-white font-medium text-ink-soft transition-colors hover:bg-surface hover:text-ink disabled:opacity-60 ${
+          small ? "px-2.5 py-1.5 text-sm" : "px-4 py-2.5 text-sm"
         }`}
       >
-        {busy ? "Uploading..." : label}
+        {busy ? "Uploading…" : label}
       </button>
       <input
         ref={ref}
@@ -499,7 +522,6 @@ function AiDraftPanel({
       return;
     }
     setBusy(true);
-    onError("");
     try {
       const res = await fetch("/api/admin/ai-draft", {
         method: "POST",
@@ -531,7 +553,7 @@ function AiDraftPanel({
       </button>
       {open && (
         <div className="mt-3 grid gap-3">
-          <p className="text-xs text-ink-faint">
+          <p className="text-xs leading-relaxed text-ink-faint">
             Give the AI a topic and it writes the whole post (title, body,
             excerpt, category, SEO) in Joy&apos;s voice and within the compliance
             rules (personal care home, never &ldquo;assisted living&rdquo; as
@@ -542,22 +564,22 @@ function AiDraftPanel({
             value={topic}
             onChange={(e) => setTopic(e.target.value)}
             placeholder="Topic (e.g. signs a parent needs memory care)"
-            className="w-full rounded-lg border border-line bg-white px-4 py-2.5 text-ink outline-none focus:border-clay"
+            className={INPUT}
           />
           <input
             value={angle}
             onChange={(e) => setAngle(e.target.value)}
             placeholder="Angle (optional, e.g. for a daughter researching near Loganville)"
-            className="w-full rounded-lg border border-line bg-white px-4 py-2.5 text-ink outline-none focus:border-clay"
+            className={INPUT}
           />
           <div>
             <button
               type="button"
               onClick={draft}
               disabled={busy}
-              className="rounded-full bg-sage px-5 py-2 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-60"
+              className={btn("primary", "sm", "bg-sage hover:bg-sage/90")}
             >
-              {busy ? "Writing..." : "Write a draft"}
+              {busy ? "Writing…" : "Write a draft"}
             </button>
           </div>
         </div>

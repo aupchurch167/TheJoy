@@ -1,9 +1,9 @@
-import Link from "next/link";
 import { requireAdmin } from "@/lib/require-admin";
 import { hasDatabase } from "@/lib/db";
 import { getPhotos } from "@/lib/photos";
 import { storageEnabled } from "@/lib/storage";
 import GalleryManager from "./GalleryManager";
+import { PageHeader, ButtonLink, NotConnected } from "@/components/admin/ui";
 
 export const dynamic = "force-dynamic";
 
@@ -12,41 +12,38 @@ export default async function AdminGalleryPage() {
 
   if (!hasDatabase()) {
     return (
-      <div className="mx-auto max-w-3xl px-5 py-12">
-        <h1 className="font-display text-2xl font-semibold text-ink">Gallery</h1>
-        <p className="mt-4 rounded-lg bg-clay/10 px-4 py-3 text-clay-dark">
-          The database is not connected yet.
-        </p>
-      </div>
+      <>
+        <PageHeader title="Gallery" />
+        <NotConnected what="The gallery" />
+      </>
     );
   }
 
   const photos = await getPhotos();
 
   return (
-    <div className="mx-auto max-w-3xl px-5 py-10">
-      <div className="mb-2 flex items-center justify-between">
-        <h1 className="font-display text-2xl font-semibold text-ink">Gallery</h1>
-        <Link
-          href="/gallery"
-          target="_blank"
-          className="text-sm font-semibold text-clay hover:text-clay-dark"
-        >
-          View public gallery
-        </Link>
-      </div>
-      <p className="mb-6 text-sm text-ink-soft">
-        Real photos of Joy for the public gallery. No stock imagery.
-      </p>
+    <>
+      <PageHeader
+        title="Gallery"
+        description="Real photos of Joy for the public gallery. No stock imagery."
+        actions={
+          <ButtonLink href="/gallery" variant="secondary" size="sm" target="_blank">
+            View public gallery
+          </ButtonLink>
+        }
+      />
 
       {!storageEnabled() && (
-        <p className="mb-6 rounded-lg bg-gold/10 px-4 py-3 text-sm text-gold">
-          Photo uploads need storage set up (S3 / Cloudflare R2). Until then, you
-          can still add photos by pasting an image URL (see OPERATIONS.md).
-        </p>
+        <div className="mb-6 flex items-start gap-3 rounded-xl border border-gold/30 bg-gold/10 px-4 py-3 text-sm text-gold">
+          <span aria-hidden>⚠️</span>
+          <p>
+            Photo uploads need storage set up (S3 / Cloudflare R2). Until then,
+            you can still add photos by pasting an image URL (see OPERATIONS.md).
+          </p>
+        </div>
       )}
 
       <GalleryManager photos={photos} />
-    </div>
+    </>
   );
 }
