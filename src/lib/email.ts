@@ -64,6 +64,8 @@ export async function sendMarketingEmail(
     console.info("[email] RESEND_API_KEY not set; skipping send to", lead.email);
     return false;
   }
+  // Phone-only family contacts have no email; nothing to send.
+  if (!lead.email) return false;
   const unsubUrl = unsubscribeUrl(lead.unsubscribe_token);
   const inner = marked.parse(markdownBody, { async: false }) as string;
 

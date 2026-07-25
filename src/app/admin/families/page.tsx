@@ -27,9 +27,10 @@ export default async function FamiliesPage() {
         title="Family list"
         description={
           <>
-            Current residents&apos; families who receive community emails
-            (invitations, a monthly note from Mellissa, event photos). To email
-            them, go to{" "}
+            Your residents&apos; families, by resident. Community emails
+            (invitations, a monthly note from Mellissa, event photos) reach only{" "}
+            <strong>active</strong> residents&apos; families who have an email.
+            To email them, go to{" "}
             <Link href="/admin/emails/new" className="font-medium text-clay hover:text-clay-dark">
               Emails
             </Link>{" "}

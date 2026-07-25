@@ -2,9 +2,13 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { addFamilyMember, removeFamilyMember } from "./actions";
+import {
+  addFamilyMember,
+  removeFamilyMember,
+  toggleFamilyActive,
+} from "./actions";
 import type { Lead } from "@/lib/leads";
-import { formatDate, orDash } from "@/lib/format";
+import { orDash } from "@/lib/format";
 import {
   Card,
   Field,
@@ -24,76 +28,133 @@ export default function FamilyManager({ members }: { members: Lead[] }) {
   const router = useRouter();
   const { success, error: toastError } = useToast();
   const [name, setName] = useState("");
+  const [residentName, setResidentName] = useState("");
+  const [relation, setRelation] = useState("");
+  const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
   const [optIn, setOptIn] = useState(false);
   const [error, setError] = useState("");
   const [pending, start] = useTransition();
 
+  const activeCount = members.filter((m) => m.active).length;
+
   function onAdd(e: React.FormEvent) {
     e.preventDefault();
     setError("");
     start(async () => {
-      const res = await addFamilyMember({ name, email, optIn });
+      const res = await addFamilyMember({
+        name,
+        residentName,
+        relation,
+        phone,
+        email,
+        optIn,
+      });
       if (!res.ok) {
         setError(res.error);
         return;
       }
       setName("");
+      setResidentName("");
+      setRelation("");
+      setPhone("");
       setEmail("");
       setOptIn(false);
-      success(`${name.trim() || "Family member"} added to the list.`);
+      success(`${name.trim() || "Contact"} added.`);
       router.refresh();
     });
   }
 
-  async function onRemove(id: string, memberName: string) {
-    const res = await removeFamilyMember(id);
-    if (res && "ok" in res && !res.ok) {
-      toastError("Could not remove that person. Please try again.");
+  async function onToggleActive(m: Lead) {
+    const res = await toggleFamilyActive(m.id, !m.active);
+    if (!res?.ok) {
+      toastError("Could not update. Please try again.");
       return;
     }
-    success(`${memberName} removed from the family list.`);
+    success(
+      `${m.resident_name || m.name} marked ${!m.active ? "active" : "inactive"}.`
+    );
+    router.refresh();
+  }
+
+  async function onRemove(id: string, who: string) {
+    const res = await removeFamilyMember(id);
+    if (res && "ok" in res && !res.ok) {
+      toastError("Could not remove that contact. Please try again.");
+      return;
+    }
+    success(`${who} removed.`);
     router.refresh();
   }
 
   return (
     <div>
       <Card>
-        <SectionLabel>Add a family member</SectionLabel>
+        <SectionLabel>Add a family contact</SectionLabel>
         <form onSubmit={onAdd} className="mt-4">
           <div className="grid gap-4 sm:grid-cols-2">
-            <Field label="Name" htmlFor="fm-name">
+            <Field label="Resident" htmlFor="fm-resident" hint="Who they visit.">
+              <Input
+                id="fm-resident"
+                value={residentName}
+                onChange={(e) => setResidentName(e.target.value)}
+                placeholder="Evelyn James"
+              />
+            </Field>
+            <Field label="Relation" htmlFor="fm-relation">
+              <Input
+                id="fm-relation"
+                value={relation}
+                onChange={(e) => setRelation(e.target.value)}
+                placeholder="Daughter"
+              />
+            </Field>
+            <Field label="Contact name" htmlFor="fm-name" required>
               <Input
                 id="fm-name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="Jane Smith"
+                placeholder="Mike James"
               />
             </Field>
-            <Field label="Email" htmlFor="fm-email">
+            <Field label="Phone" htmlFor="fm-phone">
+              <Input
+                id="fm-phone"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                placeholder="(404) 555-0100"
+              />
+            </Field>
+            <Field
+              label="Email"
+              htmlFor="fm-email"
+              hint="Optional. Needed only to send community emails."
+            >
               <Input
                 id="fm-email"
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="jane@example.com"
+                placeholder="mike@example.com"
               />
             </Field>
           </div>
 
-          <label className="mt-4 flex items-start gap-2.5 text-sm text-ink-soft">
-            <input
-              type="checkbox"
-              checked={optIn}
-              onChange={(e) => setOptIn(e.target.checked)}
-              className="mt-0.5 h-4 w-4 accent-clay"
-            />
-            <span>
-              This family member agreed to receive community emails from Joy
-              (invitations, a monthly note, event photos). They can unsubscribe
-              anytime.
-            </span>
-          </label>
+          {email.trim() && (
+            <label className="mt-4 flex items-start gap-2.5 text-sm text-ink-soft">
+              <input
+                type="checkbox"
+                checked={optIn}
+                onChange={(e) => setOptIn(e.target.checked)}
+                className="mt-0.5 h-4 w-4 accent-clay"
+              />
+              <span>
+                This family agreed to receive community emails from Joy
+                (invitations, a monthly note, event photos). They can unsubscribe
+                anytime.
+              </span>
+            </label>
+          )}
 
           {error && (
             <p className="mt-3 text-sm font-medium text-danger" role="alert">
@@ -103,7 +164,7 @@ export default function FamilyManager({ members }: { members: Lead[] }) {
 
           <div className="mt-5">
             <Button type="submit" disabled={pending}>
-              {pending ? "Adding…" : "Add family member"}
+              {pending ? "Adding…" : "Add contact"}
             </Button>
           </div>
         </form>
@@ -111,58 +172,91 @@ export default function FamilyManager({ members }: { members: Lead[] }) {
 
       <div className="mt-8">
         <SectionLabel>
-          On the list {members.length > 0 && `(${members.length})`}
+          Family contacts{" "}
+          {members.length > 0 && `(${activeCount} active of ${members.length})`}
         </SectionLabel>
         <div className="mt-3">
           {members.length === 0 ? (
             <EmptyState
               icon="👪"
-              title="No family members yet"
-              description="Add a resident's family member above to include them in community emails. Add them only with their permission."
+              title="No family contacts yet"
+              description="Add a resident's family contact above, or import your existing list (see OPERATIONS.md)."
             />
           ) : (
             <TableWrap>
               <thead>
                 <tr className="border-b border-line">
-                  <Th>Name</Th>
+                  <Th>Resident</Th>
+                  <Th>Contact</Th>
+                  <Th>Phone</Th>
                   <Th>Email</Th>
-                  <Th>Added</Th>
                   <Th>Status</Th>
                   <Th className="text-right">Actions</Th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-line">
                 {members.map((m) => (
-                  <tr key={m.id} className="transition-colors hover:bg-surface">
-                    <Td className="font-medium text-ink">{orDash(m.name)}</Td>
-                    <Td className="break-all text-ink-soft">{orDash(m.email)}</Td>
-                    <Td className="whitespace-nowrap text-ink-faint">
-                      {formatDate(m.created_at)}
+                  <tr
+                    key={m.id}
+                    className={`transition-colors hover:bg-surface ${m.active ? "" : "opacity-60"}`}
+                  >
+                    <Td className="font-medium text-ink">
+                      {orDash(m.resident_name)}
+                    </Td>
+                    <Td className="text-ink-soft">
+                      <div className="text-ink">{orDash(m.name)}</div>
+                      {m.relation && (
+                        <div className="text-xs text-ink-faint">{m.relation}</div>
+                      )}
+                    </Td>
+                    <Td className="whitespace-nowrap text-ink-soft">
+                      {orDash(m.phone)}
+                    </Td>
+                    <Td className="break-all text-ink-soft">
+                      {m.email ? (
+                        m.unsubscribed_at ? (
+                          <span className="text-ink-faint line-through">
+                            {m.email}
+                          </span>
+                        ) : (
+                          m.email
+                        )
+                      ) : (
+                        "—"
+                      )}
                     </Td>
                     <Td>
-                      {m.unsubscribed_at ? (
-                        <Badge tone="neutral">unsubscribed</Badge>
+                      {m.active ? (
+                        <Badge tone="success">Active</Badge>
                       ) : (
-                        <Badge tone="success">subscribed</Badge>
+                        <Badge tone="neutral">Inactive</Badge>
                       )}
                     </Td>
                     <Td className="text-right">
-                      <ConfirmButton
-                        variant="ghost"
-                        size="sm"
-                        title="Remove family member?"
-                        message={
-                          <>
-                            {m.name || "This person"} will stop receiving
-                            community emails from Joy. You can add them again
-                            later.
-                          </>
-                        }
-                        confirmLabel="Remove"
-                        onConfirm={() => onRemove(m.id, m.name || "This person")}
-                      >
-                        Remove
-                      </ConfirmButton>
+                      <div className="inline-flex items-center gap-1">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => onToggleActive(m)}
+                        >
+                          {m.active ? "Mark inactive" : "Mark active"}
+                        </Button>
+                        <ConfirmButton
+                          variant="ghost"
+                          size="sm"
+                          title="Remove contact?"
+                          message={
+                            <>
+                              {m.name || "This contact"} will be removed from the
+                              family list.
+                            </>
+                          }
+                          confirmLabel="Remove"
+                          onConfirm={() => onRemove(m.id, m.name || "Contact")}
+                        >
+                          Remove
+                        </ConfirmButton>
+                      </div>
                     </Td>
                   </tr>
                 ))}

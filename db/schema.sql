@@ -126,6 +126,15 @@ ALTER TABLE leads ADD COLUMN IF NOT EXISTS audience TEXT NOT NULL DEFAULT 'leads
   CHECK (audience IN ('leads', 'families'));
 CREATE INDEX IF NOT EXISTS leads_audience_idx ON leads (audience);
 
+-- Family directory fields (families audience): which resident the contact
+-- belongs to, their relation to that resident, and whether the resident is
+-- currently active (living at Joy). Family contacts may have only a phone, so
+-- email is made optional; sends already skip rows without an email.
+ALTER TABLE leads ADD COLUMN IF NOT EXISTS resident_name TEXT;
+ALTER TABLE leads ADD COLUMN IF NOT EXISTS relation TEXT;
+ALTER TABLE leads ADD COLUMN IF NOT EXISTS active BOOLEAN NOT NULL DEFAULT TRUE;
+ALTER TABLE leads ALTER COLUMN email DROP NOT NULL;
+
 -- Existing Phase 3 databases created broadcasts with a leads-only audience
 -- check. Widen it so family broadcasts are allowed.
 ALTER TABLE broadcasts DROP CONSTRAINT IF EXISTS broadcasts_audience_check;

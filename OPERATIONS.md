@@ -305,10 +305,35 @@ just wait; you can compose and save, but nothing sends until Resend is set.
 
 ### The family list
 
-`/admin > Families` is the list of current residents' families who get
-community emails. Add someone with their name and email, and check the box to
-confirm they agreed to receive emails (opt-in). They can unsubscribe from any
-email, and unsubscribed people are always skipped.
+`/admin > Families` is your directory of residents' families, grouped by
+resident. Each contact has a **resident**, a **relation** (Daughter, Son, …), a
+**contact name**, a **phone**, and an optional **email**. Every contact also has
+an **Active** flag: mark a family **inactive** when their resident is no longer
+living at Joy, and community emails skip them automatically.
+
+Add someone with the form. Email is optional (phone-only contacts are fine for
+the directory). If you enter an email, check the opt-in box to confirm they
+agreed to receive community emails. They can unsubscribe from any email, and
+unsubscribed people are always skipped.
+
+**Who gets a community email:** only contacts who are (1) on an **active**
+resident, (2) have an **email**, and (3) have not unsubscribed.
+
+### Importing your family list (one-time)
+
+To bulk-load an existing list, put a CSV at `data/family-contacts.csv` with the
+columns `resident_name, relation, contact_name, phone, email, preference`, then:
+
+```
+node scripts/import-family-contacts.mjs --dry            # preview
+node scripts/import-family-contacts.mjs                  # import
+```
+
+It is idempotent (safe to re-run; existing contacts are skipped), marks everyone
+active, and any row whose `preference` is "Do Not Contact" is stored but flagged
+unsubscribed so emails skip it. **Note:** imported contacts with an email are
+treated as opted in to community updates — trim the list or unsubscribe anyone
+who should not receive a community email before your first send.
 
 ### Emailing families
 

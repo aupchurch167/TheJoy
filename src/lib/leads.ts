@@ -23,7 +23,7 @@ export type Audience = "leads" | "families";
 export type Lead = {
   id: string;
   name: string;
-  email: string;
+  email: string | null;
   phone: string | null;
   message: string | null;
   source: string;
@@ -37,6 +37,10 @@ export type Lead = {
   drip_step: number;
   drip_status: DripStatus;
   last_drip_at: string | null;
+  // Family directory fields (families audience).
+  resident_name: string | null;
+  relation: string | null;
+  active: boolean;
 };
 
 /** Insert a lead and return the stored row (including its unsubscribe token). */
@@ -139,13 +143,21 @@ export async function getDripCandidates(): Promise<Lead[]> {
   );
 }
 
-/** Active, opted-in subscribers for a given audience (broadcast recipients). */
+/**
+ * Active, opted-in subscribers for a given audience (broadcast recipients).
+ * Rows without an email (phone-only family contacts) are skipped, and for the
+ * families audience only contacts of currently-active residents are included.
+ */
 export async function getSubscribedByAudience(
   audience: Audience
 ): Promise<Lead[]> {
   return query<Lead>(
     `SELECT * FROM leads
-      WHERE audience = $1 AND unsubscribed_at IS NULL AND consent = TRUE
+      WHERE audience = $1
+        AND unsubscribed_at IS NULL
+        AND consent = TRUE
+        AND email IS NOT NULL AND email <> ''
+        AND (audience <> 'families' OR active = TRUE)
       ORDER BY created_at ASC`,
     [audience]
   );
@@ -153,23 +165,59 @@ export async function getSubscribedByAudience(
 
 /* ---------------- Phase 4: family members (families audience) ---------------- */
 
+export type FamilyMemberInput = {
+  name: string;
+  email?: string | null;
+  phone?: string | null;
+  residentName?: string | null;
+  relation?: string | null;
+  active?: boolean;
+  source?: string;
+  /** Set to unsubscribe on insert (e.g. imported "do not contact"). */
+  unsubscribed?: boolean;
+};
+
 export async function insertFamilyMember(
-  name: string,
-  email: string
+  input: FamilyMemberInput
 ): Promise<Lead> {
+  const email = input.email?.trim() ? input.email.trim().toLowerCase() : null;
   const rows = await query<Lead>(
-    `INSERT INTO leads (name, email, source, audience, consent, drip_status)
-     VALUES ($1, $2, 'family_add', 'families', TRUE, 'completed')
+    `INSERT INTO leads
+       (name, email, phone, source, audience, consent, drip_status,
+        resident_name, relation, active, unsubscribed_at)
+     VALUES ($1, $2, $3, $4, 'families', TRUE, 'completed', $5, $6, $7, $8)
      RETURNING *`,
-    [name, email.toLowerCase()]
+    [
+      input.name,
+      email,
+      input.phone?.trim() || null,
+      input.source ?? "family_add",
+      input.residentName?.trim() || null,
+      input.relation?.trim() || null,
+      input.active ?? true,
+      input.unsubscribed ? new Date().toISOString() : null,
+    ]
   );
   return rows[0];
 }
 
 export async function getFamilyMembers(): Promise<Lead[]> {
+  // Active residents first, then grouped by resident, then by contact name.
   return query<Lead>(
-    `SELECT * FROM leads WHERE audience = 'families' ORDER BY created_at DESC`
+    `SELECT * FROM leads
+      WHERE audience = 'families'
+      ORDER BY active DESC,
+               lower(coalesce(resident_name, '')) ASC,
+               lower(name) ASC`
   );
+}
+
+/** Toggle whether a family member's resident is currently active. */
+export async function setFamilyActive(
+  id: string,
+  active: boolean
+): Promise<void> {
+  await query(`UPDATE leads SET active = $2 WHERE id = $1`, [id, active]);
 }
 
 /** Remove a subscriber row (used to remove a family member). */
@@ -178,9 +226,26 @@ export async function deleteSubscriber(id: string): Promise<void> {
 }
 
 export async function familyEmailExists(email: string): Promise<boolean> {
+  if (!email.trim()) return false;
   const rows = await query<{ id: string }>(
     `SELECT id FROM leads WHERE audience = 'families' AND lower(email) = lower($1)`,
     [email]
+  );
+  return rows.length > 0;
+}
+
+/** Dedupe by resident + contact name (for the bulk import, which lacks email). */
+export async function familyContactExists(
+  residentName: string,
+  name: string
+): Promise<boolean> {
+  const rows = await query<{ id: string }>(
+    `SELECT id FROM leads
+      WHERE audience = 'families'
+        AND lower(coalesce(resident_name,'')) = lower($1)
+        AND lower(name) = lower($2)
+      LIMIT 1`,
+    [residentName, name]
   );
   return rows.length > 0;
 }
