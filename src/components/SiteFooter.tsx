@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { BUSINESS } from "@/lib/site";
+import { BUSINESS, SOCIAL } from "@/lib/site";
 import { getSettings, toTelHref, toMailHref } from "@/lib/settings";
 
 export default async function SiteFooter() {
@@ -17,6 +17,25 @@ export default async function SiteFooter() {
             A senior living home and memory care (personal care home) in
             Loganville, Georgia. Small enough to know your parent by name.
           </p>
+          {SOCIAL.length > 0 && (
+            <div className="mt-4">
+              <p className="text-sm font-semibold text-ink">Follow along</p>
+              <ul className="mt-2 flex gap-4 text-sm text-ink-soft">
+                {SOCIAL.map((s) => (
+                  <li key={s.href}>
+                    <a
+                      href={s.href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="hover:text-clay"
+                    >
+                      {s.label}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
         </div>
 
         <div className="text-sm text-ink-soft">

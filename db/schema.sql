@@ -190,8 +190,10 @@ CREATE TABLE IF NOT EXISTS site_settings (
 );
 
 -- Seed the known keys. DO NOTHING keeps existing edited values on re-run.
--- careers_url and talkfurther_url are intentionally blank until Adam sets them
--- in the admin screen (an empty careers_url hides the Careers link).
+-- careers_url and talkfurther_url are seeded blank on purpose: the app falls
+-- back to a sensible default for each (the current Indeed posting / the tour
+-- link) when the stored value is empty, and Adam can override either in the
+-- admin screen.
 INSERT INTO site_settings (key, value) VALUES
   ('phone',           '(470) 684-3569'),
   ('email',           'hello@joyseniorcare.com'),

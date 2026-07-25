@@ -26,7 +26,7 @@ export const SETTING_META: Record<
   address: { label: "Address", type: "text" },
   careers_url: {
     label: "Careers link (Indeed)",
-    hint: "Where the Careers link points. Leave blank to hide the link.",
+    hint: "Where the Careers link points. Blank falls back to the current Indeed posting.",
     type: "url",
   },
   talkfurther_url: {

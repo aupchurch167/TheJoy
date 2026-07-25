@@ -16,12 +16,20 @@ import { SETTING_KEYS, URL_KEYS, type SettingKey } from "./settings-meta";
 
 export type SiteSettings = Record<SettingKey, string>;
 
+/**
+ * The live Indeed posting Joy hires through. Individual Indeed jobs expire,
+ * so when this one closes, paste the new posting URL in the admin Site
+ * Settings screen (no redeploy needed). This is only the fallback default.
+ */
+const CAREERS_URL_DEFAULT =
+  "https://www.indeed.com/job/med-tech-efa0e5aba40389f4";
+
 function defaults(): SiteSettings {
   return {
     phone: BUSINESS.phone,
     email: BUSINESS.email,
     address: BUSINESS_ADDRESS_ONE_LINE,
-    careers_url: "",
+    careers_url: CAREERS_URL_DEFAULT,
     // Falls back to the env/phone tour path when no setting is stored.
     talkfurther_url: TOUR_URL,
   };
@@ -41,8 +49,8 @@ export const getSettings = cache(async (): Promise<SiteSettings> => {
       phone: get("phone") || d.phone,
       email: get("email") || d.email,
       address: get("address") || d.address,
-      // careers_url: an explicit empty string means "hide", so keep it as-is.
-      careers_url: get("careers_url") ?? d.careers_url,
+      // careers_url: empty falls back to the default Indeed posting.
+      careers_url: get("careers_url") || d.careers_url,
       // talkfurther_url: empty falls back to the default tour path.
       talkfurther_url: get("talkfurther_url") || d.talkfurther_url,
     };

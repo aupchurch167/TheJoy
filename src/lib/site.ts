@@ -63,6 +63,16 @@ export const AWARD = {
 } as const;
 
 /**
+ * Joy's public social profiles. Shown as text links in the footer. Add or
+ * remove an entry and the footer updates. Leave the list empty to hide the
+ * whole "Follow along" block.
+ */
+export const SOCIAL: { label: string; href: string }[] = [
+  { label: "Facebook", href: "https://www.facebook.com/profile.php?id=61556203663827" },
+  { label: "Instagram", href: "https://www.instagram.com/joyseniorliving" },
+];
+
+/**
  * Keywords tracked by the nightly SEO rank logger (§5 cluster). Edit freely.
  * The cron records each one's Google position (needs a SERPAPI_KEY; otherwise
  * it no-ops). The admin SEO page shows the trend.
@@ -269,6 +279,11 @@ export const SERVICES = {
   memory: [
     `For families facing memory loss, Joy offers memory care inside our personal care home. The setting is the same small one, with the same familiar faces, which matters more for a person living with dementia than almost anything else.`,
     `${BUSINESS.director.name} can walk you through what memory care at Joy looks like for your parent, honestly, before you decide anything.`,
+  ],
+  respiteHeading: "Short stays and respite",
+  respite: [
+    `Not every stay is permanent. Joy offers respite care: a short stay, from a few days to a few weeks, in a real room with the same care every resident gets.`,
+    `Families use it when a caregiver at home needs a break, when a parent is recovering after a hospital visit, or when you want your parent to try Joy before deciding anything. ${BUSINESS.director.name} can tell you what is open and when.`,
   ],
   scaleHeading: "Why the small scale changes everything",
   scale: [

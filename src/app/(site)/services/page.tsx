@@ -55,6 +55,16 @@ export default async function ServicesPage() {
         </>
       )}
 
+      {/* Respite / short stays */}
+      <h2 className="mt-12 font-display text-2xl font-semibold text-ink">
+        {SERVICES.respiteHeading}
+      </h2>
+      <div className="mt-4 space-y-5 text-lg text-ink-soft">
+        {SERVICES.respite.map((p, i) => (
+          <p key={i}>{p}</p>
+        ))}
+      </div>
+
       {/* Scale */}
       <h2 className="mt-12 font-display text-2xl font-semibold text-ink">
         {SERVICES.scaleHeading}
