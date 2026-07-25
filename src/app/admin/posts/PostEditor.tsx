@@ -109,7 +109,7 @@ export default function PostEditor({
     const res = await removePost(f.id);
     if (res.ok) {
       success("Post deleted.");
-      router.push("/admin");
+      router.push("/admin/posts");
     } else {
       toastError("Could not delete the post.");
     }
@@ -162,7 +162,7 @@ export default function PostEditor({
 
   return (
     <div>
-      <BackLink href="/admin">All posts</BackLink>
+      <BackLink href="/admin/posts">All posts</BackLink>
 
       <div className="mt-3 mb-6 flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3">

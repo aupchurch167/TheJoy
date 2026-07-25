@@ -36,8 +36,19 @@ const icon = (path: ReactNode) => (
 const NAV: NavItem[] = [
   {
     href: "/admin",
+    label: "Dashboard",
+    icon: icon(
+      <>
+        <rect x="3" y="3" width="7" height="9" rx="1" />
+        <rect x="14" y="3" width="7" height="5" rx="1" />
+        <rect x="14" y="12" width="7" height="9" rx="1" />
+        <rect x="3" y="16" width="7" height="5" rx="1" />
+      </>
+    ),
+  },
+  {
+    href: "/admin/posts",
     label: "Posts",
-    match: ["/admin/posts"],
     icon: icon(
       <>
         <path d="M4 4h11l5 5v11a0 0 0 0 1 0 0H4z" />
@@ -108,8 +119,9 @@ const NAV: NavItem[] = [
 ];
 
 function isActive(pathname: string, item: NavItem): boolean {
+  // Dashboard (/admin) is active only on the exact path, not its children.
+  if (item.href === "/admin") return pathname === "/admin";
   if (pathname === item.href) return true;
-  if (item.href === "/admin") return (item.match ?? []).some((m) => pathname.startsWith(m));
   return (
     pathname.startsWith(item.href) ||
     (item.match ?? []).some((m) => pathname.startsWith(m))
