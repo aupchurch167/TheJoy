@@ -40,3 +40,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Real family PII — never commit; load into the DB out-of-band (see OPERATIONS.md)
+data/family-contacts.csv
