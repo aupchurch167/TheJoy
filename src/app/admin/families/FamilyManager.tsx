@@ -6,6 +6,7 @@ import {
   addFamilyMember,
   removeFamilyMember,
   toggleFamilyActive,
+  toggleFamilySmsConsent,
 } from "./actions";
 import type { Lead } from "@/lib/leads";
 import { orDash } from "@/lib/format";
@@ -74,6 +75,18 @@ export default function FamilyManager({ members }: { members: Lead[] }) {
     }
     success(
       `${m.resident_name || m.name} marked ${!m.active ? "active" : "inactive"}.`
+    );
+    router.refresh();
+  }
+
+  async function onToggleSms(m: Lead) {
+    const res = await toggleFamilySmsConsent(m.id, !m.sms_consent);
+    if (!res?.ok) {
+      toastError("Could not update. Please try again.");
+      return;
+    }
+    success(
+      `Texts turned ${!m.sms_consent ? "on" : "off"} for ${m.name}.`
     );
     router.refresh();
   }
@@ -229,14 +242,30 @@ export default function FamilyManager({ members }: { members: Lead[] }) {
                       )}
                     </Td>
                     <Td>
-                      {m.active ? (
-                        <Badge tone="success">Active</Badge>
-                      ) : (
-                        <Badge tone="neutral">Inactive</Badge>
-                      )}
+                      <div className="flex flex-col items-start gap-1">
+                        {m.active ? (
+                          <Badge tone="success">Active</Badge>
+                        ) : (
+                          <Badge tone="neutral">Inactive</Badge>
+                        )}
+                        {m.sms_opt_out_at ? (
+                          <Badge tone="danger">Texts: opted out</Badge>
+                        ) : m.sms_consent ? (
+                          <Badge tone="info">Texts: on</Badge>
+                        ) : null}
+                      </div>
                     </Td>
                     <Td className="text-right">
                       <div className="inline-flex items-center gap-1">
+                        {m.phone && !m.sms_opt_out_at && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => onToggleSms(m)}
+                          >
+                            {m.sms_consent ? "Texts off" : "Texts on"}
+                          </Button>
+                        )}
                         <Button
                           variant="ghost"
                           size="sm"

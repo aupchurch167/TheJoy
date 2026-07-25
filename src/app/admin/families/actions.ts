@@ -9,6 +9,7 @@ import {
   familyEmailExists,
   familyContactExists,
   setFamilyActive,
+  setFamilySmsConsent,
 } from "@/lib/leads";
 import { parseFamilyContacts } from "@/lib/family-import";
 
@@ -145,6 +146,21 @@ export async function toggleFamilyActive(
     return { ok: true };
   } catch (err) {
     console.error("[toggleFamilyActive]", err);
+    return { ok: false };
+  }
+}
+
+export async function toggleFamilySmsConsent(
+  id: string,
+  consent: boolean
+): Promise<{ ok: boolean }> {
+  await requireAdmin();
+  try {
+    await setFamilySmsConsent(id, consent);
+    revalidatePath("/admin/families");
+    return { ok: true };
+  } catch (err) {
+    console.error("[toggleFamilySmsConsent]", err);
     return { ok: false };
   }
 }

@@ -41,6 +41,9 @@ export type Lead = {
   resident_name: string | null;
   relation: string | null;
   active: boolean;
+  // SMS (text blast) consent + opt-out.
+  sms_consent: boolean;
+  sms_opt_out_at: string | null;
 };
 
 /** Insert a lead and return the stored row (including its unsubscribe token). */
@@ -218,6 +221,38 @@ export async function setFamilyActive(
   active: boolean
 ): Promise<void> {
   await query(`UPDATE leads SET active = $2 WHERE id = $1`, [id, active]);
+}
+
+/** Toggle a family contact's SMS consent (opt them in/out of text blasts). */
+export async function setFamilySmsConsent(
+  id: string,
+  consent: boolean
+): Promise<void> {
+  await query(`UPDATE leads SET sms_consent = $2 WHERE id = $1`, [id, consent]);
+}
+
+/** Mark a contact opted out of texts (e.g. they replied STOP). */
+export async function markSmsOptOut(id: string): Promise<void> {
+  await query(
+    `UPDATE leads SET sms_opt_out_at = now(), sms_consent = FALSE WHERE id = $1`,
+    [id]
+  );
+}
+
+/**
+ * Text-blast recipients: family contacts who are active, have a phone, have
+ * given SMS consent, and have not opted out.
+ */
+export async function getSmsRecipients(): Promise<Lead[]> {
+  return query<Lead>(
+    `SELECT * FROM leads
+      WHERE audience = 'families'
+        AND active = TRUE
+        AND sms_consent = TRUE
+        AND sms_opt_out_at IS NULL
+        AND phone IS NOT NULL AND phone <> ''
+      ORDER BY lower(coalesce(resident_name,'')) ASC`
+  );
 }
 
 /** Remove a subscriber row (used to remove a family member). */

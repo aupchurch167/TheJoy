@@ -135,11 +135,21 @@ ALTER TABLE leads ADD COLUMN IF NOT EXISTS relation TEXT;
 ALTER TABLE leads ADD COLUMN IF NOT EXISTS active BOOLEAN NOT NULL DEFAULT TRUE;
 ALTER TABLE leads ALTER COLUMN email DROP NOT NULL;
 
+-- SMS (text blasts via Quo). Texting requires separate, explicit consent
+-- (TCPA), so it defaults to FALSE and an admin opts each contact in. Opt-outs
+-- are recorded so a contact who replies STOP is never texted again.
+ALTER TABLE leads ADD COLUMN IF NOT EXISTS sms_consent BOOLEAN NOT NULL DEFAULT FALSE;
+ALTER TABLE leads ADD COLUMN IF NOT EXISTS sms_opt_out_at TIMESTAMPTZ;
+
 -- Existing Phase 3 databases created broadcasts with a leads-only audience
 -- check. Widen it so family broadcasts are allowed.
 ALTER TABLE broadcasts DROP CONSTRAINT IF EXISTS broadcasts_audience_check;
 ALTER TABLE broadcasts
   ADD CONSTRAINT broadcasts_audience_check CHECK (audience IN ('leads', 'families'));
+
+-- Broadcasts can be email or SMS (text blast). The subject is unused for SMS.
+ALTER TABLE broadcasts ADD COLUMN IF NOT EXISTS channel TEXT NOT NULL DEFAULT 'email'
+  CHECK (channel IN ('email', 'sms'));
 
 -- Public photo gallery. Real photos only (uploaded via admin). posted_at drives
 -- the public ordering.

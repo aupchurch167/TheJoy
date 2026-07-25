@@ -338,6 +338,25 @@ commit it.
 as opted in to community updates. Glance down the list and mark inactive (or
 unsubscribe) anyone who should not receive a community email.
 
+### Texting families (Quo)
+
+`/admin > Texts` sends a short SMS blast to families through **Quo** (formerly
+OpenPhone). Good for quick, community-wide notes: a reminder, a weather closing,
+"family night is tonight."
+
+**Setup (once):** in Railway set `QUO_API_KEY` (from Quo) and `QUO_FROM_NUMBER`
+(the Quo number to text from, e.g. `+14706843569`). The number must be
+registered for **A2P 10DLC** business texting in Quo — carriers require this, and
+Quo walks you through it. Until both are set, the Texts page shows a warning and
+sending is off.
+
+**Consent (important):** texting has stricter rules than email. A text only goes
+to a family contact you have marked **Texts: on** in the Family list, who is
+active and has a phone. Only opt in people who agreed to be texted. Every message
+automatically adds "Reply STOP to opt out."; if someone asks to stop, use **Texts
+off** (or it records their opt-out) and they are never texted again. Always use
+**Send a test to yourself** before a blast.
+
 ### Emailing families
 
 Community emails go out the same way as lead emails: `/admin > Emails > New

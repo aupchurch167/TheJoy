@@ -3,12 +3,14 @@ import { query } from "./db";
 import type { Audience } from "./leads";
 
 export type BroadcastStatus = "draft" | "scheduled" | "sending" | "sent";
+export type BroadcastChannel = "email" | "sms";
 
 export type Broadcast = {
   id: string;
   subject: string;
   body: string;
   audience: Audience;
+  channel: BroadcastChannel;
   status: BroadcastStatus;
   scheduled_at: string | null;
   sent_at: string | null;
@@ -31,13 +33,22 @@ export async function getBroadcastById(id: string): Promise<Broadcast | null> {
 export async function createBroadcast(
   subject: string,
   body: string,
-  audience: Audience = "leads"
+  audience: Audience = "leads",
+  channel: BroadcastChannel = "email"
 ): Promise<Broadcast> {
   const rows = await query<Broadcast>(
-    `INSERT INTO broadcasts (subject, body, audience) VALUES ($1, $2, $3) RETURNING *`,
-    [subject, body, audience]
+    `INSERT INTO broadcasts (subject, body, audience, channel)
+     VALUES ($1, $2, $3, $4) RETURNING *`,
+    [subject, body, audience, channel]
   );
   return rows[0];
+}
+
+/** SMS text blasts, most recent first (for the Texts page). */
+export async function getSmsBroadcasts(): Promise<Broadcast[]> {
+  return query<Broadcast>(
+    `SELECT * FROM broadcasts WHERE channel = 'sms' ORDER BY created_at DESC`
+  );
 }
 
 export async function updateBroadcast(
@@ -70,11 +81,14 @@ export async function deleteBroadcast(id: string): Promise<void> {
   await query(`DELETE FROM broadcasts WHERE id = $1 AND status <> 'sent'`, [id]);
 }
 
-/** Broadcasts due to send (scheduled and past their scheduled time). */
+/**
+ * Email broadcasts due to send (scheduled and past their time). SMS blasts send
+ * immediately from the admin action, so the cron only handles email.
+ */
 export async function getDueBroadcasts(): Promise<Broadcast[]> {
   return query<Broadcast>(
     `SELECT * FROM broadcasts
-      WHERE status = 'scheduled' AND scheduled_at <= now()
+      WHERE status = 'scheduled' AND channel = 'email' AND scheduled_at <= now()
       ORDER BY scheduled_at ASC`
   );
 }
