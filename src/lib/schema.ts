@@ -1,5 +1,6 @@
 import { AWARD, BUSINESS, SITE_URL } from "./site";
 import type { Post } from "./posts";
+import type { ServiceDetail } from "./site";
 
 /**
  * schema.org structured data for local SEO. Uses SeniorCare + LocalBusiness.
@@ -43,6 +44,26 @@ export function localBusinessJsonLd() {
       name: BUSINESS.director.name,
       jobTitle: BUSINESS.director.title,
     },
+  };
+}
+
+/** schema.org Service markup for a service detail page, tied to the business. */
+export function serviceJsonLd(service: ServiceDetail) {
+  const url = `${SITE_URL}/services/${service.slug}`;
+  return {
+    "@context": "https://schema.org",
+    "@type": "Service",
+    "@id": `${url}#service`,
+    name: service.name,
+    description: service.metaDescription,
+    serviceType: service.name,
+    url,
+    provider: {
+      "@type": ["LocalBusiness", "SeniorCare"],
+      "@id": `${SITE_URL}/#business`,
+      name: BUSINESS.name,
+    },
+    areaServed: ["Loganville, GA", "Walton County, GA", "Gwinnett County, GA"],
   };
 }
 

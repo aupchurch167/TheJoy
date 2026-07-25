@@ -1,12 +1,13 @@
 import type { Metadata } from "next";
-import { BUSINESS, MEMORY_CARE, SERVICES } from "@/lib/site";
+import Link from "next/link";
+import { BUSINESS, SERVICES, visibleServiceDetails } from "@/lib/site";
 import { getSettings } from "@/lib/settings";
 import TourButton from "@/components/TourButton";
 
 export const metadata: Metadata = {
   title: "Memory Care & Personal Care Home in Loganville, GA",
   description:
-    "Joy Senior Living is a small personal care home in Loganville, GA offering senior living and memory care. Personal care done at a scale small enough to know your parent by name.",
+    "Joy Senior Living is a small personal care home in Loganville, GA offering personal care, memory care, respite stays, daily activities, and home-cooked meals. Care at a scale small enough to know your parent by name.",
   keywords: [
     "memory care loganville ga",
     "personal care home loganville",
@@ -23,6 +24,7 @@ export const metadata: Metadata = {
 
 export default async function ServicesPage() {
   const settings = await getSettings();
+  const services = visibleServiceDetails();
 
   return (
     <div className="prose-joy mx-auto max-w-2xl px-5 py-16">
@@ -31,42 +33,29 @@ export default async function ServicesPage() {
       </h1>
       <p className="mt-6 text-xl leading-relaxed text-ink">{SERVICES.lede}</p>
 
-      {/* Personal care */}
-      <h2 className="mt-12 font-display text-2xl font-semibold text-ink">
-        {SERVICES.careHeading}
-      </h2>
-      <div className="mt-4 space-y-5 text-lg text-ink-soft">
-        {SERVICES.care.map((p, i) => (
-          <p key={i}>{p}</p>
+      {/* Service hub: one card per detail page. */}
+      <div className="mt-10 grid gap-4 sm:grid-cols-2">
+        {services.map((s) => (
+          <Link
+            key={s.slug}
+            href={`/services/${s.slug}`}
+            className="group rounded-2xl border border-line bg-white p-6 no-underline transition hover:border-clay"
+          >
+            <h2 className="font-display text-xl font-semibold text-ink">
+              {s.name}
+            </h2>
+            <p className="mt-2 text-base leading-relaxed text-ink-soft">
+              {s.tagline}
+            </p>
+            <span className="mt-4 inline-block text-sm font-semibold text-clay group-hover:text-clay-dark">
+              Learn more &rarr;
+            </span>
+          </Link>
         ))}
       </div>
 
-      {/* Memory care (gated on license confirmation) */}
-      {MEMORY_CARE.enabled && (
-        <>
-          <h2 className="mt-12 font-display text-2xl font-semibold text-ink">
-            {SERVICES.memoryHeading}
-          </h2>
-          <div className="mt-4 space-y-5 text-lg text-ink-soft">
-            {SERVICES.memory.map((p, i) => (
-              <p key={i}>{p}</p>
-            ))}
-          </div>
-        </>
-      )}
-
-      {/* Respite / short stays */}
-      <h2 className="mt-12 font-display text-2xl font-semibold text-ink">
-        {SERVICES.respiteHeading}
-      </h2>
-      <div className="mt-4 space-y-5 text-lg text-ink-soft">
-        {SERVICES.respite.map((p, i) => (
-          <p key={i}>{p}</p>
-        ))}
-      </div>
-
-      {/* Scale */}
-      <h2 className="mt-12 font-display text-2xl font-semibold text-ink">
+      {/* Scale: the through-line for every service above. */}
+      <h2 className="mt-14 font-display text-2xl font-semibold text-ink">
         {SERVICES.scaleHeading}
       </h2>
       <div className="mt-4 space-y-5 text-lg text-ink-soft">

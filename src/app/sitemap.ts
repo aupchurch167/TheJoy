@@ -1,5 +1,5 @@
 import type { MetadataRoute } from "next";
-import { SITE_URL } from "@/lib/site";
+import { SITE_URL, visibleServiceDetails } from "@/lib/site";
 import { hasDatabase } from "@/lib/db";
 import { getPublishedPosts } from "@/lib/posts";
 
@@ -8,9 +8,20 @@ export const dynamic = "force-dynamic";
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const entries: MetadataRoute.Sitemap = [
     { url: `${SITE_URL}/`, changeFrequency: "weekly", priority: 1 },
+    { url: `${SITE_URL}/about`, changeFrequency: "monthly", priority: 0.7 },
+    { url: `${SITE_URL}/services`, changeFrequency: "monthly", priority: 0.8 },
     { url: `${SITE_URL}/blog`, changeFrequency: "weekly", priority: 0.6 },
     { url: `${SITE_URL}/gallery`, changeFrequency: "monthly", priority: 0.4 },
   ];
+
+  // One entry per visible service detail page (memory care is gated).
+  for (const service of visibleServiceDetails()) {
+    entries.push({
+      url: `${SITE_URL}/services/${service.slug}`,
+      changeFrequency: "monthly",
+      priority: 0.7,
+    });
+  }
 
   if (hasDatabase()) {
     try {

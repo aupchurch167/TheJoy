@@ -293,3 +293,171 @@ export const SERVICES = {
   // category, followed by what Joy actually is.
   assistedLivingContext: `If you are looking for assisted living in Loganville, it helps to know the difference. Joy is a personal care home, a distinct Georgia license. Families searching for assisted living near Loganville often find that a smaller personal care home like Joy is a better fit for a parent who would feel lost in a large building.`,
 } as const;
+
+/* ------------------------------------------------------------------ */
+/* SERVICE DETAIL PAGES (/services/<slug>)                             */
+/* ------------------------------------------------------------------ */
+
+/**
+ * One page per service, rendered by /services/[slug]. Edit the copy here.
+ * Two hard rules still apply (§2 voice, §4 compliance): no banned words, no
+ * calling Joy "assisted living", name Mellissa where care is discussed.
+ *
+ * `gated: "memory"` ties a service to MEMORY_CARE.enabled, so memory care only
+ * appears (card + page + sitemap) while that flag is true. The old Webflow URLs
+ * (/service/<slug>) 301 to these via db/redirects.json.
+ */
+export type ServiceDetail = {
+  slug: string;
+  name: string;
+  /** One line for the overview card and the page sub-headline. */
+  tagline: string;
+  metaTitle: string;
+  metaDescription: string;
+  intro: string;
+  sections: { heading: string; body: string[] }[];
+  gated?: "memory";
+};
+
+export const SERVICE_DETAILS: ServiceDetail[] = [
+  {
+    slug: "personal-care",
+    name: "Personal care",
+    tagline: "Help with the day, from people who know your parent by name.",
+    metaTitle: "Personal Care in a Loganville Personal Care Home",
+    metaDescription:
+      "Personal care at Joy Senior Living in Loganville, GA: help with bathing, dressing, medications, meals, and around-the-clock support, at a scale small enough to know your parent by name.",
+    intro: `Joy is a personal care home in Loganville. Personal care is the heart of what we do: steady help with the parts of daily life that get harder to manage alone, given by people who know your parent as a person.`,
+    sections: [
+      {
+        heading: "Help with the day, day to day",
+        body: [
+          `Joy helps with bathing, dressing, grooming, and moving safely from room to room. The help is hands-on when it needs to be and stays out of the way when it does not, and it always keeps your parent's dignity first.`,
+          `Medications are given on time by staff who know each resident, not handed from a cart by someone passing through. Housekeeping and laundry are handled here, so the room stays clean and the clothes stay fresh without your parent lifting a finger.`,
+        ],
+      },
+      {
+        heading: "Real meals, and someone awake all night",
+        body: [
+          `Meals are cooked here and eaten at a shared table, and the kitchen works around real dietary needs. Someone is awake and on-site around the clock, so help is there at three in the morning the same as at three in the afternoon.`,
+        ],
+      },
+      {
+        heading: "Care built around one person",
+        body: [
+          `Because Joy has ${BUSINESS.beds} residents, ${BUSINESS.director.name} and her team can learn your parent: the routines, the preferences, the history. When something changes, they notice, because they knew what normal looked like yesterday.`,
+        ],
+      },
+    ],
+  },
+  {
+    slug: "memory-care",
+    name: "Memory care",
+    tagline: "The same small home, the same familiar faces, for a parent living with memory loss.",
+    metaTitle: "Memory Care in a Loganville Personal Care Home",
+    metaDescription:
+      "Memory care at Joy Senior Living in Loganville, GA, offered within our personal care home: a small, familiar setting with trained staff and steady routines for a parent living with dementia.",
+    intro: `For families facing memory loss, Joy offers memory care inside our personal care home. The setting is the same small one, with the same familiar faces, which matters more for a person living with dementia than almost anything else.`,
+    gated: "memory",
+    sections: [
+      {
+        heading: "Why routine matters here",
+        body: [
+          `Comfort comes from familiarity. Days follow a steady, predictable shape, because a reliable routine eases the fear that memory loss can bring. Meals, rest, and activity happen at the same times, in the same places, with the same people.`,
+        ],
+      },
+      {
+        heading: "Days with something in them",
+        body: [
+          `The point is not to fill the hours but to reach the person. Music, simple art, and gentle games can settle a hard afternoon and reach a memory that words no longer can. Staff are trained for memory care and lead with patience.`,
+        ],
+      },
+      {
+        heading: "Talk to Mellissa first",
+        body: [
+          `${BUSINESS.director.name} can walk you through what memory care at Joy looks like for your parent, honestly, before you decide anything. If Joy is not the right level of care for your parent, she will tell you that too.`,
+        ],
+      },
+    ],
+  },
+  {
+    slug: "respite-care",
+    name: "Respite care",
+    tagline: "A short stay, with the full care, when a family needs a break.",
+    metaTitle: "Respite Care & Short Stays in Loganville, GA",
+    metaDescription:
+      "Respite care at Joy Senior Living in Loganville, GA: short stays from a few days to a few weeks, in a private room with the same care every resident receives.",
+    intro: `Not every stay is permanent. Joy offers respite care: a short stay, from a few days to a few weeks, in a private room with the same care every resident gets.`,
+    sections: [
+      {
+        heading: "When families use it",
+        body: [
+          `Families choose respite when a caregiver at home needs a real break, when a parent is recovering after a hospital stay, or when you want your parent to try Joy before committing to a longer stay. The care is the full care, not a watered-down version of it.`,
+        ],
+      },
+      {
+        heading: "Ask what is open",
+        body: [
+          `Respite rooms depend on what is available. ${BUSINESS.director.name} can tell you what is open and when, and set up a stay that fits your family's timing.`,
+        ],
+      },
+    ],
+  },
+  {
+    slug: "daily-activities",
+    name: "Daily activities",
+    tagline: "Something to get up for, without anyone forcing it.",
+    metaTitle: "Daily Activities & Life at Joy Senior Living, Loganville",
+    metaDescription:
+      "Daily life at Joy Senior Living in Loganville, GA: light exercise, art, games, cooking, and music, adjusted so every resident can take part. Company matters as much as the activity.",
+    intro: `A good day has shape. At Joy, mornings might start with gentle stretching, afternoons might hold a card game or a craft, and there is usually music somewhere. Nothing is mandatory. The point is to offer, not to push.`,
+    sections: [
+      {
+        heading: "Mind, body, and company",
+        body: [
+          `Activities range from light exercise to art, puzzles, trivia, cooking, and sing-alongs. Some keep the body moving, some keep the mind sharp, and most of them are really about sitting with other people and having a good afternoon.`,
+        ],
+      },
+      {
+        heading: "For every resident, at every level",
+        body: [
+          `Activities are adjusted so a resident living with dementia can take part next to a neighbor who does the crossword in pen. Staff help where help is needed, so no one is left sitting on the outside of the room.`,
+        ],
+      },
+    ],
+  },
+  {
+    slug: "nutrition",
+    name: "Meals and nutrition",
+    tagline: "Handmade meals, cooked here, eaten together.",
+    metaTitle: "Meals & Nutrition at Joy Senior Living, Loganville GA",
+    metaDescription:
+      "Meals at Joy Senior Living in Loganville, GA: handmade in our own kitchen, changing through the week, with all-day snacks and real dietary accommodations, eaten together at a shared table.",
+    intro: `Meals at Joy are handmade in the kitchen here, not trucked in and reheated. The menu changes through the week for variety, and there are always a few familiar staples for the resident who just wants the thing they like.`,
+    sections: [
+      {
+        heading: "Snacks and dietary needs",
+        body: [
+          `Popcorn, cookies, and fruit are out during the day, for whenever someone wants them. The kitchen works around real dietary needs, from low salt to soft foods, so a medical restriction never has to mean a joyless plate.`,
+        ],
+      },
+      {
+        heading: "The table matters as much as the food",
+        body: [
+          `Meals are eaten together at a shared table. Sitting down with other people is part of the care, not separate from it, and for many residents it is the best part of the day.`,
+        ],
+      },
+    ],
+  },
+];
+
+/** Service detail pages that are currently visible (memory care is gated). */
+export function visibleServiceDetails(): ServiceDetail[] {
+  return SERVICE_DETAILS.filter(
+    (s) => s.gated !== "memory" || MEMORY_CARE.enabled
+  );
+}
+
+export function getServiceDetail(slug: string): ServiceDetail | undefined {
+  return visibleServiceDetails().find((s) => s.slug === slug);
+}

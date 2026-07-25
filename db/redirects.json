@@ -126,5 +126,25 @@
   {
     "from": "/post/fall-prevention-seniors-home-starts-now",
     "to": "/blog/fall-prevention-seniors-home-starts-now"
+  },
+  {
+    "from": "/service/personal-care",
+    "to": "/services/personal-care"
+  },
+  {
+    "from": "/service/memory-care",
+    "to": "/services/memory-care"
+  },
+  {
+    "from": "/service/respite-care",
+    "to": "/services/respite-care"
+  },
+  {
+    "from": "/service/daily-activities",
+    "to": "/services/daily-activities"
+  },
+  {
+    "from": "/service/nutrition",
+    "to": "/services/nutrition"
   }
 ]
