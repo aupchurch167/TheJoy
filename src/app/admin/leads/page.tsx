@@ -1,17 +1,22 @@
 import { requireAdmin } from "@/lib/require-admin";
 import { hasDatabase } from "@/lib/db";
 import { getAllLeads, getSourceReport } from "@/lib/leads";
+import { formatDate, formatPercent, orDash } from "@/lib/format";
 import StageSelect from "./StageSelect";
+import {
+  PageHeader,
+  Badge,
+  StatCard,
+  EmptyState,
+  NotConnected,
+  SectionLabel,
+  ButtonLink,
+  TableWrap,
+  Th,
+  Td,
+} from "@/components/admin/ui";
 
 export const dynamic = "force-dynamic";
-
-function fmtDate(iso: string) {
-  return new Date(iso).toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  });
-}
 
 export default async function LeadsPage({
   searchParams,
@@ -23,13 +28,10 @@ export default async function LeadsPage({
 
   if (!hasDatabase()) {
     return (
-      <div className="mx-auto max-w-3xl px-5 py-12">
-        <h1 className="font-display text-2xl font-semibold text-ink">Leads</h1>
-        <p className="mt-4 rounded-lg bg-clay/10 px-4 py-3 text-clay-dark">
-          The database is not connected yet. Set DATABASE_URL and run{" "}
-          <code>npm run migrate</code>.
-        </p>
-      </div>
+      <>
+        <PageHeader title="Leads" />
+        <NotConnected what="Leads" />
+      </>
     );
   }
 
@@ -38,114 +40,150 @@ export default async function LeadsPage({
     getAllLeads(source),
   ]);
 
+  const totalLeads = report.reduce((n, r) => n + r.total, 0);
+  const totalToured = report.reduce((n, r) => n + r.toured, 0);
+  const totalMovedIn = report.reduce((n, r) => n + r.moved_in, 0);
+  const tourRate = totalLeads > 0 ? totalToured / totalLeads : null;
+
   return (
-    <div className="mx-auto max-w-5xl px-5 py-10">
-      <h1 className="font-display text-2xl font-semibold text-ink">Leads</h1>
+    <>
+      <PageHeader
+        title="Leads"
+        description="Everyone who has reached out, and where they came from. Update a stage inline as families progress."
+      />
+
+      {/* Summary stats */}
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+        <StatCard label="Total leads" value={totalLeads} />
+        <StatCard label="Toured" value={totalToured} tone="warning" />
+        <StatCard label="Moved in" value={totalMovedIn} tone="success" />
+        <StatCard
+          label="Tour rate"
+          value={formatPercent(tourRate)}
+          hint="Share of leads who toured"
+        />
+      </div>
 
       {/* Source attribution report */}
-      <section className="mt-6">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-ink-faint">
-          By source
-        </h2>
-        <p className="mt-1 text-sm text-ink-soft">
+      <section className="mt-10">
+        <SectionLabel>By source</SectionLabel>
+        <p className="mt-1 max-w-2xl text-sm text-ink-soft">
           Where leads come from, and how many booked a tour or moved in. This is
-          how you see which channels work (and reduce reliance on any one of them).
+          how you see which channels work (and reduce reliance on any one).
         </p>
-        <div className="mt-3 overflow-x-auto rounded-lg border border-line bg-white">
-          <table className="w-full text-sm">
-            <thead className="border-b border-line text-left text-ink-faint">
-              <tr>
-                <th className="px-4 py-2 font-medium">Source</th>
-                <th className="px-4 py-2 font-medium">Leads</th>
-                <th className="px-4 py-2 font-medium">Toured</th>
-                <th className="px-4 py-2 font-medium">Moved in</th>
-                <th className="px-4 py-2 font-medium">Lost</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-line">
-              {report.length === 0 ? (
-                <tr>
-                  <td colSpan={5} className="px-4 py-6 text-center text-ink-faint">
-                    No leads yet.
-                  </td>
+        <div className="mt-3">
+          {report.length === 0 ? (
+            <EmptyState
+              icon="📊"
+              title="No leads yet"
+              description="Once families submit the contact form or arrive through TalkFurther, they'll show up here by source."
+            />
+          ) : (
+            <TableWrap>
+              <thead>
+                <tr className="border-b border-line">
+                  <Th>Source</Th>
+                  <Th className="text-right">Leads</Th>
+                  <Th className="text-right">Toured</Th>
+                  <Th className="text-right">Moved in</Th>
+                  <Th className="text-right">Lost</Th>
                 </tr>
-              ) : (
-                report.map((r) => (
-                  <tr key={r.source}>
-                    <td className="px-4 py-2 font-medium text-ink">{r.source}</td>
-                    <td className="px-4 py-2 text-ink-soft">{r.total}</td>
-                    <td className="px-4 py-2 text-ink-soft">{r.toured}</td>
-                    <td className="px-4 py-2 text-ink-soft">{r.moved_in}</td>
-                    <td className="px-4 py-2 text-ink-soft">{r.lost}</td>
+              </thead>
+              <tbody className="divide-y divide-line">
+                {report.map((r) => (
+                  <tr key={r.source} className="transition-colors hover:bg-surface">
+                    <Td className="font-medium text-ink">{orDash(r.source)}</Td>
+                    <Td className="text-right text-ink-soft">{r.total}</Td>
+                    <Td className="text-right text-ink-soft">{r.toured}</Td>
+                    <Td className="text-right text-ink-soft">{r.moved_in}</Td>
+                    <Td className="text-right text-ink-soft">{r.lost}</Td>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+                ))}
+              </tbody>
+            </TableWrap>
+          )}
         </div>
       </section>
 
       {/* Lead list with stage editing */}
       <section className="mt-10">
-        <div className="flex items-center justify-between">
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-ink-faint">
-            All leads {source ? `(source: ${source})` : ""}
-          </h2>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <SectionLabel>
+            All leads{" "}
+            {source && (
+              <Badge tone="info" className="ml-1 normal-case tracking-normal">
+                source: {source}
+              </Badge>
+            )}
+          </SectionLabel>
           {source && (
-            <a href="/admin/leads" className="text-sm text-clay hover:underline">
+            <ButtonLink href="/admin/leads" variant="ghost" size="sm">
               Clear filter
-            </a>
+            </ButtonLink>
           )}
         </div>
-        <div className="mt-3 overflow-x-auto rounded-lg border border-line bg-white">
-          <table className="w-full text-sm">
-            <thead className="border-b border-line text-left text-ink-faint">
-              <tr>
-                <th className="px-4 py-2 font-medium">Name</th>
-                <th className="px-4 py-2 font-medium">Contact</th>
-                <th className="px-4 py-2 font-medium">Source</th>
-                <th className="px-4 py-2 font-medium">Added</th>
-                <th className="px-4 py-2 font-medium">Stage</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-line">
-              {leads.length === 0 ? (
-                <tr>
-                  <td colSpan={5} className="px-4 py-6 text-center text-ink-faint">
-                    No leads.
-                  </td>
+        <div className="mt-3">
+          {leads.length === 0 ? (
+            <EmptyState
+              icon="🧾"
+              title={source ? "No leads from this source" : "No leads yet"}
+              description={
+                source
+                  ? "Try clearing the filter to see every lead."
+                  : "New leads from the contact form and TalkFurther will appear here."
+              }
+              action={
+                source ? (
+                  <ButtonLink href="/admin/leads" variant="secondary">
+                    Clear filter
+                  </ButtonLink>
+                ) : undefined
+              }
+            />
+          ) : (
+            <TableWrap>
+              <thead>
+                <tr className="border-b border-line">
+                  <Th>Name</Th>
+                  <Th>Contact</Th>
+                  <Th>Source</Th>
+                  <Th>Added</Th>
+                  <Th>Stage</Th>
                 </tr>
-              ) : (
-                leads.map((lead) => (
-                  <tr key={lead.id}>
-                    <td className="px-4 py-2">
-                      <span className="font-medium text-ink">{lead.name}</span>
+              </thead>
+              <tbody className="divide-y divide-line">
+                {leads.map((lead) => (
+                  <tr key={lead.id} className="transition-colors hover:bg-surface">
+                    <Td>
+                      <span className="font-medium text-ink">
+                        {orDash(lead.name)}
+                      </span>
                       {lead.unsubscribed_at && (
-                        <span className="ml-2 rounded-full bg-line/70 px-2 py-0.5 text-xs text-ink-faint">
+                        <Badge tone="neutral" className="ml-2">
                           unsubscribed
-                        </span>
+                        </Badge>
                       )}
-                    </td>
-                    <td className="px-4 py-2 text-ink-soft">
-                      <div>{lead.email}</div>
+                    </Td>
+                    <Td className="text-ink-soft">
+                      <div className="break-all">{orDash(lead.email)}</div>
                       {lead.phone && (
                         <div className="text-ink-faint">{lead.phone}</div>
                       )}
-                    </td>
-                    <td className="px-4 py-2 text-ink-soft">{lead.source}</td>
-                    <td className="px-4 py-2 text-ink-faint">
-                      {fmtDate(lead.created_at)}
-                    </td>
-                    <td className="px-4 py-2">
+                    </Td>
+                    <Td className="text-ink-soft">{orDash(lead.source)}</Td>
+                    <Td className="whitespace-nowrap text-ink-faint">
+                      {formatDate(lead.created_at)}
+                    </Td>
+                    <Td>
                       <StageSelect id={lead.id} stage={lead.stage} />
-                    </td>
+                    </Td>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+                ))}
+              </tbody>
+            </TableWrap>
+          )}
         </div>
       </section>
-    </div>
+    </>
   );
 }

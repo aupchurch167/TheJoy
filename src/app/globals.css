@@ -15,9 +15,12 @@
   --ink-faint: #8a8072;
   --clay: #b0532b; /* primary accent / CTA (warm terracotta) */
   --clay-dark: #8f4020;
-  --sage: #5f6b4e; /* secondary accent */
+  --sage: #5f6b4e; /* secondary accent / success */
   --line: #e6ddcd; /* soft borders */
-  --gold: #a8812f; /* award badge */
+  --gold: #a8812f; /* award badge / warning */
+  --danger: #b3341f; /* destructive actions / errors */
+  --danger-dark: #8f2817;
+  --surface: #f4ecdf; /* subtle raised/hover fill on cream */
 }
 
 @theme inline {
@@ -31,6 +34,9 @@
   --color-sage: var(--sage);
   --color-line: var(--line);
   --color-gold: var(--gold);
+  --color-danger: var(--danger);
+  --color-danger-dark: var(--danger-dark);
+  --color-surface: var(--surface);
   --font-display: var(--font-fraunces);
   --font-sans: var(--font-inter);
 }
@@ -68,4 +74,52 @@ body {
   outline: 3px solid var(--clay);
   outline-offset: 2px;
   border-radius: 2px;
+}
+
+/* --- Admin UI helpers ------------------------------------------------ */
+
+/* Skeleton loading shimmer (used by admin loading.tsx screens). */
+@keyframes admin-shimmer {
+  0% {
+    background-position: -400px 0;
+  }
+  100% {
+    background-position: 400px 0;
+  }
+}
+.admin-skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--line) 0%,
+    var(--surface) 40%,
+    var(--line) 80%
+  );
+  background-size: 400px 100%;
+  animation: admin-shimmer 1.4s ease-in-out infinite;
+}
+
+/* Toast + modal entrance. */
+@keyframes admin-rise {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.admin-rise {
+  animation: admin-rise 0.18s ease-out;
+}
+@keyframes admin-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+.admin-fade {
+  animation: admin-fade 0.15s ease-out;
 }

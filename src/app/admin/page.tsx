@@ -2,84 +2,106 @@ import Link from "next/link";
 import { requireAdmin } from "@/lib/require-admin";
 import { hasDatabase } from "@/lib/db";
 import { getAllPosts } from "@/lib/posts";
+import { formatDate } from "@/lib/format";
+import {
+  PageHeader,
+  ButtonLink,
+  Badge,
+  EmptyState,
+  NotConnected,
+  type BadgeTone,
+} from "@/components/admin/ui";
 
 export const dynamic = "force-dynamic";
+
+const STATUS_TONE: Record<string, BadgeTone> = {
+  published: "success",
+  scheduled: "warning",
+  draft: "neutral",
+};
 
 export default async function AdminDashboard() {
   await requireAdmin();
 
+  const actions = (
+    <>
+      <ButtonLink href="/admin/posts/new?ai=1" variant="primary" size="sm">
+        ✨ Write with AI
+      </ButtonLink>
+      <ButtonLink href="/admin/posts/new" variant="secondary" size="sm">
+        New post
+      </ButtonLink>
+    </>
+  );
+
   if (!hasDatabase()) {
     return (
-      <div className="mx-auto max-w-3xl px-5 py-12">
-        <h1 className="font-display text-2xl font-semibold text-ink">Posts</h1>
-        <p className="mt-4 rounded-lg bg-clay/10 px-4 py-3 text-clay-dark">
-          The database is not connected yet. Set DATABASE_URL and run{" "}
-          <code>npm run migrate</code> (see OPERATIONS.md).
-        </p>
-      </div>
+      <>
+        <PageHeader title="Posts" description="Your blog, at Stories from Joy." />
+        <NotConnected what="Posts" />
+      </>
     );
   }
 
   const posts = await getAllPosts();
+  const published = posts.filter((p) => p.status === "published").length;
+  const drafts = posts.filter((p) => p.status === "draft").length;
+  const scheduled = posts.filter((p) => p.status === "scheduled").length;
 
   return (
-    <div className="mx-auto max-w-3xl px-5 py-10">
-      <div className="mb-6 flex items-center justify-between">
-        <h1 className="font-display text-2xl font-semibold text-ink">Posts</h1>
-        <div className="flex items-center gap-2">
-          <Link
-            href="/admin/posts/new?ai=1"
-            className="rounded-full bg-sage px-4 py-2 text-sm font-semibold text-white hover:opacity-90"
-          >
-            ✨ Write with AI
-          </Link>
-          <Link
-            href="/admin/posts/new"
-            className="rounded-full border border-clay px-4 py-2 text-sm font-semibold text-clay hover:bg-clay/5"
-          >
-            New post
-          </Link>
-        </div>
-      </div>
+    <>
+      <PageHeader
+        title="Posts"
+        description={
+          posts.length > 0
+            ? `${posts.length} total · ${published} published · ${scheduled} scheduled · ${drafts} draft`
+            : "Your blog, published at Stories from Joy."
+        }
+        actions={actions}
+      />
 
       {posts.length === 0 ? (
-        <p className="rounded-lg border border-line bg-white px-5 py-8 text-center text-ink-soft">
-          No posts yet. Write your first one, or draft it with AI.
-        </p>
+        <EmptyState
+          icon="✍️"
+          title="No posts yet"
+          description="Write your first story for families, or let AI draft one in Joy's voice for you to edit."
+          action={
+            <ButtonLink href="/admin/posts/new?ai=1" variant="primary">
+              ✨ Write with AI
+            </ButtonLink>
+          }
+        />
       ) : (
-        <ul className="divide-y divide-line rounded-lg border border-line bg-white">
+        <ul className="divide-y divide-line overflow-hidden rounded-xl border border-line bg-white shadow-sm">
           {posts.map((p) => (
             <li key={p.id}>
               <Link
                 href={`/admin/posts/${p.id}`}
-                className="flex items-center justify-between gap-4 px-5 py-4 hover:bg-paper"
+                className="flex min-h-16 cursor-pointer items-center justify-between gap-4 px-5 py-4 transition-colors hover:bg-surface"
               >
                 <span className="min-w-0">
                   <span className="block truncate font-medium text-ink">
                     {p.title || "(untitled)"}
                   </span>
-                  <span className="block truncate text-sm text-ink-faint">
+                  <span className="mt-0.5 block truncate text-sm text-ink-faint">
                     /blog/{p.slug}
                   </span>
                 </span>
-                <span
-                  className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-medium ${
-                    p.status === "published"
-                      ? "bg-sage/15 text-sage"
-                      : p.status === "scheduled"
-                        ? "bg-gold/15 text-gold"
-                        : "bg-line/70 text-ink-faint"
-                  }`}
-                >
-                  {p.status === "scheduled" && p.published_at
-                    ? `scheduled ${new Date(p.published_at).toLocaleDateString()}`
-                    : p.status}
+                <span className="flex shrink-0 items-center gap-3">
+                  {p.status === "scheduled" && p.published_at && (
+                    <span className="hidden text-xs text-ink-faint sm:inline">
+                      {formatDate(p.published_at)}
+                    </span>
+                  )}
+                  <Badge tone={STATUS_TONE[p.status] ?? "neutral"}>
+                    {p.status}
+                  </Badge>
                 </span>
               </Link>
             </li>
           ))}
         </ul>
       )}
-    </div>
+    </>
   );
 }
