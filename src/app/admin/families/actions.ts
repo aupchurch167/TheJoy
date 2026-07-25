@@ -7,8 +7,10 @@ import {
   insertFamilyMember,
   deleteSubscriber,
   familyEmailExists,
+  familyContactExists,
   setFamilyActive,
 } from "@/lib/leads";
+import { parseFamilyContacts } from "@/lib/family-import";
 
 const AddSchema = z
   .object({
@@ -59,6 +61,77 @@ export async function addFamilyMember(input: unknown): Promise<FamilyResult> {
     console.error("[addFamilyMember]", err);
     return { ok: false, error: "Could not add. Is the database connected?" };
   }
+}
+
+export type ImportResult =
+  | { ok: true; added: number; skipped: number; invalid: number }
+  | { ok: false; error: string };
+
+/**
+ * Bulk import family contacts from pasted/uploaded text. Deduplicates within
+ * the batch and against existing rows (by email, else by resident + name), so
+ * re-running or overlapping lists never create duplicates.
+ */
+export async function importFamilyContacts(text: string): Promise<ImportResult> {
+  await requireAdmin();
+  if (typeof text !== "string" || text.trim() === "") {
+    return { ok: false, error: "Nothing to import. Paste a list or choose a file." };
+  }
+  const rows = parseFamilyContacts(text).slice(0, 2000);
+  if (rows.length === 0) {
+    return {
+      ok: false,
+      error:
+        "No contacts found. Use columns: resident, relation, contact name, phone, email (a header row is optional).",
+    };
+  }
+
+  const seenEmail = new Set<string>();
+  const seenKey = new Set<string>();
+  let added = 0;
+  let skipped = 0;
+  let invalid = 0;
+
+  for (const r of rows) {
+    if (!r.name.trim()) {
+      invalid++;
+      continue;
+    }
+    const email = r.email.trim().toLowerCase();
+    const key = `${r.resident_name.trim().toLowerCase()}|${r.name.trim().toLowerCase()}`;
+    if ((email && seenEmail.has(email)) || seenKey.has(key)) {
+      skipped++;
+      continue;
+    }
+    try {
+      if (email && (await familyEmailExists(email))) {
+        skipped++;
+        continue;
+      }
+      if (r.resident_name.trim() && (await familyContactExists(r.resident_name, r.name))) {
+        skipped++;
+        continue;
+      }
+      await insertFamilyMember({
+        name: r.name,
+        email: email || null,
+        phone: r.phone || null,
+        residentName: r.resident_name || null,
+        relation: r.relation || null,
+        source: "family_import",
+        unsubscribed: r.doNotContact,
+      });
+      added++;
+      if (email) seenEmail.add(email);
+      seenKey.add(key);
+    } catch (err) {
+      console.error("[importFamilyContacts] row failed:", err);
+      invalid++;
+    }
+  }
+
+  revalidatePath("/admin/families");
+  return { ok: true, added, skipped, invalid };
 }
 
 export async function toggleFamilyActive(

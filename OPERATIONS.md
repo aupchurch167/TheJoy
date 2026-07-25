@@ -319,21 +319,24 @@ unsubscribed people are always skipped.
 **Who gets a community email:** only contacts who are (1) on an **active**
 resident, (2) have an **email**, and (3) have not unsubscribed.
 
-### Importing your family list (one-time)
+### Importing your family list (bulk)
 
-To bulk-load an existing list, put a CSV at `data/family-contacts.csv` with the
-columns `resident_name, relation, contact_name, phone, email, preference`, then:
+Easiest: **`/admin > Families > Import a list`**. Paste your list or choose a
+file (CSV, or copied straight out of a spreadsheet). Use columns `resident,
+relation, contact name, phone, email` (a header row is optional). It skips any
+contact already on the list (matched by email, or by resident + name), so you
+can re-import or paste overlapping lists without creating duplicates. A row
+whose preference is "Do Not Contact" is stored but flagged unsubscribed, so
+community emails skip it.
 
-```
-node scripts/import-family-contacts.mjs --dry            # preview
-node scripts/import-family-contacts.mjs                  # import
-```
+Prefer the command line? Put a CSV at `data/family-contacts.csv` (same columns)
+and run `node scripts/import-family-contacts.mjs` (add `--dry` to preview).
+Same dedupe rules. Note: this CSV holds real PII, so it is gitignored — never
+commit it.
 
-It is idempotent (safe to re-run; existing contacts are skipped), marks everyone
-active, and any row whose `preference` is "Do Not Contact" is stored but flagged
-unsubscribed so emails skip it. **Note:** imported contacts with an email are
-treated as opted in to community updates — trim the list or unsubscribe anyone
-who should not receive a community email before your first send.
+**Before your first family email:** imported contacts with an email are treated
+as opted in to community updates. Glance down the list and mark inactive (or
+unsubscribe) anyone who should not receive a community email.
 
 ### Emailing families
 

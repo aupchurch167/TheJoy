@@ -23,6 +23,7 @@ import {
 } from "@/components/admin/ui";
 import ConfirmButton from "@/components/admin/ConfirmButton";
 import { useToast } from "@/components/admin/Toast";
+import FamilyImport from "./FamilyImport";
 
 export default function FamilyManager({ members }: { members: Lead[] }) {
   const router = useRouter();
@@ -169,6 +170,8 @@ export default function FamilyManager({ members }: { members: Lead[] }) {
           </div>
         </form>
       </Card>
+
+      <FamilyImport />
 
       <div className="mt-8">
         <SectionLabel>
