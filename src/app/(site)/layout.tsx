@@ -1,5 +1,6 @@
 import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
+import MarketingScripts from "@/components/MarketingScripts";
 
 // Render dynamically so admin edits to site settings (contact facts, careers
 // link, tour link) in the shared header/footer show up promptly.
@@ -14,6 +15,7 @@ export default function SiteLayout({
 }) {
   return (
     <>
+      <MarketingScripts />
       <a
         href="#main"
         className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-lg focus:bg-clay focus:px-4 focus:py-2 focus:text-white"
