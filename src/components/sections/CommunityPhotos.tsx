@@ -1,8 +1,9 @@
-import { COMMUNITY_PHOTOS } from "@/lib/site";
+import { getSitePhotos } from "@/lib/site-photos";
 import Photo from "@/components/Photo";
 
-export default function CommunityPhotos() {
-  if (COMMUNITY_PHOTOS.length === 0) return null;
+export default async function CommunityPhotos() {
+  const { community } = await getSitePhotos();
+  if (community.length === 0) return null;
 
   return (
     <section id="community" className="py-16 sm:py-20">
@@ -16,7 +17,7 @@ export default function CommunityPhotos() {
         </p>
 
         <div className="mt-8 grid grid-cols-2 gap-4 lg:grid-cols-4">
-          {COMMUNITY_PHOTOS.map((p, i) => (
+          {community.map((p, i) => (
             <Photo
               key={i}
               src={p.src}

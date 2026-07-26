@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { ABOUT, BUSINESS, MELLISSA } from "@/lib/site";
 import { getSettings } from "@/lib/settings";
+import { getSitePhotos } from "@/lib/site-photos";
 import Photo from "@/components/Photo";
 import TourButton from "@/components/TourButton";
 
@@ -19,6 +20,9 @@ export const metadata: Metadata = {
 
 export default async function AboutPage() {
   const settings = await getSettings();
+  const { mellissa, community } = await getSitePhotos();
+  // About shows two community shots (the first and last of the four).
+  const aboutPhotos = [community[0], community[3]].filter(Boolean);
 
   return (
     <div className="prose-joy">
@@ -38,7 +42,7 @@ export default async function AboutPage() {
       {/* Photos */}
       <section className="mx-auto mt-12 max-w-5xl px-5">
         <div className="grid gap-4 sm:grid-cols-2">
-          {ABOUT.photos.map((p, i) => (
+          {aboutPhotos.map((p, i) => (
             <Photo
               key={i}
               src={p.src}
@@ -65,8 +69,8 @@ export default async function AboutPage() {
       <section className="mx-auto mt-14 max-w-5xl px-5">
         <div className="grid items-center gap-10 sm:grid-cols-[minmax(0,320px)_1fr]">
           <Photo
-            src={MELLISSA.photo}
-            alt={`${BUSINESS.director.name}, ${BUSINESS.director.title} at Joy Senior Living`}
+            src={mellissa.src}
+            alt={mellissa.alt}
             className="aspect-[4/5] w-full ring-1 ring-line"
           />
           <div>

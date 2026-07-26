@@ -104,6 +104,16 @@ const NAV: NavItem[] = [
     ),
   },
   {
+    href: "/admin/photos",
+    label: "Site photos",
+    icon: icon(
+      <>
+        <path d="M14.5 4h-5L8 6H4a1 1 0 0 0-1 1v11a1 1 0 0 0 1 1h16a1 1 0 0 0 1-1V7a1 1 0 0 0-1-1h-4z" />
+        <circle cx="12" cy="12.5" r="3.2" />
+      </>
+    ),
+  },
+  {
     href: "/admin/seo",
     label: "SEO",
     icon: icon(

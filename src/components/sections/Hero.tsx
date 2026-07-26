@@ -1,8 +1,10 @@
-import { AWARD, HERO, HERO_PHOTO } from "@/lib/site";
+import { AWARD, HERO } from "@/lib/site";
+import { getSitePhotos } from "@/lib/site-photos";
 import Photo from "@/components/Photo";
 import TourButton from "@/components/TourButton";
 
-export default function Hero() {
+export default async function Hero() {
+  const { hero } = await getSitePhotos();
   return (
     <section className="relative overflow-hidden">
       <div className="mx-auto grid max-w-6xl items-center gap-10 px-5 py-14 lg:grid-cols-2 lg:py-20">
@@ -34,8 +36,8 @@ export default function Hero() {
 
         <div className="relative">
           <Photo
-            src={HERO_PHOTO.src}
-            alt={HERO_PHOTO.alt}
+            src={hero.src}
+            alt={hero.alt}
             priority
             className="aspect-[4/3] w-full shadow-sm ring-1 ring-line"
           />

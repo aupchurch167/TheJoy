@@ -29,10 +29,21 @@ next deploy. It has comments explaining each part. Two rules never bend:
 
 ## 2. Photos (real only, no stock)
 
-The site ships with calm placeholders that say "Add real photo: ...". Replace
-them by dropping real image files into `public/images/` with these exact names:
+The site ships with calm placeholders that say "Add real photo: ...".
 
-| File to add                     | What it is                                   |
+**Easiest: `/admin > Site photos`.** Six slots (homepage hero, Mellissa's
+portrait, and four community photos). For each, upload a photo or paste an image
+URL; the homepage and About page update within a moment. "Reset" returns a slot
+to its placeholder. Uploads need photo storage set up (S3 / Cloudflare R2); until
+then, paste an image URL in any slot (that always works).
+
+The two galleries are separate: **Site photos** are these fixed marketing images;
+the **Gallery** (`/admin > Gallery`) is the open-ended public photo grid.
+
+Prefer files in the repo? You can still drop images into `public/images/` with
+these exact names (an admin override, if set, wins over the file):
+
+| File                            | What it is                                   |
 | ------------------------------- | -------------------------------------------- |
 | `public/images/hero.jpg`        | The building, for the top of the homepage    |
 | `public/images/mellissa.jpg`    | A real recent photo of Mellissa              |
@@ -44,7 +55,7 @@ them by dropping real image files into `public/images/` with these exact names:
 Use real photos of Joy only. No stock imagery. Landscape photos around
 1600px wide look best; the room/porch grid is square so anything works.
 
-To add or change the captions, edit `COMMUNITY_PHOTOS` in `src/lib/site.ts`.
+To change the captions/alt text, edit `COMMUNITY_PHOTOS` in `src/lib/site.ts`.
 
 ---
 
