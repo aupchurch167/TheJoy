@@ -2,6 +2,7 @@ import Link from "next/link";
 import { BUSINESS } from "@/lib/site";
 import { getSettings, toTelHref } from "@/lib/settings";
 import TourButton from "./TourButton";
+import MobileNav from "./MobileNav";
 
 const NAV = [
   { href: "/", label: "Home" },
@@ -41,16 +42,25 @@ export default async function SiteHeader() {
           )}
         </nav>
 
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2 sm:gap-4">
           <a
             href={toTelHref(settings.phone)}
             className="hidden text-sm font-medium text-ink-soft hover:text-clay sm:inline"
           >
             {settings.phone}
           </a>
-          <TourButton href={settings.talkfurther_url} className="px-5 py-2.5 text-sm">
-            Book a tour
-          </TourButton>
+          <span className="hidden sm:inline-flex">
+            <TourButton href={settings.talkfurther_url} className="px-5 py-2.5 text-sm">
+              Book a tour
+            </TourButton>
+          </span>
+          <MobileNav
+            items={NAV}
+            careersUrl={settings.careers_url}
+            phone={settings.phone}
+            phoneHref={toTelHref(settings.phone)}
+            tourUrl={settings.talkfurther_url}
+          />
         </div>
       </div>
     </header>
