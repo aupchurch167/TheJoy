@@ -1,10 +1,13 @@
 import Link from "next/link";
-import { BUSINESS, SOCIAL } from "@/lib/site";
+import { BUSINESS, SOCIAL, BADGES, MEMORY_CARE } from "@/lib/site";
 import { getSettings, toTelHref, toMailHref } from "@/lib/settings";
 
 export default async function SiteFooter() {
   const settings = await getSettings();
   const year = 2026; // update yearly; kept static to avoid build-time drift
+  const badges = BADGES.filter(
+    (b) => !b.requiresMemoryCare || MEMORY_CARE.enabled
+  );
 
   return (
     <footer className="border-t border-line bg-white/60">
@@ -91,6 +94,24 @@ export default async function SiteFooter() {
           </ul>
         </div>
       </div>
+
+      {badges.length > 0 && (
+        <div className="border-t border-line/70">
+          <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-center gap-6 px-5 py-6 sm:gap-10">
+            {badges.map((b) => (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                key={b.src}
+                src={b.src}
+                alt={b.alt}
+                loading="lazy"
+                decoding="async"
+                className="h-16 w-auto"
+              />
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="border-t border-line/70">
         <p className="mx-auto max-w-6xl px-5 py-5 text-xs text-ink-faint">

@@ -42,8 +42,19 @@ export type SmsResult = { ok: boolean; error?: string };
 /** Send one SMS. Returns ok:false with a reason instead of throwing. */
 export async function sendSms(to: string, content: string): Promise<SmsResult> {
   const key = apiKey();
-  const from = fromNumber();
-  if (!key || !from) return { ok: false, error: "SMS is not configured." };
+  const fromRaw = fromNumber();
+  if (!key || !fromRaw) return { ok: false, error: "SMS is not configured." };
+
+  // Quo accepts `from` as E.164 (+1...) OR a phone-number id (PN...). Normalize
+  // a plain/formatted number to E.164; pass a PN id through untouched.
+  const from = fromRaw.startsWith("PN") ? fromRaw : toE164(fromRaw);
+  if (!from) {
+    return {
+      ok: false,
+      error:
+        "QUO_FROM_NUMBER is not valid. Use full E.164 like +14706843569 (or the Quo phone-number id starting with PN).",
+    };
+  }
 
   const e164 = toE164(to);
   if (!e164) return { ok: false, error: "Invalid phone number." };
