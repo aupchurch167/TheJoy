@@ -5,7 +5,7 @@ import { BUSINESS, SITE_URL } from "@/lib/site";
 import Analytics from "@/components/Analytics";
 
 export const viewport: Viewport = {
-  themeColor: "#fbf6ee",
+  themeColor: "#f8f8f9",
 };
 
 const fraunces = Fraunces({

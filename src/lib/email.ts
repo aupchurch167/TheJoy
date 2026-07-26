@@ -31,19 +31,19 @@ function unsubscribeUrl(token: string): string {
 
 /** Wrap rendered content in a simple, warm, branded HTML shell. */
 function wrapEmail(innerHtml: string, unsubUrl: string): string {
-  return `<!doctype html><html><body style="margin:0;background:#fbf6ee;padding:24px 0;font-family:Georgia,'Times New Roman',serif;color:#2b2620;">
+  return `<!doctype html><html><body style="margin:0;background:#f8f8f9;padding:24px 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#071417;">
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td align="center">
-    <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#ffffff;border:1px solid #e6ddcd;border-radius:12px;overflow:hidden;">
-      <tr><td style="padding:24px 32px 8px;border-bottom:1px solid #e6ddcd;">
-        <div style="font-size:20px;font-weight:600;color:#2b2620;">${BUSINESS.name}</div>
-        <div style="font-size:12px;color:#8a8072;">Loganville, Georgia</div>
+    <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#ffffff;border:1px solid #e3e7e9;border-radius:12px;overflow:hidden;">
+      <tr><td style="padding:24px 32px 8px;border-bottom:1px solid #e3e7e9;">
+        <div style="font-size:20px;font-weight:600;color:#01a7ce;">${BUSINESS.name}</div>
+        <div style="font-size:12px;color:#97a0a3;">Loganville, Georgia</div>
       </td></tr>
-      <tr><td style="padding:24px 32px;font-size:16px;line-height:1.7;color:#5c5347;">
+      <tr><td style="padding:24px 32px;font-size:16px;line-height:1.7;color:#626d70;">
         ${innerHtml}
       </td></tr>
-      <tr><td style="padding:16px 32px 28px;border-top:1px solid #e6ddcd;font-size:12px;color:#8a8072;line-height:1.6;">
+      <tr><td style="padding:16px 32px 28px;border-top:1px solid #e3e7e9;font-size:12px;color:#97a0a3;line-height:1.6;">
         ${BUSINESS.name} (a personal care home), ${BUSINESS_ADDRESS_ONE_LINE}. ${BUSINESS.phone}.<br/>
-        You are receiving this because you contacted us. <a href="${unsubUrl}" style="color:#b0532b;">Unsubscribe</a>.
+        You are receiving this because you contacted us. <a href="${unsubUrl}" style="color:#017391;">Unsubscribe</a>.
       </td></tr>
     </table>
   </td></tr></table>

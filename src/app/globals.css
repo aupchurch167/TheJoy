@@ -2,25 +2,25 @@
 
 /*
   Joy Senior Living design tokens.
-  Warm, calm, human. Committed light theme (no auto dark mode): the site
-  should look the same for every family, and warm cream reads better than
-  a surprise dark flip for our audience.
+  Palette matched to joyseniorcare.com: "Joyful Blue" primary, "Caring Green"
+  secondary, cool neutrals on a near-white page. Committed light theme (no auto
+  dark mode) so the site looks the same for every family.
 */
 
 :root {
-  --paper: #fbf6ee; /* warm cream page background */
+  --paper: #f8f8f9; /* cool near-white page background (neutral-200) */
   --card: #ffffff;
-  --ink: #2b2620; /* warm near-black body text */
-  --ink-soft: #5c5347; /* secondary text */
-  --ink-faint: #8a8072;
-  --clay: #b0532b; /* primary accent / CTA (warm terracotta) */
-  --clay-dark: #8f4020;
-  --sage: #5f6b4e; /* secondary accent / success */
-  --line: #e6ddcd; /* soft borders */
-  --gold: #a8812f; /* award badge / warning */
-  --danger: #b3341f; /* destructive actions / errors */
-  --danger-dark: #8f2817;
-  --surface: #f4ecdf; /* subtle raised/hover fill on cream */
+  --ink: #071417; /* near-black headings/body (neutral-800) */
+  --ink-soft: #626d70; /* secondary text (neutral-600) */
+  --ink-faint: #97a0a3;
+  --clay: #01a7ce; /* primary accent / CTA (Joyful Blue) */
+  --clay-dark: #017391; /* darker blue for hovers + strong link text */
+  --sage: #24a332; /* secondary accent / success (Caring Green) */
+  --line: #e3e7e9; /* soft cool borders */
+  --gold: #b7791f; /* award badge / warning (amber) */
+  --danger: #cf4636; /* destructive actions / errors */
+  --danger-dark: #a5382b;
+  --surface: #eef2f3; /* subtle raised/hover fill */
 }
 
 @theme inline {
