@@ -3,6 +3,7 @@ import Difference from "@/components/sections/Difference";
 import MeetMellissa from "@/components/sections/MeetMellissa";
 import Testimonials from "@/components/sections/Testimonials";
 import CommunityPhotos from "@/components/sections/CommunityPhotos";
+import Awards from "@/components/sections/Awards";
 import LatestPosts from "@/components/sections/LatestPosts";
 import FinalCta from "@/components/sections/FinalCta";
 import { localBusinessJsonLd } from "@/lib/schema";
@@ -63,6 +64,7 @@ export default async function Home() {
       <Difference />
       <MeetMellissa />
       <Testimonials />
+      <Awards />
       <CommunityPhotos />
       <LatestPosts posts={postCards} />
       <FinalCta />

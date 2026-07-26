@@ -63,6 +63,28 @@ export const AWARD = {
 } as const;
 
 /**
+ * Award / recognition badges shown on the homepage. Real third-party awards
+ * only. Images live in /public/images/badges. `requiresMemoryCare` hides a
+ * badge unless MEMORY_CARE.enabled (so we never claim memory care recognition
+ * if memory care is not offered). To update the year, replace the image file.
+ */
+export const BADGES: { src: string; alt: string; requiresMemoryCare?: boolean }[] = [
+  {
+    src: "/images/badges/apfm-best-of-senior-living.png",
+    alt: "A Place for Mom Best of Senior Living award badge",
+  },
+  {
+    src: "/images/badges/best-in-senior-living.png",
+    alt: "Best in Senior Living award from Assisted Living Magazine",
+  },
+  {
+    src: "/images/badges/best-in-memory-care.png",
+    alt: "Best in Memory Care award from Assisted Living Magazine",
+    requiresMemoryCare: true,
+  },
+];
+
+/**
  * Joy's public social profiles. Shown as text links in the footer. Add or
  * remove an entry and the footer updates. Leave the list empty to hide the
  * whole "Follow along" block.
