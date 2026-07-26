@@ -3,7 +3,8 @@ import { requireAdmin } from "@/lib/require-admin";
 import { hasDatabase } from "@/lib/db";
 import { getSmsRecipients } from "@/lib/leads";
 import { getSmsBroadcasts } from "@/lib/broadcasts";
-import { smsEnabled } from "@/lib/sms";
+import { smsEnabled, parseSmsNumbers } from "@/lib/sms";
+import { getSettings } from "@/lib/settings";
 import { formatDateTime } from "@/lib/format";
 import {
   PageHeader,
@@ -28,11 +29,13 @@ export default async function TextsPage() {
     );
   }
 
-  const [recipients, recent] = await Promise.all([
+  const [recipients, recent, settings] = await Promise.all([
     getSmsRecipients(),
     getSmsBroadcasts(),
+    getSettings(),
   ]);
   const enabled = smsEnabled();
+  const testNumberCount = parseSmsNumbers(settings.sms_test_numbers).length;
 
   return (
     <>
@@ -68,7 +71,11 @@ export default async function TextsPage() {
         </p>
       </div>
 
-      <TextComposer enabled={enabled} recipientCount={recipients.length} />
+      <TextComposer
+        enabled={enabled}
+        recipientCount={recipients.length}
+        testNumberCount={testNumberCount}
+      />
 
       <div className="mt-10">
         <SectionLabel>Recent texts</SectionLabel>

@@ -37,6 +37,21 @@ export function toE164(phone?: string | null): string | null {
   return null;
 }
 
+/** Parse a comma/newline list of phone numbers to unique E.164, dropping invalid. */
+export function parseSmsNumbers(raw?: string | null): string[] {
+  if (!raw) return [];
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const part of raw.split(/[,\n]/)) {
+    const e164 = toE164(part.trim());
+    if (e164 && !seen.has(e164)) {
+      seen.add(e164);
+      out.push(e164);
+    }
+  }
+  return out;
+}
+
 export type SmsResult = { ok: boolean; error?: string };
 
 /** Send one SMS. Returns ok:false with a reason instead of throwing. */

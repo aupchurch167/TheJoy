@@ -1,18 +1,23 @@
 "use server";
 
+import { createHash } from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { requireAdmin } from "@/lib/require-admin";
+import { query } from "@/lib/db";
+import { getSettings } from "@/lib/settings";
 import { getSmsRecipients, markSmsOptOut } from "@/lib/leads";
 import {
   createBroadcast,
   markBroadcastSent,
   recordRecipient,
 } from "@/lib/broadcasts";
-import { sendSms, smsEnabled, toE164 } from "@/lib/sms";
+import { sendSms, smsEnabled, parseSmsNumbers } from "@/lib/sms";
 
-// Opt-out line appended to every blast, per SMS compliance best practice.
+// Opt-out line appended to every text, per SMS compliance best practice.
 const OPT_OUT = "Reply STOP to opt out.";
+// A blast is only allowed if the exact message was tested within this window.
+const TEST_VALID_MINUTES = 60;
 
 const BodySchema = z
   .string()
@@ -20,12 +25,47 @@ const BodySchema = z
   .min(1, "Write a message first.")
   .max(1000, "Keep texts short (under 1000 characters).");
 
-export type TextResult =
+/** The exact bytes that get sent (message + opt-out line). */
+function fullContent(body: string): string {
+  return `${body.trim()}\n\n${OPT_OUT}`;
+}
+/** Stable hash of the message, used to gate the blast on a matching test. */
+function bodyHash(body: string): string {
+  return createHash("sha256").update(fullContent(body)).digest("hex");
+}
+
+/** Owner/admin numbers (from Settings) that receive the required test. */
+async function getTestNumbers(): Promise<string[]> {
+  const settings = await getSettings();
+  return parseSmsNumbers(settings.sms_test_numbers);
+}
+
+async function recordTest(hash: string): Promise<void> {
+  await query(
+    `INSERT INTO sms_tests (body_hash, tested_at) VALUES ($1, now())
+     ON CONFLICT (body_hash) DO UPDATE SET tested_at = now()`,
+    [hash]
+  );
+}
+async function wasTestedRecently(hash: string): Promise<boolean> {
+  const rows = await query<{ ok: boolean }>(
+    `SELECT true AS ok FROM sms_tests
+      WHERE body_hash = $1 AND tested_at > now() - ($2 || ' minutes')::interval
+      LIMIT 1`,
+    [hash, String(TEST_VALID_MINUTES)]
+  );
+  return rows.length > 0;
+}
+
+export type TestResult =
   | { ok: true; sent: number; failed: number; total: number }
   | { ok: false; error: string };
 
-/** Send a text blast to all opted-in, active family contacts with a phone. */
-export async function sendTextBlast(input: unknown): Promise<TextResult> {
+/**
+ * Required step: send the exact message to the owner/admin test numbers. On at
+ * least one success, the message is marked tested so the blast unlocks.
+ */
+export async function sendTestToAdmins(input: unknown): Promise<TestResult> {
   await requireAdmin();
   const parsed = BodySchema.safeParse(input);
   if (!parsed.success) {
@@ -33,6 +73,58 @@ export async function sendTextBlast(input: unknown): Promise<TextResult> {
   }
   if (!smsEnabled()) {
     return { ok: false, error: "Texting is not configured yet (see OPERATIONS.md)." };
+  }
+  const numbers = await getTestNumbers();
+  if (numbers.length === 0) {
+    return {
+      ok: false,
+      error:
+        "No test numbers set. Add owner/admin phone numbers in Settings → Text test numbers.",
+    };
+  }
+
+  const content = fullContent(parsed.data);
+  let sent = 0;
+  let failed = 0;
+  for (const n of numbers) {
+    const res = await sendSms(n, content);
+    if (res.ok) sent++;
+    else failed++;
+    await new Promise((r) => setTimeout(r, 120));
+  }
+  if (sent === 0) {
+    return {
+      ok: false,
+      error: "Every test text failed. Check the number(s) and Quo setup.",
+    };
+  }
+  await recordTest(bodyHash(parsed.data));
+  return { ok: true, sent, failed, total: numbers.length };
+}
+
+export type BlastResult =
+  | { ok: true; sent: number; failed: number; total: number }
+  | { ok: false; error: string; needsTest?: boolean };
+
+/** Send a text blast to opted-in, active family contacts. Gated on a test. */
+export async function sendTextBlast(input: unknown): Promise<BlastResult> {
+  await requireAdmin();
+  const parsed = BodySchema.safeParse(input);
+  if (!parsed.success) {
+    return { ok: false, error: parsed.error.issues[0]?.message ?? "Invalid." };
+  }
+  if (!smsEnabled()) {
+    return { ok: false, error: "Texting is not configured yet (see OPERATIONS.md)." };
+  }
+
+  // Gate: this exact message must have been test-sent to the owners/admins.
+  if (!(await wasTestedRecently(bodyHash(parsed.data)))) {
+    return {
+      ok: false,
+      needsTest: true,
+      error:
+        "Send a test to the owners & admin first. The blast stays locked until this exact message has been tested.",
+    };
   }
 
   const recipients = await getSmsRecipients();
@@ -44,7 +136,7 @@ export async function sendTextBlast(input: unknown): Promise<TextResult> {
     };
   }
 
-  const content = `${parsed.data}\n\n${OPT_OUT}`;
+  const content = fullContent(parsed.data);
   const broadcast = await createBroadcast("", parsed.data, "families", "sms");
 
   let sent = 0;
@@ -54,26 +146,12 @@ export async function sendTextBlast(input: unknown): Promise<TextResult> {
     await recordRecipient(broadcast.id, r.id, res.ok ? undefined : res.error);
     if (res.ok) sent++;
     else failed++;
-    // Gentle pacing to stay under Quo's rate limit.
     await new Promise((resolve) => setTimeout(resolve, 120));
   }
 
   await markBroadcastSent(broadcast.id, sent);
   revalidatePath("/admin/texts");
   return { ok: true, sent, failed, total: recipients.length };
-}
-
-/** Send a single test text to a number, to confirm setup before a blast. */
-export async function sendTestText(
-  body: string,
-  phone: string
-): Promise<{ ok: boolean; error?: string }> {
-  await requireAdmin();
-  const parsed = BodySchema.safeParse(body);
-  if (!parsed.success) return { ok: false, error: parsed.error.issues[0]?.message };
-  if (!smsEnabled()) return { ok: false, error: "Texting is not configured yet." };
-  if (!toE164(phone)) return { ok: false, error: "Enter a valid US phone number." };
-  return sendSms(phone, `${parsed.data}\n\n${OPT_OUT}`);
 }
 
 /** Manually opt a contact out of texts (e.g. they asked to stop). */

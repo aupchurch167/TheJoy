@@ -32,6 +32,8 @@ function defaults(): SiteSettings {
     careers_url: CAREERS_URL_DEFAULT,
     // Falls back to the env/phone tour path when no setting is stored.
     talkfurther_url: TOUR_URL,
+    // Owner/admin numbers that get the required test text before a blast.
+    sms_test_numbers: process.env.SMS_TEST_NUMBERS || "",
   };
 }
 
@@ -53,6 +55,8 @@ export const getSettings = cache(async (): Promise<SiteSettings> => {
       careers_url: get("careers_url") || d.careers_url,
       // talkfurther_url: empty falls back to the default tour path.
       talkfurther_url: get("talkfurther_url") || d.talkfurther_url,
+      // sms_test_numbers: empty falls back to the env default (if any).
+      sms_test_numbers: get("sms_test_numbers") || d.sms_test_numbers,
     };
   } catch {
     return d;

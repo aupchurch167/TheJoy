@@ -365,8 +365,15 @@ sending is off.
 to a family contact you have marked **Texts: on** in the Family list, who is
 active and has a phone. Only opt in people who agreed to be texted. Every message
 automatically adds "Reply STOP to opt out."; if someone asks to stop, use **Texts
-off** (or it records their opt-out) and they are never texted again. Always use
-**Send a test to yourself** before a blast.
+off** (or it records their opt-out) and they are never texted again.
+
+**Required test before every blast.** A family blast is locked until that exact
+message has been test-sent to the owner/admin numbers. Set those numbers in
+`/admin > Settings > Text test numbers (owners & admin)` (comma-separated), or
+via the `SMS_TEST_NUMBERS` env var. On the Texts page: write the message,
+**Step 1** send the test (goes to those numbers), review it on your phone, then
+**Step 2** send to families unlocks. Editing the message after testing locks it
+again until you re-test. This is enforced on the server, not just in the browser.
 
 ### Emailing families
 

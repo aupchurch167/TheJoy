@@ -151,6 +151,14 @@ ALTER TABLE broadcasts
 ALTER TABLE broadcasts ADD COLUMN IF NOT EXISTS channel TEXT NOT NULL DEFAULT 'email'
   CHECK (channel IN ('email', 'sms'));
 
+-- Text-blast safety gate: a family blast is only allowed after that exact
+-- message was test-sent to the owners/admins. One row per tested message
+-- (keyed by a hash of the content); tested_at gates how recent it must be.
+CREATE TABLE IF NOT EXISTS sms_tests (
+  body_hash  TEXT PRIMARY KEY,
+  tested_at  TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
 -- Public photo gallery. Real photos only (uploaded via admin). posted_at drives
 -- the public ordering.
 CREATE TABLE IF NOT EXISTS photos (

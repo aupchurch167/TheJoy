@@ -9,12 +9,20 @@ export const SETTING_KEYS = [
   "address",
   "careers_url",
   "talkfurther_url",
+  "sms_test_numbers",
 ] as const;
 
 export type SettingKey = (typeof SETTING_KEYS)[number];
 
 /** Keys that must be a valid http(s) URL when non-empty. */
 export const URL_KEYS: SettingKey[] = ["careers_url", "talkfurther_url"];
+
+/** Keys that may be left blank (optional). */
+export const OPTIONAL_KEYS: SettingKey[] = [
+  "careers_url",
+  "talkfurther_url",
+  "sms_test_numbers",
+];
 
 /** Human labels + hints for the admin screen. */
 export const SETTING_META: Record<
@@ -33,6 +41,11 @@ export const SETTING_META: Record<
     label: "Tour link (TalkFurther)",
     hint: "The single Book-a-tour destination. Blank falls back to the phone number.",
     type: "url",
+  },
+  sms_test_numbers: {
+    label: "Text test numbers (owners & admin)",
+    hint: "Comma-separated phone numbers. A text blast must be test-sent to these first; they get the required preview before any family blast.",
+    type: "text",
   },
 };
 
@@ -53,6 +66,7 @@ export function validateSetting(key: string, value: string): string | null {
     if (!isValidHttpUrl(v)) return `${key} must be a valid http(s) URL.`;
     return null;
   }
+  if (v === "" && (OPTIONAL_KEYS as string[]).includes(key)) return null;
   if (v === "") return `${key} cannot be empty.`;
   return null;
 }

@@ -1,9 +1,10 @@
 "use client";
 
+import Link from "next/link";
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { sendTextBlast, sendTestText } from "./actions";
-import { Card, Textarea, Input, Button, SectionLabel } from "@/components/admin/ui";
+import { sendTextBlast, sendTestToAdmins } from "./actions";
+import { Card, Textarea, Button, SectionLabel } from "@/components/admin/ui";
 import ConfirmButton from "@/components/admin/ConfirmButton";
 import { useToast } from "@/components/admin/Toast";
 
@@ -12,46 +13,62 @@ const OPT_OUT_LEN = "\n\nReply STOP to opt out.".length;
 export default function TextComposer({
   enabled,
   recipientCount,
+  testNumberCount,
 }: {
   enabled: boolean;
   recipientCount: number;
+  testNumberCount: number;
 }) {
   const router = useRouter();
   const { success, error: toastError } = useToast();
   const [body, setBody] = useState("");
-  const [testPhone, setTestPhone] = useState("");
+  // The message text that was last successfully tested. The blast unlocks only
+  // while the current text matches this exactly.
+  const [testedBody, setTestedBody] = useState<string | null>(null);
   const [pending, start] = useTransition();
   const [testing, setTesting] = useState(false);
 
-  // Rough SMS segment estimate (GSM-7: 160 for one part, 153 for multi-part).
+  const trimmed = body.trim();
+  const isTested = testedBody !== null && testedBody === trimmed;
+
   const total = body.length + (body ? OPT_OUT_LEN : 0);
   const segments = total === 0 ? 0 : total <= 160 ? 1 : Math.ceil(total / 153);
-  const canSend = enabled && body.trim() !== "" && recipientCount > 0;
+
+  const canTest = enabled && trimmed !== "" && testNumberCount > 0 && !testing;
+  const canBlast = enabled && isTested && recipientCount > 0;
+
+  async function onTest() {
+    setTesting(true);
+    const res = await sendTestToAdmins(body);
+    setTesting(false);
+    if (!res.ok) {
+      toastError(res.error);
+      return;
+    }
+    setTestedBody(trimmed);
+    success(
+      `Test sent to ${res.sent} owner/admin number${res.sent === 1 ? "" : "s"}. Review it, then send the blast.`
+    );
+  }
 
   async function onBlast() {
     return new Promise<void>((resolve) => {
       start(async () => {
         const res = await sendTextBlast(body);
         if (!res.ok) {
+          if (res.needsTest) setTestedBody(null);
           toastError(res.error);
         } else {
           success(
             `Text sent to ${res.sent} of ${res.total} families${res.failed ? `, ${res.failed} failed` : ""}.`
           );
           setBody("");
+          setTestedBody(null);
           router.refresh();
         }
         resolve();
       });
     });
-  }
-
-  async function onTest() {
-    setTesting(true);
-    const res = await sendTestText(body, testPhone);
-    setTesting(false);
-    if (res.ok) success(`Test text sent to ${testPhone}.`);
-    else toastError(res.error || "Could not send the test.");
   }
 
   return (
@@ -84,48 +101,67 @@ export default function TextComposer({
         </span>
       </div>
 
-      {/* Test send */}
-      <div className="mt-4 flex flex-wrap items-end gap-2 rounded-lg border border-line bg-paper/60 p-3">
-        <div className="flex-1">
-          <label className="mb-1 block text-xs font-medium text-ink">
-            Send a test to yourself first
-          </label>
-          <Input
-            value={testPhone}
-            onChange={(e) => setTestPhone(e.target.value)}
-            placeholder="(470) 555-0100"
-          />
+      {/* Step 1: required test to owners & admin */}
+      <div className="mt-4 rounded-lg border border-line bg-paper/60 p-3">
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <p className="text-sm font-medium text-ink">
+              Step 1 · Test to owners &amp; admin{" "}
+              {isTested && <span className="text-sage">✓ done</span>}
+            </p>
+            <p className="mt-0.5 text-xs text-ink-faint">
+              {testNumberCount > 0 ? (
+                <>
+                  Sends this exact message to {testNumberCount} owner/admin number
+                  {testNumberCount === 1 ? "" : "s"} for review. Required before a
+                  blast; editing the message means testing again.
+                </>
+              ) : (
+                <>
+                  Add owner/admin numbers in{" "}
+                  <Link href="/admin/settings" className="font-medium text-clay hover:text-clay-dark">
+                    Settings
+                  </Link>{" "}
+                  to enable testing.
+                </>
+              )}
+            </p>
+          </div>
+          <Button variant="secondary" size="sm" onClick={onTest} disabled={!canTest}>
+            {testing ? "Sending…" : "Send test"}
+          </Button>
         </div>
-        <Button
-          variant="secondary"
-          size="md"
-          onClick={onTest}
-          disabled={!enabled || testing || body.trim() === "" || testPhone.trim() === ""}
-        >
-          {testing ? "Sending…" : "Send test"}
-        </Button>
       </div>
 
-      <div className="mt-5">
+      {/* Step 2: the blast, locked until tested */}
+      <div className="mt-4">
+        <p className="mb-2 text-sm font-medium text-ink">
+          Step 2 · Send to families{" "}
+          {!isTested && trimmed !== "" && (
+            <span className="text-ink-faint">(locked until tested)</span>
+          )}
+        </p>
         <ConfirmButton
           variant="primary"
           size="md"
           confirmVariant="primary"
-          disabled={!canSend || pending}
+          disabled={!canBlast || pending}
           title="Send this text now?"
           message={
             <>
               This texts <strong>{recipientCount}</strong> opted-in famil
-              {recipientCount === 1 ? "y" : "ies"} through Quo. Texts cannot be
-              unsent.
+              {recipientCount === 1 ? "y" : "ies"} through Quo. You already tested
+              this message with the owners/admins. Texts cannot be unsent.
             </>
           }
           confirmLabel={`Send to ${recipientCount}`}
           onConfirm={onBlast}
         >
-          {pending ? "Sending…" : `Send to ${recipientCount} famil${recipientCount === 1 ? "y" : "ies"}`}
+          {pending
+            ? "Sending…"
+            : `Send to ${recipientCount} famil${recipientCount === 1 ? "y" : "ies"}`}
         </ConfirmButton>
-        {!canSend && enabled && recipientCount === 0 && (
+        {enabled && recipientCount === 0 && (
           <p className="mt-2 text-xs text-ink-faint">
             No one is opted in yet. Turn on <strong>Texts</strong> for family
             contacts in the Family list.
