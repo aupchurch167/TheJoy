@@ -1,10 +1,17 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { Fragment, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { saveSiteSettings } from "./actions";
 import { SETTING_META, type SettingKey } from "@/lib/settings-meta";
-import { Card, Field, Input, Button } from "@/components/admin/ui";
+import {
+  Card,
+  Field,
+  Input,
+  Textarea,
+  SectionLabel,
+  Button,
+} from "@/components/admin/ui";
 import { useToast } from "@/components/admin/Toast";
 
 export default function SettingsForm({
@@ -19,6 +26,10 @@ export default function SettingsForm({
   );
   const [error, setError] = useState("");
   const [pending, start] = useTransition();
+
+  function set(key: string, value: string) {
+    setValues((v) => ({ ...v, [key]: value }));
+  }
 
   function onSave(e: React.FormEvent) {
     e.preventDefault();
@@ -39,25 +50,67 @@ export default function SettingsForm({
   return (
     <Card>
       <form onSubmit={onSave} className="grid gap-5">
-        {initial.map((s) => {
+        {initial.map((s, i) => {
           const meta = SETTING_META[s.key];
+          const value = values[s.key] ?? "";
+          // Group header whenever the group changes from the previous field.
+          const prevGroup = i > 0 ? SETTING_META[initial[i - 1].key]?.group : null;
+          const showGroup = meta?.group && meta.group !== prevGroup;
+
           return (
-            <Field
-              key={s.key}
-              label={meta?.label ?? s.key}
-              htmlFor={`setting-${s.key}`}
-              hint={meta?.hint}
-            >
-              <Input
-                id={`setting-${s.key}`}
-                type={meta?.type === "url" ? "url" : "text"}
-                value={values[s.key] ?? ""}
-                onChange={(e) =>
-                  setValues((v) => ({ ...v, [s.key]: e.target.value }))
-                }
-                placeholder={meta?.type === "url" ? "https://…" : undefined}
-              />
-            </Field>
+            <Fragment key={s.key}>
+              {showGroup && (
+                <div className={i > 0 ? "border-t border-line pt-5" : ""}>
+                  <SectionLabel>{meta.group}</SectionLabel>
+                </div>
+              )}
+
+              {meta?.type === "bool" ? (
+                <label className="flex items-start gap-3">
+                  <input
+                    type="checkbox"
+                    checked={value === "on"}
+                    onChange={(e) => set(s.key, e.target.checked ? "on" : "")}
+                    className="mt-0.5 h-5 w-5 rounded border-line text-clay focus:ring-clay/30"
+                  />
+                  <span>
+                    <span className="block text-sm font-medium text-ink">
+                      {meta.label}
+                    </span>
+                    {meta.hint && (
+                      <span className="mt-0.5 block text-xs text-ink-faint">
+                        {meta.hint}
+                      </span>
+                    )}
+                  </span>
+                </label>
+              ) : (
+                <Field
+                  label={meta?.label ?? s.key}
+                  htmlFor={`setting-${s.key}`}
+                  hint={meta?.hint}
+                >
+                  {meta?.type === "textarea" ? (
+                    <Textarea
+                      id={`setting-${s.key}`}
+                      rows={2}
+                      value={value}
+                      onChange={(e) => set(s.key, e.target.value)}
+                    />
+                  ) : (
+                    <Input
+                      id={`setting-${s.key}`}
+                      type="text"
+                      value={value}
+                      onChange={(e) => set(s.key, e.target.value)}
+                      placeholder={
+                        meta?.type === "url" ? "https://… or /page" : undefined
+                      }
+                    />
+                  )}
+                </Field>
+              )}
+            </Fragment>
           );
         })}
 

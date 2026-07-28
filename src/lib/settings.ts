@@ -1,6 +1,6 @@
 import { cache } from "react";
 import { hasDatabase, query } from "./db";
-import { BUSINESS, BUSINESS_ADDRESS_ONE_LINE, TOUR_URL } from "./site";
+import { BUSINESS, BUSINESS_ADDRESS_ONE_LINE, TOUR_URL, HERO } from "./site";
 import { SETTING_KEYS, URL_KEYS, type SettingKey } from "./settings-meta";
 
 /**
@@ -34,6 +34,13 @@ function defaults(): SiteSettings {
     talkfurther_url: TOUR_URL,
     // Owner/admin numbers that get the required test text before a blast.
     sms_test_numbers: process.env.SMS_TEST_NUMBERS || "",
+    // Homepage headline; blank in the DB falls back to this built-in line.
+    hero_headline: HERO.headline,
+    // Promotion banner: off with no content by default.
+    promo_enabled: "",
+    promo_text: "",
+    promo_cta_label: "",
+    promo_cta_url: "",
   };
 }
 
@@ -57,6 +64,13 @@ export const getSettings = cache(async (): Promise<SiteSettings> => {
       talkfurther_url: get("talkfurther_url") || d.talkfurther_url,
       // sms_test_numbers: empty falls back to the env default (if any).
       sms_test_numbers: get("sms_test_numbers") || d.sms_test_numbers,
+      // hero_headline: empty falls back to the built-in headline.
+      hero_headline: get("hero_headline") || d.hero_headline,
+      // promo_*: stored "" is a real value (off / no content), so respect it.
+      promo_enabled: get("promo_enabled") ?? d.promo_enabled,
+      promo_text: get("promo_text") ?? d.promo_text,
+      promo_cta_label: get("promo_cta_label") ?? d.promo_cta_label,
+      promo_cta_url: get("promo_cta_url") ?? d.promo_cta_url,
     };
   } catch {
     return d;

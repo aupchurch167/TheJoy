@@ -24,7 +24,7 @@ export default async function SiteSettingsPage() {
     <div className="max-w-2xl">
       <PageHeader
         title="Site settings"
-        description="Values used across the public site (contact facts, the Careers link, the tour link). Editing here updates the live site within a moment."
+        description="Values used across the public site: contact facts, the Careers and tour links, the homepage headline, and the promotion banner. Editing here updates the live site within a moment."
       />
       <SettingsForm initial={settings} />
     </div>

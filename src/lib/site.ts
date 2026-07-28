@@ -116,10 +116,12 @@ export const TRACKED_KEYWORDS: string[] = [
 /* ------------------------------------------------------------------ */
 
 export const HERO = {
-  // Rewritten in the copywriter's homepage pass (owner-approved). The prior
-  // line ("a home small enough to know your parent by name") still lives in the
-  // meta description and footer, so we kept the phrase without losing the punch.
-  headline: "Twenty-four residents. That's the whole idea.",
+  // The built-in default headline. This is now editable from the admin (Site
+  // settings > Homepage headline, key hero_headline); an empty setting falls
+  // back to this line. Earlier lines ("Twenty-four residents. That's the whole
+  // idea." and "a home small enough to know your parent by name") still live in
+  // the meta description and footer.
+  headline: "You can go back to being a daughter.",
   sub: `Joy is a personal care home and memory care in ${BUSINESS.address.city}, Georgia (small enough that we learn how your mother takes her coffee and which chair your father claims after breakfast).`,
   ctaLabel: "Book a tour",
   // Rendered next to the tour button.

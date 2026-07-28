@@ -1,6 +1,7 @@
 import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
 import MarketingScripts from "@/components/MarketingScripts";
+import PromoBanner from "@/components/PromoBanner";
 
 // Render dynamically so admin edits to site settings (contact facts, careers
 // link, tour link) in the shared header/footer show up promptly.
@@ -22,6 +23,7 @@ export default function SiteLayout({
       >
         Skip to content
       </a>
+      <PromoBanner />
       <SiteHeader />
       <main id="main" className="flex-1">
         {children}
