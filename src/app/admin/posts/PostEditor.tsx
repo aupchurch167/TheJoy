@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Markdown from "@/components/Markdown";
 import { savePost, removePost } from "./actions";
 import type { Post } from "@/lib/posts";
+import { suggestHeroPrompt, defaultHeroAlt } from "@/lib/hero-prompt";
 import { btn, BackLink, Badge } from "@/components/admin/ui";
 import ConfirmButton from "@/components/admin/ConfirmButton";
 import { useToast } from "@/components/admin/Toast";
@@ -313,6 +314,30 @@ export default function PostEditor({
             />
             <UploadButton label="Upload" onFile={(file) => uploadInline(file, true)} />
           </div>
+
+          <GenerateHeroPanel
+            fields={{
+              title: f.title,
+              excerpt: f.excerpt,
+              category: f.category,
+              slug: f.slug,
+            }}
+            onImage={(url, altSuggestion) => {
+              setF((prev) => ({
+                ...prev,
+                hero_image: url,
+                hero_image_alt: prev.hero_image_alt || altSuggestion,
+              }));
+              success(
+                "Hero image generated. Review it (and the alt text) before publishing."
+              );
+            }}
+            onError={(msg) => {
+              setError(msg);
+              toastError(msg);
+            }}
+          />
+
           {f.hero_image && (
             <div className="mt-3">
               {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -491,6 +516,107 @@ function UploadButton({
         }}
       />
     </>
+  );
+}
+
+/* ---------- Hero image generation (calls the Gemini-backed endpoint) ---------- */
+
+function GenerateHeroPanel({
+  fields,
+  onImage,
+  onError,
+}: {
+  fields: { title: string; excerpt: string; category: string; slug: string };
+  onImage: (url: string, altSuggestion: string) => void;
+  onError: (msg: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [prompt, setPrompt] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  function toggle() {
+    setOpen((o) => {
+      const next = !o;
+      // Suggest a prompt the first time the panel opens.
+      if (next && !prompt.trim()) setPrompt(suggestHeroPrompt(fields));
+      return next;
+    });
+  }
+
+  async function generate() {
+    if (!prompt.trim()) {
+      onError("Write a prompt for the image first.");
+      return;
+    }
+    setBusy(true);
+    try {
+      const res = await fetch("/api/admin/generate-image", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prompt, slug: fields.slug || fields.title }),
+      });
+      const json = await res.json();
+      if (!res.ok || !json.ok) {
+        onError(json.error || "Image generation failed.");
+        return;
+      }
+      onImage(json.url, defaultHeroAlt(fields));
+    } catch {
+      onError("Could not reach the image service.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="mt-3 rounded-lg border border-sage/30 bg-sage/5 p-3">
+      <button
+        type="button"
+        onClick={toggle}
+        className="flex items-center gap-2 text-sm font-semibold text-sage"
+      >
+        <span aria-hidden="true">✨</span>
+        {open
+          ? "Generate a hero image with Gemini (hide)"
+          : "Generate a hero image with Gemini"}
+      </button>
+      {open && (
+        <div className="mt-3 grid gap-2">
+          <p className="text-xs leading-relaxed text-ink-faint">
+            Describe the image you want (we suggested one from your title, edit it
+            freely). Gemini creates it and saves it as the hero image. These are
+            AI illustrations, not real photos of Joy, so keep them atmospheric
+            (light, a porch, hands, a table), never fake photos of the home,
+            residents, or staff. Review before publishing.
+          </p>
+          <textarea
+            value={prompt}
+            onChange={(e) => setPrompt(e.target.value)}
+            rows={4}
+            className={INPUT}
+            placeholder="Describe the hero image you want…"
+          />
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              onClick={generate}
+              disabled={busy}
+              className={btn("primary", "sm", "bg-sage hover:bg-sage/90")}
+            >
+              {busy ? "Generating…" : "Generate image"}
+            </button>
+            <button
+              type="button"
+              onClick={() => setPrompt(suggestHeroPrompt(fields))}
+              disabled={busy}
+              className={btn("secondary", "sm")}
+            >
+              Suggest a prompt
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
   );
 }
 

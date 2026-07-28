@@ -223,6 +223,20 @@ To upload images (hero or inside a post), set up an S3-compatible bucket
 (Cloudflare R2 is the easy choice) with the `S3_*` env vars. Without that, you
 can still paste an image URL into the hero field or a Markdown image link.
 
+### Generate a hero image with Gemini
+
+In the editor, under the Hero image field, click **Generate a hero image with
+Gemini**. It pre-fills a suggested prompt from your post title (edit it freely),
+then Gemini creates the image and saves it as the hero. This needs
+`GEMINI_API_KEY` set (from aistudio.google.com) **and** storage configured (the
+`S3_*` vars), because the generated image is saved to your bucket. If your
+account exposes a different image model, set `GEMINI_IMAGE_MODEL`.
+
+These are **AI illustrations, not real photos of Joy.** Keep them atmospheric
+(light, a porch, hands, a table). Do not generate fake photos of the home,
+residents, or staff (the "real photos only" rule still governs anything that
+depicts Joy itself). Always review before publishing.
+
 ### Moving the old Webflow posts over (one-time)
 
 1. Export your blog from Webflow (CSV is fine).
