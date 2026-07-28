@@ -47,6 +47,32 @@ export function storageEnabled(): boolean {
   return config() !== null;
 }
 
+/**
+ * Check that a just-uploaded object is actually readable at its public URL.
+ * The #1 cause of "I uploaded a photo but it shows the placeholder" is an
+ * S3_PUBLIC_URL that points at the private S3 API endpoint (which needs signed
+ * requests) instead of the bucket's public URL (R2.dev subdomain or a custom
+ * domain), or a bucket without public access. A quick GET catches that and lets
+ * the UI say so, instead of the image silently 403ing on the live site.
+ */
+export async function verifyPublicUrl(
+  url: string
+): Promise<{ ok: boolean; status: number | null }> {
+  try {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 6000);
+    const res = await fetch(url, {
+      method: "GET",
+      cache: "no-store",
+      signal: controller.signal,
+    });
+    clearTimeout(timer);
+    return { ok: res.ok, status: res.status };
+  } catch {
+    return { ok: false, status: null };
+  }
+}
+
 export async function uploadImage(
   bytes: Buffer,
   key: string,

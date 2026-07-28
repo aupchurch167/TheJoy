@@ -59,6 +59,8 @@ function PhotoSlotCard({ slot, canUpload }: { slot: Slot; canUpload: boolean }) 
       setValue(json.url);
       setBroken(false);
       save(json.url);
+      // The file saved, but its public URL is not readable (storage config).
+      if (json.warning) toastError(json.warning);
     } catch {
       toastError("Upload failed.");
     } finally {

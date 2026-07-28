@@ -223,6 +223,21 @@ To upload images (hero or inside a post), set up an S3-compatible bucket
 (Cloudflare R2 is the easy choice) with the `S3_*` env vars. Without that, you
 can still paste an image URL into the hero field or a Markdown image link.
 
+**"I uploaded a photo but the site still shows the placeholder."** The image
+saved to the bucket, but the browser cannot load it from its public URL. The
+upload now warns you when this happens. Almost always it is `S3_PUBLIC_URL`:
+
+- `S3_PUBLIC_URL` must be the bucket's **public** URL, not the S3 API endpoint.
+  - Right: the R2 **public development URL** (`https://pub-<hash>.r2.dev`) or a
+    custom domain you connected to the bucket (e.g. `https://img.joyseniorcare.com`).
+  - Wrong: `https://<account>.r2.cloudflarestorage.com/...` (that is `S3_ENDPOINT`;
+    it needs signed requests, so public `<img>` loads get 401/403).
+- In Cloudflare R2, the bucket needs public access **on** (enable the r2.dev
+  public URL, or attach the custom domain). A brand-new bucket is private.
+- Test it: paste the image's URL straight into a browser tab. If it does not
+  load there, the site cannot load it either. Fix `S3_PUBLIC_URL` / public
+  access, then re-upload (or just re-save the same URL).
+
 ### Generate a hero image with Gemini
 
 In the editor, under the Hero image field, click **Generate a hero image with

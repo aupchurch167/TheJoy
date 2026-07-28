@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { isAdminRequest } from "@/lib/require-admin";
-import { storageEnabled, uploadImage } from "@/lib/storage";
+import { storageEnabled, uploadImage, verifyPublicUrl } from "@/lib/storage";
 import { slugify } from "@/lib/posts";
 
 export const runtime = "nodejs";
@@ -50,6 +50,21 @@ export async function POST(request: Request) {
   try {
     const bytes = Buffer.from(await file.arrayBuffer());
     const url = await uploadImage(bytes, key, file.type);
+
+    // The upload can succeed to the bucket yet not be publicly readable (wrong
+    // S3_PUBLIC_URL, or the bucket is not public). Catch that here so the admin
+    // gets a clear message instead of a silent placeholder on the site.
+    const check = await verifyPublicUrl(url);
+    if (!check.ok) {
+      return NextResponse.json({
+        ok: true,
+        url,
+        warning: `Uploaded, but the image is not loading from its public URL${
+          check.status ? ` (HTTP ${check.status})` : ""
+        }. Check that S3_PUBLIC_URL is the bucket's public URL (an R2.dev subdomain or your custom domain, not the S3 endpoint) and that public access is on. See OPERATIONS.md.`,
+      });
+    }
+
     return NextResponse.json({ ok: true, url });
   } catch (err) {
     console.error("[upload]", err);

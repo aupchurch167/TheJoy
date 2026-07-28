@@ -159,6 +159,11 @@ export default function PostEditor({
     } else {
       set("body", `${f.body}\n\n![](${json.url})\n`);
     }
+    // Saved to the bucket, but not readable at its public URL (storage config).
+    if (json.warning) {
+      setError(json.warning);
+      toastError(json.warning);
+    }
   }
 
   return (
