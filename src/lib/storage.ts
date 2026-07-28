@@ -75,34 +75,22 @@ export async function verifyPublicUrl(
 
 /**
  * Build an operator-facing message for an upload whose public URL did not load.
- * Includes the exact URL (admin-only) and a targeted hint for the two common
- * causes: a 404 from S3_PUBLIC_URL carrying an extra bucket-name path segment
- * (or mapping to a different bucket), and a 401/403 from public access being
- * off or S3_PUBLIC_URL being the private S3 endpoint.
+ * Includes the exact URL (admin-only). The fix is always the same: make
+ * S3_PUBLIC_URL equal everything before "/blog/" in the object's real public
+ * URL. Whether that includes the bucket name depends on the bucket's public-URL
+ * style (some R2 dev URLs include it, some do not), so we tell the operator to
+ * copy it from the bucket rather than guessing.
  */
 export function publicUrlProblem(url: string, status: number | null): string {
-  const cfg = config();
-  const bucket = cfg?.bucket;
-
-  let hint = "";
-  try {
-    const path = new URL(url).pathname;
-    if (bucket && (path === `/${bucket}` || path.startsWith(`/${bucket}/`))) {
-      hint = ` It looks like S3_PUBLIC_URL includes the bucket name ("${bucket}"). The public R2/S3 URL already points at the bucket, so remove "/${bucket}" from S3_PUBLIC_URL.`;
-    }
-  } catch {
-    // ignore URL parse issues
-  }
-
   const code = status ? `HTTP ${status}` : "no response";
   const meaning =
     status === 404
-      ? "the file is not at that URL. Usually S3_PUBLIC_URL points to the wrong bucket, or has an extra path segment"
+      ? "the file is not at that URL, so S3_PUBLIC_URL does not match the bucket's real public URL"
       : status === 401 || status === 403
         ? "access is denied. The bucket may not be public, or S3_PUBLIC_URL is the private S3 endpoint (…r2.cloudflarestorage.com) instead of the public URL"
         : "the URL could not be loaded";
 
-  return `Uploaded, but the image did not load from ${url} (${code}): ${meaning}.${hint} See OPERATIONS.md.`;
+  return `Uploaded, but the image did not load from ${url} (${code}): ${meaning}. Open the file in your bucket, copy its public URL, and set S3_PUBLIC_URL to everything BEFORE "/blog/". See OPERATIONS.md.`;
 }
 
 export async function uploadImage(
