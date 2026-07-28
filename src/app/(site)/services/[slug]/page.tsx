@@ -8,6 +8,8 @@ import {
 } from "@/lib/site";
 import { serviceJsonLd } from "@/lib/schema";
 import { getSettings } from "@/lib/settings";
+import { getServicePhotos } from "@/lib/site-photos";
+import Photo from "@/components/Photo";
 import TourButton from "@/components/TourButton";
 
 // Detail pages are static content; prerender each visible service.
@@ -46,7 +48,11 @@ export default async function ServiceDetailPage({
   const service = getServiceDetail(slug);
   if (!service) notFound();
 
-  const settings = await getSettings();
+  const [settings, servicePhotos] = await Promise.all([
+    getSettings(),
+    getServicePhotos(),
+  ]);
+  const photo = servicePhotos.get(service.slug) || service.photo;
 
   return (
     <div className="prose-joy mx-auto max-w-2xl px-5 py-16">
@@ -68,6 +74,13 @@ export default async function ServiceDetailPage({
         {service.name}
       </h1>
       <p className="mt-4 text-xl leading-relaxed text-ink">{service.tagline}</p>
+
+      <Photo
+        src={photo.src}
+        alt={photo.alt}
+        priority
+        className="mt-8 aspect-[16/9] w-full ring-1 ring-line"
+      />
 
       <p className="mt-8 text-lg text-ink-soft">{service.intro}</p>
 

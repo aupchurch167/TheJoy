@@ -35,7 +35,7 @@ export default async function SitePhotosPage() {
     <>
       <PageHeader
         title="Site photos"
-        description="The main photos on your homepage and About page. Upload a new one or paste an image URL; the site updates within a moment. Real photos only, no stock."
+        description="The main photos across your site (homepage, About, and each service). Upload a new one or paste an image URL; the site updates within a moment. Real photos only, no stock."
         actions={
           <ButtonLink href="/" variant="secondary" size="sm" target="_blank">
             View site

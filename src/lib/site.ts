@@ -531,6 +531,12 @@ export type ServiceDetail = {
   intro: string;
   sections: { heading: string; body: string[] }[];
   gated?: "memory";
+  /**
+   * Card + page photo. Real photos only (no stock). The `src` is the code
+   * default and shows a calm placeholder until the real file exists; an
+   * operator can also swap it from /admin/photos (settingKey photo_service_*).
+   */
+  photo: { src: string; alt: string };
 };
 
 export const SERVICE_DETAILS: ServiceDetail[] = [
@@ -541,6 +547,10 @@ export const SERVICE_DETAILS: ServiceDetail[] = [
     metaTitle: "Personal Care in a Loganville Personal Care Home",
     metaDescription:
       "Personal care at Joy Senior Living in Loganville, GA: help with bathing, dressing, medications, meals, and around-the-clock support, at a scale small enough to know your parent by name.",
+    photo: {
+      src: "/images/services/personal-care.jpg",
+      alt: "A caregiver helping a resident at Joy Senior Living in Loganville",
+    },
     intro: `Joy is a personal care home in Loganville. Personal care is the heart of what we do: steady help with the parts of daily life that get harder to manage alone, given by people who know your parent as a person.`,
     sections: [
       {
@@ -571,6 +581,10 @@ export const SERVICE_DETAILS: ServiceDetail[] = [
     metaTitle: "Memory Care in a Loganville Personal Care Home",
     metaDescription:
       "Memory care at Joy Senior Living in Loganville, GA, offered within our personal care home: a small, familiar setting with trained staff and steady routines for a parent living with dementia.",
+    photo: {
+      src: "/images/services/memory-care.jpg",
+      alt: "A quiet, familiar common room used for memory care at Joy Senior Living",
+    },
     intro: `For families facing memory loss, Joy offers memory care inside our personal care home. The setting is the same small one, with the same familiar faces, which matters more for a person living with dementia than almost anything else.`,
     gated: "memory",
     sections: [
@@ -601,6 +615,10 @@ export const SERVICE_DETAILS: ServiceDetail[] = [
     metaTitle: "Respite Care & Short Stays in Loganville, GA",
     metaDescription:
       "Respite care at Joy Senior Living in Loganville, GA: short stays from a few days to a few weeks, in a private room with the same care every resident receives.",
+    photo: {
+      src: "/images/services/respite-care.jpg",
+      alt: "A guest room set up for a short respite stay at Joy Senior Living",
+    },
     intro: `Not every stay is permanent. Joy offers respite care: a short stay, from a few days to a few weeks, in a private room with the same care every resident gets.`,
     sections: [
       {
@@ -624,6 +642,10 @@ export const SERVICE_DETAILS: ServiceDetail[] = [
     metaTitle: "Daily Activities & Life at Joy Senior Living, Loganville",
     metaDescription:
       "Daily life at Joy Senior Living in Loganville, GA: light exercise, art, games, cooking, and music, adjusted so every resident can take part. Company matters as much as the activity.",
+    photo: {
+      src: "/images/services/daily-activities.jpg",
+      alt: "Residents together during an afternoon activity at Joy Senior Living",
+    },
     intro: `A good day has shape. At Joy, mornings might start with gentle stretching, afternoons might hold a card game or a craft, and there is usually music somewhere. Nothing is mandatory. The point is to offer, not to push.`,
     sections: [
       {
@@ -647,6 +669,10 @@ export const SERVICE_DETAILS: ServiceDetail[] = [
     metaTitle: "Meals & Nutrition at Joy Senior Living, Loganville GA",
     metaDescription:
       "Meals at Joy Senior Living in Loganville, GA: handmade in our own kitchen, changing through the week, with all-day snacks and real dietary accommodations, eaten together at a shared table.",
+    photo: {
+      src: "/images/services/nutrition.jpg",
+      alt: "A home-cooked meal at the shared dining table at Joy Senior Living",
+    },
     intro: `Meals at Joy are handmade in the kitchen here, not trucked in and reheated. The menu changes through the week for variety, and there are always a few familiar staples for the resident who just wants the thing they like.`,
     sections: [
       {

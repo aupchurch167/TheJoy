@@ -5,7 +5,24 @@ import { track } from "@/lib/analytics";
 
 type Status = "idle" | "submitting" | "success" | "error";
 
-export default function LeadForm() {
+/**
+ * Lead capture form (posts to /api/leads). The default layout is the roomy
+ * one used in the homepage contact section. Pass `compact` for the tighter
+ * sidebar version (used as the sticky quick-CTA on the Services pages), with
+ * an optional in-card `heading` and `blurb`.
+ */
+export default function LeadForm({
+  compact = false,
+  heading,
+  blurb,
+  source,
+}: {
+  compact?: boolean;
+  heading?: string;
+  blurb?: string;
+  /** Optional hidden source tag, e.g. "services" for attribution. */
+  source?: string;
+} = {}) {
   const [status, setStatus] = useState<Status>("idle");
   const [error, setError] = useState<string>("");
 
@@ -27,6 +44,7 @@ export default function LeadForm() {
           phone: data.phone,
           message: data.message,
           company: data.company, // honeypot
+          source,
           consent: true,
         }),
       });
@@ -68,10 +86,24 @@ export default function LeadForm() {
   return (
     <form
       onSubmit={handleSubmit}
-      className="rounded-2xl bg-white p-7 shadow-sm ring-1 ring-line"
+      className={`rounded-2xl bg-white shadow-sm ring-1 ring-line ${
+        compact ? "p-6" : "p-7"
+      }`}
       noValidate
     >
-      <div className="grid gap-4">
+      {(heading || blurb) && (
+        <div className="mb-5">
+          {heading && (
+            <p className="font-display text-2xl font-semibold text-ink">
+              {heading}
+            </p>
+          )}
+          {blurb && (
+            <p className="mt-2 text-sm leading-relaxed text-ink-soft">{blurb}</p>
+          )}
+        </div>
+      )}
+      <div className={compact ? "grid gap-3.5" : "grid gap-4"}>
         <label className="block">
           <span className="text-sm font-medium text-ink-soft">Your name</span>
           <input
@@ -113,7 +145,7 @@ export default function LeadForm() {
           </span>
           <textarea
             name="message"
-            rows={4}
+            rows={compact ? 3 : 4}
             placeholder="Mom is 82, still at home, and we're starting to worry about the stairs."
             className="mt-1 w-full rounded-lg border border-line bg-paper px-4 py-3 text-ink outline-none focus:border-clay"
           />

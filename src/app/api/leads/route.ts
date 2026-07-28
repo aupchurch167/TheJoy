@@ -15,9 +15,14 @@ const LeadSchema = z.object({
   phone: z.string().trim().max(40).optional().or(z.literal("")),
   message: z.string().trim().max(2000).optional().or(z.literal("")),
   consent: z.boolean().optional(),
+  // Where the form lives, for attribution. Sanitized to an allowlist below.
+  source: z.string().trim().max(40).optional(),
   // Honeypot: real people leave this empty; bots fill it.
   company: z.string().max(0).optional(),
 });
+
+// Only these form sources are trusted; anything else falls back to homepage.
+const FORM_SOURCES = new Set(["homepage_form", "services_form"]);
 
 export async function POST(request: Request) {
   let body: unknown;
@@ -58,12 +63,17 @@ export async function POST(request: Request) {
   }
 
   try {
+    const source =
+      parsed.data.source && FORM_SOURCES.has(parsed.data.source)
+        ? parsed.data.source
+        : "homepage_form";
+
     const lead = await insertLead({
       name: parsed.data.name,
       email: parsed.data.email,
       phone: parsed.data.phone || null,
       message: parsed.data.message || null,
-      source: "homepage_form",
+      source,
       consent: parsed.data.consent ?? true,
     });
 

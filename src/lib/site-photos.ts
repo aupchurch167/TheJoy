@@ -1,6 +1,16 @@
 import { cache } from "react";
 import { hasDatabase, query } from "./db";
-import { HERO_PHOTO, MELLISSA, COMMUNITY_PHOTOS } from "./site";
+import {
+  HERO_PHOTO,
+  MELLISSA,
+  COMMUNITY_PHOTOS,
+  SERVICE_DETAILS,
+} from "./site";
+
+/** site_settings key for a service's photo (slug dashes become underscores). */
+export function servicePhotoSettingKey(slug: string): string {
+  return `photo_service_${slug.replace(/-/g, "_")}`;
+}
 
 /**
  * Admin-editable site photos. The key marketing images (hero, Mellissa, the
@@ -19,7 +29,8 @@ export type PhotoSlotKey =
   | "community_1"
   | "community_2"
   | "community_3"
-  | "community_4";
+  | "community_4"
+  | `service_${string}`;
 
 export type PhotoSlot = {
   key: PhotoSlotKey;
@@ -60,6 +71,16 @@ export const SITE_PHOTO_SLOTS: PhotoSlot[] = [
     alt: p.alt,
     aspect: "aspect-square",
   })),
+  // One slot per service, so the Services page photos are admin-editable too.
+  ...SERVICE_DETAILS.map((s) => ({
+    key: `service_${s.slug}` as PhotoSlotKey,
+    settingKey: servicePhotoSettingKey(s.slug),
+    label: `Service: ${s.name}`,
+    hint: `Photo for the ${s.name} card and page. ${s.photo.alt}`,
+    defaultSrc: s.photo.src,
+    alt: s.photo.alt,
+    aspect: "aspect-[4/3]",
+  })),
 ];
 
 export type ResolvedPhoto = { src: string; alt: string };
@@ -90,6 +111,23 @@ export const getSitePhotoOverrides = cache(
     const map = await readOverrides();
     const out: Record<string, string> = {};
     for (const s of SITE_PHOTO_SLOTS) out[s.settingKey] = map.get(s.settingKey) || "";
+    return out;
+  }
+);
+
+/**
+ * Resolved service photos as a map (slug -> {src, alt}). Uses the admin
+ * override when set, else the code default (which shows the calm placeholder
+ * until a real file exists). One DB read, cached per request.
+ */
+export const getServicePhotos = cache(
+  async (): Promise<Map<string, ResolvedPhoto>> => {
+    const map = await readOverrides();
+    const out = new Map<string, ResolvedPhoto>();
+    for (const s of SERVICE_DETAILS) {
+      const key = servicePhotoSettingKey(s.slug);
+      out.set(s.slug, { src: map.get(key) || s.photo.src, alt: s.photo.alt });
+    }
     return out;
   }
 );

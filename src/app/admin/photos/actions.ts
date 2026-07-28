@@ -34,9 +34,11 @@ export async function saveSitePhoto(
        ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, updated_at = now()`,
       [settingKey, value]
     );
-    // These photos appear on the homepage and About page.
+    // These photos appear across the marketing site.
     revalidatePath("/");
     revalidatePath("/about");
+    revalidatePath("/services", "layout");
+    revalidatePath("/memory-care");
     revalidatePath("/admin/photos");
     return { ok: true };
   } catch (err) {
