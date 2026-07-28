@@ -225,7 +225,20 @@ can still paste an image URL into the hero field or a Markdown image link.
 
 **"I uploaded a photo but the site still shows the placeholder."** The image
 saved to the bucket, but the browser cannot load it from its public URL. The
-upload now warns you when this happens. Almost always it is `S3_PUBLIC_URL`:
+upload now warns you (with the exact URL it tried) when this happens. The status
+code tells you which problem it is:
+
+- **HTTP 404** (not found): the public host works, but nothing is at that path.
+  Usually `S3_PUBLIC_URL` maps to a **different bucket** than `S3_BUCKET`, or it
+  has an **extra path segment** (the bucket name). The r2.dev/custom-domain URL
+  already points at the bucket, so `S3_PUBLIC_URL` should be just the host
+  (`https://pub-<hash>.r2.dev`), with no `/bucket-name` after it. Compare the
+  URL in the warning against your bucket: if it reads
+  `https://pub-….r2.dev/<bucket>/blog/…`, drop the `/<bucket>`.
+- **HTTP 401 / 403** (denied): public access is off, or `S3_PUBLIC_URL` is the
+  private S3 endpoint. Fix as below.
+
+Almost always the fix is `S3_PUBLIC_URL`:
 
 - `S3_PUBLIC_URL` must be the bucket's **public** URL, not the S3 API endpoint.
   - Right: the R2 **public development URL** (`https://pub-<hash>.r2.dev`) or a

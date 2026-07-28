@@ -1,6 +1,11 @@
 import { NextResponse } from "next/server";
 import { isAdminRequest } from "@/lib/require-admin";
-import { storageEnabled, uploadImage, verifyPublicUrl } from "@/lib/storage";
+import {
+  storageEnabled,
+  uploadImage,
+  verifyPublicUrl,
+  publicUrlProblem,
+} from "@/lib/storage";
 import { slugify } from "@/lib/posts";
 
 export const runtime = "nodejs";
@@ -59,9 +64,7 @@ export async function POST(request: Request) {
       return NextResponse.json({
         ok: true,
         url,
-        warning: `Uploaded, but the image is not loading from its public URL${
-          check.status ? ` (HTTP ${check.status})` : ""
-        }. Check that S3_PUBLIC_URL is the bucket's public URL (an R2.dev subdomain or your custom domain, not the S3 endpoint) and that public access is on. See OPERATIONS.md.`,
+        warning: publicUrlProblem(url, check.status),
       });
     }
 
