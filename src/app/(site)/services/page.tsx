@@ -47,10 +47,14 @@ export default async function ServicesPage() {
           <div className="grid gap-6 sm:grid-cols-2">
             {services.map((s) => {
               const photo = servicePhotos.get(s.slug);
+              // Memory care has its own top-level page; everything else uses
+              // the /services/[slug] detail page.
+              const href =
+                s.slug === "memory-care" ? "/memory-care" : `/services/${s.slug}`;
               return (
                 <Link
                   key={s.slug}
-                  href={`/services/${s.slug}`}
+                  href={href}
                   className="group flex flex-col overflow-hidden rounded-2xl border border-line bg-white no-underline shadow-sm transition hover:border-clay"
                 >
                   <Photo

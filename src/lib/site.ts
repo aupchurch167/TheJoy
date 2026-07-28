@@ -537,6 +537,21 @@ export type ServiceDetail = {
    * operator can also swap it from /admin/photos (settingKey photo_service_*).
    */
   photo: { src: string; alt: string };
+  /**
+   * Interactive + educational blocks for the detail page: a visual "what to
+   * expect" timeline and a Q&A accordion of the questions families ask. Same
+   * treatment as the memory-care page. Optional; a service without it just
+   * shows its prose sections. Keep answers honest and on-voice (§2), and never
+   * invent specifics (route the unknowns to Mellissa).
+   */
+  education?: {
+    stepsHeading: string;
+    stepsLede?: string;
+    steps: { label: string; body: string }[];
+    faqsHeading: string;
+    faqsLede?: string;
+    faqs: { q: string; a: string }[];
+  };
 };
 
 export const SERVICE_DETAILS: ServiceDetail[] = [
@@ -573,6 +588,48 @@ export const SERVICE_DETAILS: ServiceDetail[] = [
         ],
       },
     ],
+    education: {
+      stepsHeading: "What a day of care looks like",
+      stepsLede: `Nothing here runs on a rigid schedule, but the help arrives when it is needed. Here is the plain shape of a day.`,
+      steps: [
+        {
+          label: "Morning",
+          body: `Help with a shower, dressing, and grooming, at whatever pace the morning needs. Then breakfast at the shared table.`,
+        },
+        {
+          label: "Midday",
+          body: `Medications on time, from staff who know each resident. Lunch, then rest or company in the living room.`,
+        },
+        {
+          label: "Afternoon",
+          body: `A walk, a visit, or an activity if she wants one. Housekeeping and laundry happen quietly in the background.`,
+        },
+        {
+          label: "Evening",
+          body: `Dinner, evening medications, and help getting ready for bed. Someone stays awake and on-site all night.`,
+        },
+      ],
+      faqsHeading: "Questions families ask",
+      faqsLede: `The ones we hear most, answered plainly. Tap any to read more.`,
+      faqs: [
+        {
+          q: "Will the same people care for my mother?",
+          a: `As much as any home can promise. Joy has ${BUSINESS.beds} residents, so the faces stay familiar. That is the whole point of a small home: the person helping her today is usually the one who helped her yesterday.`,
+        },
+        {
+          q: "What if she resists help with bathing?",
+          a: `That is common, and it is usually about dignity, not the bath. Staff go slowly, keep her covered and warm, and never force it. Often it just takes the right person and the right time of day, which a small team learns quickly.`,
+        },
+        {
+          q: "How are medications handled?",
+          a: `Medications are given on schedule by staff who know each resident, and recorded each time. Nothing is handed from a cart to a stranger. ${BUSINESS.director.name} coordinates with your parent's doctors and pharmacy.`,
+        },
+        {
+          q: "What happens if her needs increase?",
+          a: `Joy is a personal care home, and there is a point where a parent needs skilled nursing beyond what we offer. If that day comes, ${BUSINESS.director.name} will tell you honestly and help you find the right next step.`,
+        },
+      ],
+    },
   },
   {
     slug: "memory-care",
@@ -634,6 +691,48 @@ export const SERVICE_DETAILS: ServiceDetail[] = [
         ],
       },
     ],
+    education: {
+      stepsHeading: "How a respite stay works",
+      stepsLede: `A short stay is simpler than families expect. Here is the shape of one.`,
+      steps: [
+        {
+          label: "Ask",
+          body: `Call ${BUSINESS.director.name.split(" ")[0]} to see what rooms are open and when. Stays run from a few days to a few weeks.`,
+        },
+        {
+          label: "Settle",
+          body: `Your parent arrives to a real, furnished room and the same care every resident gets, not a watered-down version.`,
+        },
+        {
+          label: "The stay",
+          body: `Meals, medications, help with the day, and activities. You get a genuine break, and your parent is genuinely looked after.`,
+        },
+        {
+          label: "Home",
+          body: `When the stay ends, your parent goes home. Many families use a respite stay to test Joy before deciding on a longer one.`,
+        },
+      ],
+      faqsHeading: "Questions families ask",
+      faqsLede: `The ones we hear most, answered plainly. Tap any to read more.`,
+      faqs: [
+        {
+          q: "How long can a stay be?",
+          a: `From a few days to a few weeks, depending on what your family needs and what is open. ${BUSINESS.director.name} can tell you what is available.`,
+        },
+        {
+          q: "Is the care the same as for permanent residents?",
+          a: `Yes. A respite guest gets the full care: help with the day, medications, meals, and staff awake around the clock. It is not a lesser version.`,
+        },
+        {
+          q: "Can we use it to try Joy before committing?",
+          a: `Many families do exactly that. A short stay is the honest way to see whether Joy fits your parent before a longer decision.`,
+        },
+        {
+          q: "How much notice do you need?",
+          a: `It depends on openings, which change. Call ${BUSINESS.phone} and ask for ${BUSINESS.director.name.split(" ")[0]}; she can often work with short timelines.`,
+        },
+      ],
+    },
   },
   {
     slug: "daily-activities",
@@ -661,6 +760,48 @@ export const SERVICE_DETAILS: ServiceDetail[] = [
         ],
       },
     ],
+    education: {
+      stepsHeading: "A day usually has a shape",
+      stepsLede: `Nothing is mandatory. This is just how the hours tend to fall.`,
+      steps: [
+        {
+          label: "Morning",
+          body: `Gentle stretching or a walk, coffee and conversation. Nothing anyone is made to do.`,
+        },
+        {
+          label: "Midday",
+          body: `Lunch together, then a quiet hour. Some rest, some read, some sit on the porch.`,
+        },
+        {
+          label: "Afternoon",
+          body: `A card game, a craft, music, or baking. The activity is really an excuse to be together.`,
+        },
+        {
+          label: "Evening",
+          body: `Dinner, then a movie or an early wind-down. The house gets quiet.`,
+        },
+      ],
+      faqsHeading: "Questions families ask",
+      faqsLede: `The ones we hear most, answered plainly. Tap any to read more.`,
+      faqs: [
+        {
+          q: "What if my dad won't join in?",
+          a: `Then he does not have to. The point is to offer, never to push. Often someone who says no for weeks joins on his own once the room feels familiar.`,
+        },
+        {
+          q: "Can a parent with dementia take part?",
+          a: `Yes. Activities are adjusted so a resident living with memory loss can take part next to a neighbor who does the crossword in pen. Staff help where help is needed.`,
+        },
+        {
+          q: "Who leads the activities?",
+          a: `Staff lead them, and they know the residents, so an afternoon is built around who is actually in the room that day.`,
+        },
+        {
+          q: "What does a typical week look like?",
+          a: `It changes with the season and who is here. ${BUSINESS.director.name} can tell you what this week's activities look like when you visit.`,
+        },
+      ],
+    },
   },
   {
     slug: "nutrition",
@@ -688,6 +829,48 @@ export const SERVICE_DETAILS: ServiceDetail[] = [
         ],
       },
     ],
+    education: {
+      stepsHeading: "Meals through the day",
+      stepsLede: `Cooked here, eaten together, with something on hand between meals.`,
+      steps: [
+        {
+          label: "Breakfast",
+          body: `Cooked here in the morning, the way people actually eat it. Coffee however each person takes it.`,
+        },
+        {
+          label: "Lunch",
+          body: `A hot midday meal at the shared table, with a familiar staple always on hand.`,
+        },
+        {
+          label: "Snacks",
+          body: `Popcorn, cookies, and fruit are out through the day, for whenever someone wants them.`,
+        },
+        {
+          label: "Dinner",
+          body: `An early, unhurried dinner together, then the kitchen winds down.`,
+        },
+      ],
+      faqsHeading: "Questions families ask",
+      faqsLede: `The ones we hear most, answered plainly. Tap any to read more.`,
+      faqs: [
+        {
+          q: "What about dietary restrictions?",
+          a: `The kitchen works around real needs, from low salt to soft foods. A medical restriction never has to mean a joyless plate. Tell ${BUSINESS.director.name} what your parent needs.`,
+        },
+        {
+          q: "What if he is a picky eater?",
+          a: `There are always a few familiar staples for the resident who just wants the thing he likes. No one goes hungry over a menu.`,
+        },
+        {
+          q: "Can she eat in her room?",
+          a: `The table is where most of the day's company happens, so we gently encourage it. But if a resident needs to eat in her room, that is fine.`,
+        },
+        {
+          q: "Are snacks available between meals?",
+          a: `Yes, all day. Popcorn, cookies, and fruit are out, and the kitchen can put something together when someone is hungry off-schedule.`,
+        },
+      ],
+    },
   },
 ];
 

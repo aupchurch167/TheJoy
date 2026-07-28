@@ -1,25 +1,38 @@
-import { MEMORY_CARE_EDUCATION } from "@/lib/site";
-
 /**
- * Visual "steady day" rhythm for the memory-care page. Routine is the therapy,
- * so we show it as a timeline: a horizontal track on wide screens, a vertical
- * one on mobile. Static (no interactivity needed), real content only.
+ * A visual, numbered timeline: a horizontal track on wide screens, a vertical
+ * one on mobile. Static (no interactivity), real content only. Used for the
+ * memory-care "steady day" and each service's "what to expect" rhythm.
  */
-export default function MemoryCareRhythm() {
-  const { rhythmHeading, rhythmLede, rhythm } = MEMORY_CARE_EDUCATION;
+export default function StepTimeline({
+  heading,
+  lede,
+  steps,
+}: {
+  heading: string;
+  lede?: string;
+  steps: { label: string; body: string }[];
+}) {
+  const cols =
+    steps.length >= 4
+      ? "sm:grid-cols-4"
+      : steps.length === 3
+        ? "sm:grid-cols-3"
+        : "sm:grid-cols-2";
 
   return (
     <section className="mt-14">
       <h2 className="font-display text-2xl font-semibold text-ink sm:text-3xl">
-        {rhythmHeading}
+        {heading}
       </h2>
-      <p className="mt-4 text-lg leading-relaxed text-ink-soft">{rhythmLede}</p>
+      {lede && (
+        <p className="mt-4 text-lg leading-relaxed text-ink-soft">{lede}</p>
+      )}
 
-      <ol className="mt-8 grid gap-6 sm:grid-cols-4 sm:gap-4">
-        {rhythm.map((step, i) => (
+      <ol className={`mt-8 grid gap-6 ${cols} sm:gap-4`}>
+        {steps.map((step, i) => (
           <li key={step.label} className="relative">
             {/* Connector line between nodes (horizontal on desktop). */}
-            {i < rhythm.length - 1 && (
+            {i < steps.length - 1 && (
               <span
                 aria-hidden
                 className="absolute left-3 top-8 hidden h-px w-full bg-line sm:block"

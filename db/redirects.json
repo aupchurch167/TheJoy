@@ -133,7 +133,7 @@
   },
   {
     "from": "/service/memory-care",
-    "to": "/services/memory-care"
+    "to": "/memory-care"
   },
   {
     "from": "/service/respite-care",

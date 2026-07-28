@@ -23,8 +23,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     });
   }
 
-  // One entry per visible service detail page (memory care is gated).
+  // One entry per visible service detail page. Memory care is skipped here
+  // because it lives at its own canonical /memory-care URL (added above), and
+  // /services/memory-care redirects there.
   for (const service of visibleServiceDetails()) {
+    if (service.slug === "memory-care") continue;
     entries.push({
       url: `${SITE_URL}/services/${service.slug}`,
       changeFrequency: "monthly",

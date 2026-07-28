@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import {
   BUSINESS,
   getServiceDetail,
@@ -10,11 +10,20 @@ import { serviceJsonLd } from "@/lib/schema";
 import { getSettings } from "@/lib/settings";
 import { getServicePhotos } from "@/lib/site-photos";
 import Photo from "@/components/Photo";
+import StepTimeline from "@/components/StepTimeline";
+import Accordion from "@/components/Accordion";
 import TourButton from "@/components/TourButton";
 
-// Detail pages are static content; prerender each visible service.
+// Memory care has its own richer top-level page (/memory-care). This detail
+// slug redirects there so the two are always the same, single, canonical page.
+const REDIRECT_TO_MEMORY_CARE = "/memory-care";
+
+// Detail pages are static content; prerender each visible service except
+// memory care, which redirects to /memory-care.
 export function generateStaticParams() {
-  return visibleServiceDetails().map((s) => ({ slug: s.slug }));
+  return visibleServiceDetails()
+    .filter((s) => s.slug !== "memory-care")
+    .map((s) => ({ slug: s.slug }));
 }
 
 export async function generateMetadata({
@@ -45,6 +54,8 @@ export default async function ServiceDetailPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
+  if (slug === "memory-care") redirect(REDIRECT_TO_MEMORY_CARE);
+
   const service = getServiceDetail(slug);
   if (!service) notFound();
 
@@ -96,6 +107,27 @@ export default async function ServiceDetailPage({
           </div>
         </section>
       ))}
+
+      {/* Visual + interactive education (same treatment as the memory-care
+          page): a "what to expect" timeline and a Q&A accordion. */}
+      {service.education && (
+        <>
+          <StepTimeline
+            heading={service.education.stepsHeading}
+            lede={service.education.stepsLede}
+            steps={service.education.steps}
+          />
+          <Accordion
+            idPrefix={`faq-${service.slug}`}
+            heading={service.education.faqsHeading}
+            lede={service.education.faqsLede}
+            items={service.education.faqs.map((f) => ({
+              title: f.q,
+              body: f.a,
+            }))}
+          />
+        </>
+      )}
 
       {/* Single tour CTA (§: one tour path only). */}
       <div className="mt-14 rounded-2xl bg-ink px-6 py-8 text-center text-white">

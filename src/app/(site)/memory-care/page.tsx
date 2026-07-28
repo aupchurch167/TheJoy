@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { BUSINESS, MEMORY_CARE } from "@/lib/site";
+import { BUSINESS, MEMORY_CARE, MEMORY_CARE_EDUCATION } from "@/lib/site";
 import { getSettings } from "@/lib/settings";
 import TourButton from "@/components/TourButton";
-import MemoryCareRhythm from "@/components/sections/MemoryCareRhythm";
-import MemoryCareSigns from "@/components/sections/MemoryCareSigns";
+import StepTimeline from "@/components/StepTimeline";
+import Accordion from "@/components/Accordion";
 
 export const dynamic = "force-dynamic";
 
@@ -49,10 +49,25 @@ export default async function MemoryCarePage() {
       </div>
 
       {/* Visual: the steady day. Routine is the therapy, so we show it. */}
-      <MemoryCareRhythm />
+      <StepTimeline
+        heading={MEMORY_CARE_EDUCATION.rhythmHeading}
+        lede={MEMORY_CARE_EDUCATION.rhythmLede}
+        steps={MEMORY_CARE_EDUCATION.rhythm.map((s) => ({
+          label: s.label,
+          body: s.body,
+        }))}
+      />
 
       {/* Interactive, educational guide to what families see. */}
-      <MemoryCareSigns />
+      <Accordion
+        idPrefix="signs"
+        heading={MEMORY_CARE_EDUCATION.signsHeading}
+        lede={MEMORY_CARE_EDUCATION.signsLede}
+        items={MEMORY_CARE_EDUCATION.signs.map((s) => ({
+          title: s.title,
+          body: s.body,
+        }))}
+      />
 
       {/* Single tour CTA (§: one tour path only). */}
       <div className="mt-16 rounded-2xl bg-ink px-6 py-8 text-center text-white">
