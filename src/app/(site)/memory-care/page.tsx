@@ -1,16 +1,18 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { BUSINESS, MEMORY_CARE, getServiceDetail } from "@/lib/site";
+import { BUSINESS, MEMORY_CARE } from "@/lib/site";
 import { getSettings } from "@/lib/settings";
 import TourButton from "@/components/TourButton";
+import MemoryCareRhythm from "@/components/sections/MemoryCareRhythm";
+import MemoryCareSigns from "@/components/sections/MemoryCareSigns";
 
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: `Memory Care in Loganville, GA | ${BUSINESS.name}`,
   description:
-    "Memory care at Joy Senior Living in Loganville, GA, offered within our personal care home: a small, familiar setting with steady routines and staff who know your parent by name.",
+    "Memory care at Joy Senior Living in Loganville, GA, offered within our personal care home: a small, familiar setting with steady routines and staff who know your parent by name. What dementia behaviors mean, and how a small home helps.",
   keywords: [
     "memory care loganville ga",
     "dementia care loganville",
@@ -30,8 +32,6 @@ export default async function MemoryCarePage() {
   if (!MEMORY_CARE.enabled) notFound();
 
   const settings = await getSettings();
-  // Reuse the vetted memory-care service copy for the deeper sections.
-  const detail = getServiceDetail("memory-care");
 
   return (
     <div className="prose-joy mx-auto max-w-2xl px-5 py-16">
@@ -48,27 +48,21 @@ export default async function MemoryCarePage() {
         ))}
       </div>
 
-      {detail?.sections.map((section) => (
-        <section key={section.heading}>
-          <h2 className="mt-12 font-display text-2xl font-semibold text-ink">
-            {section.heading}
-          </h2>
-          <div className="mt-4 space-y-5 text-lg text-ink-soft">
-            {section.body.map((p, i) => (
-              <p key={i}>{p}</p>
-            ))}
-          </div>
-        </section>
-      ))}
+      {/* Visual: the steady day. Routine is the therapy, so we show it. */}
+      <MemoryCareRhythm />
+
+      {/* Interactive, educational guide to what families see. */}
+      <MemoryCareSigns />
 
       {/* Single tour CTA (§: one tour path only). */}
-      <div className="mt-14 rounded-2xl bg-ink px-6 py-8 text-center text-white">
+      <div className="mt-16 rounded-2xl bg-ink px-6 py-8 text-center text-white">
         <p className="font-display text-2xl font-semibold">
           Talk it through with {BUSINESS.director.name.split(" ")[0]}
         </p>
         <p className="mx-auto mt-2 max-w-md text-white/80">
           {BUSINESS.director.name} can walk you through what memory care at Joy
-          would look like for your parent. Book a tour, or call {settings.phone}.
+          would look like for your parent, and tell you honestly whether it is
+          the right fit. Book a tour, or call {settings.phone}.
         </p>
         <div className="mt-5">
           <TourButton variant="light" href={settings.talkfurther_url}>

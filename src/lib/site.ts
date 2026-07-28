@@ -216,6 +216,68 @@ export const MEMORY_CARE = {
 } as const;
 
 /**
+ * Educational content for the /memory-care page. This is general, widely
+ * accepted information about what families see with dementia and how a small,
+ * familiar setting with steady routine helps. It makes NO clinical claims and
+ * NO promises about Joy's specific capabilities beyond what the license allows.
+ * Every hard decision routes back to ${BUSINESS.director.name}. Keep it honest
+ * and on-voice (§2): parentheses not em-dashes, prose, specific over reassuring.
+ */
+export const MEMORY_CARE_EDUCATION = {
+  // The visual "steady day" rhythm. Routine is the therapy, so we show it.
+  rhythmHeading: "A day that doesn't change much, on purpose",
+  rhythmLede: `For a person with memory loss, a predictable day does more than almost anything a building can offer. The shape below is the point: same order, same times, same faces.`,
+  rhythm: [
+    {
+      label: "Morning",
+      body: `Wake, wash, dress, breakfast. The same order, the same time, the same faces every day.`,
+    },
+    {
+      label: "Midday",
+      body: `Lunch at the shared table, then rest. The busiest hours are kept calm and quiet.`,
+    },
+    {
+      label: "Afternoon",
+      body: `Music, a walk, or simple hands-on activity. The point is to reach the person, not fill the hours.`,
+    },
+    {
+      label: "Evening",
+      body: `An early, unhurried dinner and a slow wind-down, before the harder hours of the day set in.`,
+    },
+  ],
+  // Interactive, educational guide to the behaviors families actually see. Each
+  // answer explains what is happening AND how a small, familiar home helps.
+  signsHeading: "What you're seeing, and what it means",
+  signsLede: `Dementia shows up in ways that are frightening the first time and confusing every time. Here is what some of the common ones mean, and why a small home changes how they feel. Tap any one to read more.`,
+  signs: [
+    {
+      title: "She asks the same question over and over.",
+      body: `Short-term memory fades first, so the question feels brand new to her each time, even seconds after you answered. Reminding her that she already asked rarely helps and often stings. A calm, familiar setting lowers the worry underneath the repetition, and staff who know her can answer the tenth time as gently as the first.`,
+    },
+    {
+      title: "He wanders, especially late in the day.",
+      body: `Restlessness and pacing are common, and they often peak in the late afternoon (sometimes called sundowning). Usually he is looking for something familiar: a person, a place, a routine from years ago. A small home with the same faces and a predictable evening gives him fewer reasons to feel lost, and a layout where he is never far from someone who knows him.`,
+    },
+    {
+      title: "Some days he doesn't recognize me.",
+      body: `This is one of the hardest parts, and it is not a choice or a failure of love. The brain's ability to place a face comes and goes. Meeting him in the moment he is in (without correcting him) keeps the visit warm. Staff who see him every day learn his good hours, and can tell you when he is most himself.`,
+    },
+    {
+      title: "Evenings are harder than mornings.",
+      body: `Confusion and agitation often grow as the day goes on and the light fades. Predictable routine eases it more than anything: the same dinner time, the same wind-down, the same people. A quiet, familiar house in the evening is far calmer than a large, busy building.`,
+    },
+    {
+      title: "She won't eat, or forgets that she ate.",
+      body: `Appetite and the very sense of hunger change with dementia, and pressure makes it worse. Meals at a shared table, on a steady schedule, with food she recognizes, help more than any reminder to eat. Because Joy is small, someone notices the day she skips a meal, not a week later.`,
+    },
+    {
+      title: "I feel guilty even considering a move.",
+      body: `Almost every family does. Caring for a parent with dementia at home can ask more than one person can give, and choosing help is not giving up. ${BUSINESS.director.name} has had this conversation many times. She will be honest with you about whether Joy is the right fit, or whether your parent needs more than a personal care home can offer.`,
+    },
+  ],
+} as const;
+
+/**
  * Objection handler. Names, honestly, who Joy is NOT right for. This builds
  * trust and keeps §4 straight: Joy is a personal care home, not a nursing home.
  */
