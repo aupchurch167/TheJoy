@@ -22,7 +22,7 @@ const LeadSchema = z.object({
 });
 
 // Only these form sources are trusted; anything else falls back to homepage.
-const FORM_SOURCES = new Set(["homepage_form", "services_form"]);
+const FORM_SOURCES = new Set(["homepage_form", "services_form", "blog_form"]);
 
 export async function POST(request: Request) {
   let body: unknown;
