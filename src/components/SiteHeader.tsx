@@ -1,13 +1,17 @@
 import Link from "next/link";
-import { BUSINESS } from "@/lib/site";
+import { BUSINESS, MEMORY_CARE } from "@/lib/site";
 import { getSettings, toTelHref } from "@/lib/settings";
 import TourButton from "./TourButton";
 import MobileNav from "./MobileNav";
 
+// Memory Care sits in the nav only while it is offered within the license (§4).
 const NAV = [
   { href: "/", label: "Home" },
   { href: "/about", label: "About" },
   { href: "/services", label: "Services" },
+  ...(MEMORY_CARE.enabled
+    ? [{ href: "/memory-care", label: "Memory Care" }]
+    : []),
   { href: "/blog", label: "Blog" },
 ];
 

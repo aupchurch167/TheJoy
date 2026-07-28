@@ -1,0 +1,92 @@
+import type { Metadata } from "next";
+import Link from "next/link";
+import { notFound } from "next/navigation";
+import { BUSINESS, MEMORY_CARE, getServiceDetail } from "@/lib/site";
+import { getSettings } from "@/lib/settings";
+import TourButton from "@/components/TourButton";
+
+export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+  title: `Memory Care in Loganville, GA | ${BUSINESS.name}`,
+  description:
+    "Memory care at Joy Senior Living in Loganville, GA, offered within our personal care home: a small, familiar setting with steady routines and staff who know your parent by name.",
+  keywords: [
+    "memory care loganville ga",
+    "dementia care loganville",
+    "personal care home memory care georgia",
+  ],
+  alternates: { canonical: "/memory-care" },
+  openGraph: {
+    title: `Memory Care | ${BUSINESS.name}`,
+    description: BUSINESS.descriptor,
+    url: "/memory-care",
+    type: "website",
+  },
+};
+
+export default async function MemoryCarePage() {
+  // §4: the page only exists while memory care is confirmed within the license.
+  if (!MEMORY_CARE.enabled) notFound();
+
+  const settings = await getSettings();
+  // Reuse the vetted memory-care service copy for the deeper sections.
+  const detail = getServiceDetail("memory-care");
+
+  return (
+    <div className="prose-joy mx-auto max-w-2xl px-5 py-16">
+      <p className="text-sm font-semibold uppercase tracking-wide text-clay">
+        Memory care, within our personal care home
+      </p>
+      <h1 className="mt-2 font-display text-4xl font-semibold text-ink sm:text-5xl">
+        {MEMORY_CARE.heading}
+      </h1>
+
+      <div className="mt-6 space-y-5 text-lg leading-relaxed text-ink-soft">
+        {MEMORY_CARE.body.map((para, i) => (
+          <p key={i}>{para}</p>
+        ))}
+      </div>
+
+      {detail?.sections.map((section) => (
+        <section key={section.heading}>
+          <h2 className="mt-12 font-display text-2xl font-semibold text-ink">
+            {section.heading}
+          </h2>
+          <div className="mt-4 space-y-5 text-lg text-ink-soft">
+            {section.body.map((p, i) => (
+              <p key={i}>{p}</p>
+            ))}
+          </div>
+        </section>
+      ))}
+
+      {/* Single tour CTA (§: one tour path only). */}
+      <div className="mt-14 rounded-2xl bg-ink px-6 py-8 text-center text-white">
+        <p className="font-display text-2xl font-semibold">
+          Talk it through with {BUSINESS.director.name.split(" ")[0]}
+        </p>
+        <p className="mx-auto mt-2 max-w-md text-white/80">
+          {BUSINESS.director.name} can walk you through what memory care at Joy
+          would look like for your parent. Book a tour, or call {settings.phone}.
+        </p>
+        <div className="mt-5">
+          <TourButton variant="light" href={settings.talkfurther_url}>
+            {MEMORY_CARE.ctaLabel}
+          </TourButton>
+        </div>
+      </div>
+
+      <p className="mt-10 text-base leading-relaxed text-ink-faint">
+        Looking at all of Joy&rsquo;s care?{" "}
+        <Link
+          href="/services"
+          className="font-semibold text-clay hover:text-clay-dark"
+        >
+          See everything we offer
+        </Link>
+        .
+      </p>
+    </div>
+  );
+}

@@ -21,6 +21,16 @@ export default async function MeetMellissa() {
             {MELLISSA.intro}
           </p>
 
+          {/* Owner-supplied story. Hidden until real paragraphs are added
+              (§ do not fabricate). */}
+          {MELLISSA.story.length > 0 && (
+            <div className="mt-4 space-y-4 text-lg leading-relaxed text-ink-soft">
+              {MELLISSA.story.map((para, i) => (
+                <p key={i}>{para}</p>
+              ))}
+            </div>
+          )}
+
           {/* Only renders when Mellissa's own words are provided (§ do not
               fabricate). Empty string = hidden. */}
           {MELLISSA.quote.trim() !== "" && (

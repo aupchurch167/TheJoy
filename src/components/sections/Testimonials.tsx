@@ -1,18 +1,33 @@
-import { TESTIMONIALS } from "@/lib/site";
+import { TESTIMONIALS, TESTIMONIAL_FEATURED } from "@/lib/site";
 
 export default function Testimonials() {
   // Only real quotes ship. Empty ones are filtered out (never fabricate).
   const shown = TESTIMONIALS.filter((t) => t.quote.trim() !== "");
   if (shown.length === 0) return null;
 
+  const featured = TESTIMONIAL_FEATURED.quote.trim() !== "";
+
   return (
-    <section id="families" className="bg-sage/10 py-16 sm:py-20">
+    <section id="families" className="bg-white/60 py-16 sm:py-20">
       <div className="mx-auto max-w-5xl px-5">
         <h2 className="font-display text-3xl font-semibold text-ink sm:text-4xl">
           Hear from families
         </h2>
 
-        <div className="mt-8 grid gap-6 sm:grid-cols-2">
+        {featured && (
+          <figure className="mt-8 border-l-4 border-clay pl-6 sm:pl-8">
+            <blockquote>
+              <p className="font-display text-3xl font-semibold leading-tight text-ink sm:text-4xl">
+                &ldquo;{TESTIMONIAL_FEATURED.quote}&rdquo;
+              </p>
+            </blockquote>
+            <figcaption className="mt-4 text-base text-ink-soft">
+              {TESTIMONIAL_FEATURED.attribution}
+            </figcaption>
+          </figure>
+        )}
+
+        <div className="mt-10 grid gap-6 sm:grid-cols-2">
           {shown.map((t, i) => (
             <figure
               key={i}

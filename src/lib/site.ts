@@ -116,65 +116,195 @@ export const TRACKED_KEYWORDS: string[] = [
 /* ------------------------------------------------------------------ */
 
 export const HERO = {
-  // KEPT VERBATIM. The best asset on the site. Do not "improve" this line.
-  headline: "A senior living home small enough to know your parent by name.",
-  sub: `${BUSINESS.beds} residents. One small community in Loganville, led by ${BUSINESS.director.name}.`,
+  // Rewritten in the copywriter's homepage pass (owner-approved). The prior
+  // line ("a home small enough to know your parent by name") still lives in the
+  // meta description and footer, so we kept the phrase without losing the punch.
+  headline: "Twenty-four residents. That's the whole idea.",
+  sub: `Joy is a personal care home and memory care in ${BUSINESS.address.city}, Georgia (small enough that we learn how your mother takes her coffee and which chair your father claims after breakfast).`,
   ctaLabel: "Book a tour",
+  // Rendered next to the tour button.
+  callLine: `Or call and ask for ${BUSINESS.director.name.split(" ")[0]}: ${BUSINESS.phone}`,
 } as const;
+
+/**
+ * Thin trust bar under the hero. Plain, verifiable facts (no reassurance
+ * language). Keep every item true to the license and the Google listing.
+ */
+export const TRUST_STRIP: string[] = [
+  "Licensed personal care home, State of Georgia",
+  `${BUSINESS.beds} residents`,
+  "Staff on-site 24 hours",
+  `${BUSINESS.address.street}, ${BUSINESS.address.city}`,
+];
 
 /** Section 2: the difference, in plain words. Prose, no icon grid. */
 export const DIFFERENCE = {
-  heading: "What small actually means",
+  heading: `What "small" actually means`,
   body: [
-    `Joy has ${BUSINESS.beds} beds. That number is the whole point. ${BUSINESS.director.name} and her team learn how your mother takes her coffee, which chair your father claims after breakfast, the name of the dog he raised years ago. Known by name is not a slogan here. It is what ${BUSINESS.beds} residents allow.`,
-    `Larger places count residents in the hundreds, and a single staff member may cover a whole floor. At Joy the same faces greet your parent every morning. When something shifts (a harder night, a lost appetite, a new worry) someone notices that day, not next week.`,
-    `Joy is a personal care home. That is the license Georgia grants us, and it shapes the days here: help with bathing and dressing, medications on time, real meals at a shared table, and the steady company of people who know your parent well.`,
+    `It is arithmetic. Joy has ${BUSINESS.beds} residents, and that number is the whole design. A large community counts its residents in the hundreds, and one aide may cover a full floor. Here, the same few faces greet your parent every morning.`,
+    `That scale is what lets ${BUSINESS.director.name} and her team actually know your mother: how she takes her coffee, which chair your father claims after breakfast, the name of the dog he raised years ago. "Known by name" is not a slogan. It is what ${BUSINESS.beds} residents allow.`,
+    `And it changes the thing that matters most. When something shifts (a harder night, a lost appetite, a new worry) someone notices that day, because they knew what normal looked like yesterday.`,
   ],
 } as const;
 
 /**
- * Memory care paragraph. §4: "memory care" is an allowed claim, but the
- * pre-launch checklist requires confirming it falls within Joy's personal
- * care home license. If confirmed, this renders. If not yet confirmed,
- * set `enabled` to false and it disappears from the page.
+ * Section: "A Tuesday at Joy". A plain, specific picture of a day. Detail over
+ * reassurance (§2). Not a schedule anyone has to follow, just the shape of one.
  */
-export const MEMORY_CARE = {
-  enabled: true,
-  heading: "For families facing memory loss",
-  body: `When a parent is living with dementia, the questions get harder and the days get longer. Joy offers memory care inside our personal care home, with the same small scale and the same familiar faces. ${BUSINESS.director.name} can walk you through what that looks like for your parent, honestly, before you decide anything.`,
+export const A_TUESDAY = {
+  heading: "A Tuesday at Joy",
+  intro: `Nothing here runs on a schedule for its own sake. But a day has a shape, and it helps to picture a plain one.`,
+  parts: [
+    {
+      label: "Breakfast",
+      body: `Eggs cooked in the kitchen here, not trucked in and reheated. Coffee the way each person takes it, because the staff already know.`,
+    },
+    {
+      label: "Mornings",
+      body: `Someone helps with a shower and dressing, unhurried. Then stretching in the living room, a walk to the porch, or just the paper and quiet.`,
+    },
+    {
+      label: "Afternoons",
+      body: `Lunch at a shared table. After that a card game, a craft, music, or a nap. Nothing is mandatory. The point is to offer, not to push.`,
+    },
+    {
+      label: "Nights",
+      body: `Dinner, then the house settles. Someone is awake and on-site the whole night, so help at three in the morning is the same as help at three in the afternoon.`,
+    },
+  ],
 } as const;
 
 /**
- * Search-context paragraph. This is how we appear for "assisted living
- * Loganville" searches WITHOUT ever calling Joy assisted living (§4).
- * Uses the approved patterns from the brief.
+ * Section: "What we handle". The daily work of care, stated plainly. Kept as a
+ * short, specific list (not an icon grid, not reassurance filler). The memory
+ * care line is gated by MEMORY_CARE.enabled in the component.
+ */
+export const HOME_SERVICES = {
+  heading: "What we handle",
+  lede: `The daily work of care, done by people who know your parent (not handed off to strangers).`,
+  items: [
+    "Bathing, dressing, and grooming",
+    "Medications, given on time",
+    "Three meals a day, cooked here",
+    "Housekeeping and laundry",
+    "Staff awake and on-site, 24 hours",
+    "Coordination with doctors, home health, and hospice",
+  ],
+  memoryItem: "Memory care, inside the same home",
+  note: `Joy is licensed by the State of Georgia as a personal care home. That license shapes what we can do, and we will always tell you honestly if a parent needs more than we offer.`,
+} as const;
+
+/**
+ * Memory care section. §4: "memory care" is an allowed claim, but the
+ * pre-launch checklist requires confirming it falls within Joy's personal
+ * care home license. If confirmed, this renders (and gates the memory-care
+ * badge, service page, and nav item). If not yet confirmed, set `enabled`
+ * to false and it disappears everywhere.
+ *
+ * NOTE: The copywriter suggested a line about residents "not having to move"
+ * as needs progress. That is a licensing claim we have NOT verified, so it is
+ * intentionally left out. Confirm with the state license before adding it.
+ */
+export const MEMORY_CARE = {
+  enabled: true,
+  heading: "When it's dementia",
+  body: [
+    `When a parent is living with dementia, the questions get harder and the days get longer. Joy offers memory care inside our personal care home, so the setting stays small and the faces stay familiar (which matters more for memory loss than almost anything else).`,
+    `Routine does a lot of the work. Meals, rest, and activity happen at the same times, in the same places, with the same people. ${BUSINESS.director.name} can walk you through what that looks like for your parent, honestly, before you decide anything.`,
+  ],
+  ctaLabel: "Talk to Mellissa about memory care",
+} as const;
+
+/**
+ * Objection handler. Names, honestly, who Joy is NOT right for. This builds
+ * trust and keeps §4 straight: Joy is a personal care home, not a nursing home.
+ */
+export const OBJECTION = {
+  heading: "Doesn't a smaller home mean less care?",
+  body: [
+    `It is a fair question, and the honest answer is that small is not the same as less. Joy has staff awake around the clock, medications managed by people who know each resident, and help on hand at every hour. What a large building adds is not more care. It is more residents per aide.`,
+    `But Joy is not right for everyone. We are a personal care home, not a nursing home. If your parent needs skilled nursing (a ventilator, IV care, two-person transfers, wound care only a nurse can do) we will tell you plainly and help you find the right place. Saying so is part of the job.`,
+  ],
+} as const;
+
+/**
+ * Search-context paragraph. How we appear for "assisted living Loganville"
+ * searches WITHOUT ever calling Joy assisted living (§4). Now surfaced through
+ * the FAQ "Is Joy assisted living?" item; kept here for reuse.
  */
 export const ASSISTED_LIVING_CONTEXT = {
   body: `If you are looking for assisted living in Loganville, Joy is a personal care home that offers much of what those families need: help with daily tasks, medication management, meals, and staff on-site around the clock. Families searching for assisted living near Loganville often find that a smaller personal care home like Joy is a better fit for a parent who would feel lost in a large building.`,
 } as const;
 
+/**
+ * Homepage FAQ. Answers the questions families actually ask, in Joy voice.
+ * Cost and openings are deliberately NOT invented (owner has not set a price,
+ * and openings change): both answer with a call-to-ask. The memory-care item
+ * is gated by MEMORY_CARE.enabled in the component.
+ */
+export const FAQ: { q: string; a: string; gated?: "memory" }[] = [
+  {
+    q: "Is Joy assisted living?",
+    a: `Not exactly, and the difference matters. Joy is a personal care home, a distinct license the State of Georgia grants. If you are searching for assisted living in ${BUSINESS.address.city}, a small personal care home like Joy often fits a parent who would feel lost in a large building.`,
+  },
+  {
+    q: "Do you offer memory care?",
+    a: `Yes, inside the same personal care home, with the same small scale and the same familiar faces. ${BUSINESS.director.name} can tell you whether Joy is the right level of care for your parent.`,
+    gated: "memory",
+  },
+  {
+    q: "What does it cost?",
+    a: `Cost depends on the room and the level of care your parent needs, so the honest answer is a short conversation, not a number on a page. Call ${BUSINESS.phone} and ask for ${BUSINESS.director.name.split(" ")[0]}, and she will walk you through it.`,
+  },
+  {
+    q: "How do I know when it's time?",
+    a: `The signs are rarely loud: a stack of unopened mail, the same story twice in ten minutes, a new unsteadiness on the stairs. If you are asking the question, it is usually worth a call. We can talk it through with no pressure.`,
+  },
+  {
+    q: "Do you have openings?",
+    a: `Openings change, and with ${BUSINESS.beds} rooms they can change quickly. Call ${BUSINESS.phone} to ask what is available now. If we are full, ${BUSINESS.director.name.split(" ")[0]} can tell you what the wait usually looks like.`,
+  },
+];
+
 /** Section 3: Meet Mellissa. */
 export const MELLISSA = {
   heading: "Meet Mellissa",
   // Safe, true, third-person intro. Always shows.
-  intro: `${BUSINESS.director.name} is Joy's ${BUSINESS.director.title}. She leads the team that cares for every resident, and she is usually the first person a family meets.`,
+  intro: `${BUSINESS.director.name} is Joy's ${BUSINESS.director.title}. She leads the team that cares for every resident, and she is usually the first person a family meets (and often the last one they call at night with a question).`,
   /**
-   * IMPORTANT: These must be Mellissa's OWN words. Do not fabricate.
-   * Ask Mellissa for two or three honest first-person sentences and paste
-   * them below. While this is an empty string, the quote block is hidden
+   * OWNER-SUPPLIED. Mellissa's story: why she does this work, how long she has,
+   * what she believes about caring for someone's parent. Two or three honest
+   * paragraphs, in her words or a faithful retelling she approves. Do NOT
+   * fabricate a backstory. While this array is empty, the block stays hidden
    * and the page still reads cleanly. (See OPERATIONS.md.)
+   */
+  story: [] as string[],
+  /**
+   * IMPORTANT: Must be Mellissa's OWN words. Do not fabricate. Ask her for two
+   * or three honest first-person sentences and paste them below. While this is
+   * an empty string, the quote block is hidden.
    */
   quote: "",
   photo: "/images/mellissa.jpg", // real photo of Mellissa; see photo manifest
 } as const;
 
 /**
+ * Featured pull quote for the top of the testimonials section. These are the
+ * real words a resident said to his son, quoted in Mike S.'s review below.
+ * Real words only, never fabricated. Set quote to "" to hide the feature.
+ */
+export const TESTIMONIAL_FEATURED = {
+  quote: "I like my new home.",
+  attribution: `What Mike's father said, unprompted, over coffee in his room at Joy.`,
+} as const;
+
+/**
  * Section 4: real testimonials from families (owner-supplied). These are real
- * people's words and are kept faithful to what they wrote, which is why a few
- * contain phrasing the Joy house voice otherwise avoids (e.g. "loved one").
- * Do not paraphrase a testimonial. Entries with an empty `quote` are skipped,
- * so the section never shows a fabricated testimonial. Lead with Mike S. and
- * Cathy (§3).
+ * people's words. We only ever EXCERPT them (front-loading the strongest line
+ * and marking cuts with "..."); we never paraphrase or reword. That is why a
+ * few keep phrasing the Joy house voice otherwise avoids (e.g. "loved one").
+ * Entries with an empty `quote` are skipped, so the section never shows a
+ * fabricated testimonial. Lead with Mike S. and Cathy (§3).
  */
 export const TESTIMONIALS: {
   quote: string;
@@ -182,27 +312,27 @@ export const TESTIMONIALS: {
   context?: string;
 }[] = [
   {
-    quote: `We moved my dad to the memory care section of The Joy... if you're considering moving your loved one, it can be pretty stressful for everyone. Walking into The Joy with my dad was like walking into a sanctuary of caring and calm... I was sitting with my dad in his room enjoying a cup of coffee together and, unprompted, he said: "I like my new home." ... So grateful for everyone at The Joy!`,
+    quote: `Walking into The Joy with my dad was like walking into a sanctuary of caring and calm... So grateful for everyone at The Joy!`,
     name: "Mike S.",
     context: "Resident's son",
   },
   {
-    quote: `Dad had been living in a large luxury senior facility for two years, but his memory became really bad... along with his balance!! He had multiple falls... He needed a higher level of care. We found The Joy through Caring.com. What a blessing!! ... The staff is fabulous and since all the rooms are only steps away from the central "nurse's station" they are easily able to keep a vigilant eye on my independent Dad. Thank you, Angels, for guiding us to The Joy!!`,
+    quote: `We found The Joy through Caring.com. What a blessing!! The staff is fabulous and since all the rooms are only steps away from the central "nurse's station" they are easily able to keep a vigilant eye on my independent Dad.`,
     name: "Cathy",
     context: "Resident's daughter",
   },
   {
-    quote: `My mother has been a resident at Joy for several months. I can't say enough good things about this facility. The caring staff have made my mother feel like she is in her home and loved. They have fostered a family environment and hosted family gatherings. It is truly a 'joy' to have found this facility.`,
+    quote: `The caring staff have made my mother feel like she is in her home and loved. They have fostered a family environment and hosted family gatherings. It is truly a 'joy' to have found this facility.`,
     name: "Theresa",
     context: "Resident's daughter",
   },
   {
-    quote: `I have seen a lot of communities and this one by far was the absolute BEST!!! From the moment when we first walked in until it was all complete was truly a pleasure. We immediately felt welcomed... I tell everybody about this lovely community, and we are so happy we moved our mom in here.`,
+    quote: `I have seen a lot of communities and this one by far was the absolute BEST!!! We immediately felt welcomed... we are so happy we moved our mom in here.`,
     name: "Sidney",
     context: "Resident's family",
   },
   {
-    quote: `We have decided to move my mom into Joy after touring several facilities in the area. At the end of the day, their staff was the most engaging and caring. On top of that, it's a brand new building so everything was clean and smelled nice.`,
+    quote: `At the end of the day, their staff was the most engaging and caring. On top of that, it's a brand new building so everything was clean and smelled nice.`,
     name: "Nicole",
     context: "Resident's daughter",
   },

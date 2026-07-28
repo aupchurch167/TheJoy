@@ -69,6 +69,13 @@ export default async function SiteFooter() {
                 Services
               </Link>
             </li>
+            {MEMORY_CARE.enabled && (
+              <li>
+                <Link href="/memory-care" className="hover:text-clay">
+                  Memory Care
+                </Link>
+              </li>
+            )}
             <li>
               <Link href="/blog" className="hover:text-clay">
                 Stories from Joy

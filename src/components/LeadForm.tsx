@@ -114,7 +114,7 @@ export default function LeadForm() {
           <textarea
             name="message"
             rows={4}
-            placeholder="Tell us a little about your parent and what you need."
+            placeholder="Mom is 82, still at home, and we're starting to worry about the stairs."
             className="mt-1 w-full rounded-lg border border-line bg-paper px-4 py-3 text-ink outline-none focus:border-clay"
           />
         </label>

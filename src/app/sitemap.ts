@@ -1,5 +1,5 @@
 import type { MetadataRoute } from "next";
-import { SITE_URL, visibleServiceDetails } from "@/lib/site";
+import { SITE_URL, MEMORY_CARE, visibleServiceDetails } from "@/lib/site";
 import { hasDatabase } from "@/lib/db";
 import { getPublishedPosts } from "@/lib/posts";
 
@@ -13,6 +13,15 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${SITE_URL}/blog`, changeFrequency: "weekly", priority: 0.6 },
     { url: `${SITE_URL}/gallery`, changeFrequency: "monthly", priority: 0.4 },
   ];
+
+  // Memory care landing page (gated on the license, §4).
+  if (MEMORY_CARE.enabled) {
+    entries.push({
+      url: `${SITE_URL}/memory-care`,
+      changeFrequency: "monthly",
+      priority: 0.8,
+    });
+  }
 
   // One entry per visible service detail page (memory care is gated).
   for (const service of visibleServiceDetails()) {

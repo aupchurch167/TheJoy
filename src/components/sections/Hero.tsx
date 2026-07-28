@@ -32,6 +32,8 @@ export default async function Hero() {
               See what makes Joy different
             </a>
           </div>
+
+          <p className="mt-4 text-sm text-ink-faint">{HERO.callLine}</p>
         </div>
 
         <div className="relative">

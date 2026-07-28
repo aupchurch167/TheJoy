@@ -14,8 +14,9 @@ export default async function FinalCta() {
             Come see the home
           </h2>
           <p className="mt-4 max-w-md text-lg leading-relaxed text-white/80">
-            The best way to know if Joy is right for your parent is to walk
-            through it. Book a tour, or call and ask for {BUSINESS.director.name.split(" ")[0]}.
+            You can read about a place for a long time and still not know it. The
+            way to know Joy is to stand in it. Book a tour, or call and ask for{" "}
+            {BUSINESS.director.name.split(" ")[0]}.
           </p>
 
           <div className="mt-8">

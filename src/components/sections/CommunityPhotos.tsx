@@ -13,7 +13,8 @@ export default async function CommunityPhotos() {
         </h2>
         <p className="mt-3 max-w-xl text-lg text-ink-soft">
           Real photos of the building, the rooms, and the people who live and
-          work here. No stock, no staging.
+          work here. No stock. No staging. No wide-angle lens making four rooms
+          look like forty.
         </p>
 
         <div className="mt-8 grid grid-cols-2 gap-4 lg:grid-cols-4">
