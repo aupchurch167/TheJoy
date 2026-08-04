@@ -35,9 +35,9 @@ export default async function MemoryCareHome() {
           <p className="text-sm font-medium text-ink">
             The same day, on purpose:
           </p>
-          <ol className="mt-3 flex flex-wrap items-center gap-x-2 gap-y-2 text-sm text-ink-soft">
+          <div className="mt-3 flex flex-wrap items-center gap-x-2 gap-y-2 text-sm text-ink-soft">
             {MEMORY_CARE_EDUCATION.rhythm.map((step, i) => (
-              <li key={step.label} className="flex items-center gap-2">
+              <span key={step.label} className="flex items-center gap-2">
                 {i > 0 && (
                   <span aria-hidden className="text-clay">
                     &rarr;
@@ -46,9 +46,9 @@ export default async function MemoryCareHome() {
                 <span className="rounded-full bg-paper px-3 py-1 font-medium text-ink">
                   {step.label}
                 </span>
-              </li>
+              </span>
             ))}
-          </ol>
+          </div>
         </div>
 
         <div className="mt-8 flex flex-wrap items-center gap-5">

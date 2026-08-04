@@ -414,9 +414,7 @@ export const COMMUNITY_PHOTOS: { src: string; alt: string }[] = [
   { src: "/images/community-3.jpg", alt: "A resident's room at Joy Senior Living" },
   { src: "/images/community-4.jpg", alt: "The common living room at Joy Senior Living" },
   { src: "/images/community-5.jpg", alt: "The kitchen where meals are cooked at Joy Senior Living" },
-  { src: "/images/community-6.jpg", alt: "A sunny sitting area at Joy Senior Living in Loganville" },
-  { src: "/images/community-7.jpg", alt: "Residents enjoying an afternoon activity at Joy Senior Living" },
-  { src: "/images/community-8.jpg", alt: "The garden and grounds at Joy Senior Living" },
+  { src: "/images/community-6.jpg", alt: "The garden and grounds at Joy Senior Living" },
 ];
 
 /**
