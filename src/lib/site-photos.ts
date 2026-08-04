@@ -4,6 +4,7 @@ import {
   HERO_PHOTO,
   MELLISSA,
   COMMUNITY_PHOTOS,
+  HOME_SECTION_PHOTOS,
   SERVICE_DETAILS,
 } from "./site";
 
@@ -26,10 +27,10 @@ export function servicePhotoSettingKey(slug: string): string {
 export type PhotoSlotKey =
   | "hero"
   | "mellissa"
-  | "community_1"
-  | "community_2"
-  | "community_3"
-  | "community_4"
+  | "tuesday"
+  | "home_services"
+  | "cta"
+  | `community_${number}`
   | `service_${string}`;
 
 export type PhotoSlot = {
@@ -62,15 +63,42 @@ export const SITE_PHOTO_SLOTS: PhotoSlot[] = [
     alt: `${MELLISSA.heading}, Executive Director at Joy Senior Living`,
     aspect: "aspect-[4/5]",
   },
-  ...COMMUNITY_PHOTOS.slice(0, 4).map((p, i) => ({
+  ...COMMUNITY_PHOTOS.map((p, i) => ({
     key: `community_${i + 1}` as PhotoSlotKey,
     settingKey: `photo_community_${i + 1}`,
-    label: `Community photo ${i + 1}`,
+    label: `Inside the home photo ${i + 1}`,
     hint: p.alt,
     defaultSrc: p.src,
     alt: p.alt,
     aspect: "aspect-square",
   })),
+  {
+    key: "tuesday",
+    settingKey: "photo_tuesday",
+    label: "Homepage: A Tuesday at Joy",
+    hint: "A warm photo beside the daily-rhythm section (e.g. breakfast, morning light).",
+    defaultSrc: HOME_SECTION_PHOTOS.tuesday.src,
+    alt: HOME_SECTION_PHOTOS.tuesday.alt,
+    aspect: "aspect-[4/5]",
+  },
+  {
+    key: "home_services",
+    settingKey: "photo_home_services",
+    label: "Homepage: What we handle",
+    hint: "A care / daily-life photo beside the “What we handle” list.",
+    defaultSrc: HOME_SECTION_PHOTOS.services.src,
+    alt: HOME_SECTION_PHOTOS.services.alt,
+    aspect: "aspect-[4/5]",
+  },
+  {
+    key: "cta",
+    settingKey: "photo_cta",
+    label: "Homepage: Come see the home",
+    hint: "A building or exterior shot next to the contact form.",
+    defaultSrc: HOME_SECTION_PHOTOS.cta.src,
+    alt: HOME_SECTION_PHOTOS.cta.alt,
+    aspect: "aspect-[3/2]",
+  },
   // One slot per service, so the Services page photos are admin-editable too.
   ...SERVICE_DETAILS.map((s) => ({
     key: `service_${s.slug}` as PhotoSlotKey,
@@ -88,6 +116,9 @@ export type SitePhotos = {
   hero: ResolvedPhoto;
   mellissa: ResolvedPhoto;
   community: ResolvedPhoto[];
+  tuesday: ResolvedPhoto;
+  homeServices: ResolvedPhoto;
+  cta: ResolvedPhoto;
 };
 
 /** Read stored photo overrides (settingKey -> url). Empty map with no DB. */
@@ -139,11 +170,17 @@ export const getSitePhotos = cache(async (): Promise<SitePhotos> => {
   const bySlot = (k: PhotoSlotKey) => SITE_PHOTO_SLOTS.find((s) => s.key === k)!;
   const hero = bySlot("hero");
   const mellissa = bySlot("mellissa");
+  const tuesday = bySlot("tuesday");
+  const homeServices = bySlot("home_services");
+  const cta = bySlot("cta");
   return {
     hero: { src: src(hero), alt: hero.alt },
     mellissa: { src: src(mellissa), alt: mellissa.alt },
     community: SITE_PHOTO_SLOTS.filter((s) => s.key.startsWith("community")).map(
       (s) => ({ src: src(s), alt: s.alt })
     ),
+    tuesday: { src: src(tuesday), alt: tuesday.alt },
+    homeServices: { src: src(homeServices), alt: homeServices.alt },
+    cta: { src: src(cta), alt: cta.alt },
   };
 });

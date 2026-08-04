@@ -1,15 +1,25 @@
 import { BUSINESS } from "@/lib/site";
 import { getSettings, toTelHref, toMailHref } from "@/lib/settings";
+import { getSitePhotos } from "@/lib/site-photos";
+import Photo from "@/components/Photo";
 import TourButton from "@/components/TourButton";
 import LeadForm from "@/components/LeadForm";
 
 export default async function FinalCta() {
-  const settings = await getSettings();
+  const [settings, { cta }] = await Promise.all([
+    getSettings(),
+    getSitePhotos(),
+  ]);
 
   return (
     <section id="contact" className="bg-ink py-16 text-white sm:py-24">
       <div className="mx-auto grid max-w-6xl gap-12 px-5 lg:grid-cols-2">
         <div>
+          <Photo
+            src={cta.src}
+            alt={cta.alt}
+            className="mb-8 aspect-[3/2] w-full ring-1 ring-white/15"
+          />
           <h2 className="font-display text-3xl font-semibold sm:text-4xl">
             Come see the home
           </h2>
