@@ -26,6 +26,13 @@ export async function addPhoto(
   return rows[0];
 }
 
+export async function updatePhotoImage(
+  id: string,
+  imageUrl: string
+): Promise<void> {
+  await query(`UPDATE photos SET image_url = $1 WHERE id = $2`, [imageUrl, id]);
+}
+
 export async function deletePhoto(id: string): Promise<void> {
   await query(`DELETE FROM photos WHERE id = $1`, [id]);
 }

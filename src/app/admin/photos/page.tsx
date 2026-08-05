@@ -30,6 +30,7 @@ export default async function SitePhotosPage() {
     defaultSrc: s.defaultSrc,
     current: overrides[s.settingKey] || "",
     contain: s.contain ?? false,
+    group: s.group,
   }));
 
   return (

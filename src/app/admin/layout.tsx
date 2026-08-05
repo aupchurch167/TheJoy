@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import "react-easy-crop/react-easy-crop.css";
 import { auth } from "@/auth";
 import { isAllowedAdmin } from "@/lib/access";
 import AdminNav from "./AdminNav";

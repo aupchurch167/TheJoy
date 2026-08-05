@@ -47,6 +47,8 @@ export type PhotoSlot = {
   aspect: string;
   /** Logos should not be cropped: preview with object-contain instead of cover. */
   contain?: boolean;
+  /** Section heading in the admin Site Photos screen. */
+  group: string;
 };
 
 export const SITE_PHOTO_SLOTS: PhotoSlot[] = [
@@ -59,6 +61,7 @@ export const SITE_PHOTO_SLOTS: PhotoSlot[] = [
     alt: BRAND.logo.alt,
     aspect: "aspect-[3/1]",
     contain: true,
+    group: "Branding",
   },
   {
     key: "logo_mark",
@@ -69,6 +72,7 @@ export const SITE_PHOTO_SLOTS: PhotoSlot[] = [
     alt: BRAND.mark.alt,
     aspect: "aspect-square",
     contain: true,
+    group: "Branding",
   },
   {
     key: "hero",
@@ -78,6 +82,7 @@ export const SITE_PHOTO_SLOTS: PhotoSlot[] = [
     defaultSrc: HERO_PHOTO.src,
     alt: HERO_PHOTO.alt,
     aspect: "aspect-[4/3]",
+    group: "Homepage",
   },
   {
     key: "mellissa",
@@ -87,6 +92,7 @@ export const SITE_PHOTO_SLOTS: PhotoSlot[] = [
     defaultSrc: MELLISSA.photo,
     alt: `${MELLISSA.heading}, Executive Director at Joy Senior Living`,
     aspect: "aspect-[4/5]",
+    group: "Homepage",
   },
   ...COMMUNITY_PHOTOS.map((p, i) => ({
     key: `community_${i + 1}` as PhotoSlotKey,
@@ -96,6 +102,7 @@ export const SITE_PHOTO_SLOTS: PhotoSlot[] = [
     defaultSrc: p.src,
     alt: p.alt,
     aspect: "aspect-square",
+    group: "Homepage",
   })),
   {
     key: "tuesday",
@@ -105,6 +112,7 @@ export const SITE_PHOTO_SLOTS: PhotoSlot[] = [
     defaultSrc: HOME_SECTION_PHOTOS.tuesday.src,
     alt: HOME_SECTION_PHOTOS.tuesday.alt,
     aspect: "aspect-[4/5]",
+    group: "Homepage",
   },
   {
     key: "home_services",
@@ -114,6 +122,7 @@ export const SITE_PHOTO_SLOTS: PhotoSlot[] = [
     defaultSrc: HOME_SECTION_PHOTOS.services.src,
     alt: HOME_SECTION_PHOTOS.services.alt,
     aspect: "aspect-[4/5]",
+    group: "Homepage",
   },
   {
     key: "cta",
@@ -123,6 +132,7 @@ export const SITE_PHOTO_SLOTS: PhotoSlot[] = [
     defaultSrc: HOME_SECTION_PHOTOS.cta.src,
     alt: HOME_SECTION_PHOTOS.cta.alt,
     aspect: "aspect-[3/2]",
+    group: "Homepage",
   },
   // One slot per service, so the Services page photos are admin-editable too.
   ...SERVICE_DETAILS.map((s) => ({
@@ -133,6 +143,7 @@ export const SITE_PHOTO_SLOTS: PhotoSlot[] = [
     defaultSrc: s.photo.src,
     alt: s.photo.alt,
     aspect: "aspect-[4/3]",
+    group: "Services",
   })),
 ];
 

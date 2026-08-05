@@ -3,8 +3,10 @@
 import { useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { saveSitePhoto } from "./actions";
-import { Card, Input, Button, SectionLabel } from "@/components/admin/ui";
+import { Card, Input, Button, Badge, SectionLabel } from "@/components/admin/ui";
 import { useToast } from "@/components/admin/Toast";
+import ImageCropper from "@/components/admin/ImageCropper";
+import { aspectRatioFromClass } from "@/lib/crop-image";
 
 type Slot = {
   key: string;
@@ -16,6 +18,7 @@ type Slot = {
   defaultSrc: string;
   current: string;
   contain?: boolean;
+  group: string;
 };
 
 export default function PhotosManager({
@@ -25,10 +28,28 @@ export default function PhotosManager({
   slots: Slot[];
   canUpload: boolean;
 }) {
+  // Group slots into labeled sections, preserving order.
+  const groups: { name: string; slots: Slot[] }[] = [];
+  for (const s of slots) {
+    let g = groups.find((x) => x.name === s.group);
+    if (!g) {
+      g = { name: s.group, slots: [] };
+      groups.push(g);
+    }
+    g.slots.push(s);
+  }
+
   return (
-    <div className="grid gap-5 sm:grid-cols-2">
-      {slots.map((slot) => (
-        <PhotoSlotCard key={slot.key} slot={slot} canUpload={canUpload} />
+    <div className="space-y-10">
+      {groups.map((g) => (
+        <section key={g.name}>
+          <SectionLabel>{g.name}</SectionLabel>
+          <div className="mt-3 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            {g.slots.map((slot) => (
+              <PhotoSlotCard key={slot.key} slot={slot} canUpload={canUpload} />
+            ))}
+          </div>
+        </section>
       ))}
     </div>
   );
@@ -38,36 +59,19 @@ function PhotoSlotCard({ slot, canUpload }: { slot: Slot; canUpload: boolean }) 
   const router = useRouter();
   const { success, error: toastError } = useToast();
   const fileRef = useRef<HTMLInputElement>(null);
-  // The value shown/edited: the override if set, else the default path.
   const [value, setValue] = useState(slot.current || slot.defaultSrc);
   const [uploading, setUploading] = useState(false);
   const [broken, setBroken] = useState(false);
   const [pending, start] = useTransition();
+  const [cropSrc, setCropSrc] = useState<string | null>(null);
+  const [showUrl, setShowUrl] = useState(false);
 
   const usingDefault = !slot.current;
-
-  async function onUpload(file: File) {
-    setUploading(true);
-    const fd = new FormData();
-    fd.append("file", file);
-    try {
-      const res = await fetch("/api/admin/upload", { method: "POST", body: fd });
-      const json = await res.json();
-      if (!res.ok || !json.ok) {
-        toastError(json.error || "Upload failed.");
-        return;
-      }
-      setValue(json.url);
-      setBroken(false);
-      save(json.url);
-      // The file saved, but its public URL is not readable (storage config).
-      if (json.warning) toastError(json.warning);
-    } catch {
-      toastError("Upload failed.");
-    } finally {
-      setUploading(false);
-    }
-  }
+  const ratio = aspectRatioFromClass(slot.aspect);
+  const canCrop = !slot.contain; // logos should not be cropped
+  const hasImage = Boolean(value) && !broken;
+  // Only re-crop real remote images (uploaded / pasted https URLs).
+  const canEditExisting = canCrop && hasImage && /^https?:\/\//.test(value);
 
   function save(url: string) {
     start(async () => {
@@ -81,6 +85,52 @@ function PhotoSlotCard({ slot, canUpload }: { slot: Slot; canUpload: boolean }) 
     });
   }
 
+  async function uploadFile(file: File) {
+    setUploading(true);
+    const fd = new FormData();
+    fd.append("file", file);
+    try {
+      const res = await fetch("/api/admin/upload", { method: "POST", body: fd });
+      const json = await res.json();
+      if (!res.ok || !json.ok) {
+        toastError(json.error || "Upload failed.");
+        return;
+      }
+      setValue(json.url);
+      setBroken(false);
+      save(json.url);
+      if (json.warning) toastError(json.warning);
+    } catch {
+      toastError("Upload failed.");
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  function onPickFile(file: File) {
+    if (canCrop) {
+      // Crop the freshly-picked file before uploading (local blob = no CORS).
+      setCropSrc(URL.createObjectURL(file));
+    } else {
+      uploadFile(file);
+    }
+  }
+
+  function editExisting() {
+    // Load the stored image through the same-origin proxy so the crop can save.
+    setCropSrc(`/api/admin/image-proxy?url=${encodeURIComponent(value)}`);
+  }
+
+  function closeCropper() {
+    if (cropSrc?.startsWith("blob:")) URL.revokeObjectURL(cropSrc);
+    setCropSrc(null);
+  }
+
+  async function onCropped(file: File) {
+    closeCropper();
+    await uploadFile(file);
+  }
+
   function reset() {
     setValue(slot.defaultSrc);
     setBroken(false);
@@ -89,15 +139,15 @@ function PhotoSlotCard({ slot, canUpload }: { slot: Slot; canUpload: boolean }) 
 
   return (
     <Card>
-      <div className="flex items-center justify-between">
-        <SectionLabel>{slot.label}</SectionLabel>
+      <div className="flex items-center justify-between gap-2">
+        <p className="truncate text-sm font-semibold text-ink">{slot.label}</p>
         {usingDefault ? (
-          <span className="text-xs text-ink-faint">using placeholder</span>
+          <Badge tone="neutral">No image</Badge>
         ) : (
           <button
             onClick={reset}
             disabled={pending}
-            className="text-xs font-medium text-clay hover:text-clay-dark"
+            className="shrink-0 text-xs font-medium text-clay hover:text-clay-dark"
           >
             Reset
           </button>
@@ -123,10 +173,10 @@ function PhotoSlotCard({ slot, canUpload }: { slot: Slot; canUpload: boolean }) 
         )}
       </div>
 
-      <p className="mt-2 text-xs text-ink-faint">{slot.hint}</p>
+      <p className="mt-2 text-xs leading-relaxed text-ink-faint">{slot.hint}</p>
 
-      {/* Controls */}
-      <div className="mt-3 flex flex-wrap items-center gap-2">
+      {/* Actions */}
+      <div className="mt-3 flex flex-wrap gap-2">
         {canUpload && (
           <>
             <Button
@@ -135,7 +185,7 @@ function PhotoSlotCard({ slot, canUpload }: { slot: Slot; canUpload: boolean }) 
               onClick={() => fileRef.current?.click()}
               disabled={uploading || pending}
             >
-              {uploading ? "Uploading…" : "Upload"}
+              {uploading ? "Uploading…" : hasImage ? "Replace" : "Upload"}
             </Button>
             <input
               ref={fileRef}
@@ -144,32 +194,63 @@ function PhotoSlotCard({ slot, canUpload }: { slot: Slot; canUpload: boolean }) 
               className="hidden"
               onChange={(e) => {
                 const f = e.target.files?.[0];
-                if (f) onUpload(f);
+                if (f) onPickFile(f);
                 e.target.value = "";
               }}
             />
           </>
         )}
-      </div>
-
-      <div className="mt-2 flex items-center gap-2">
-        <Input
-          value={value}
-          onChange={(e) => {
-            setValue(e.target.value);
-            setBroken(false);
-          }}
-          placeholder="Paste an image URL (https://…)"
-          className="min-w-0 flex-1"
-        />
+        {canEditExisting && (
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={editExisting}
+            disabled={uploading || pending}
+          >
+            Crop &amp; position
+          </Button>
+        )}
         <Button
+          variant="ghost"
           size="sm"
-          onClick={() => save(value === slot.defaultSrc ? "" : value)}
-          disabled={pending || uploading}
+          onClick={() => setShowUrl((v) => !v)}
+          disabled={uploading}
         >
-          {pending ? "Saving…" : "Save"}
+          {showUrl ? "Hide URL" : "Paste URL"}
         </Button>
       </div>
+
+      {showUrl && (
+        <div className="mt-2 flex items-center gap-2">
+          <Input
+            value={value}
+            onChange={(e) => {
+              setValue(e.target.value);
+              setBroken(false);
+            }}
+            placeholder="https://…"
+            className="min-w-0 flex-1"
+          />
+          <Button
+            size="sm"
+            onClick={() => save(value === slot.defaultSrc ? "" : value)}
+            disabled={pending || uploading}
+          >
+            {pending ? "Saving…" : "Save"}
+          </Button>
+        </div>
+      )}
+
+      {cropSrc && (
+        <ImageCropper
+          src={cropSrc}
+          aspect={ratio}
+          filename={slot.key}
+          title={`Crop & position — ${slot.label}`}
+          onCancel={closeCropper}
+          onCropped={onCropped}
+        />
+      )}
     </Card>
   );
 }
