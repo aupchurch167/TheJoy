@@ -122,5 +122,43 @@ export async function uploadImage(
     })
   );
 
-  return `${cfg.publicUrl}/${key}`;
+  return resolvePublicUrl(cfg.publicUrl, cfg.bucket, key);
+}
+
+/**
+ * Return the public URL that actually loads for a just-uploaded object.
+ *
+ * Some R2 public URLs serve objects at `{base}/{key}`, others at
+ * `{base}/{bucket}/{key}`. Rather than depend on S3_PUBLIC_URL being set with
+ * exactly the right shape (a recurring foot-gun), we try both and store the one
+ * that returns 200, so uploads render either way. Falls back to the plain
+ * `{base}/{key}` if neither loads (the upload route then warns with the URL).
+ */
+async function resolvePublicUrl(
+  base: string,
+  bucket: string,
+  key: string
+): Promise<string> {
+  const primary = `${base}/${key}`;
+
+  // If the base already ends with the bucket name, the bucket is in the path
+  // and there is only one sensible URL to try.
+  let alreadyHasBucket = false;
+  try {
+    const segments = new URL(base).pathname.split("/").filter(Boolean);
+    alreadyHasBucket = segments[segments.length - 1] === bucket;
+  } catch {
+    // base is not a valid URL; just use the primary form
+    return primary;
+  }
+
+  const candidates = alreadyHasBucket
+    ? [primary]
+    : [primary, `${base}/${bucket}/${key}`];
+
+  for (const url of candidates) {
+    const { ok } = await verifyPublicUrl(url);
+    if (ok) return url;
+  }
+  return primary;
 }
