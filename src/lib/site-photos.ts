@@ -5,6 +5,7 @@ import {
   MELLISSA,
   COMMUNITY_PHOTOS,
   HOME_SECTION_PHOTOS,
+  BRAND,
   SERVICE_DETAILS,
 } from "./site";
 
@@ -25,6 +26,8 @@ export function servicePhotoSettingKey(slug: string): string {
  */
 
 export type PhotoSlotKey =
+  | "logo"
+  | "logo_mark"
   | "hero"
   | "mellissa"
   | "tuesday"
@@ -42,9 +45,31 @@ export type PhotoSlot = {
   alt: string;
   /** Tailwind aspect ratio for the admin preview + public render. */
   aspect: string;
+  /** Logos should not be cropped: preview with object-contain instead of cover. */
+  contain?: boolean;
 };
 
 export const SITE_PHOTO_SLOTS: PhotoSlot[] = [
+  {
+    key: "logo",
+    settingKey: "photo_logo",
+    label: "Logo (full)",
+    hint: "Your full logo (wordmark). Shows in the header and footer. A wide PNG with a transparent background works best. Until set, the site shows the name as text.",
+    defaultSrc: BRAND.logo.src,
+    alt: BRAND.logo.alt,
+    aspect: "aspect-[3/1]",
+    contain: true,
+  },
+  {
+    key: "logo_mark",
+    settingKey: "photo_logo_mark",
+    label: "Logo mark (icon)",
+    hint: "The compact icon version of your logo. Shows in the header on small screens. A square PNG with a transparent background works best.",
+    defaultSrc: BRAND.mark.src,
+    alt: BRAND.mark.alt,
+    aspect: "aspect-square",
+    contain: true,
+  },
   {
     key: "hero",
     settingKey: "photo_hero",
@@ -112,7 +137,11 @@ export const SITE_PHOTO_SLOTS: PhotoSlot[] = [
 ];
 
 export type ResolvedPhoto = { src: string; alt: string };
+/** A brand mark resolves to its uploaded URL, or `set: false` (use text). */
+export type ResolvedLogo = { src: string; alt: string; set: boolean };
 export type SitePhotos = {
+  logo: ResolvedLogo;
+  logoMark: ResolvedLogo;
   hero: ResolvedPhoto;
   mellissa: ResolvedPhoto;
   community: ResolvedPhoto[];
@@ -173,7 +202,17 @@ export const getSitePhotos = cache(async (): Promise<SitePhotos> => {
   const tuesday = bySlot("tuesday");
   const homeServices = bySlot("home_services");
   const cta = bySlot("cta");
+  // Logos: only render an image when a real one has been uploaded (an override
+  // exists). Otherwise `set: false` so the header/footer show the text name.
+  const logoUrl = map.get("photo_logo") || "";
+  const logoMarkUrl = map.get("photo_logo_mark") || "";
   return {
+    logo: { src: logoUrl, alt: bySlot("logo").alt, set: logoUrl !== "" },
+    logoMark: {
+      src: logoMarkUrl,
+      alt: bySlot("logo_mark").alt,
+      set: logoMarkUrl !== "",
+    },
     hero: { src: src(hero), alt: hero.alt },
     mellissa: { src: src(mellissa), alt: mellissa.alt },
     community: SITE_PHOTO_SLOTS.filter((s) => s.key.startsWith("community")).map(

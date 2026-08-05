@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { BUSINESS, MEMORY_CARE } from "@/lib/site";
 import { getSettings, toTelHref } from "@/lib/settings";
+import { getSitePhotos } from "@/lib/site-photos";
 import TourButton from "./TourButton";
 import MobileNav from "./MobileNav";
 
@@ -16,16 +17,44 @@ const NAV = [
 ];
 
 export default async function SiteHeader() {
-  const settings = await getSettings();
+  const [settings, { logo, logoMark }] = await Promise.all([
+    getSettings(),
+    getSitePhotos(),
+  ]);
 
   return (
     <header className="sticky top-0 z-40 border-b border-line/70 bg-paper/90 backdrop-blur">
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-5 py-3.5">
-        <Link href="/" className="flex flex-col leading-tight">
-          <span className="font-display text-xl font-semibold text-ink">
-            {BUSINESS.name}
-          </span>
-          <span className="text-xs text-ink-faint">Loganville, Georgia</span>
+        <Link
+          href="/"
+          className="flex items-center"
+          aria-label={`${BUSINESS.name} home`}
+        >
+          {logo.set ? (
+            <>
+              {/* Full logo on larger screens. eslint-disable-next-line @next/next/no-img-element */}
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={logo.src}
+                alt={BUSINESS.name}
+                className="hidden h-9 w-auto sm:block"
+              />
+              {/* Compact mark on mobile (falls back to the full logo if no mark). */}
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={logoMark.set ? logoMark.src : logo.src}
+                alt={BUSINESS.name}
+                className="h-9 w-auto sm:hidden"
+              />
+            </>
+          ) : (
+            <span className="flex flex-col leading-tight">
+              <span className="font-display text-xl font-semibold text-ink">
+                {BUSINESS.name}
+              </span>
+              <span className="text-xs text-ink-faint">Loganville, Georgia</span>
+            </span>
+          )}
         </Link>
 
         <nav className="hidden items-center gap-6 text-sm font-medium text-ink-soft lg:flex">

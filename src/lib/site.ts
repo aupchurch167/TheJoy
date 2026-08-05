@@ -422,6 +422,22 @@ export const COMMUNITY_PHOTOS: { src: string; alt: string }[] = [
  * the Site Photos screen). Real photos only; each shows the calm placeholder
  * until a real file or upload exists.
  */
+/**
+ * Brand marks (admin-editable via the Site Photos screen). `logo` is the full
+ * wordmark, `mark` is the compact icon/logomark. Until a real file is uploaded,
+ * the header and footer fall back to the text wordmark, so nothing looks broken.
+ */
+export const BRAND = {
+  logo: {
+    src: "/images/brand/logo.png",
+    alt: `${BUSINESS.name}`,
+  },
+  mark: {
+    src: "/images/brand/logo-mark.png",
+    alt: `${BUSINESS.name} logo`,
+  },
+} as const;
+
 export const HOME_SECTION_PHOTOS = {
   tuesday: {
     src: "/images/home/a-tuesday.jpg",

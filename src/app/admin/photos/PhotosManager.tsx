@@ -15,6 +15,7 @@ type Slot = {
   aspect: string;
   defaultSrc: string;
   current: string;
+  contain?: boolean;
 };
 
 export default function PhotosManager({
@@ -112,7 +113,7 @@ function PhotoSlotCard({ slot, canUpload }: { slot: Slot; canUpload: boolean }) 
           <img
             src={value}
             alt={slot.alt}
-            className="h-full w-full object-cover"
+            className={`h-full w-full ${slot.contain ? "object-contain p-3" : "object-cover"}`}
             onError={() => setBroken(true)}
           />
         ) : (

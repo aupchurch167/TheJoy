@@ -1,9 +1,13 @@
 import Link from "next/link";
 import { BUSINESS, SOCIAL, BADGES, MEMORY_CARE } from "@/lib/site";
 import { getSettings, toTelHref, toMailHref } from "@/lib/settings";
+import { getSitePhotos } from "@/lib/site-photos";
 
 export default async function SiteFooter() {
-  const settings = await getSettings();
+  const [settings, { logo }] = await Promise.all([
+    getSettings(),
+    getSitePhotos(),
+  ]);
   const year = 2026; // update yearly; kept static to avoid build-time drift
   const badges = BADGES.filter(
     (b) => !b.requiresMemoryCare || MEMORY_CARE.enabled
@@ -13,9 +17,18 @@ export default async function SiteFooter() {
     <footer className="border-t border-line bg-white/60">
       <div className="mx-auto grid max-w-6xl gap-8 px-5 py-12 sm:grid-cols-2 lg:grid-cols-3">
         <div>
-          <p className="font-display text-lg font-semibold text-ink">
-            {BUSINESS.name}
-          </p>
+          {logo.set ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={logo.src}
+              alt={BUSINESS.name}
+              className="h-10 w-auto"
+            />
+          ) : (
+            <p className="font-display text-lg font-semibold text-ink">
+              {BUSINESS.name}
+            </p>
+          )}
           <p className="mt-2 text-sm leading-relaxed text-ink-soft">
             A senior living home and memory care (personal care home) in
             Loganville, Georgia. Small enough to know your parent by name.
