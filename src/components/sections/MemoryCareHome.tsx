@@ -13,7 +13,7 @@ export default async function MemoryCareHome() {
   const settings = await getSettings();
 
   return (
-    <section id="memory-care" className="py-16 sm:py-20">
+    <section id="memory-care" className="bg-white/60 py-16 sm:py-20">
       <div className="mx-auto max-w-2xl px-5">
         <p className="text-sm font-semibold uppercase tracking-wide text-clay">
           Memory care, within our personal care home

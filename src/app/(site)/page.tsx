@@ -65,19 +65,24 @@ export default async function Home() {
           __html: JSON.stringify(localBusinessJsonLd()),
         }}
       />
+      {/* Ordered as a story for a family researching care:
+          relief (hero) -> credible (trust strip) -> the idea (small) ->
+          a day here -> see the home -> meet Mellissa -> what we handle ->
+          memory care -> the doubt -> families -> awards -> stories ->
+          your questions -> come see it. */}
       <Hero />
       <TrustStrip />
       <Difference />
       <ATuesday />
+      <CommunityPhotos />
+      <MeetMellissa />
       <HomeServices />
       <MemoryCareHome />
       <Objection />
-      <MeetMellissa />
       <Testimonials />
       <Awards />
-      <CommunityPhotos />
-      <Faq />
       <LatestPosts posts={postCards} />
+      <Faq />
       <FinalCta />
     </>
   );

@@ -10,7 +10,7 @@ export default async function ATuesday() {
   const { tuesday } = await getSitePhotos();
 
   return (
-    <section id="a-day" className="py-16 sm:py-20">
+    <section id="a-day" className="bg-white/60 py-16 sm:py-20">
       <div className="mx-auto grid max-w-5xl items-start gap-10 px-5 lg:grid-cols-2">
         <div>
           <p className="text-sm font-semibold uppercase tracking-wide text-clay">
