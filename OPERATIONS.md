@@ -239,6 +239,19 @@ code tells you which problem it is:
 - **HTTP 401 / 403** (denied): public access is off, or `S3_PUBLIC_URL` is the
   private S3 endpoint. Fix as below.
 
+New uploads self-correct (the app tries both `{host}/blog/…` and
+`{host}/{bucket}/blog/…` and saves whichever loads). To repair images that were
+saved broken *before* that, run the one-time fixer (preview first):
+
+```
+railway run node scripts/fix-image-urls.mjs --dry   # preview, changes nothing
+railway run node scripts/fix-image-urls.mjs         # apply
+```
+
+It rewrites saved image links (blog heroes, inline post images, site photos)
+only when the corrected URL actually loads, and leaves Webflow-CDN and
+already-correct links alone.
+
 Almost always the fix is `S3_PUBLIC_URL`:
 
 - `S3_PUBLIC_URL` must be the bucket's **public** URL, not the S3 API endpoint.
