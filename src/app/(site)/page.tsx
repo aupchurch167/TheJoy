@@ -12,9 +12,9 @@ import Awards from "@/components/sections/Awards";
 import Faq from "@/components/sections/Faq";
 import LatestPosts from "@/components/sections/LatestPosts";
 import FinalCta from "@/components/sections/FinalCta";
-import { localBusinessJsonLd } from "@/lib/schema";
+import { localBusinessJsonLd, faqPageJsonLd } from "@/lib/schema";
 import type { Metadata } from "next";
-import { BUSINESS } from "@/lib/site";
+import { BUSINESS, OG_IMAGE } from "@/lib/site";
 import { hasDatabase } from "@/lib/db";
 import { getPublishedPosts } from "@/lib/posts";
 import { getSitePhotos } from "@/lib/site-photos";
@@ -25,17 +25,13 @@ export const dynamic = "force-dynamic";
 // voice and §4 compliance: senior living / personal care home / memory care,
 // with "assisted living" only as the search category, never Joy's label.
 export const metadata: Metadata = {
-  title: `${BUSINESS.name} | Personal Care & Memory Care in Loganville, GA`,
+  // `absolute` bypasses the root layout's "%s | Joy Senior Living" template, so
+  // the brand-first homepage title is not double-branded. (The `keywords` meta
+  // tag was removed: Google ignores it and it only advertised our targets.)
+  title: {
+    absolute: `${BUSINESS.name} | Personal Care & Memory Care in Loganville, GA`,
+  },
   description: `A ${BUSINESS.beds}-resident personal care home and memory care in ${BUSINESS.address.city}, Georgia. Small enough to know your parent by name. Book a tour or call ${BUSINESS.phone}.`,
-  keywords: [
-    "the joy senior living of loganville",
-    "joy senior living reviews",
-    "assisted living loganville ga",
-    "assisted living in loganville ga",
-    "memory care loganville ga",
-    "small assisted living georgia",
-    "personal care home loganville ga",
-  ],
   alternates: { canonical: "/" },
   openGraph: {
     title: `${BUSINESS.name} | Personal Care & Memory Care in Loganville, GA`,
@@ -44,6 +40,7 @@ export const metadata: Metadata = {
     siteName: BUSINESS.name,
     locale: "en_US",
     type: "website",
+    images: [OG_IMAGE],
   },
 };
 
@@ -68,6 +65,13 @@ export default async function Home() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{
           __html: JSON.stringify(localBusinessJsonLd({ image: schemaImage })),
+        }}
+      />
+      {/* FAQPage markup, mirroring the visible FAQ (memory-care item gated). */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(faqPageJsonLd()),
         }}
       />
       {/* Ordered as a story for a family researching care:

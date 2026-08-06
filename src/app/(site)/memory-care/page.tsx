@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { BUSINESS, MEMORY_CARE, MEMORY_CARE_EDUCATION } from "@/lib/site";
+import { BUSINESS, MEMORY_CARE, MEMORY_CARE_EDUCATION, OG_IMAGE } from "@/lib/site";
 import { getSettings } from "@/lib/settings";
 import TourButton from "@/components/TourButton";
 import StepTimeline from "@/components/StepTimeline";
@@ -10,20 +10,18 @@ import Accordion from "@/components/Accordion";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: `Memory Care in Loganville, GA | ${BUSINESS.name}`,
+  // No brand here: the root layout's title template appends "| Joy Senior
+  // Living" automatically, so including it would double-brand the tab title.
+  title: "Memory Care in Loganville, GA",
   description:
     "Memory care at Joy Senior Living in Loganville, GA, offered within our personal care home: a small, familiar setting with steady routines and staff who know your parent by name. What dementia behaviors mean, and how a small home helps.",
-  keywords: [
-    "memory care loganville ga",
-    "dementia care loganville",
-    "personal care home memory care georgia",
-  ],
   alternates: { canonical: "/memory-care" },
   openGraph: {
     title: `Memory Care | ${BUSINESS.name}`,
     description: BUSINESS.descriptor,
     url: "/memory-care",
     type: "website",
+    images: [OG_IMAGE],
   },
 };
 

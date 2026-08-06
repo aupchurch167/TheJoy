@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { hasDatabase } from "@/lib/db";
 import { getPublishedPostBySlug } from "@/lib/posts";
 import { articleJsonLd } from "@/lib/schema";
-import { BUSINESS } from "@/lib/site";
+import { BUSINESS, OG_IMAGE } from "@/lib/site";
 import Markdown from "@/components/Markdown";
 import Photo from "@/components/Photo";
 import TourButton from "@/components/TourButton";
@@ -30,7 +30,7 @@ export async function generateMetadata({
       description,
       type: "article",
       url: `/blog/${post.slug}`,
-      images: post.hero_image ? [post.hero_image] : undefined,
+      images: post.hero_image ? [post.hero_image] : [OG_IMAGE],
       publishedTime: post.published_at || undefined,
     },
   };

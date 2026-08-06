@@ -1,6 +1,8 @@
 import {
   AWARD,
   BUSINESS,
+  FAQ,
+  MEMORY_CARE,
   ORG_PROFILE,
   SITE_URL,
   visibleServiceDetails,
@@ -77,6 +79,31 @@ export function localBusinessJsonLd(opts?: { image?: string }) {
         },
       })),
     },
+  };
+}
+
+/**
+ * schema.org FAQPage markup for the homepage FAQ. Built from the same FAQ
+ * array the visible <Faq> component renders, with the memory-care question
+ * gated identically (§4), so the structured data never states more than the
+ * page shows. The answers are the exact on-page text (no invented specifics).
+ */
+export function faqPageJsonLd() {
+  const items = FAQ.filter(
+    (f) => f.gated !== "memory" || MEMORY_CARE.enabled
+  );
+  return {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "@id": `${SITE_URL}/#faq`,
+    mainEntity: items.map((item) => ({
+      "@type": "Question",
+      name: item.q,
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: item.a,
+      },
+    })),
   };
 }
 

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { BUSINESS, SERVICES, visibleServiceDetails } from "@/lib/site";
+import { BUSINESS, OG_IMAGE, SERVICES, visibleServiceDetails } from "@/lib/site";
 import { getSettings } from "@/lib/settings";
 import { getServicePhotos } from "@/lib/site-photos";
 import Photo from "@/components/Photo";
@@ -11,17 +11,13 @@ export const metadata: Metadata = {
   title: "Memory Care & Personal Care Home in Loganville, GA",
   description:
     "Joy Senior Living is a small personal care home in Loganville, GA offering personal care, memory care, respite stays, daily activities, and home-cooked meals. Care at a scale small enough to know your parent by name.",
-  keywords: [
-    "memory care loganville ga",
-    "personal care home loganville",
-    "small assisted living georgia",
-  ],
   alternates: { canonical: "/services" },
   openGraph: {
     title: `Services | ${BUSINESS.name}`,
     description: BUSINESS.descriptor,
     url: "/services",
     type: "website",
+    images: [OG_IMAGE],
   },
 };
 

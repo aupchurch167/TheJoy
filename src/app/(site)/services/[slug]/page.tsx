@@ -4,6 +4,7 @@ import { notFound, redirect } from "next/navigation";
 import {
   BUSINESS,
   getServiceDetail,
+  OG_IMAGE,
   visibleServiceDetails,
 } from "@/lib/site";
 import { serviceJsonLd } from "@/lib/schema";
@@ -44,6 +45,7 @@ export async function generateMetadata({
       description: service.metaDescription,
       url: `/services/${service.slug}`,
       type: "website",
+      images: [OG_IMAGE],
     },
   };
 }

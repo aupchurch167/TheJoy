@@ -146,5 +146,65 @@
   {
     "from": "/service/nutrition",
     "to": "/services/nutrition"
+  },
+  {
+    "from": "/contact",
+    "to": "/tour"
+  },
+  {
+    "from": "/schedule-tour",
+    "to": "/tour"
+  },
+  {
+    "from": "/meals",
+    "to": "/tour"
+  },
+  {
+    "from": "/pricing",
+    "to": "/blog/cost-of-assisted-living-and-personal-care"
+  },
+  {
+    "from": "/loganville",
+    "to": "/gallery"
+  },
+  {
+    "from": "/career",
+    "to": "/about"
+  },
+  {
+    "from": "/careers",
+    "to": "/about"
+  },
+  {
+    "from": "/team/:path*",
+    "to": "/about"
+  },
+  {
+    "from": "/blog-category/:path*",
+    "to": "/blog"
+  },
+  {
+    "from": "/newsletters/:path*",
+    "to": "/blog"
+  },
+  {
+    "from": "/checkout",
+    "to": "/"
+  },
+  {
+    "from": "/order-confirmation",
+    "to": "/"
+  },
+  {
+    "from": "/paypal-checkout",
+    "to": "/"
+  },
+  {
+    "from": "/search",
+    "to": "/"
+  },
+  {
+    "from": "/:slug(thank-you.*)",
+    "to": "/"
   }
 ]

@@ -51,10 +51,29 @@ export const BUSINESS_ADDRESS_ONE_LINE = `${BUSINESS.address.street}, ${BUSINESS
 export const TOUR_URL =
   process.env.NEXT_PUBLIC_TALKFURTHER_URL || BUSINESS.phoneHref;
 
-/** Public site URL (used for canonical links, sitemap, schema). */
+/**
+ * Public site URL (used for canonical links, sitemap, schema, robots Host).
+ * The canonical host is www; non-www requests 301 to it at the DNS/host level.
+ * Override with NEXT_PUBLIC_SITE_URL in the env if the domain ever changes.
+ */
 export const SITE_URL = (
-  process.env.NEXT_PUBLIC_SITE_URL || "https://joyseniorcare.com"
+  process.env.NEXT_PUBLIC_SITE_URL || "https://www.joyseniorcare.com"
 ).replace(/\/$/, "");
+
+/**
+ * Default social-share image (og:image / twitter:image). Points at the
+ * generated 1200x630 card served by src/app/og/route.tsx. Referenced from the
+ * root layout and from every page that sets its own `openGraph` (a page-level
+ * openGraph overwrites the parent's, so each one must include the image to
+ * have a card). Blog posts pass their own hero image instead when they have
+ * one. `url` is resolved against metadataBase (SITE_URL) into an absolute URL.
+ */
+export const OG_IMAGE = {
+  url: "/og",
+  width: 1200,
+  height: 630,
+  alt: `${BUSINESS.name}, a personal care home in ${BUSINESS.address.city}, ${BUSINESS.address.state}`,
+} as const;
 
 /** The award badge. Update the year here each year. */
 export const AWARD = {

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { ABOUT, BUSINESS, MELLISSA } from "@/lib/site";
+import { ABOUT, BUSINESS, MELLISSA, OG_IMAGE } from "@/lib/site";
 import { getSettings } from "@/lib/settings";
 import { getSitePhotos } from "@/lib/site-photos";
 import Photo from "@/components/Photo";
@@ -15,6 +15,7 @@ export const metadata: Metadata = {
     description: BUSINESS.descriptor,
     url: "/about",
     type: "website",
+    images: [OG_IMAGE],
   },
 };
 
