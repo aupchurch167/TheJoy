@@ -42,6 +42,7 @@ export default async function PublicGalleryPage() {
               <Photo
                 src={p.image_url}
                 alt={p.image_alt || p.caption || "A photo from Joy Senior Living"}
+                sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 288px"
                 className="aspect-square w-full ring-1 ring-line"
               />
               {p.caption && (

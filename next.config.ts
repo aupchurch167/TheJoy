@@ -50,7 +50,43 @@ function loadNoindexHeaders(): HeaderRules {
   return rules;
 }
 
+/**
+ * next/image remote hosts. Must be a SUPERSET of the allowlist in Photo.tsx.
+ * We serve our own images from Cloudflare R2 (pub-*.r2.dev, or a custom public
+ * URL) and, transitionally, legacy blog images from the Webflow CDN. AVIF/WebP
+ * are enabled so multi-megabyte uploads are resized and re-encoded on the fly.
+ */
+function imageRemotePatterns() {
+  const patterns: NonNullable<
+    NonNullable<NextConfig["images"]>["remotePatterns"]
+  > = [
+    { protocol: "https", hostname: "**.r2.dev" },
+    { protocol: "https", hostname: "**.website-files.com" },
+    { protocol: "https", hostname: "uploads-ssl.webflow.com" },
+  ];
+  // A custom R2 public domain (S3_PUBLIC_URL) if one is configured.
+  const publicUrl = process.env.S3_PUBLIC_URL;
+  if (publicUrl) {
+    try {
+      const { hostname, protocol } = new URL(publicUrl);
+      if (!patterns.some((p) => p.hostname === hostname)) {
+        patterns.push({
+          protocol: protocol.replace(":", "") as "http" | "https",
+          hostname,
+        });
+      }
+    } catch {
+      // ignore an unparseable S3_PUBLIC_URL
+    }
+  }
+  return patterns;
+}
+
 const nextConfig: NextConfig = {
+  images: {
+    formats: ["image/avif", "image/webp"],
+    remotePatterns: imageRemotePatterns(),
+  },
   async redirects() {
     return loadRedirects();
   },

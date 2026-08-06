@@ -23,6 +23,7 @@ export default async function CommunityPhotos() {
               key={i}
               src={p.src}
               alt={p.alt}
+              sizes="(max-width: 1024px) 50vw, 384px"
               className="aspect-square w-full ring-1 ring-line"
             />
           ))}
