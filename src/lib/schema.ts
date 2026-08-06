@@ -107,9 +107,15 @@ export function faqPageJsonLd() {
   };
 }
 
-/** schema.org Service markup for a service detail page, tied to the business. */
-export function serviceJsonLd(service: ServiceDetail) {
-  const url = `${SITE_URL}/services/${service.slug}`;
+/**
+ * schema.org Service markup for a service page, tied to the business. `opts.url`
+ * overrides the default /services/<slug> URL (memory care lives at /memory-care).
+ */
+export function serviceJsonLd(
+  service: ServiceDetail,
+  opts?: { url?: string }
+) {
+  const url = opts?.url ?? `${SITE_URL}/services/${service.slug}`;
   return {
     "@context": "https://schema.org",
     "@type": "Service",
@@ -127,6 +133,134 @@ export function serviceJsonLd(service: ServiceDetail) {
   };
 }
 
+/**
+ * schema.org CollectionPage for the /services overview, listing the visible
+ * services (memory care links to its own /memory-care page).
+ */
+export function servicesCollectionJsonLd() {
+  const url = `${SITE_URL}/services`;
+  return {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "@id": `${url}#services`,
+    url,
+    name: "Care services at Joy Senior Living",
+    about: { "@id": `${SITE_URL}/#business` },
+    hasPart: visibleServiceDetails().map((s) => ({
+      "@type": "Service",
+      name: s.name,
+      url:
+        s.slug === "memory-care"
+          ? `${SITE_URL}/memory-care`
+          : `${SITE_URL}/services/${s.slug}`,
+    })),
+  };
+}
+
+/**
+ * schema.org Person for Mellissa Daniel, Joy's Executive Director. She is the
+ * site's E-E-A-T anchor (a registered nurse with 20+ years of experience, per
+ * the owner-supplied ORG_PROFILE). Referenced by @id from the AboutPage.
+ */
+export function mellissaPersonJsonLd() {
+  return {
+    "@type": "Person",
+    "@id": `${SITE_URL}/#mellissa`,
+    name: BUSINESS.director.name,
+    jobTitle: BUSINESS.director.title,
+    description:
+      "Executive Director at Joy Senior Living and a registered nurse with more than 20 years of experience.",
+    url: `${SITE_URL}/about`,
+    worksFor: {
+      "@type": ["LocalBusiness", "SeniorCare"],
+      "@id": `${SITE_URL}/#business`,
+      name: BUSINESS.name,
+    },
+  };
+}
+
+/** schema.org AboutPage for /about, with Mellissa's Person entity in a graph. */
+export function aboutPageJsonLd() {
+  const url = `${SITE_URL}/about`;
+  return {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "AboutPage",
+        "@id": `${url}#about`,
+        url,
+        name: `About ${BUSINESS.name}`,
+        about: { "@id": `${SITE_URL}/#business` },
+        mainEntity: { "@id": `${SITE_URL}/#mellissa` },
+      },
+      mellissaPersonJsonLd(),
+    ],
+  };
+}
+
+/** schema.org ContactPage for /tour (book-a-tour / contact hub). */
+export function contactPageJsonLd() {
+  const url = `${SITE_URL}/tour`;
+  return {
+    "@context": "https://schema.org",
+    "@type": "ContactPage",
+    "@id": `${url}#contact`,
+    url,
+    name: "Book a tour of Joy Senior Living",
+    about: { "@id": `${SITE_URL}/#business` },
+  };
+}
+
+/** schema.org Blog for the /blog index, listing published posts. */
+export function blogCollectionJsonLd(
+  posts: { slug: string; title: string; published_at?: string | null }[]
+) {
+  const url = `${SITE_URL}/blog`;
+  return {
+    "@context": "https://schema.org",
+    "@type": "Blog",
+    "@id": `${url}#blog`,
+    url,
+    name: "Stories from Joy",
+    publisher: {
+      "@type": "Organization",
+      "@id": `${SITE_URL}/#business`,
+      name: BUSINESS.name,
+    },
+    blogPost: posts.map((p) => ({
+      "@type": "BlogPosting",
+      headline: p.title,
+      url: `${SITE_URL}/blog/${p.slug}`,
+      datePublished: p.published_at || undefined,
+    })),
+  };
+}
+
+/** schema.org BreadcrumbList. Pass site-relative paths in trail order. */
+export function breadcrumbJsonLd(items: { name: string; path: string }[]) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: items.map((it, i) => ({
+      "@type": "ListItem",
+      position: i + 1,
+      name: it.name,
+      item: `${SITE_URL}${it.path}`,
+    })),
+  };
+}
+
+/** Turn a stored author (often a slug like "adam-upchurch") into a Person. */
+function authorPerson(author: string) {
+  const name = /^[a-z0-9]+(?:-[a-z0-9]+)+$/.test(author)
+    ? author
+        .split("-")
+        .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+        .join(" ")
+    : author;
+  return { "@type": "Person", name, url: `${SITE_URL}/about` };
+}
+
 /** schema.org Article markup for a blog post. */
 export function articleJsonLd(post: Post) {
   const url = `${SITE_URL}/blog/${post.slug}`;
@@ -139,7 +273,9 @@ export function articleJsonLd(post: Post) {
     image: post.hero_image || undefined,
     datePublished: post.published_at || undefined,
     dateModified: post.updated_at || post.published_at || undefined,
-    author: { "@type": "Organization", name: post.author },
+    // Owner-operator authorship is real E-E-A-T on a YMYL (senior care) site,
+    // so the author is a Person (not the CMS slug as an Organization).
+    author: authorPerson(post.author),
     publisher: {
       "@type": "Organization",
       name: BUSINESS.name,

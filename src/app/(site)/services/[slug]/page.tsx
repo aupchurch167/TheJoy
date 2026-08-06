@@ -7,7 +7,7 @@ import {
   OG_IMAGE,
   visibleServiceDetails,
 } from "@/lib/site";
-import { serviceJsonLd } from "@/lib/schema";
+import { serviceJsonLd, breadcrumbJsonLd } from "@/lib/schema";
 import { getSettings, tourHref } from "@/lib/settings";
 import { getServicePhotos } from "@/lib/site-photos";
 import Photo from "@/components/Photo";
@@ -73,6 +73,18 @@ export default async function ServiceDetailPage({
         type="application/ld+json"
         dangerouslySetInnerHTML={{
           __html: JSON.stringify(serviceJsonLd(service)),
+        }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(
+            breadcrumbJsonLd([
+              { name: "Home", path: "/" },
+              { name: "Services", path: "/services" },
+              { name: service.name, path: `/services/${service.slug}` },
+            ])
+          ),
         }}
       />
 

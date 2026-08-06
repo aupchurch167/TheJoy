@@ -4,7 +4,9 @@ import {
   BUSINESS_ADDRESS_ONE_LINE,
   OG_IMAGE,
 } from "@/lib/site";
+import { contactPageJsonLd, breadcrumbJsonLd } from "@/lib/schema";
 import { getSettings, toTelHref } from "@/lib/settings";
+import JsonLd from "@/components/JsonLd";
 import TourButton from "@/components/TourButton";
 import LeadForm from "@/components/LeadForm";
 
@@ -15,7 +17,7 @@ export const metadata: Metadata = {
   // Brand is appended by the root layout title template; do not repeat it here.
   title: "Book a Tour",
   description:
-    "See Joy Senior Living in person. Book a tour of our small personal care home in Loganville, GA, or call and ask for Mellissa. We will show you the home and answer your questions, with no pressure.",
+    "Book a tour of Joy Senior Living, a small personal care home in Loganville, GA. See the home, meet Mellissa, and ask anything. No pressure.",
   alternates: { canonical: "/tour" },
   openGraph: {
     title: `Book a Tour | ${BUSINESS.name}`,
@@ -32,6 +34,13 @@ export default async function TourPage() {
 
   return (
     <div className="prose-joy">
+      <JsonLd data={contactPageJsonLd()} />
+      <JsonLd
+        data={breadcrumbJsonLd([
+          { name: "Home", path: "/" },
+          { name: "Book a tour", path: "/tour" },
+        ])}
+      />
       {/* Intro + the one tour path */}
       <section className="mx-auto max-w-2xl px-5 pt-16">
         <p className="text-sm font-semibold uppercase tracking-wide text-clay">

@@ -3,7 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { hasDatabase } from "@/lib/db";
 import { getPublishedPostBySlug } from "@/lib/posts";
-import { articleJsonLd } from "@/lib/schema";
+import { articleJsonLd, breadcrumbJsonLd } from "@/lib/schema";
 import { BUSINESS, OG_IMAGE } from "@/lib/site";
 import { getSettings, tourHref } from "@/lib/settings";
 import Markdown from "@/components/Markdown";
@@ -53,6 +53,18 @@ export default async function PostPage({
         type="application/ld+json"
         dangerouslySetInnerHTML={{
           __html: JSON.stringify(articleJsonLd(post)),
+        }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(
+            breadcrumbJsonLd([
+              { name: "Home", path: "/" },
+              { name: "Stories from Joy", path: "/blog" },
+              { name: post.title, path: `/blog/${post.slug}` },
+            ])
+          ),
         }}
       />
 

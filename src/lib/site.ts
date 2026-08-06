@@ -661,7 +661,7 @@ export const SERVICE_DETAILS: ServiceDetail[] = [
     tagline: "Help with the day, from people who know your parent by name.",
     metaTitle: "Personal Care in a Loganville Personal Care Home",
     metaDescription:
-      "Personal care at Joy Senior Living in Loganville, GA: help with bathing, dressing, medications, meals, and around-the-clock support, at a scale small enough to know your parent by name.",
+      "Personal care at Joy Senior Living, a small personal care home in Loganville, GA: bathing, dressing, medications, meals, and 24-hour support.",
     photo: {
       src: "/images/services/personal-care.jpg",
       alt: "A caregiver helping a resident at Joy Senior Living in Loganville",
@@ -840,7 +840,7 @@ export const SERVICE_DETAILS: ServiceDetail[] = [
     tagline: "Something to get up for, without anyone forcing it.",
     metaTitle: "Daily Activities & Life at Joy Senior Living, Loganville",
     metaDescription:
-      "Daily life at Joy Senior Living in Loganville, GA: light exercise, art, games, cooking, and music, adjusted so every resident can take part. Company matters as much as the activity.",
+      "Daily life at Joy Senior Living in Loganville, GA: light exercise, art, games, cooking, and music, adjusted so every resident can take part.",
     photo: {
       src: "/images/services/daily-activities.jpg",
       alt: "Residents together during an afternoon activity at Joy Senior Living",
@@ -909,7 +909,7 @@ export const SERVICE_DETAILS: ServiceDetail[] = [
     tagline: "Handmade meals, cooked here, eaten together.",
     metaTitle: "Meals & Nutrition at Joy Senior Living, Loganville GA",
     metaDescription:
-      "Meals at Joy Senior Living in Loganville, GA: handmade in our own kitchen, changing through the week, with all-day snacks and real dietary accommodations, eaten together at a shared table.",
+      "Meals at Joy Senior Living in Loganville, GA: handmade in our kitchen, changing weekly, with all-day snacks and real dietary needs met, eaten together.",
     photo: {
       src: "/images/services/nutrition.jpg",
       alt: "A home-cooked meal at the shared dining table at Joy Senior Living",

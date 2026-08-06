@@ -1,8 +1,17 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { BUSINESS, MEMORY_CARE, MEMORY_CARE_EDUCATION, OG_IMAGE } from "@/lib/site";
+import {
+  BUSINESS,
+  MEMORY_CARE,
+  MEMORY_CARE_EDUCATION,
+  OG_IMAGE,
+  SITE_URL,
+  getServiceDetail,
+} from "@/lib/site";
+import { serviceJsonLd, breadcrumbJsonLd } from "@/lib/schema";
 import { getSettings, tourHref } from "@/lib/settings";
+import JsonLd from "@/components/JsonLd";
 import TourButton from "@/components/TourButton";
 import StepTimeline from "@/components/StepTimeline";
 import Accordion from "@/components/Accordion";
@@ -14,7 +23,7 @@ export const metadata: Metadata = {
   // Living" automatically, so including it would double-brand the tab title.
   title: "Memory Care in Loganville, GA",
   description:
-    "Memory care at Joy Senior Living in Loganville, GA, offered within our personal care home: a small, familiar setting with steady routines and staff who know your parent by name. What dementia behaviors mean, and how a small home helps.",
+    "Memory care at Joy Senior Living, a small personal care home in Loganville, GA: steady routines and familiar faces for a parent living with dementia.",
   alternates: { canonical: "/memory-care" },
   openGraph: {
     title: `Memory Care | ${BUSINESS.name}`,
@@ -30,9 +39,19 @@ export default async function MemoryCarePage() {
   if (!MEMORY_CARE.enabled) notFound();
 
   const settings = await getSettings();
+  const service = getServiceDetail("memory-care");
 
   return (
     <div className="prose-joy mx-auto max-w-2xl px-5 py-16">
+      {service && (
+        <JsonLd data={serviceJsonLd(service, { url: `${SITE_URL}/memory-care` })} />
+      )}
+      <JsonLd
+        data={breadcrumbJsonLd([
+          { name: "Home", path: "/" },
+          { name: "Memory Care", path: "/memory-care" },
+        ])}
+      />
       <p className="text-sm font-semibold uppercase tracking-wide text-clay">
         Memory care, within our personal care home
       </p>

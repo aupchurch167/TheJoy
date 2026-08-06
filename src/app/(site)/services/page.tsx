@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { BUSINESS, OG_IMAGE, SERVICES, visibleServiceDetails } from "@/lib/site";
+import { servicesCollectionJsonLd, breadcrumbJsonLd } from "@/lib/schema";
 import { getSettings, tourHref } from "@/lib/settings";
 import { getServicePhotos } from "@/lib/site-photos";
+import JsonLd from "@/components/JsonLd";
 import Photo from "@/components/Photo";
 import TourButton from "@/components/TourButton";
 import LeadForm from "@/components/LeadForm";
@@ -10,7 +12,7 @@ import LeadForm from "@/components/LeadForm";
 export const metadata: Metadata = {
   title: "Memory Care & Personal Care Home in Loganville, GA",
   description:
-    "Joy Senior Living is a small personal care home in Loganville, GA offering personal care, memory care, respite stays, daily activities, and home-cooked meals. Care at a scale small enough to know your parent by name.",
+    "Personal care, memory care, respite, activities, and home-cooked meals at Joy Senior Living, a small personal care home in Loganville, GA.",
   alternates: { canonical: "/services" },
   openGraph: {
     title: `Services | ${BUSINESS.name}`,
@@ -30,6 +32,13 @@ export default async function ServicesPage() {
 
   return (
     <div className="mx-auto max-w-6xl px-5 py-16">
+      <JsonLd data={servicesCollectionJsonLd()} />
+      <JsonLd
+        data={breadcrumbJsonLd([
+          { name: "Home", path: "/" },
+          { name: "Services", path: "/services" },
+        ])}
+      />
       <div className="max-w-2xl">
         <h1 className="font-display text-4xl font-semibold text-ink sm:text-5xl">
           {SERVICES.heading}

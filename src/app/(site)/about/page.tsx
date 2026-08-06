@@ -1,14 +1,16 @@
 import type { Metadata } from "next";
 import { ABOUT, BUSINESS, MELLISSA, OG_IMAGE } from "@/lib/site";
+import { aboutPageJsonLd } from "@/lib/schema";
 import { getSettings, tourHref } from "@/lib/settings";
 import { getSitePhotos } from "@/lib/site-photos";
+import JsonLd from "@/components/JsonLd";
 import Photo from "@/components/Photo";
 import TourButton from "@/components/TourButton";
 
 export const metadata: Metadata = {
   title: "About The Joy Senior Living of Loganville",
   description:
-    "The story of Joy Senior Living, a small personal care home in Loganville, GA led by Mellissa Daniel. Why small scale matters, and what a 24-bed home feels like day to day.",
+    "The story of Joy Senior Living, a small personal care home in Loganville, GA led by Mellissa Daniel, and why small scale changes everything.",
   alternates: { canonical: "/about" },
   openGraph: {
     title: `About ${BUSINESS.name}`,
@@ -27,6 +29,7 @@ export default async function AboutPage() {
 
   return (
     <div className="prose-joy">
+      <JsonLd data={aboutPageJsonLd()} />
       {/* Intro */}
       <section className="mx-auto max-w-2xl px-5 pt-16">
         <h1 className="font-display text-4xl font-semibold text-ink sm:text-5xl">

@@ -4,6 +4,8 @@ import { BUSINESS } from "@/lib/site";
 import { getSettings } from "@/lib/settings";
 import { hasDatabase } from "@/lib/db";
 import { getPublishedPosts } from "@/lib/posts";
+import { blogCollectionJsonLd, breadcrumbJsonLd } from "@/lib/schema";
+import JsonLd from "@/components/JsonLd";
 import Photo from "@/components/Photo";
 import LeadForm from "@/components/LeadForm";
 
@@ -24,6 +26,13 @@ export default async function BlogIndex() {
 
   return (
     <div className="mx-auto max-w-6xl px-5 py-16">
+      <JsonLd data={blogCollectionJsonLd(posts)} />
+      <JsonLd
+        data={breadcrumbJsonLd([
+          { name: "Home", path: "/" },
+          { name: "Stories from Joy", path: "/blog" },
+        ])}
+      />
       <div className="max-w-2xl">
         <h1 className="font-display text-4xl font-semibold text-ink">
           Stories from Joy
