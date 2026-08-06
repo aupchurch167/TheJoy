@@ -36,6 +36,7 @@ export type PhotoSlotKey =
   | "cta"
   | `community_${number}`
   | `about_${number}`
+  | "about_mellissa"
   | `service_${string}`;
 
 export type PhotoSlot = {
@@ -148,6 +149,19 @@ export const SITE_PHOTO_SLOTS: PhotoSlot[] = [
     aspect: "aspect-[4/3]",
     group: "About page",
   })),
+  {
+    // Mellissa's portrait ON the About page, separate from the homepage one.
+    // Unset falls back to the homepage Mellissa photo, so nothing breaks until
+    // a dedicated About photo is uploaded here.
+    key: "about_mellissa",
+    settingKey: "photo_about_mellissa",
+    label: "About page: Mellissa's photo",
+    hint: "Mellissa's portrait on the About page. Leave unset to reuse her homepage photo.",
+    defaultSrc: MELLISSA.photo,
+    alt: `${MELLISSA.heading}, Executive Director at Joy Senior Living`,
+    aspect: "aspect-[4/5]",
+    group: "About page",
+  },
   // One slot per service, so the Services page photos are admin-editable too.
   ...SERVICE_DETAILS.map((s) => ({
     key: `service_${s.slug}` as PhotoSlotKey,
@@ -174,6 +188,7 @@ export type SitePhotos = {
   homeServices: ResolvedPhoto;
   cta: ResolvedPhoto;
   about: ResolvedPhoto[];
+  aboutMellissa: ResolvedPhoto;
 };
 
 /** Read stored photo overrides (settingKey -> url). Empty map with no DB. */
@@ -247,8 +262,13 @@ export const getSitePhotos = cache(async (): Promise<SitePhotos> => {
     tuesday: { src: src(tuesday), alt: tuesday.alt },
     homeServices: { src: src(homeServices), alt: homeServices.alt },
     cta: { src: src(cta), alt: cta.alt },
-    about: SITE_PHOTO_SLOTS.filter((s) => s.key.startsWith("about")).map(
+    about: SITE_PHOTO_SLOTS.filter((s) => /^about_\d+$/.test(s.key)).map(
       (s) => ({ src: src(s), alt: s.alt })
     ),
+    // About-page Mellissa: her own override, else the homepage Mellissa photo.
+    aboutMellissa: {
+      src: map.get("photo_about_mellissa") || src(mellissa),
+      alt: bySlot("about_mellissa").alt,
+    },
   };
 });

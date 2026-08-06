@@ -16,30 +16,42 @@ import Script from "next/script";
  * omitted: there is no Webflow badge on this site, so the rule is dead.)
  */
 
-const GTM_ID = "GTM-KB6N9GQL";
+// The GTM container is inherited from the old Webflow site. It can be turned
+// off without a code change by setting NEXT_PUBLIC_GTM_ID to an empty string in
+// the environment (leave it unset to keep the original container). This matters
+// because legacy tags inside that container (e.g. call tracking) can trigger a
+// tel: action on load, which iOS blocks with a "started a call" prompt.
+const GTM_ID =
+  process.env.NEXT_PUBLIC_GTM_ID !== undefined
+    ? process.env.NEXT_PUBLIC_GTM_ID
+    : "GTM-KB6N9GQL";
 
 export default function MarketingScripts() {
   return (
     <>
-      {/* Google Tag Manager (head bootstrap) */}
-      <Script id="gtm-init" strategy="afterInteractive">
-        {`(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+      {GTM_ID && (
+        <>
+          {/* Google Tag Manager (head bootstrap) */}
+          <Script id="gtm-init" strategy="afterInteractive">
+            {`(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
 new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
 j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
 })(window,document,'script','dataLayer','${GTM_ID}');`}
-      </Script>
+          </Script>
 
-      {/* Google Tag Manager (noscript fallback) */}
-      <noscript>
-        <iframe
-          src={`https://www.googletagmanager.com/ns.html?id=${GTM_ID}`}
-          height="0"
-          width="0"
-          style={{ display: "none", visibility: "hidden" }}
-          title="Google Tag Manager"
-        />
-      </noscript>
+          {/* Google Tag Manager (noscript fallback) */}
+          <noscript>
+            <iframe
+              src={`https://www.googletagmanager.com/ns.html?id=${GTM_ID}`}
+              height="0"
+              width="0"
+              style={{ display: "none", visibility: "hidden" }}
+              title="Google Tag Manager"
+            />
+          </noscript>
+        </>
+      )}
 
       {/* TalkFurther loader (binds to this domain, powers the in-page tour) */}
       <Script id="talkfurther-init" strategy="afterInteractive">

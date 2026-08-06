@@ -23,7 +23,7 @@ export const metadata: Metadata = {
 
 export default async function AboutPage() {
   const settings = await getSettings();
-  const { mellissa, about } = await getSitePhotos();
+  const { aboutMellissa, about } = await getSitePhotos();
   // The About page's own two photos (editable in admin > Site Photos > About).
   const aboutPhotos = about.filter(Boolean);
 
@@ -73,8 +73,8 @@ export default async function AboutPage() {
       <section className="mx-auto mt-14 max-w-5xl px-5">
         <div className="grid items-center gap-10 sm:grid-cols-[minmax(0,320px)_1fr]">
           <Photo
-            src={mellissa.src}
-            alt={mellissa.alt}
+            src={aboutMellissa.src}
+            alt={aboutMellissa.alt}
             className="aspect-[4/5] w-full ring-1 ring-line"
           />
           <div>
