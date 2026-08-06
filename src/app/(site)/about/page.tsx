@@ -23,9 +23,9 @@ export const metadata: Metadata = {
 
 export default async function AboutPage() {
   const settings = await getSettings();
-  const { mellissa, community } = await getSitePhotos();
-  // About shows two community shots (the first and last of the four).
-  const aboutPhotos = [community[0], community[3]].filter(Boolean);
+  const { mellissa, about } = await getSitePhotos();
+  // The About page's own two photos (editable in admin > Site Photos > About).
+  const aboutPhotos = about.filter(Boolean);
 
   return (
     <div className="prose-joy">

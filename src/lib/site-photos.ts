@@ -7,6 +7,7 @@ import {
   HOME_SECTION_PHOTOS,
   BRAND,
   SERVICE_DETAILS,
+  ABOUT,
 } from "./site";
 
 /** site_settings key for a service's photo (slug dashes become underscores). */
@@ -34,6 +35,7 @@ export type PhotoSlotKey =
   | "home_services"
   | "cta"
   | `community_${number}`
+  | `about_${number}`
   | `service_${string}`;
 
 export type PhotoSlot = {
@@ -134,6 +136,18 @@ export const SITE_PHOTO_SLOTS: PhotoSlot[] = [
     aspect: "aspect-[3/2]",
     group: "Homepage",
   },
+  // The two photos on the About page (front porch, common room by default).
+  // Dedicated slots so About can be edited without touching the homepage grid.
+  ...ABOUT.photos.map((p, i) => ({
+    key: `about_${i + 1}` as PhotoSlotKey,
+    settingKey: `photo_about_${i + 1}`,
+    label: `About page photo ${i + 1}`,
+    hint: p.alt,
+    defaultSrc: p.src,
+    alt: p.alt,
+    aspect: "aspect-[4/3]",
+    group: "About page",
+  })),
   // One slot per service, so the Services page photos are admin-editable too.
   ...SERVICE_DETAILS.map((s) => ({
     key: `service_${s.slug}` as PhotoSlotKey,
@@ -159,6 +173,7 @@ export type SitePhotos = {
   tuesday: ResolvedPhoto;
   homeServices: ResolvedPhoto;
   cta: ResolvedPhoto;
+  about: ResolvedPhoto[];
 };
 
 /** Read stored photo overrides (settingKey -> url). Empty map with no DB. */
@@ -232,5 +247,8 @@ export const getSitePhotos = cache(async (): Promise<SitePhotos> => {
     tuesday: { src: src(tuesday), alt: tuesday.alt },
     homeServices: { src: src(homeServices), alt: homeServices.alt },
     cta: { src: src(cta), alt: cta.alt },
+    about: SITE_PHOTO_SLOTS.filter((s) => s.key.startsWith("about")).map(
+      (s) => ({ src: src(s), alt: s.alt })
+    ),
   };
 });
