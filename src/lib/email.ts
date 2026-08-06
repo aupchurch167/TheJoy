@@ -79,6 +79,34 @@ export async function sendMarketingEmail(
   return true;
 }
 
+/**
+ * Send a TEST copy of a broadcast to one address, rendered exactly like the
+ * real send (same branded shell, same Markdown->HTML). The subject is prefixed
+ * with [TEST] and the unsubscribe link points at a harmless preview token, so a
+ * test can never unsubscribe a real recipient. Returns false when email is off.
+ */
+export async function sendTestEmail(
+  to: string,
+  subject: string,
+  markdownBody: string
+): Promise<boolean> {
+  if (!resend) {
+    console.info("[email] RESEND_API_KEY not set; test send skipped.");
+    return false;
+  }
+  const unsubUrl = unsubscribeUrl("test-preview");
+  const inner = marked.parse(markdownBody || "", { async: false }) as string;
+
+  await resend.emails.send({
+    from: FROM,
+    to,
+    subject: `[TEST] ${subject}`,
+    html: wrapEmail(inner, unsubUrl),
+    headers: { "List-Unsubscribe": `<${unsubUrl}>` },
+  });
+  return true;
+}
+
 /** Internal alert so Adam/Mellissa see a new lead right away. */
 export async function notifyNewLead(lead: Lead): Promise<void> {
   const to = process.env.LEAD_NOTIFY_TO;

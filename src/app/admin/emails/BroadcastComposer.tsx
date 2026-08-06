@@ -3,7 +3,7 @@
 import { useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Markdown from "@/components/Markdown";
-import { saveDraft, sendOrSchedule, removeBroadcast } from "./actions";
+import { saveDraft, sendOrSchedule, removeBroadcast, sendTest } from "./actions";
 import type { Broadcast } from "@/lib/broadcasts";
 import type { Audience } from "@/lib/leads";
 import { btn, BackLink, Badge, Card } from "@/components/admin/ui";
@@ -42,6 +42,10 @@ export default function BroadcastComposer({
   const [aiContext, setAiContext] = useState("");
   const [aiBusy, setAiBusy] = useState(false);
   const [aiError, setAiError] = useState("");
+
+  // Test send.
+  const [testTo, setTestTo] = useState("");
+  const [testBusy, setTestBusy] = useState(false);
 
   const sent = broadcast?.status === "sent";
   const isNew = !broadcast;
@@ -95,6 +99,27 @@ export default function BroadcastComposer({
       router.push("/admin/emails");
     } else {
       toastError("Could not delete the email.");
+    }
+  }
+
+  async function onSendTest() {
+    if (!subject.trim()) {
+      setError("Add a subject before sending a test.");
+      toastError("Add a subject before sending a test.");
+      return;
+    }
+    setError("");
+    setTestBusy(true);
+    try {
+      const res = await sendTest({ subject, body, to: testTo });
+      if (!res.ok) {
+        setError(res.error);
+        toastError(res.error);
+        return;
+      }
+      success(res.message);
+    } finally {
+      setTestBusy(false);
     }
   }
 
@@ -317,6 +342,33 @@ export default function BroadcastComposer({
             An unsubscribe link is added to every email automatically. Opted-out
             recipients are always skipped.
           </p>
+        </div>
+
+        {/* Send a test to yourself before the real blast. */}
+        <div className="rounded-xl border border-line bg-white p-4 shadow-sm">
+          <p className="text-sm font-medium text-ink">Send a test first</p>
+          <p className="mt-1 text-xs text-ink-soft">
+            Sends this exact email (subject and formatting) to one address, marked
+            [TEST], with a safe unsubscribe link. Leave blank to send to your team
+            alert address.
+          </p>
+          <div className="mt-2.5 flex flex-wrap items-center gap-2">
+            <input
+              type="email"
+              value={testTo}
+              onChange={(e) => setTestTo(e.target.value)}
+              placeholder="you@joyseniorcare.com"
+              className={`${INPUT} h-10 sm:max-w-xs`}
+            />
+            <button
+              type="button"
+              onClick={onSendTest}
+              disabled={testBusy || pending}
+              className={btn("secondary", "sm")}
+            >
+              {testBusy ? "Sending test…" : "Send test"}
+            </button>
+          </div>
         </div>
 
         <div className="flex flex-wrap items-end gap-4 rounded-xl border border-line bg-white p-4 shadow-sm">

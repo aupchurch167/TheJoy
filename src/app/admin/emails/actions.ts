@@ -11,7 +11,7 @@ import {
   getBroadcastById,
 } from "@/lib/broadcasts";
 import { processDueBroadcasts } from "@/lib/broadcast-runner";
-import { emailEnabled } from "@/lib/email";
+import { emailEnabled, sendTestEmail } from "@/lib/email";
 
 const BaseSchema = z.object({
   id: z.string().uuid().optional(),
@@ -107,6 +107,61 @@ export async function sendOrSchedule(input: unknown): Promise<ActionResult> {
   } catch (err) {
     console.error("[sendOrSchedule]", err);
     return { ok: false, error: "Could not send. Please try again." };
+  }
+}
+
+const TestSchema = z.object({
+  subject: z.string().trim().min(1, "Add a subject before testing.").max(200),
+  body: z.string().max(50000).optional(),
+  to: z
+    .string()
+    .trim()
+    .email("Enter a valid test email address.")
+    .optional()
+    .or(z.literal("")),
+});
+
+export type TestResult =
+  | { ok: true; message: string }
+  | { ok: false; error: string };
+
+/**
+ * Send a test copy of the current draft to one address before the real blast.
+ * Falls back to the first LEAD_NOTIFY_TO address when no address is given.
+ */
+export async function sendTest(input: unknown): Promise<TestResult> {
+  await requireAdmin();
+  const parsed = TestSchema.safeParse(input);
+  if (!parsed.success)
+    return { ok: false, error: parsed.error.issues[0]?.message ?? "Invalid." };
+
+  if (!emailEnabled()) {
+    return {
+      ok: false,
+      error:
+        "Email is not set up yet (RESEND_API_KEY). Add it before sending a test (see OPERATIONS.md).",
+    };
+  }
+
+  const to =
+    parsed.data.to ||
+    (process.env.LEAD_NOTIFY_TO || "").split(",")[0]?.trim() ||
+    "";
+  if (!to) {
+    return {
+      ok: false,
+      error:
+        "Enter a test email address (or set LEAD_NOTIFY_TO for a default).",
+    };
+  }
+
+  try {
+    const ok = await sendTestEmail(to, parsed.data.subject, parsed.data.body ?? "");
+    if (!ok) return { ok: false, error: "Email is not configured." };
+    return { ok: true, message: `Test sent to ${to}. Check your inbox.` };
+  } catch (err) {
+    console.error("[sendTest]", err);
+    return { ok: false, error: "Could not send the test. Please try again." };
   }
 }
 
