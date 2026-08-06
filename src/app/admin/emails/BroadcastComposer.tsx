@@ -6,6 +6,7 @@ import Markdown from "@/components/Markdown";
 import { saveDraft, sendOrSchedule, removeBroadcast, sendTest } from "./actions";
 import type { Broadcast } from "@/lib/broadcasts";
 import type { Audience } from "@/lib/leads";
+import { templatesForAudience } from "@/lib/email-templates";
 import { btn, BackLink, Badge, Card } from "@/components/admin/ui";
 import ConfirmButton from "@/components/admin/ConfirmButton";
 import { useToast } from "@/components/admin/Toast";
@@ -100,6 +101,23 @@ export default function BroadcastComposer({
     } else {
       toastError("Could not delete the email.");
     }
+  }
+
+  function applyTemplate(templateId: string) {
+    const t = templatesForAudience(audience).find((x) => x.id === templateId);
+    if (!t) return;
+    if (
+      (subject.trim() || body.trim()) &&
+      !window.confirm(
+        "Replace the current subject and message with this template?"
+      )
+    ) {
+      return;
+    }
+    setSubject(t.subject);
+    setBody(t.body);
+    setTab("write");
+    success(`Loaded template: ${t.label}`);
   }
 
   async function onSendTest() {
@@ -248,6 +266,34 @@ export default function BroadcastComposer({
           </div>
         )}
 
+        {/* Start from a ready-made template (filled with merge fields). */}
+        <label className="block">
+          <span className="text-sm font-medium text-ink">
+            Start from a template{" "}
+            <span className="text-ink-faint">(optional)</span>
+          </span>
+          <select
+            value=""
+            onChange={(e) => {
+              if (e.target.value) applyTemplate(e.target.value);
+              e.target.value = "";
+            }}
+            className={`${INPUT} mt-1.5 h-11 sm:max-w-md`}
+          >
+            <option value="">Choose a template…</option>
+            {templatesForAudience(audience).map((t) => (
+              <option key={t.id} value={t.id}>
+                {t.label}
+              </option>
+            ))}
+          </select>
+          <span className="mt-1 block text-xs text-ink-faint">
+            Fills the subject and message. Then customize it and use{" "}
+            <strong className="font-semibold">{"{{first_name}}"}</strong> anywhere
+            to personalize each recipient.
+          </span>
+        </label>
+
         {/* Create with AI: describe the email, get a Joy-voice draft to edit. */}
         <div className="rounded-xl border border-clay/30 bg-clay/5 p-4">
           <p className="text-sm font-semibold text-ink">
@@ -339,8 +385,12 @@ export default function BroadcastComposer({
             </div>
           )}
           <p className="mt-2 text-xs text-ink-faint">
-            An unsubscribe link is added to every email automatically. Opted-out
-            recipients are always skipped.
+            The Joy letterhead, badges, and an unsubscribe link are added
+            automatically (opted-out recipients are always skipped). Personalize
+            with <code>{"{{first_name}}"}</code>, and add a button with{" "}
+            <code>[[button:Call us|tel:+14706843569]]</code>. Use{" "}
+            <strong className="font-semibold">Send test</strong> to see the final
+            design.
           </p>
         </div>
 
