@@ -17,18 +17,20 @@ export default async function SiteFooter() {
     <footer className="border-t border-line bg-white/60">
       <div className="mx-auto grid max-w-6xl gap-8 px-5 py-12 sm:grid-cols-2 lg:grid-cols-3">
         <div>
-          {logo.set ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={logo.src}
-              alt={BUSINESS.name}
-              className="h-10 w-auto"
-            />
-          ) : (
-            <p className="font-display text-lg font-semibold text-ink">
-              {BUSINESS.name}
-            </p>
-          )}
+          <Link
+            href="/"
+            aria-label={`${BUSINESS.name} home`}
+            className="inline-flex items-center"
+          >
+            {logo.set ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={logo.src} alt={BUSINESS.name} className="h-10 w-auto" />
+            ) : (
+              <span className="font-display text-lg font-semibold text-ink">
+                {BUSINESS.name}
+              </span>
+            )}
+          </Link>
           <p className="mt-2 text-sm leading-relaxed text-ink-soft">
             A senior living home and memory care (personal care home) in
             Loganville, Georgia. Small enough to know your parent by name.
