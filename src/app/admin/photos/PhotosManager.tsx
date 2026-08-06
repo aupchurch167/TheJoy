@@ -5,8 +5,20 @@ import { useRouter } from "next/navigation";
 import { saveSitePhoto } from "./actions";
 import { Card, Input, Button, Badge, SectionLabel } from "@/components/admin/ui";
 import { useToast } from "@/components/admin/Toast";
-import ImageCropper from "@/components/admin/ImageCropper";
+import ImageCropper, { type AspectOption } from "@/components/admin/ImageCropper";
 import { aspectRatioFromClass } from "@/lib/crop-image";
+
+// Logos are cropped with a transparent (PNG) result and a choice of shapes, so
+// an operator can trim whitespace without forcing a wide wordmark into a square.
+const LOGO_ASPECTS: AspectOption[] = [
+  { label: "Wide", value: 3 },
+  { label: "Standard", value: 2 },
+  { label: "Square", value: 1 },
+];
+const MARK_ASPECTS: AspectOption[] = [
+  { label: "Square", value: 1 },
+  { label: "Standard", value: 4 / 3 },
+];
 
 type Slot = {
   key: string;
@@ -68,7 +80,15 @@ function PhotoSlotCard({ slot, canUpload }: { slot: Slot; canUpload: boolean }) 
 
   const usingDefault = !slot.current;
   const ratio = aspectRatioFromClass(slot.aspect);
-  const canCrop = !slot.contain; // logos should not be cropped
+  // Logos (contain slots) are croppable too, but as transparent PNGs with a
+  // choice of shapes; photos crop to their fixed on-site aspect.
+  const isLogo = Boolean(slot.contain);
+  const aspectOptions = isLogo
+    ? slot.key === "logo_mark"
+      ? MARK_ASPECTS
+      : LOGO_ASPECTS
+    : undefined;
+  const canCrop = true;
   const hasImage = Boolean(value) && !broken;
   // Only re-crop real remote images (uploaded / pasted https URLs).
   const canEditExisting = canCrop && hasImage && /^https?:\/\//.test(value);
@@ -245,6 +265,8 @@ function PhotoSlotCard({ slot, canUpload }: { slot: Slot; canUpload: boolean }) 
         <ImageCropper
           src={cropSrc}
           aspect={ratio}
+          aspectOptions={aspectOptions}
+          transparent={isLogo}
           filename={slot.key}
           title={`Crop & position — ${slot.label}`}
           onCancel={closeCropper}

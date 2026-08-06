@@ -5,6 +5,7 @@ import { hasDatabase } from "@/lib/db";
 import { getPublishedPostBySlug } from "@/lib/posts";
 import { articleJsonLd } from "@/lib/schema";
 import { BUSINESS, OG_IMAGE } from "@/lib/site";
+import { getSettings, tourHref } from "@/lib/settings";
 import Markdown from "@/components/Markdown";
 import Photo from "@/components/Photo";
 import TourButton from "@/components/TourButton";
@@ -44,6 +45,7 @@ export default async function PostPage({
   const { slug } = await params;
   const post = hasDatabase() ? await getPublishedPostBySlug(slug) : null;
   if (!post) notFound();
+  const settings = await getSettings();
 
   return (
     <article className="mx-auto max-w-2xl px-5 py-14">
@@ -94,7 +96,9 @@ export default async function PostPage({
           it. Book a tour, or call {BUSINESS.director.name} at {BUSINESS.phone}.
         </p>
         <div className="mt-5">
-          <TourButton variant="light">Book a tour</TourButton>
+          <TourButton variant="light" href={tourHref(settings)}>
+            Book a tour
+          </TourButton>
         </div>
       </div>
     </article>

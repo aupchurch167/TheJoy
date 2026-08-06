@@ -1,5 +1,5 @@
 import { BUSINESS } from "@/lib/site";
-import { getSettings, toTelHref, toMailHref } from "@/lib/settings";
+import { getSettings, toTelHref, toMailHref, tourHref } from "@/lib/settings";
 import { getSitePhotos } from "@/lib/site-photos";
 import Photo from "@/components/Photo";
 import TourButton from "@/components/TourButton";
@@ -30,7 +30,7 @@ export default async function FinalCta() {
           </p>
 
           <div className="mt-8">
-            <TourButton variant="light" href={settings.talkfurther_url}>
+            <TourButton variant="light" href={tourHref(settings)}>
               Book a tour
             </TourButton>
           </div>

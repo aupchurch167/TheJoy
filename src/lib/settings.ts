@@ -30,6 +30,9 @@ function defaults(): SiteSettings {
     email: BUSINESS.email,
     address: BUSINESS_ADDRESS_ONE_LINE,
     careers_url: CAREERS_URL_DEFAULT,
+    // Book-a-tour mode: "on" opens the TalkFurther scheduler, "" routes to the
+    // on-site /tour page (contact form + call Mellissa). Defaults to on.
+    tour_use_talkfurther: "on",
     // Falls back to the env/phone tour path when no setting is stored.
     talkfurther_url: TOUR_URL,
     // Owner/admin numbers that get the required test text before a blast.
@@ -60,6 +63,8 @@ export const getSettings = cache(async (): Promise<SiteSettings> => {
       address: get("address") || d.address,
       // careers_url: empty falls back to the default Indeed posting.
       careers_url: get("careers_url") || d.careers_url,
+      // tour_use_talkfurther: bool stored as "on"/""; unset falls back to on.
+      tour_use_talkfurther: get("tour_use_talkfurther") ?? d.tour_use_talkfurther,
       // talkfurther_url: empty falls back to the default tour path.
       talkfurther_url: get("talkfurther_url") || d.talkfurther_url,
       // sms_test_numbers: empty falls back to the env default (if any).
@@ -112,6 +117,20 @@ export async function saveSettings(
       [key, value.trim()]
     );
   }
+}
+
+/**
+ * The "Book a tour" destination for the whole site, honoring the admin toggle.
+ * When TalkFurther is on, buttons open the scheduler URL (falling back to the
+ * on-site /tour page if it is blank); when off, they go to /tour (the contact
+ * form + call-Mellissa page). This is the ONE tour path (§ AGENTS.md): the
+ * /tour page itself houses the single TalkFurther button.
+ */
+export function tourHref(settings: SiteSettings): string {
+  if (settings.tour_use_talkfurther === "on") {
+    return settings.talkfurther_url || "/tour";
+  }
+  return "/tour";
 }
 
 /** Build a tel: href from a display phone number. */

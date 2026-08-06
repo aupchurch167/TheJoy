@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { BUSINESS, OG_IMAGE, SERVICES, visibleServiceDetails } from "@/lib/site";
-import { getSettings } from "@/lib/settings";
+import { getSettings, tourHref } from "@/lib/settings";
 import { getServicePhotos } from "@/lib/site-photos";
 import Photo from "@/components/Photo";
 import TourButton from "@/components/TourButton";
@@ -115,7 +115,7 @@ export default async function ServicesPage() {
           a tour, or call {BUSINESS.director.name} at {settings.phone}.
         </p>
         <div className="mt-5">
-          <TourButton variant="light" href={settings.talkfurther_url}>
+          <TourButton variant="light" href={tourHref(settings)}>
             Book a tour
           </TourButton>
         </div>

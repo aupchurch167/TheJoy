@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { MEMORY_CARE } from "@/lib/site";
-import { getSettings } from "@/lib/settings";
+import { getSettings, tourHref } from "@/lib/settings";
 import TourButton from "@/components/TourButton";
 
 /**
@@ -29,7 +29,7 @@ export default async function MemoryCareHome() {
         </div>
 
         <div className="mt-8 flex flex-wrap items-center gap-5">
-          <TourButton href={settings.talkfurther_url}>
+          <TourButton href={tourHref(settings)}>
             {MEMORY_CARE.ctaLabel}
           </TourButton>
           <Link

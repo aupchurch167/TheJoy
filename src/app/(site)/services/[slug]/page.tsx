@@ -8,7 +8,7 @@ import {
   visibleServiceDetails,
 } from "@/lib/site";
 import { serviceJsonLd } from "@/lib/schema";
-import { getSettings } from "@/lib/settings";
+import { getSettings, tourHref } from "@/lib/settings";
 import { getServicePhotos } from "@/lib/site-photos";
 import Photo from "@/components/Photo";
 import StepTimeline from "@/components/StepTimeline";
@@ -142,7 +142,7 @@ export default async function ServiceDetailPage({
           {settings.phone}.
         </p>
         <div className="mt-5">
-          <TourButton variant="light" href={settings.talkfurther_url}>
+          <TourButton variant="light" href={tourHref(settings)}>
             Book a tour
           </TourButton>
         </div>

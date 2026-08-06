@@ -1,6 +1,6 @@
 import { AWARD, HERO } from "@/lib/site";
 import { getSitePhotos } from "@/lib/site-photos";
-import { getSettings } from "@/lib/settings";
+import { getSettings, tourHref } from "@/lib/settings";
 import Photo from "@/components/Photo";
 import TourButton from "@/components/TourButton";
 
@@ -31,7 +31,7 @@ export default async function Hero() {
           </p>
 
           <div className="mt-8 flex flex-wrap items-center gap-4">
-            <TourButton>{HERO.ctaLabel}</TourButton>
+            <TourButton href={tourHref(settings)}>{HERO.ctaLabel}</TourButton>
             <a
               href="#difference"
               className="text-base font-semibold text-clay hover:text-clay-dark"

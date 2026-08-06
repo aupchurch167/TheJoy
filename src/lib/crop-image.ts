@@ -26,13 +26,23 @@ function loadImage(src: string): Promise<HTMLImageElement> {
   });
 }
 
-/** Export the chosen crop as a JPEG File, downscaling very large crops. */
+/**
+ * Export the chosen crop as a File, downscaling very large crops.
+ *
+ * `format` defaults to "jpeg" (photos). Pass "png" for logos and other images
+ * with transparency: the canvas starts fully transparent and PNG preserves the
+ * alpha channel, so a transparent-background logo stays transparent (a JPEG
+ * would flatten it onto black). The crop rectangle can extend past the image
+ * edges (react-easy-crop allows this when the image is zoomed out to fit); the
+ * area outside the image simply stays transparent.
+ */
 export async function getCroppedFile(
   src: string,
   crop: CropPixels,
   filename = "crop",
-  maxWidth = 2000
+  opts: { maxWidth?: number; format?: "jpeg" | "png" } = {}
 ): Promise<File> {
+  const { maxWidth = 2000, format = "jpeg" } = opts;
   const image = await loadImage(src);
 
   let outW = crop.width;
@@ -61,13 +71,15 @@ export async function getCroppedFile(
     canvas.height
   );
 
+  const mime = format === "png" ? "image/png" : "image/jpeg";
+  const ext = format === "png" ? "png" : "jpg";
   const blob: Blob = await new Promise((resolve, reject) =>
     canvas.toBlob(
       (b) => (b ? resolve(b) : reject(new Error("Could not export the crop."))),
-      "image/jpeg",
-      0.92
+      mime,
+      format === "png" ? undefined : 0.92
     )
   );
 
-  return new File([blob], `${filename}.jpg`, { type: "image/jpeg" });
+  return new File([blob], `${filename}.${ext}`, { type: mime });
 }

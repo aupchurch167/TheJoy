@@ -8,6 +8,7 @@ export const SETTING_KEYS = [
   "email",
   "address",
   "careers_url",
+  "tour_use_talkfurther",
   "talkfurther_url",
   "sms_test_numbers",
   // Homepage
@@ -29,11 +30,12 @@ export const URL_KEYS: SettingKey[] = [
 ];
 
 /** Boolean keys, stored as "on" (true) or "" (false), rendered as a toggle. */
-export const BOOL_KEYS: SettingKey[] = ["promo_enabled"];
+export const BOOL_KEYS: SettingKey[] = ["promo_enabled", "tour_use_talkfurther"];
 
 /** Keys that may be left blank (optional). */
 export const OPTIONAL_KEYS: SettingKey[] = [
   "careers_url",
+  "tour_use_talkfurther",
   "talkfurther_url",
   "sms_test_numbers",
   "hero_headline",
@@ -59,9 +61,15 @@ export const SETTING_META: Record<
     type: "url",
     group: "Contact & links",
   },
+  tour_use_talkfurther: {
+    label: "Use the TalkFurther scheduler for “Book a tour”",
+    hint: "On: every Book-a-tour button opens your TalkFurther scheduler. Off: the buttons go to the on-site Tour page (contact form plus call Mellissa) instead.",
+    type: "bool",
+    group: "Contact & links",
+  },
   talkfurther_url: {
     label: "Tour link (TalkFurther)",
-    hint: "The single Book-a-tour destination. Blank falls back to the phone number.",
+    hint: "The TalkFurther scheduler link, used when the toggle above is on. Blank falls back to the on-site Tour page.",
     type: "url",
     group: "Contact & links",
   },

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { BUSINESS, MEMORY_CARE } from "@/lib/site";
-import { getSettings, toTelHref } from "@/lib/settings";
+import { getSettings, toTelHref, tourHref } from "@/lib/settings";
 import { getSitePhotos } from "@/lib/site-photos";
 import TourButton from "./TourButton";
 import MobileNav from "./MobileNav";
@@ -83,7 +83,7 @@ export default async function SiteHeader() {
             {settings.phone}
           </a>
           <span className="hidden sm:inline-flex">
-            <TourButton href={settings.talkfurther_url} className="px-5 py-2.5 text-sm">
+            <TourButton href={tourHref(settings)} className="px-5 py-2.5 text-sm">
               Book a tour
             </TourButton>
           </span>
@@ -92,7 +92,7 @@ export default async function SiteHeader() {
             careersUrl={settings.careers_url}
             phone={settings.phone}
             phoneHref={toTelHref(settings.phone)}
-            tourUrl={settings.talkfurther_url}
+            tourUrl={tourHref(settings)}
           />
         </div>
       </div>

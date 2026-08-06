@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { BUSINESS, MEMORY_CARE, MEMORY_CARE_EDUCATION, OG_IMAGE } from "@/lib/site";
-import { getSettings } from "@/lib/settings";
+import { getSettings, tourHref } from "@/lib/settings";
 import TourButton from "@/components/TourButton";
 import StepTimeline from "@/components/StepTimeline";
 import Accordion from "@/components/Accordion";
@@ -78,7 +78,7 @@ export default async function MemoryCarePage() {
           the right fit. Book a tour, or call {settings.phone}.
         </p>
         <div className="mt-5">
-          <TourButton variant="light" href={settings.talkfurther_url}>
+          <TourButton variant="light" href={tourHref(settings)}>
             {MEMORY_CARE.ctaLabel}
           </TourButton>
         </div>

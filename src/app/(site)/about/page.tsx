@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { ABOUT, BUSINESS, MELLISSA, OG_IMAGE } from "@/lib/site";
-import { getSettings } from "@/lib/settings";
+import { getSettings, tourHref } from "@/lib/settings";
 import { getSitePhotos } from "@/lib/site-photos";
 import Photo from "@/components/Photo";
 import TourButton from "@/components/TourButton";
@@ -103,7 +103,7 @@ export default async function AboutPage() {
           {ABOUT.licenseNote}
         </p>
         <div className="mt-8">
-          <TourButton href={settings.talkfurther_url}>Book a tour</TourButton>
+          <TourButton href={tourHref(settings)}>Book a tour</TourButton>
         </div>
       </section>
     </div>
