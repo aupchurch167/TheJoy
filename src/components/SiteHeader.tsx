@@ -39,13 +39,20 @@ export default async function SiteHeader() {
                 alt={BUSINESS.name}
                 className="hidden h-9 w-auto sm:block"
               />
-              {/* Compact mark on mobile (falls back to the full logo if no mark). */}
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={logoMark.set ? logoMark.src : logo.src}
-                alt={BUSINESS.name}
-                className="h-9 w-auto sm:hidden"
-              />
+              {/* On mobile: the compact mark PLUS the name in text, so the brand
+                  reads even when only the mark is uploaded. Falls back to the
+                  full logo if no separate mark exists. */}
+              <span className="flex items-center gap-2 sm:hidden">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={logoMark.set ? logoMark.src : logo.src}
+                  alt=""
+                  className="h-9 w-auto"
+                />
+                <span className="font-display text-lg font-semibold leading-tight text-ink">
+                  {BUSINESS.name}
+                </span>
+              </span>
             </>
           ) : (
             <span className="flex flex-col leading-tight">
