@@ -26,7 +26,10 @@ export default function AdminPasswordForm() {
         setLoading(false);
         return;
       }
-      router.push(res.url || "/admin");
+      // Navigate with a RELATIVE path, not res.url: res.url is absolute and
+      // built from Auth.js's base URL, which resolves to localhost when AUTH_URL
+      // is unset in production. A relative push stays on the current domain.
+      router.push("/admin");
       router.refresh();
     } catch {
       setError("Could not sign in. Please try again.");
