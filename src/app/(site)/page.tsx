@@ -17,6 +17,7 @@ import type { Metadata } from "next";
 import { BUSINESS } from "@/lib/site";
 import { hasDatabase } from "@/lib/db";
 import { getPublishedPosts } from "@/lib/posts";
+import { getSitePhotos } from "@/lib/site-photos";
 
 export const dynamic = "force-dynamic";
 
@@ -56,13 +57,17 @@ export default async function Home() {
     href: `/blog/${p.slug}`,
   }));
 
+  // Use the admin-uploaded logo for the business schema image when set.
+  const { logo } = await getSitePhotos();
+  const schemaImage = logo.set && /^https?:\/\//.test(logo.src) ? logo.src : undefined;
+
   return (
     <>
       {/* schema.org structured data for local SEO (SeniorCare/LocalBusiness). */}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
-          __html: JSON.stringify(localBusinessJsonLd()),
+          __html: JSON.stringify(localBusinessJsonLd({ image: schemaImage })),
         }}
       />
       {/* Ordered as a story for a family researching care:

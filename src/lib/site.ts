@@ -95,6 +95,47 @@ export const SOCIAL: { label: string; href: string }[] = [
 ];
 
 /**
+ * Entity/SEO profile for the schema.org LocalBusiness markup (owner-supplied
+ * data plus external listings). §4 note: the schema NEVER declares Joy an
+ * assisted living facility. The `@type` stays LocalBusiness/SeniorCare and the
+ * description uses "assisted living" only as the category families search for,
+ * followed by what Joy actually is (a personal care home).
+ *
+ * `image` currently points at the existing hosted logo; once a logo is uploaded
+ * in the admin (Site Photos > Logo), the homepage passes that to the schema
+ * instead. VERIFY the executive-director credential line stays accurate.
+ */
+export const ORG_PROFILE = {
+  alternateName: [
+    "The Joy Senior Living of Loganville",
+    "The Joy of Loganville",
+  ],
+  image:
+    "https://cdn.prod.website-files.com/6655063219502b9f80b43360/66550793cb73b19370860b32_Copy%20of%20Joy%20Logo%20(1200%20x%20500%20px)%20(1)-p-500.png",
+  geo: { latitude: 33.836512, longitude: -83.904572 },
+  openingHours: "Mo-Su 00:00-23:59",
+  priceRange: "$4,500 - $5,900 per month",
+  areaServed: [
+    "Loganville, GA",
+    "Snellville, GA",
+    "Grayson, GA",
+    "Monroe, GA",
+    "Conyers, GA",
+    "Walton County, GA",
+    "Gwinnett County, GA",
+  ],
+  sameAs: [
+    "https://www.facebook.com/thejoyseniorliving/",
+    "https://www.aplaceformom.com/community/the-joy-senior-living-of-loganville-1462645",
+    "https://www.caring.com/senior-living/georgia/loganville/joy-senior-living",
+    "https://health.usnews.com/best-senior-living/the-joy-senior-living-of-loganville-35811",
+    "https://www.yelp.com/biz/the-joy-senior-living-loganville",
+  ],
+  // §4-compliant: "assisted living" appears only as the search category.
+  description: `The Joy Senior Living of Loganville is a ${BUSINESS.beds}-suite personal care home in ${BUSINESS.address.city}, ${BUSINESS.address.state} offering senior living, memory care, and respite care. Families searching for assisted living near ${BUSINESS.address.city} find a personal care home small enough to know every resident by name. Led by an executive director with more than 20 years of experience as a registered nurse, The Joy provides staff on-site around the clock, home-cooked meals, and daily activities.`,
+} as const;
+
+/**
  * Keywords tracked by the nightly SEO rank logger (§5 cluster). Edit freely.
  * The cron records each one's Google position (needs a SERPAPI_KEY; otherwise
  * it no-ops). The admin SEO page shows the trend.
