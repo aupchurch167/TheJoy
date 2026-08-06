@@ -38,6 +38,11 @@ export default function BroadcastComposer({
   const [pending, start] = useTransition();
   const bodyRef = useRef<HTMLTextAreaElement>(null);
 
+  // "Create with AI" panel.
+  const [aiContext, setAiContext] = useState("");
+  const [aiBusy, setAiBusy] = useState(false);
+  const [aiError, setAiError] = useState("");
+
   const sent = broadcast?.status === "sent";
   const isNew = !broadcast;
 
@@ -90,6 +95,44 @@ export default function BroadcastComposer({
       router.push("/admin/emails");
     } else {
       toastError("Could not delete the email.");
+    }
+  }
+
+  async function generateWithAI() {
+    if (!aiContext.trim()) {
+      setAiError("Tell the AI what the email is about first.");
+      return;
+    }
+    if (
+      (subject.trim() || body.trim()) &&
+      !window.confirm(
+        "Replace the current subject and message with the AI draft?"
+      )
+    ) {
+      return;
+    }
+    setAiError("");
+    setAiBusy(true);
+    try {
+      const res = await fetch("/api/admin/draft-email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ context: aiContext, audience }),
+      });
+      const json = await res.json();
+      if (!res.ok || !json.ok) {
+        setAiError(json.error || "The AI draft failed.");
+        toastError(json.error || "The AI draft failed.");
+        return;
+      }
+      setSubject(json.draft.subject);
+      setBody(json.draft.body);
+      setTab("write");
+      success("AI draft ready. Review and edit before sending.");
+    } catch {
+      setAiError("The AI draft failed. Please try again.");
+    } finally {
+      setAiBusy(false);
     }
   }
 
@@ -179,6 +222,45 @@ export default function BroadcastComposer({
             </p>
           </div>
         )}
+
+        {/* Create with AI: describe the email, get a Joy-voice draft to edit. */}
+        <div className="rounded-xl border border-clay/30 bg-clay/5 p-4">
+          <p className="text-sm font-semibold text-ink">
+            ✨ Create with AI
+          </p>
+          <p className="mt-1 text-xs leading-relaxed text-ink-soft">
+            Describe the email and any details (event, date, the message you want
+            to get across). The AI writes a draft in Joy&apos;s voice for the{" "}
+            {audience === "families" ? "families" : "leads"} list. It never sends,
+            and it fills in [placeholders] for anything you did not specify.
+          </p>
+          <textarea
+            value={aiContext}
+            onChange={(e) => setAiContext(e.target.value)}
+            rows={3}
+            className={`${INPUT} mt-2.5`}
+            placeholder={
+              audience === "families"
+                ? "e.g. Invite families to a fall porch social on [date] at 3pm, with snacks and live music. Warm and casual."
+                : "e.g. A gentle check-in for families researching care, sharing what makes a small home different and inviting them to book a tour or call Mellissa."
+            }
+          />
+          {aiError && (
+            <p className="mt-2 text-xs font-medium text-danger" role="alert">
+              {aiError}
+            </p>
+          )}
+          <div className="mt-2.5">
+            <button
+              type="button"
+              onClick={generateWithAI}
+              disabled={aiBusy}
+              className={btn("secondary", "sm")}
+            >
+              {aiBusy ? "Writing…" : "Generate draft"}
+            </button>
+          </div>
+        </div>
 
         <label className="block">
           <span className="text-sm font-medium text-ink">Subject</span>
