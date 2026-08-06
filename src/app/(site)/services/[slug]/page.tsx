@@ -143,6 +143,41 @@ export default async function ServiceDetailPage({
         </>
       )}
 
+      {/* Internal mesh: the rest of Joy's care (memory care lives at its own
+          top-level page). All targets exist, so no dead links. */}
+      {(() => {
+        const siblings = visibleServiceDetails().filter(
+          (s) => s.slug !== service.slug
+        );
+        if (siblings.length === 0) return null;
+        return (
+          <section className="mt-14">
+            <h2 className="font-display text-2xl font-semibold text-ink">
+              Explore more of Joy&rsquo;s care
+            </h2>
+            <ul className="mt-5 grid gap-3 sm:grid-cols-2">
+              {siblings.map((s) => (
+                <li key={s.slug}>
+                  <Link
+                    href={
+                      s.slug === "memory-care"
+                        ? "/memory-care"
+                        : `/services/${s.slug}`
+                    }
+                    className="font-semibold text-clay hover:text-clay-dark"
+                  >
+                    {s.name}
+                  </Link>
+                  <span className="block text-sm text-ink-soft">
+                    {s.tagline}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </section>
+        );
+      })()}
+
       {/* Single tour CTA (§: one tour path only). */}
       <div className="mt-14 rounded-2xl bg-ink px-6 py-8 text-center text-white">
         <p className="font-display text-2xl font-semibold">
