@@ -155,7 +155,7 @@ export default async function PostPage({
         </p>
         <p className="mx-auto mt-2 max-w-md text-white/80">
           The best way to know if Joy is right for your parent is to walk through
-          it. Book a tour, or call {BUSINESS.director.name} at {BUSINESS.phone}.
+          it. Book a tour, or call us at {BUSINESS.phone}.
         </p>
         <div className="mt-5">
           <TourButton variant="light" href={tourHref(settings)}>

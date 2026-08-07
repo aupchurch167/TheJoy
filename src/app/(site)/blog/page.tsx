@@ -115,7 +115,7 @@ export default async function BlogIndex() {
               compact
               source="blog_form"
               heading="Get in touch with us"
-              blurb={`Thinking it might be time? Tell us a little about your parent and we will call you back. Or call ${BUSINESS.director.name} at ${settings.phone}.`}
+              blurb={`Thinking it might be time? Tell us a little about your parent and we will call you back. Or call us at ${settings.phone}.`}
             />
           </div>
         </aside>

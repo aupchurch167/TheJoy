@@ -373,12 +373,12 @@ export const FAQ: { q: string; a: string; gated?: "memory" }[] = [
   },
   {
     q: "Do you offer memory care?",
-    a: `Yes, inside the same personal care home, with the same small scale and the same familiar faces. ${BUSINESS.director.name} can tell you whether Joy is the right level of care for your parent.`,
+    a: `Yes, inside the same personal care home, with the same small scale and the same familiar faces. We can tell you whether Joy is the right level of care for your parent.`,
     gated: "memory",
   },
   {
     q: "What does it cost?",
-    a: `Cost depends on the room and the level of care your parent needs, so the honest answer is a short conversation, not a number on a page. Call ${BUSINESS.phone} and ask for ${BUSINESS.director.name.split(" ")[0]}, and she will walk you through it.`,
+    a: `Cost depends on the room and the level of care your parent needs, so the honest answer is a short conversation, not a number on a page. Call ${BUSINESS.phone} and we will walk you through it.`,
   },
   {
     q: "How do I know when it's time?",
@@ -386,7 +386,7 @@ export const FAQ: { q: string; a: string; gated?: "memory" }[] = [
   },
   {
     q: "Do you have openings?",
-    a: `Openings change, and with ${BUSINESS.beds} rooms they can change quickly. Call ${BUSINESS.phone} to ask what is available now. If we are full, ${BUSINESS.director.name.split(" ")[0]} can tell you what the wait usually looks like.`,
+    a: `Openings change, and with ${BUSINESS.beds} rooms they can change quickly. Call ${BUSINESS.phone} to ask what is available now. If we are full, we can tell you what the wait usually looks like.`,
   },
 ];
 
@@ -597,7 +597,7 @@ export const SERVICES = {
   respiteHeading: "Short stays and respite",
   respite: [
     `Not every stay is permanent. Joy offers respite care: a short stay, from a few days to a few weeks, in a real room with the same care every resident gets.`,
-    `Families use it when a caregiver at home needs a break, when a parent is recovering after a hospital visit, or when you want your parent to try Joy before deciding anything. ${BUSINESS.director.name} can tell you what is open and when.`,
+    `Families use it when a caregiver at home needs a break, when a parent is recovering after a hospital visit, or when you want your parent to try Joy before deciding anything. We can tell you what is open and when.`,
   ],
   scaleHeading: "Why the small scale changes everything",
   scale: [
@@ -787,7 +787,7 @@ export const SERVICE_DETAILS: ServiceDetail[] = [
       {
         heading: "Ask what is open",
         body: [
-          `Respite rooms depend on what is available. ${BUSINESS.director.name} can tell you what is open and when, and set up a stay that fits your family's timing.`,
+          `Respite rooms depend on what is available. We can tell you what is open and when, and set up a stay that fits your family's timing.`,
         ],
       },
     ],
@@ -797,7 +797,7 @@ export const SERVICE_DETAILS: ServiceDetail[] = [
       steps: [
         {
           label: "Ask",
-          body: `Call ${BUSINESS.director.name.split(" ")[0]} to see what rooms are open and when. Stays run from a few days to a few weeks.`,
+          body: `Call us to see what rooms are open and when. Stays run from a few days to a few weeks.`,
         },
         {
           label: "Settle",
@@ -817,7 +817,7 @@ export const SERVICE_DETAILS: ServiceDetail[] = [
       faqs: [
         {
           q: "How long can a stay be?",
-          a: `From a few days to a few weeks, depending on what your family needs and what is open. ${BUSINESS.director.name} can tell you what is available.`,
+          a: `From a few days to a few weeks, depending on what your family needs and what is open. We can tell you what is available.`,
         },
         {
           q: "Is the care the same as for permanent residents?",
@@ -829,7 +829,7 @@ export const SERVICE_DETAILS: ServiceDetail[] = [
         },
         {
           q: "How much notice do you need?",
-          a: `It depends on openings, which change. Call ${BUSINESS.phone} and ask for ${BUSINESS.director.name.split(" ")[0]}; she can often work with short timelines.`,
+          a: `It depends on openings, which change. Call ${BUSINESS.phone} and we can often work with short timelines.`,
         },
       ],
     },
@@ -898,7 +898,7 @@ export const SERVICE_DETAILS: ServiceDetail[] = [
         },
         {
           q: "What does a typical week look like?",
-          a: `It changes with the season and who is here. ${BUSINESS.director.name} can tell you what this week's activities look like when you visit.`,
+          a: `It changes with the season and who is here. We can tell you what this week's activities look like when you visit.`,
         },
       ],
     },

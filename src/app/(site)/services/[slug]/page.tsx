@@ -185,8 +185,7 @@ export default async function ServiceDetailPage({
         </p>
         <p className="mx-auto mt-2 max-w-md text-white/80">
           The best way to understand {service.name.toLowerCase()} at Joy is to
-          walk through it. Book a tour, or call {BUSINESS.director.name} at{" "}
-          {settings.phone}.
+          walk through it. Book a tour, or call us at {settings.phone}.
         </p>
         <div className="mt-5">
           <TourButton variant="light" href={tourHref(settings)}>

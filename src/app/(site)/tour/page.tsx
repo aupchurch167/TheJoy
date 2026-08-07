@@ -63,9 +63,9 @@ export default async function TourPage() {
             sign.
           </p>
           <p>
-            Prefer to talk first? Call and ask for {firstName}. If a tour is
-            hard to arrange right now, send a note below and she will reach out
-            to set up a time that works.
+            Prefer to talk first? Call us any time. If a tour is hard to arrange
+            right now, send a note below and we will reach out to set up a time
+            that works.
           </p>
         </div>
 
@@ -90,7 +90,7 @@ export default async function TourPage() {
         <LeadForm
           source="tour"
           heading="Ask about a tour"
-          blurb={`Tell us a little about your parent and what you are looking for. ${firstName} will get back to you.`}
+          blurb={`Tell us a little about your parent and what you are looking for. We will get back to you.`}
         />
       </section>
     </div>

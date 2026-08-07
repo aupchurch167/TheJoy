@@ -25,8 +25,7 @@ export default async function FinalCta() {
           </h2>
           <p className="mt-4 max-w-md text-lg leading-relaxed text-white/80">
             You can read about a place for a long time and still not know it. The
-            way to know Joy is to stand in it. Book a tour, or call and ask for{" "}
-            {BUSINESS.director.name.split(" ")[0]}.
+            way to know Joy is to stand in it. Book a tour, or call us.
           </p>
 
           <div className="mt-8">

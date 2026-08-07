@@ -108,7 +108,7 @@ export default async function ServicesPage() {
               compact
               source="services_form"
               heading="Get in touch with us"
-              blurb={`Tell us a little about your parent and we will call you back. Or call ${BUSINESS.director.name} at ${settings.phone}.`}
+              blurb={`Tell us a little about your parent and we will call you back. Or call us at ${settings.phone}.`}
             />
           </div>
         </aside>
@@ -121,7 +121,7 @@ export default async function ServicesPage() {
         </p>
         <p className="mx-auto mt-2 max-w-md text-white/80">
           The best way to understand what Joy offers is to walk through it. Book
-          a tour, or call {BUSINESS.director.name} at {settings.phone}.
+          a tour, or call us at {settings.phone}.
         </p>
         <div className="mt-5">
           <TourButton variant="light" href={tourHref(settings)}>
