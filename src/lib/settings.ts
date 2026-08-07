@@ -44,6 +44,10 @@ function defaults(): SiteSettings {
     promo_text: "",
     promo_cta_label: "",
     promo_cta_url: "",
+    // Deposits: a sensible default the Deposits form pre-fills (overridable
+    // per request); note shown to the family on the invoice is off by default.
+    deposit_amount: "500",
+    deposit_note: "",
   };
 }
 
@@ -76,6 +80,10 @@ export const getSettings = cache(async (): Promise<SiteSettings> => {
       promo_text: get("promo_text") ?? d.promo_text,
       promo_cta_label: get("promo_cta_label") ?? d.promo_cta_label,
       promo_cta_url: get("promo_cta_url") ?? d.promo_cta_url,
+      // deposit_amount: empty falls back to the built-in default; note is a
+      // real "" (off) when stored blank.
+      deposit_amount: get("deposit_amount") || d.deposit_amount,
+      deposit_note: get("deposit_note") ?? d.deposit_note,
     };
   } catch {
     return d;

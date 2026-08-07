@@ -228,3 +228,49 @@ INSERT INTO site_settings (key, value) VALUES
   ('careers_url',     ''),
   ('talkfurther_url', '')
 ON CONFLICT (key) DO NOTHING;
+
+-- ==========================================================================
+-- Change Set 02: deposit requests (PayPal invoices)
+-- ==========================================================================
+
+-- Each row is a deposit the office asked a family to pay, sent as a PayPal
+-- invoice. PayPal hosts the payment page and emails the recipient; we keep a
+-- local record so the admin Deposits screen shows history and paid/unpaid
+-- status. lead_id links back to the person in `leads` when the request started
+-- from there (nullable: a deposit can go to an email that is not yet a lead).
+-- amount_cents avoids floating-point money; format for display in the app.
+CREATE TABLE IF NOT EXISTS deposit_requests (
+  id                  UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  lead_id             UUID REFERENCES leads(id) ON DELETE SET NULL,
+  recipient_name      TEXT NOT NULL,
+  recipient_email     TEXT NOT NULL,
+  amount_cents        INTEGER NOT NULL,
+  currency            TEXT NOT NULL DEFAULT 'USD',
+  note                TEXT,
+  -- Which processor sent it (only 'paypal' today; column keeps the door open).
+  provider            TEXT NOT NULL DEFAULT 'paypal',
+  provider_invoice_id TEXT,
+  invoice_number      TEXT,
+  -- Payer-facing hosted invoice URL (from PayPal), handy for a manual re-send.
+  invoice_url         TEXT,
+  -- Collapsed status: sent | paid | partially_paid | cancelled | refunded | draft.
+  status              TEXT NOT NULL DEFAULT 'sent',
+  created_by          TEXT,
+  created_at          TIMESTAMPTZ NOT NULL DEFAULT now(),
+  paid_at             TIMESTAMPTZ,
+  updated_at          TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS deposit_requests_created_idx
+  ON deposit_requests (created_at DESC);
+CREATE INDEX IF NOT EXISTS deposit_requests_invoice_idx
+  ON deposit_requests (provider_invoice_id);
+CREATE INDEX IF NOT EXISTS deposit_requests_status_idx
+  ON deposit_requests (status);
+
+-- Deposit settings: the default amount (dollars) the form pre-fills, and an
+-- optional note shown to the recipient on every invoice. Seeded blank note.
+INSERT INTO site_settings (key, value) VALUES
+  ('deposit_amount', '500'),
+  ('deposit_note',   '')
+ON CONFLICT (key) DO NOTHING;

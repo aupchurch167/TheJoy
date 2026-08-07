@@ -535,3 +535,52 @@ refreshes its own render on save; the short TTL covers Cloudflare's layer.
   is true (confirm it is within the license first).
 
 Both are in the header and footer navigation.
+
+## 14. Deposits (PayPal)
+
+Send a family a **move-in deposit request** as a PayPal invoice. PayPal emails
+them a secure, hosted invoice, hosts the payment page, and tells you when it is
+paid. The money goes straight to your PayPal account. The site never touches
+card numbers.
+
+### One-time setup
+
+1. At https://developer.paypal.com/dashboard/applications create a REST app.
+   You get two sets of keys: **Sandbox** (for testing) and **Live** (real
+   money). Copy the app's **Client ID** and **Secret**.
+2. In Railway (Variables) set:
+   - `PAYPAL_CLIENT_ID`
+   - `PAYPAL_CLIENT_SECRET`
+   - `PAYPAL_ENV` = `sandbox` while testing, `live` when you are ready to take
+     real payments. (Unset behaves as sandbox.)
+3. Redeploy. The **Deposits** screen in the admin turns on. Until the keys are
+   set it shows a "PayPal is not connected yet" notice and nothing else breaks.
+
+### Sending a deposit request
+
+1. Admin → **Deposits**.
+2. Enter the family member's name and email. The amount pre-fills from your
+   default (Site Settings → Deposits); change it for this family if needed. Add
+   an optional note that shows on the invoice.
+3. **Send deposit request.** PayPal emails the invoice. The request appears in
+   **History** with its status (Sent → Paid).
+
+The mode badge on the screen tells you at a glance whether you are in
+**Sandbox** (test) or **Live** (real payments).
+
+### Keeping status up to date
+
+- **Automatic (recommended for live):** in the PayPal app add a webhook to
+  `https://www.joyseniorcare.com/api/webhooks/paypal` subscribed to the
+  **Invoicing** events, then paste the generated **Webhook ID** into
+  `PAYPAL_WEBHOOK_ID` in Railway. Status then updates itself when a family pays.
+- **Manual:** click **Refresh** on any row to re-check that invoice with PayPal.
+
+### The default amount and note
+
+Set them in Admin → **Site settings** → *Deposits (PayPal)*:
+
+- **Default deposit amount (USD)** — pre-fills the Deposits form; still
+  overridable per request.
+- **Deposit invoice note (optional)** — a line shown to the family on every
+  invoice. Leave blank for none.

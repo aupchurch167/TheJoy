@@ -18,6 +18,9 @@ export const SETTING_KEYS = [
   "promo_text",
   "promo_cta_label",
   "promo_cta_url",
+  // Deposits (PayPal)
+  "deposit_amount",
+  "deposit_note",
 ] as const;
 
 export type SettingKey = (typeof SETTING_KEYS)[number];
@@ -43,6 +46,8 @@ export const OPTIONAL_KEYS: SettingKey[] = [
   "promo_text",
   "promo_cta_label",
   "promo_cta_url",
+  "deposit_amount",
+  "deposit_note",
 ];
 
 export type SettingType = "text" | "url" | "textarea" | "bool";
@@ -109,6 +114,18 @@ export const SETTING_META: Record<
     type: "url",
     group: "Promotion banner",
   },
+  deposit_amount: {
+    label: "Default deposit amount (USD)",
+    hint: "Pre-fills the amount on the Deposits screen. You can change it for each request before sending. Numbers only, e.g. 500 or 750.00.",
+    type: "text",
+    group: "Deposits (PayPal)",
+  },
+  deposit_note: {
+    label: "Deposit invoice note (optional)",
+    hint: "A short line shown to the family on every deposit invoice, e.g. what the deposit holds. Leave blank for none.",
+    type: "textarea",
+    group: "Deposits (PayPal)",
+  },
 };
 
 export function isValidHttpUrl(value: string): boolean {
@@ -137,6 +154,14 @@ export function validateSetting(key: string, value: string): string | null {
       // fall through to the error below
     }
     return `${key} must be a link (https://…, /page, tel:…, or mailto:…).`;
+  }
+  if (key === "deposit_amount") {
+    if (v === "") return null; // empty falls back to the built-in default
+    const cleaned = v.replace(/[$,\s]/g, "");
+    if (!/^\d+(\.\d{1,2})?$/.test(cleaned) || parseFloat(cleaned) <= 0) {
+      return "Default deposit amount must be a positive number (e.g. 500 or 750.00).";
+    }
+    return null;
   }
   if (v === "" && (OPTIONAL_KEYS as string[]).includes(key)) return null;
   if (v === "") return `${key} cannot be empty.`;
