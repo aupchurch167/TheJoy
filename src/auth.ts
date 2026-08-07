@@ -50,9 +50,24 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
      */
     async signIn({ profile }) {
       const email = profile?.email;
-      const verified = (profile as { email_verified?: boolean } | undefined)
+      // Google sends email_verified as a boolean, but coerce a string "true"
+      // just in case, so a real verified account is never wrongly rejected.
+      const raw = (profile as { email_verified?: boolean | string } | undefined)
         ?.email_verified;
-      return isAllowedAdmin(email, verified);
+      const verified = raw === true || raw === "true";
+      const ok = isAllowedAdmin(email, verified);
+      if (!ok) {
+        // Shows in the server logs (e.g. Railway) so a rejected sign-in can be
+        // diagnosed: which email, whether Google marked it verified, and whether
+        // an ADMIN_ALLOWLIST is narrowing access.
+        console.warn("[auth] sign-in rejected", {
+          email: email || "(none)",
+          email_verified: raw,
+          domainOk: !!email && email.toLowerCase().endsWith("@joyseniorcare.com"),
+          allowlist: process.env.ADMIN_ALLOWLIST || "(empty)",
+        });
+      }
+      return ok;
     },
     async jwt({ token, user }) {
       if (user?.email) token.email = user.email;
