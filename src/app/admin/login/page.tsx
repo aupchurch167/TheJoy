@@ -1,9 +1,8 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
-import { auth, passwordLoginEnabled, googleLoginEnabled } from "@/auth";
+import { auth, googleLoginEnabled } from "@/auth";
 import { ALLOWED_DOMAIN, isAllowedAdmin } from "@/lib/access";
 import AdminSignInButton from "./AdminSignInButton";
-import AdminPasswordForm from "./AdminPasswordForm";
 
 export const dynamic = "force-dynamic";
 
@@ -23,7 +22,6 @@ export default async function AdminLoginPage({
   }
 
   const { error } = await searchParams;
-  const passwordEnabled = passwordLoginEnabled();
   const googleEnabled = googleLoginEnabled();
 
   return (
@@ -39,14 +37,11 @@ export default async function AdminLoginPage({
                 Sign in with your <strong>@{ALLOWED_DOMAIN}</strong> Google
                 account.
               </p>
-            ) : passwordEnabled ? (
-              <p className="mt-2 text-sm text-ink-soft">
-                Sign in to manage the site.
-              </p>
             ) : (
               <p className="mt-2 text-sm text-ink-soft">
-                Sign-in is not set up yet. Set <code>ADMIN_PASSWORD</code> (or
-                Google OAuth) and redeploy.
+                Sign-in is not set up yet. Set the Google OAuth env vars
+                (<code>AUTH_GOOGLE_ID</code>, <code>AUTH_GOOGLE_SECRET</code>) and
+                redeploy.
               </p>
             )}
           </div>
@@ -57,31 +52,13 @@ export default async function AdminLoginPage({
               className="mt-6 rounded-lg border border-danger/30 bg-danger/10 px-4 py-3 text-sm text-danger"
             >
               That account is not allowed. Only verified @{ALLOWED_DOMAIN}{" "}
-              accounts can sign in.
+              Google accounts can sign in.
             </p>
           )}
 
           {googleEnabled && (
             <div className="mt-6 flex justify-center">
               <AdminSignInButton />
-            </div>
-          )}
-
-          {passwordEnabled && (
-            <div className="mt-6">
-              {googleEnabled && (
-                <div className="mb-4 flex items-center gap-3 text-xs text-ink-faint">
-                  <span className="h-px flex-1 bg-line" />
-                  or
-                  <span className="h-px flex-1 bg-line" />
-                </div>
-              )}
-              <AdminPasswordForm />
-              {googleEnabled && (
-                <p className="mt-3 text-center text-xs text-ink-faint">
-                  Temporary password access, until Google sign-in is set up.
-                </p>
-              )}
             </div>
           )}
         </div>
