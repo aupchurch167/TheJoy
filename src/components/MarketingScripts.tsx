@@ -1,4 +1,5 @@
 import Script from "next/script";
+import { getSettings } from "@/lib/settings";
 
 /**
  * Third-party marketing scripts for the PUBLIC site only (mounted in the
@@ -8,9 +9,11 @@ import Script from "next/script";
  * 1. Google Tag Manager (container GTM-KB6N9GQL) — carried over from the old
  *    Webflow site so existing tags/analytics keep firing.
  * 2. TalkFurther loader — injects js.talkfurther.com/talkfurther_init.min.js,
- *    which binds to this domain and powers the in-page tour flow. Once loaded,
- *    a "Book a tour" link to /#/further/55 (or window.FurtherEmbeddedVSA.open(55))
- *    opens the "Schedule A Tour" scheduler, same as joyseniorcare.com today.
+ *    which binds to this domain and powers the in-page tour flow. It ONLY loads
+ *    when the admin toggle "Use the TalkFurther scheduler for Book a tour"
+ *    (tour_use_talkfurther) is on. Turn that off and the Further widget/bubble
+ *    does not load at all (the Book-a-tour buttons then go to the on-site /tour
+ *    page instead), which also stops the widget's auto-engage/call on load.
  *
  * (The old site's `.w-webflow-badge { display:none }` rule is intentionally
  * omitted: there is no Webflow badge on this site, so the rule is dead.)
@@ -26,7 +29,10 @@ const GTM_ID =
     ? process.env.NEXT_PUBLIC_GTM_ID
     : "GTM-KB6N9GQL";
 
-export default function MarketingScripts() {
+export default async function MarketingScripts() {
+  const settings = await getSettings();
+  const talkFurtherEnabled = settings.tour_use_talkfurther === "on";
+
   return (
     <>
       {GTM_ID && (
@@ -53,9 +59,10 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         </>
       )}
 
-      {/* TalkFurther loader (binds to this domain, powers the in-page tour) */}
-      <Script id="talkfurther-init" strategy="afterInteractive">
-        {`(function () {
+      {/* TalkFurther loader — only when the admin toggle enables the scheduler. */}
+      {talkFurtherEnabled && (
+        <Script id="talkfurther-init" strategy="afterInteractive">
+          {`(function () {
 var a = document.createElement("script");
 var b = document.getElementsByTagName("script")[0];
 a.type = "text/javascript";
@@ -63,7 +70,8 @@ a.src = ('https:' == document.location.protocol ? 'https://' : 'http://') + "js.
 a.async = true;
 b.parentNode.insertBefore(a, b);
 })();`}
-      </Script>
+        </Script>
+      )}
     </>
   );
 }
