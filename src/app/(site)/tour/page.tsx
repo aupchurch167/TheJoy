@@ -75,7 +75,7 @@ export default async function TourPage() {
             href={toTelHref(settings.phone)}
             className="text-lg font-semibold text-clay hover:text-clay-dark"
           >
-            Or call {firstName}: {settings.phone}
+            Or call us at {settings.phone}
           </a>
         </div>
 

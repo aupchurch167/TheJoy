@@ -185,7 +185,7 @@ export const HERO = {
   sub: `Joy is a personal care home and memory care in ${BUSINESS.address.city}, Georgia (small enough that we learn how your mother takes her coffee and which chair your father claims after breakfast).`,
   ctaLabel: "Book a tour",
   // Rendered next to the tour button.
-  callLine: `Or call and ask for ${BUSINESS.director.name.split(" ")[0]}: ${BUSINESS.phone}`,
+  callLine: `Or call us at ${BUSINESS.phone}`,
 } as const;
 
 /**
