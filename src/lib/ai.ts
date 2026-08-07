@@ -107,6 +107,14 @@ export async function draftPost(
 
 export type EmailAudience = "leads" | "families";
 
+/** Occasion / style presets that shape how much flair the email carries. */
+export type EmailStyle =
+  | "standard"
+  | "birthday"
+  | "holiday"
+  | "event"
+  | "newsletter";
+
 export type EmailDraft = { subject: string; body: string };
 
 const EMAIL_SCHEMA = {
@@ -127,15 +135,42 @@ const EMAIL_SCHEMA = {
   additionalProperties: false,
 } as const;
 
-function emailSystemPrompt(audience: EmailAudience): string {
+function styleBrief(style: EmailStyle): string {
+  switch (style) {
+    case "birthday":
+      return `OCCASION: a BIRTHDAY note. Warm and personal. Open with a celebratory headline (e.g. "# Happy birthday, {{first_name}}"). Use a [[banner:...]] for one short, heartfelt cheer, and a [[divider]] before the sign-off. At most ONE tasteful emoji, if any. Keep it genuine, not cartoonish.`;
+    case "holiday":
+      return `OCCASION: a HOLIDAY / seasonal greeting. Warm and inclusive (do not assume a specific religious holiday unless the operator names one). Use a [[banner:...]] for a short seasonal line and a [[divider]] for a gentle flourish. At most ONE tasteful emoji, if any.`;
+    case "event":
+      return `OCCASION: an EVENT INVITATION. Lead with a clear, inviting headline. State the event, and put [date], [time], and [location or "here at Joy"] as bracketed placeholders if not given. End with a [[button:...]] to RSVP or reply. Keep it easy to say yes to.`;
+    case "newsletter":
+      return `OCCASION: a short NEWSLETTER / update. Use a headline and one or two "##" subheadings for sections. A pull-quote ("> ...") is welcome if it fits. Close with a gentle [[button:...]] where appropriate.`;
+    default:
+      return `A plain, warm note. Minimal flair: a headline is optional, mostly short paragraphs. Add a [[button:...]] only if there is a clear next step.`;
+  }
+}
+
+function emailSystemPrompt(audience: EmailAudience, style: EmailStyle): string {
   const audienceBrief =
     audience === "families"
       ? `This email goes to the FAMILIES list (the families of people who currently live at Joy). It must be COMMUNITY-WIDE only: parties, a family night, a monthly note, event photos, seasonal greetings. NEVER include details about an individual resident, and NEVER anything urgent (urgent news is always a phone call, never an email). Warm, brief, and inclusive of every family.`
       : `This email goes to the LEADS list (adult children researching senior living for a parent, usually a daughter in her 50s or 60s). It is a gentle nurture note: honest, low-pressure, and helpful. It is fine to invite them to book a tour or call and ask for ${BUSINESS.director.name}, but never pushy.`;
 
-  return `You are writing a short email on behalf of ${BUSINESS.name}, a 24-bed personal care home in Loganville, Georgia, led by Executive Director ${BUSINESS.director.name}.
+  return `You are writing an email on behalf of ${BUSINESS.name}, a 24-bed personal care home in Loganville, Georgia, led by Executive Director ${BUSINESS.director.name}.
 
 ${audienceBrief}
+
+${styleBrief(style)}
+
+The email is rendered inside a warm, Georgia-serif letter template (letterhead, award badges, and footer are added for you). Compose the BODY in Markdown, and you may use these building blocks for structure and flair:
+- "# Headline" for the opening line, and "## Subheading" for sections.
+- "> quote" for a pull-quote (renders with an accent bar). Only quote REAL words the operator provides; never invent a testimonial.
+- [[button:Label|https://... or tel:+1...]] for a filled call-to-action button (e.g. [[button:Book a tour|https://www.joyseniorcare.com/tour]] or [[button:Call (470) 684-3569|tel:+14706843569]]).
+- [[banner:Short line]] for a centered accent band (great for a birthday or holiday cheer).
+- [[divider]] for a small ornamental divider between sections.
+- {{first_name}} to greet the recipient by name (it is filled per person at send).
+- A photo makes emails warmer, but you do NOT have image URLs. NEVER invent an image URL. Instead, write a bracketed note on its own line where a photo should go, e.g. "[Add a photo of the party here]", and the operator will drop in a real one.
+End with a warm sign-off from ${BUSINESS.director.name} (name + "Executive Director, ${BUSINESS.name}").
 
 TWO RULES GOVERN EVERY WORD. They never bend.
 
@@ -148,14 +183,15 @@ VOICE (§2):
 COMPLIANCE (§4) - Georgia license (a legal boundary):
 - Joy is a PERSONAL CARE HOME, NOT assisted living. NEVER call Joy "assisted living". You may reference "assisted living" ONLY as the category families search for, immediately followed by what Joy actually is (a personal care home).
 - Allowed self-descriptions: "senior living", "personal care home", "memory care".
-- NEVER fabricate specifics: no invented dates, times, prices, statistics, quotes, or resident stories. Use ONLY the details the operator provides in their context. If a specific (a date, an RSVP link, a price) is needed but not given, write a clear placeholder in [square brackets] for the operator to fill in, rather than inventing it.
+- NEVER fabricate specifics: no invented dates, times, prices, statistics, quotes, or resident stories. Use ONLY the details the operator provides. If a specific (a date, an RSVP link, a price) is needed but not given, write a clear [square bracket] placeholder for the operator to fill in.
 
-Keep the whole email short: a subject line plus a few short paragraphs in Markdown. Do not add an unsubscribe link, a "Joy Senior Living" signature, or an address block; those are appended automatically.`;
+Do not add an unsubscribe link, the letterhead, badges, or an address block; those are appended automatically.`;
 }
 
 export async function draftEmail(
   context: string,
-  audience: EmailAudience
+  audience: EmailAudience,
+  style: EmailStyle = "standard"
 ): Promise<EmailDraft> {
   if (!aiEnabled()) {
     throw new Error("AI drafting is not configured (set ANTHROPIC_API_KEY).");
@@ -166,14 +202,14 @@ export async function draftEmail(
   const userPrompt = [
     `Write an email. Here is what it should be about, in the operator's words:`,
     context,
-    `Remember: Joy's voice, personal care home (never "assisted living" for Joy), no banned words, no em-dashes, and invent no specifics (use [placeholders] for any detail not given above).`,
+    `Remember: Joy's voice, personal care home (never "assisted living" for Joy), no banned words, no em-dashes, and invent no specifics (use [placeholders] for any detail not given above). Use the building blocks (headline, [[button:...]], [[banner:...]], [[divider]], {{first_name}}) to match the occasion.`,
   ].join("\n\n");
 
   const response = await client.messages.create({
     model: MODEL,
     max_tokens: 4000,
     thinking: { type: "adaptive" },
-    system: emailSystemPrompt(audience),
+    system: emailSystemPrompt(audience, style),
     output_config: { format: { type: "json_schema", schema: EMAIL_SCHEMA } },
     messages: [{ role: "user", content: userPrompt }],
   });

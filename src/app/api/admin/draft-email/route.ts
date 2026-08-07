@@ -13,6 +13,9 @@ const Schema = z.object({
     .min(1, "Tell the AI what the email should be about.")
     .max(2000),
   audience: z.enum(["leads", "families"]).default("leads"),
+  style: z
+    .enum(["standard", "birthday", "holiday", "event", "newsletter"])
+    .default("standard"),
 });
 
 export async function POST(request: Request) {
@@ -46,7 +49,11 @@ export async function POST(request: Request) {
   }
 
   try {
-    const draft = await draftEmail(parsed.data.context, parsed.data.audience);
+    const draft = await draftEmail(
+      parsed.data.context,
+      parsed.data.audience,
+      parsed.data.style
+    );
     return NextResponse.json({ ok: true, draft });
   } catch (err) {
     console.error("[draft-email]", err);

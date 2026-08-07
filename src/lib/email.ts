@@ -72,6 +72,18 @@ function buttonHtml(label: string, url: string): string {
   )}</a></td></tr></table>`;
 }
 
+// A centered accent band, for a celebratory line (birthday, holiday, event).
+function bannerHtml(text: string): string {
+  return `<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:6px 0 24px 0;"><tr><td align="center" bgcolor="#7a8c62" style="padding:16px 24px;border-radius:6px;font-family:Georgia,'Times New Roman',serif;font-size:19px;line-height:26px;mso-line-height-rule:exactly;color:#fbf9f5;letter-spacing:0.03em;">${escapeText(
+    text
+  )}</td></tr></table>`;
+}
+
+// A small ornamental divider between sections.
+function dividerHtml(): string {
+  return `<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:8px 0 22px 0;"><tr><td align="center" style="font-family:Georgia,'Times New Roman',serif;font-size:16px;letter-spacing:10px;color:#b6b09c;">&bull;&nbsp;&bull;&nbsp;&bull;</td></tr></table>`;
+}
+
 // Inline styles so the letter typography survives every email client. Applied
 // to the Markdown-rendered body. Order matters: blockquotes are handled before
 // bare <p> so quote text keeps its larger italic style.
@@ -106,8 +118,8 @@ function styleEmailBody(html: string): string {
     .replace(/<ul>/g, `<ul style="${ST.ul}">`)
     .replace(/<ol>/g, `<ol style="${ST.ul}">`)
     .replace(/<li>/g, `<li style="${ST.li}">`);
-  // CTA button shortcode: [[button:Label|https://…]] (also strips the <p> marked
-  // wrapped it in).
+  // Shortcodes. Each also strips the <p> marked wrapped a lone shortcode in.
+  // [[button:Label|https://…]] -> filled CTA button
   out = out.replace(
     /<p[^>]*>\s*\[\[button:([^|\]]+)\|([^\]]+)\]\]\s*<\/p>/g,
     (_m, label, url) => buttonHtml(String(label).trim(), String(url).trim())
@@ -116,6 +128,17 @@ function styleEmailBody(html: string): string {
     /\[\[button:([^|\]]+)\|([^\]]+)\]\]/g,
     (_m, label, url) => buttonHtml(String(label).trim(), String(url).trim())
   );
+  // [[banner:Text]] -> centered accent band
+  out = out.replace(
+    /<p[^>]*>\s*\[\[banner:([^\]]+)\]\]\s*<\/p>/g,
+    (_m, text) => bannerHtml(String(text).trim())
+  );
+  out = out.replace(/\[\[banner:([^\]]+)\]\]/g, (_m, text) =>
+    bannerHtml(String(text).trim())
+  );
+  // [[divider]] -> ornamental divider
+  out = out.replace(/<p[^>]*>\s*\[\[divider\]\]\s*<\/p>/g, () => dividerHtml());
+  out = out.replace(/\[\[divider\]\]/g, () => dividerHtml());
   return out;
 }
 

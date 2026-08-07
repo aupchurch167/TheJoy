@@ -41,6 +41,7 @@ export default function BroadcastComposer({
 
   // "Create with AI" panel.
   const [aiContext, setAiContext] = useState("");
+  const [aiStyle, setAiStyle] = useState("standard");
   const [aiBusy, setAiBusy] = useState(false);
   const [aiError, setAiError] = useState("");
 
@@ -160,7 +161,7 @@ export default function BroadcastComposer({
       const res = await fetch("/api/admin/draft-email", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ context: aiContext, audience }),
+        body: JSON.stringify({ context: aiContext, audience, style: aiStyle }),
       });
       const json = await res.json();
       if (!res.ok || !json.ok) {
@@ -302,9 +303,26 @@ export default function BroadcastComposer({
           <p className="mt-1 text-xs leading-relaxed text-ink-soft">
             Describe the email and any details (event, date, the message you want
             to get across). The AI writes a draft in Joy&apos;s voice for the{" "}
-            {audience === "families" ? "families" : "leads"} list. It never sends,
-            and it fills in [placeholders] for anything you did not specify.
+            {audience === "families" ? "families" : "leads"} list, with a headline,
+            buttons, and flair to match the occasion. It never sends, and it fills
+            in [placeholders] for anything you did not specify.
           </p>
+          <div className="mt-2.5">
+            <label className="text-xs font-medium text-ink">
+              Style / occasion
+            </label>
+            <select
+              value={aiStyle}
+              onChange={(e) => setAiStyle(e.target.value)}
+              className={`${INPUT} mt-1 h-10 sm:max-w-xs`}
+            >
+              <option value="standard">Standard note</option>
+              <option value="birthday">Birthday</option>
+              <option value="holiday">Holiday / seasonal</option>
+              <option value="event">Event invitation</option>
+              <option value="newsletter">Newsletter / update</option>
+            </select>
+          </div>
           <textarea
             value={aiContext}
             onChange={(e) => setAiContext(e.target.value)}
