@@ -280,7 +280,7 @@ export default function PostEditor({
           />
         </Field>
 
-        <div className="grid gap-5 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
           <Field label="URL slug" hint="Leave blank to build it from the title.">
             <input
               value={f.slug}

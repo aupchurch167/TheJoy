@@ -52,7 +52,7 @@ export default function DepositForm({
   return (
     <Card>
       <SectionLabel>New deposit request</SectionLabel>
-      <form onSubmit={onSubmit} className="mt-4 grid gap-4 sm:grid-cols-2">
+      <form onSubmit={onSubmit} className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
         <Field label="Family member's name" htmlFor="dep-name" required>
           <Input
             id="dep-name"

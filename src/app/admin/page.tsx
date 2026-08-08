@@ -136,9 +136,9 @@ export default async function AdminDashboard() {
         />
       </div>
 
-      <div className="mt-8 grid gap-6 lg:grid-cols-2">
+      <div className="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-2">
         {/* Recent leads */}
-        <Card padded={false}>
+        <Card padded={false} className="min-w-0">
           <div className="flex items-center justify-between px-5 py-4">
             <SectionLabel>Recent leads</SectionLabel>
             <Link
@@ -176,7 +176,7 @@ export default async function AdminDashboard() {
         </Card>
 
         {/* Recent posts */}
-        <Card padded={false}>
+        <Card padded={false} className="min-w-0">
           <div className="flex items-center justify-between px-5 py-4">
             <SectionLabel>Recent posts</SectionLabel>
             <Link

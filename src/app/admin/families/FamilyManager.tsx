@@ -106,7 +106,7 @@ export default function FamilyManager({ members }: { members: Lead[] }) {
       <Card>
         <SectionLabel>Add a family contact</SectionLabel>
         <form onSubmit={onAdd} className="mt-4">
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <Field label="Resident" htmlFor="fm-resident" hint="Who they visit.">
               <Input
                 id="fm-resident"
