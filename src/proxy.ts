@@ -12,6 +12,20 @@ import { isAllowedAdmin } from "@/lib/access";
 //      page is always reachable), using the Auth.js session on the request.
 export default auth((req) => {
   const { pathname } = req.nextUrl;
+  const host = req.headers.get("host") || req.nextUrl.host;
+
+  // 0. Canonical host: the bare apex (joyseniorcare.com) 301s to www, which is
+  //    the canonical host everywhere else (SITE_URL, AUTH_URL, OG, sitemap).
+  //    Only the exact apex is matched, so localhost, the *.up.railway.app URL,
+  //    and platform health checks are left alone. (Requires the apex to have a
+  //    TLS cert on the host, i.e. added as a custom domain in Railway.)
+  if (host === "joyseniorcare.com") {
+    const url = req.nextUrl.clone();
+    url.hostname = "www.joyseniorcare.com";
+    url.protocol = "https:";
+    url.port = "";
+    return NextResponse.redirect(url, 301);
+  }
 
   // 1. Lowercase redirect (skip API routes; they are matched out below anyway).
   if (/[A-Z]/.test(pathname) && !pathname.startsWith("/api/")) {
