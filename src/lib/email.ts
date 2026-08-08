@@ -334,6 +334,7 @@ export async function sendDepositEmail(input: {
   amountFormatted: string; // e.g. "$500.00"
   payUrl: string;
   note?: string | null;
+  reminder?: boolean; // softer "friendly reminder" wording
 }): Promise<boolean> {
   if (!resend) {
     console.info("[email] RESEND_API_KEY not set; deposit email skipped.");
@@ -342,12 +343,16 @@ export async function sendDepositEmail(input: {
   const first = (input.name || "").trim().split(/\s+/)[0] || "there";
   const note = (input.note || "").trim();
 
+  const opening = input.reminder
+    ? `Just a friendly reminder about the move-in deposit of ${input.amountFormatted} to reserve the room.`
+    : `Thank you for choosing Joy. To reserve the room, we are requesting a move-in deposit of ${input.amountFormatted}.`;
+
   // Joy voice (§2): short sentences, no em-dashes (parentheses for asides), no
   // banned words, Mellissa named where care/help is offered.
   const bodyMd = [
     `Hi ${first},`,
     ``,
-    `Thank you for choosing Joy. To reserve the room, we are requesting a move-in deposit of ${input.amountFormatted}.`,
+    opening,
     ...(note ? [``, note] : []),
     ``,
     `You can pay securely below (it goes through PayPal, and any card works, no PayPal account needed).`,
@@ -366,7 +371,9 @@ export async function sendDepositEmail(input: {
     from: FROM,
     to: input.to,
     replyTo: BUSINESS.email,
-    subject: `Your deposit request from ${BUSINESS.name}`,
+    subject: input.reminder
+      ? `A reminder about your deposit request from ${BUSINESS.name}`
+      : `Your deposit request from ${BUSINESS.name}`,
     // Transactional: no marketing unsubscribe footer, no award badges.
     html: wrapEmail(renderBody(bodyMd), undefined, false),
   });

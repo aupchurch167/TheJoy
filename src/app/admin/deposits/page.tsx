@@ -1,10 +1,17 @@
+import Link from "next/link";
 import { requireAdmin } from "@/lib/require-admin";
 import { hasDatabase } from "@/lib/db";
 import { getSettings } from "@/lib/settings";
 import { paypalEnabled, paypalMode } from "@/lib/paypal";
 import { emailEnabled } from "@/lib/email";
+import { smsEnabled } from "@/lib/sms";
 import { BUSINESS } from "@/lib/site";
-import { listDepositRequests, formatMoney } from "@/lib/deposits";
+import {
+  listDepositRequests,
+  countArchivedDeposits,
+  formatMoney,
+  isCancelable,
+} from "@/lib/deposits";
 import {
   PageHeader,
   NotConnected,
@@ -17,7 +24,7 @@ import {
   type BadgeTone,
 } from "@/components/admin/ui";
 import DepositForm from "./DepositForm";
-import RefreshButton from "./RefreshButton";
+import DepositRowActions from "./DepositRowActions";
 
 export const dynamic = "force-dynamic";
 
@@ -43,7 +50,11 @@ function formatDate(iso: string | null): string {
   });
 }
 
-export default async function DepositsPage() {
+export default async function DepositsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ view?: string }>;
+}) {
   await requireAdmin();
 
   if (!hasDatabase()) {
@@ -55,11 +66,17 @@ export default async function DepositsPage() {
     );
   }
 
-  const [settings, deposits] = await Promise.all([
+  const { view } = await searchParams;
+  const showArchived = view === "archived";
+
+  const [settings, deposits, archivedCount] = await Promise.all([
     getSettings(),
-    listDepositRequests(200),
+    listDepositRequests({ archived: showArchived }),
+    countArchivedDeposits(),
   ]);
   const enabled = paypalEnabled();
+  const emailReady = emailEnabled();
+  const smsReady = smsEnabled();
 
   return (
     <div className="max-w-4xl">
@@ -82,15 +99,15 @@ export default async function DepositsPage() {
         </Card>
       )}
 
-      {enabled && !emailEnabled() && (
+      {enabled && !emailReady && (
         <Card className="mb-6 border-gold/40 bg-gold/5">
           <p className="text-sm font-semibold text-ink">
             Email sending is off, so the family will not be emailed.
           </p>
           <p className="mt-1 text-sm leading-relaxed text-ink-soft">
-            The invoice is still created and you can copy its payment link from{" "}
-            <strong>View</strong> on each row. To have the request emailed from{" "}
-            <code>{BUSINESS.email}</code> automatically, set{" "}
+            The invoice is still created and you can copy its payment link from
+            the row menu (<strong>View invoice</strong>). To have the request
+            emailed from <code>{BUSINESS.email}</code> automatically, set{" "}
             <code>RESEND_API_KEY</code> in Railway (see OPERATIONS.md).
           </p>
         </Card>
@@ -112,14 +129,44 @@ export default async function DepositsPage() {
       />
 
       <div className="mt-10">
-        <h2 className="mb-3 font-display text-lg font-semibold text-ink">
-          History
-        </h2>
+        <div className="mb-3 flex items-center justify-between gap-3">
+          <h2 className="font-display text-lg font-semibold text-ink">
+            {showArchived ? "Archived" : "History"}
+          </h2>
+          {/* Active / Archived toggle */}
+          <div className="flex items-center gap-1 text-sm">
+            <Link
+              href="/admin/deposits"
+              className={`rounded-lg px-3 py-1.5 font-medium ${
+                showArchived
+                  ? "text-ink-soft hover:bg-surface"
+                  : "bg-clay/10 text-clay"
+              }`}
+            >
+              Active
+            </Link>
+            <Link
+              href="/admin/deposits?view=archived"
+              className={`rounded-lg px-3 py-1.5 font-medium ${
+                showArchived
+                  ? "bg-clay/10 text-clay"
+                  : "text-ink-soft hover:bg-surface"
+              }`}
+            >
+              Archived{archivedCount > 0 ? ` (${archivedCount})` : ""}
+            </Link>
+          </div>
+        </div>
+
         {deposits.length === 0 ? (
           <EmptyState
             icon="💳"
-            title="No deposit requests yet"
-            description="Deposit requests you send will appear here with their payment status."
+            title={showArchived ? "Nothing archived" : "No deposit requests yet"}
+            description={
+              showArchived
+                ? "Requests you archive will appear here. You can restore them anytime."
+                : "Deposit requests you send will appear here with their payment status."
+            }
           />
         ) : (
           <TableWrap>
@@ -130,7 +177,7 @@ export default async function DepositsPage() {
                 <Th>Status</Th>
                 <Th>Sent</Th>
                 <Th>Paid</Th>
-                <Th className="text-right">Invoice</Th>
+                <Th className="text-right">Actions</Th>
               </tr>
             </thead>
             <tbody>
@@ -157,19 +204,15 @@ export default async function DepositsPage() {
                     {formatDate(d.paid_at)}
                   </Td>
                   <Td>
-                    <div className="flex items-center justify-end gap-2">
-                      {d.invoice_url && (
-                        <a
-                          href={d.invoice_url}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="text-sm font-semibold text-clay hover:text-clay-dark"
-                        >
-                          View
-                        </a>
-                      )}
-                      <RefreshButton id={d.id} />
-                    </div>
+                    <DepositRowActions
+                      id={d.id}
+                      invoiceUrl={d.invoice_url}
+                      hasPhone={!!d.recipient_phone}
+                      archived={!!d.archived_at}
+                      cancelable={isCancelable(d.status)}
+                      emailReady={emailReady}
+                      smsReady={smsReady}
+                    />
                   </Td>
                 </tr>
               ))}

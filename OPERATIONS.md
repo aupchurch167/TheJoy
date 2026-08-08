@@ -579,13 +579,30 @@ warns you, the invoice is still created, and you can copy its payment link from
 The mode badge on the screen tells you at a glance whether you are in
 **Sandbox** (test) or **Live** (real payments).
 
+### Managing a request (the row menu)
+
+Each row in the list has a **⋮ menu** with:
+
+- **View invoice** — open the PayPal payment page (copy/share the link).
+- **Email reminder** — resend the payment link from `hello@joyseniorcare.com`.
+- **Text reminder** — text the link (needs a mobile number on the request, and
+  texting set up; see section 11). Add the number in the **Mobile phone** field
+  when you send the request.
+- **Refresh status** — re-check paid/unpaid with PayPal.
+- **Cancel request** — voids the invoice on PayPal so it can no longer be paid
+  (only for unpaid requests).
+- **Archive / Restore** — hides a row from the list (kept under the **Archived**
+  tab); does not touch PayPal.
+- **Delete** — removes the record from your history here (PayPal keeps its own
+  copy).
+
 ### Keeping status up to date
 
 - **Automatic (recommended for live):** in the PayPal app add a webhook to
   `https://www.joyseniorcare.com/api/webhooks/paypal` subscribed to the
   **Invoicing** events, then paste the generated **Webhook ID** into
   `PAYPAL_WEBHOOK_ID` in Railway. Status then updates itself when a family pays.
-- **Manual:** click **Refresh** on any row to re-check that invoice with PayPal.
+- **Manual:** use **Refresh status** in the row menu to re-check with PayPal.
 
 ### The default amount and note
 

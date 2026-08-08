@@ -244,6 +244,7 @@ CREATE TABLE IF NOT EXISTS deposit_requests (
   lead_id             UUID REFERENCES leads(id) ON DELETE SET NULL,
   recipient_name      TEXT NOT NULL,
   recipient_email     TEXT NOT NULL,
+  recipient_phone     TEXT,
   amount_cents        INTEGER NOT NULL,
   currency            TEXT NOT NULL DEFAULT 'USD',
   note                TEXT,
@@ -258,8 +259,14 @@ CREATE TABLE IF NOT EXISTS deposit_requests (
   created_by          TEXT,
   created_at          TIMESTAMPTZ NOT NULL DEFAULT now(),
   paid_at             TIMESTAMPTZ,
-  updated_at          TIMESTAMPTZ NOT NULL DEFAULT now()
+  updated_at          TIMESTAMPTZ NOT NULL DEFAULT now(),
+  -- Local-only: hides the row from the default list (PayPal has no "archive").
+  archived_at         TIMESTAMPTZ
 );
+
+-- For databases created before these columns existed.
+ALTER TABLE deposit_requests ADD COLUMN IF NOT EXISTS archived_at TIMESTAMPTZ;
+ALTER TABLE deposit_requests ADD COLUMN IF NOT EXISTS recipient_phone TEXT;
 
 CREATE INDEX IF NOT EXISTS deposit_requests_created_idx
   ON deposit_requests (created_at DESC);

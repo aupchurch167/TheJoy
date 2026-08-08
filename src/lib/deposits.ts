@@ -14,6 +14,7 @@ export type DepositRequest = {
   lead_id: string | null;
   recipient_name: string;
   recipient_email: string;
+  recipient_phone: string | null;
   amount_cents: number;
   currency: string;
   note: string | null;
@@ -26,12 +27,19 @@ export type DepositRequest = {
   created_at: string;
   paid_at: string | null;
   updated_at: string;
+  archived_at: string | null;
 };
+
+/** Statuses that are "open" on PayPal and can still be cancelled. */
+export function isCancelable(status: string): boolean {
+  return status === "sent" || status === "partially_paid";
+}
 
 export type NewDepositRequest = {
   leadId?: string | null;
   recipientName: string;
   recipientEmail: string;
+  recipientPhone?: string | null;
   amountCents: number;
   currency?: string;
   note?: string | null;
@@ -111,15 +119,16 @@ export async function insertDepositRequest(
   const status = input.status ?? "sent";
   const rows = await query<DepositRequest>(
     `INSERT INTO deposit_requests
-       (lead_id, recipient_name, recipient_email, amount_cents, currency, note,
-        provider, provider_invoice_id, invoice_number, invoice_url, status,
-        created_by, paid_at)
-     VALUES ($1, $2, $3, $4, $5, $6, 'paypal', $7, $8, $9, $10, $11, $12)
+       (lead_id, recipient_name, recipient_email, recipient_phone, amount_cents,
+        currency, note, provider, provider_invoice_id, invoice_number,
+        invoice_url, status, created_by, paid_at)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, 'paypal', $8, $9, $10, $11, $12, $13)
      RETURNING *`,
     [
       input.leadId ?? null,
       input.recipientName,
       input.recipientEmail.toLowerCase(),
+      input.recipientPhone ?? null,
       input.amountCents,
       input.currency ?? "USD",
       input.note ?? null,
@@ -135,12 +144,42 @@ export async function insertDepositRequest(
 }
 
 export async function listDepositRequests(
-  limit = 100
+  opts: { archived?: boolean; limit?: number } = {}
 ): Promise<DepositRequest[]> {
+  const { archived = false, limit = 200 } = opts;
   return query<DepositRequest>(
-    `SELECT * FROM deposit_requests ORDER BY created_at DESC LIMIT $1`,
+    `SELECT * FROM deposit_requests
+      WHERE archived_at IS ${archived ? "NOT NULL" : "NULL"}
+      ORDER BY created_at DESC
+      LIMIT $1`,
     [limit]
   );
+}
+
+/** How many deposits are archived (for the list's toggle label). */
+export async function countArchivedDeposits(): Promise<number> {
+  const rows = await query<{ n: string }>(
+    `SELECT COUNT(*)::int AS n FROM deposit_requests WHERE archived_at IS NOT NULL`
+  );
+  return Number(rows[0]?.n ?? 0);
+}
+
+/** Archive (hide from the default list) or restore a deposit row. */
+export async function setDepositArchived(
+  id: string,
+  archived: boolean
+): Promise<void> {
+  await query(
+    `UPDATE deposit_requests
+       SET archived_at = ${archived ? "now()" : "NULL"}, updated_at = now()
+     WHERE id = $1`,
+    [id]
+  );
+}
+
+/** Permanently remove the local record (PayPal keeps its own copy). */
+export async function deleteDepositRow(id: string): Promise<void> {
+  await query(`DELETE FROM deposit_requests WHERE id = $1`, [id]);
 }
 
 export async function getDepositById(

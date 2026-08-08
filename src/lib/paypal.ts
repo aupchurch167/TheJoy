@@ -257,6 +257,45 @@ export async function getInvoice(
   };
 }
 
+/**
+ * Cancel a sent, unpaid invoice on PayPal (voids the payment request). Works on
+ * open invoices (SENT / PAYMENT_PENDING / PARTIALLY_PAID); PayPal rejects a
+ * cancel on a paid or draft invoice. We suppress PayPal's own cancel email
+ * (send_to_recipient:false) to stay consistent with how we send.
+ */
+export async function cancelInvoice(
+  invoiceId: string,
+  opts?: { note?: string }
+): Promise<void> {
+  const token = await getAccessToken();
+  const res = await fetch(
+    `${apiBase()}/v2/invoicing/invoices/${invoiceId}/cancel`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        subject: "Your deposit request was cancelled",
+        note:
+          opts?.note ||
+          "This deposit request has been cancelled. Please disregard the invoice.",
+        send_to_invoicer: false,
+        send_to_recipient: false,
+      }),
+      cache: "no-store",
+    }
+  );
+  // Success is 204 No Content.
+  if (!res.ok) {
+    const text = await res.text().catch(() => "");
+    throw new Error(
+      `PayPal could not cancel the invoice (${res.status}). ${text.slice(0, 200)}`
+    );
+  }
+}
+
 /* ------------------------------------------------------------------ */
 /* Webhook signature verification                                      */
 /* ------------------------------------------------------------------ */

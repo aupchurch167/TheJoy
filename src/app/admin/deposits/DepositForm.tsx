@@ -24,6 +24,7 @@ export default function DepositForm({
   const { success, error: toastError } = useToast();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
   const [amount, setAmount] = useState(defaultAmount);
   const [note, setNote] = useState(defaultNote);
   const [pending, start] = useTransition();
@@ -35,7 +36,7 @@ export default function DepositForm({
     e.preventDefault();
     if (!canSend) return;
     start(async () => {
-      const res = await sendDepositRequest({ name, email, amount, note });
+      const res = await sendDepositRequest({ name, email, phone, amount, note });
       if (!res.ok) {
         toastError(res.error);
         return;
@@ -43,6 +44,7 @@ export default function DepositForm({
       success(res.message);
       setName("");
       setEmail("");
+      setPhone("");
       setAmount(defaultAmount);
       setNote(defaultNote);
       router.refresh();
@@ -70,6 +72,21 @@ export default function DepositForm({
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="family@example.com"
+            autoComplete="off"
+            disabled={!enabled}
+          />
+        </Field>
+        <Field
+          label="Mobile phone (optional)"
+          htmlFor="dep-phone"
+          hint="Only needed if you want to text a payment reminder later."
+        >
+          <Input
+            id="dep-phone"
+            type="tel"
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
+            placeholder="(470) 555-0134"
             autoComplete="off"
             disabled={!enabled}
           />
