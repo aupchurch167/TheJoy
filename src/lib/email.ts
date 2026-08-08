@@ -178,7 +178,11 @@ function renderBody(markdownBody: string): string {
  * flows into the letter area; greeting, headline, photo, quote, CTA button, and
  * sign-off all come from the message content (see lib/email-templates.ts).
  */
-function wrapEmail(innerHtml: string, unsubUrl?: string): string {
+function wrapEmail(
+  innerHtml: string,
+  unsubUrl?: string,
+  showBadges = true
+): string {
   const badges = BADGES.filter(
     (b) => !b.requiresMemoryCare || MEMORY_CARE.enabled
   )
@@ -189,6 +193,18 @@ function wrapEmail(innerHtml: string, unsubUrl?: string): string {
         )}" style="border:0;outline:none;width:66px;height:auto;vertical-align:middle;${i > 0 ? "padding-left:14px;" : ""}">`
     )
     .join("");
+
+  // The award-badge strip is optional. Transactional emails (e.g. a deposit
+  // request) hide it; when hidden, the footer takes the divider so there is
+  // still a clean line above the address block.
+  const badgesRow = showBadges
+    ? `  <tr><td class="pad" style="padding:34px 48px 0 48px;">
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="border-top:1px solid #ddd8cc;"><tr><td align="left" style="padding-top:22px;">
+      ${badges}
+    </td></tr></table>
+  </td></tr>`
+    : "";
+  const footerBorder = showBadges ? "" : "border-top:1px solid #ddd8cc;";
 
   return `<!DOCTYPE html><html lang="en"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
@@ -221,13 +237,9 @@ function wrapEmail(innerHtml: string, unsubUrl?: string): string {
     ${innerHtml}
   </td></tr>
 
-  <tr><td class="pad" style="padding:34px 48px 0 48px;">
-    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="border-top:1px solid #ddd8cc;"><tr><td align="left" style="padding-top:22px;">
-      ${badges}
-    </td></tr></table>
-  </td></tr>
+${badgesRow}
 
-  <tr><td class="pad" style="padding:28px 48px 40px 48px;">
+  <tr><td class="pad" style="padding:28px 48px 40px 48px;${footerBorder}">
     <p style="margin:0 0 6px 0;font-family:Georgia,'Times New Roman',serif;font-size:13px;line-height:22px;mso-line-height-rule:exactly;color:#6f6d62;">
       ${escapeText(BUSINESS.name)} &middot; <a href="https://maps.google.com/?q=${encodeURIComponent(
         `${BUSINESS.name} ${BUSINESS_ADDRESS_ONE_LINE}`
@@ -355,7 +367,8 @@ export async function sendDepositEmail(input: {
     to: input.to,
     replyTo: BUSINESS.email,
     subject: `Your deposit request from ${BUSINESS.name}`,
-    html: wrapEmail(renderBody(bodyMd)),
+    // Transactional: no marketing unsubscribe footer, no award badges.
+    html: wrapEmail(renderBody(bodyMd), undefined, false),
   });
   return true;
 }
