@@ -2,6 +2,8 @@ import { requireAdmin } from "@/lib/require-admin";
 import { hasDatabase } from "@/lib/db";
 import { getSettings } from "@/lib/settings";
 import { paypalEnabled, paypalMode } from "@/lib/paypal";
+import { emailEnabled } from "@/lib/email";
+import { BUSINESS } from "@/lib/site";
 import { listDepositRequests, formatMoney } from "@/lib/deposits";
 import {
   PageHeader,
@@ -63,7 +65,7 @@ export default async function DepositsPage() {
     <div className="max-w-4xl">
       <PageHeader
         title="Deposits"
-        description="Send a move-in deposit request. PayPal emails the family a secure invoice, hosts the payment page, and tracks whether it is paid. Payments go straight to your PayPal account."
+        description={`Send a move-in deposit request. We email the family a secure payment link from ${BUSINESS.email}; PayPal hosts the payment page and tracks whether it is paid. Payments go straight to your PayPal account.`}
       />
 
       {!enabled && (
@@ -76,6 +78,20 @@ export default async function DepositsPage() {
             in Railway (Variables), then redeploy. Leave <code>PAYPAL_ENV</code>{" "}
             unset to test in sandbox first, or set it to <code>live</code> to take
             real payments. See OPERATIONS.md for the step-by-step.
+          </p>
+        </Card>
+      )}
+
+      {enabled && !emailEnabled() && (
+        <Card className="mb-6 border-gold/40 bg-gold/5">
+          <p className="text-sm font-semibold text-ink">
+            Email sending is off, so the family will not be emailed.
+          </p>
+          <p className="mt-1 text-sm leading-relaxed text-ink-soft">
+            The invoice is still created and you can copy its payment link from{" "}
+            <strong>View</strong> on each row. To have the request emailed from{" "}
+            <code>{BUSINESS.email}</code> automatically, set{" "}
+            <code>RESEND_API_KEY</code> in Railway (see OPERATIONS.md).
           </p>
         </Card>
       )}

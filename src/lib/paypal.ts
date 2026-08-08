@@ -186,6 +186,10 @@ export async function createAndSendDepositInvoice(input: {
   const invoiceId = created.id || parseIdFromHref(created.href);
   if (!invoiceId) throw new Error("PayPal did not return an invoice id.");
 
+  // Send with send_to_recipient:false — this transitions the invoice to SENT
+  // (so it is payable and a recipient_view_url is generated) but PayPal does
+  // NOT email the recipient. We email the payment link ourselves from
+  // hello@joyseniorcare.com via Resend, for a branded, reliable delivery.
   const sendRes = await fetch(
     `${base}/v2/invoicing/invoices/${invoiceId}/send`,
     {
@@ -194,14 +198,14 @@ export async function createAndSendDepositInvoice(input: {
         Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ send_to_recipient: true }),
+      body: JSON.stringify({ send_to_recipient: false }),
       cache: "no-store",
     }
   );
   if (!sendRes.ok) {
     const text = await sendRes.text().catch(() => "");
     throw new Error(
-      `The invoice was created but PayPal could not send it (${sendRes.status}). ${text.slice(0, 300)}`
+      `The invoice was created but PayPal could not finalize it (${sendRes.status}). ${text.slice(0, 300)}`
     );
   }
 

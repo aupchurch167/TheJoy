@@ -105,8 +105,8 @@ export default function DepositForm({
         </Field>
         <div className="sm:col-span-2 flex items-center justify-between gap-3">
           <p className="text-xs text-ink-faint">
-            PayPal emails a secure invoice and tracks payment. Nothing is charged
-            here.
+            We email a secure payment link from hello@joyseniorcare.com; PayPal
+            tracks payment. Nothing is charged here.
           </p>
           <Button type="submit" disabled={!canSend || pending}>
             {pending ? "Sending…" : "Send deposit request"}

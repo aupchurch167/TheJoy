@@ -118,37 +118,58 @@ function styleEmailBody(html: string): string {
     .replace(/<ul>/g, `<ul style="${ST.ul}">`)
     .replace(/<ol>/g, `<ol style="${ST.ul}">`)
     .replace(/<li>/g, `<li style="${ST.li}">`);
-  // Shortcodes. Each also strips the <p> marked wrapped a lone shortcode in.
-  // [[button:Label|https://…]] -> filled CTA button
-  out = out.replace(
-    /<p[^>]*>\s*\[\[button:([^|\]]+)\|([^\]]+)\]\]\s*<\/p>/g,
-    (_m, label, url) => buttonHtml(String(label).trim(), String(url).trim())
-  );
-  out = out.replace(
-    /\[\[button:([^|\]]+)\|([^\]]+)\]\]/g,
-    (_m, label, url) => buttonHtml(String(label).trim(), String(url).trim())
-  );
-  // [[banner:Text]] -> centered accent band
-  out = out.replace(
-    /<p[^>]*>\s*\[\[banner:([^\]]+)\]\]\s*<\/p>/g,
-    (_m, text) => bannerHtml(String(text).trim())
-  );
-  out = out.replace(/\[\[banner:([^\]]+)\]\]/g, (_m, text) =>
-    bannerHtml(String(text).trim())
-  );
-  // [[divider]] -> ornamental divider
-  out = out.replace(/<p[^>]*>\s*\[\[divider\]\]\s*<\/p>/g, () => dividerHtml());
-  out = out.replace(/\[\[divider\]\]/g, () => dividerHtml());
   return out;
+}
+
+const SHORTCODE_TOKEN = "JOYSCTOKEN";
+
+/**
+ * Expand [[button:Label|url]], [[banner:Text]], and [[divider]] shortcodes to
+ * placeholder tokens on the RAW markdown, returning the rewritten markdown plus
+ * the HTML each token maps to. This runs BEFORE marked so a bare URL inside a
+ * shortcode is never GFM-autolinked (which would break the shortcode and even
+ * swallow the closing `]]`). The tokens are plain text marked leaves untouched.
+ */
+function extractShortcodes(md: string): { md: string; parts: string[] } {
+  const parts: string[] = [];
+  const token = () => `${SHORTCODE_TOKEN}${parts.length - 1}X`;
+  const out = (md || "")
+    .replace(/\[\[button:([^|\]]+)\|([^\]]+)\]\]/g, (_m, label, url) => {
+      parts.push(buttonHtml(String(label).trim(), String(url).trim()));
+      return token();
+    })
+    .replace(/\[\[banner:([^\]]+)\]\]/g, (_m, text) => {
+      parts.push(bannerHtml(String(text).trim()));
+      return token();
+    })
+    .replace(/\[\[divider\]\]/g, () => {
+      parts.push(dividerHtml());
+      return token();
+    });
+  return { md: out, parts };
 }
 
 /** Render Markdown to the styled inner HTML used inside the branded shell. */
 function renderBody(markdownBody: string): string {
+  // Pull shortcodes out first (so their URLs survive marked's autolinker).
+  const { md, parts } = extractShortcodes(markdownBody || "");
   // breaks:true so a single newline is a line break (email authors expect the
   // signature and address blocks they type on separate lines to stay stacked).
-  return styleEmailBody(
-    marked.parse(markdownBody || "", { async: false, breaks: true }) as string
+  let html = styleEmailBody(
+    marked.parse(md, { async: false, breaks: true }) as string
   );
+  // Swap the block-level shortcode HTML back in, stripping the <p> marked wraps
+  // a lone token in, then any inline occurrences.
+  html = html
+    .replace(
+      new RegExp(`<p[^>]*>\\s*${SHORTCODE_TOKEN}(\\d+)X\\s*</p>`, "g"),
+      (_m, i) => parts[Number(i)] ?? ""
+    )
+    .replace(
+      new RegExp(`${SHORTCODE_TOKEN}(\\d+)X`, "g"),
+      (_m, i) => parts[Number(i)] ?? ""
+    );
+  return html;
 }
 
 /**
@@ -157,7 +178,7 @@ function renderBody(markdownBody: string): string {
  * flows into the letter area; greeting, headline, photo, quote, CTA button, and
  * sign-off all come from the message content (see lib/email-templates.ts).
  */
-function wrapEmail(innerHtml: string, unsubUrl: string): string {
+function wrapEmail(innerHtml: string, unsubUrl?: string): string {
   const badges = BADGES.filter(
     (b) => !b.requiresMemoryCare || MEMORY_CARE.enabled
   )
@@ -214,7 +235,11 @@ function wrapEmail(innerHtml: string, unsubUrl: string): string {
       <a href="${BUSINESS.phoneHref}" style="color:#5a6b45;text-decoration:underline;">${escapeText(BUSINESS.phone)}</a> &middot; <a href="${BUSINESS.emailHref}" style="color:#5a6b45;text-decoration:underline;">${escapeText(BUSINESS.email)}</a>
     </p>
     <p style="margin:0;font-family:Georgia,'Times New Roman',serif;font-size:11px;line-height:19px;mso-line-height-rule:exactly;color:#9a988c;">
-      Licensed as a personal care home in the State of Georgia. You are receiving this because you contacted us about Joy. <a href="${unsubUrl}" style="color:#9a988c;text-decoration:underline;">Unsubscribe</a>.
+      ${
+        unsubUrl
+          ? `Licensed as a personal care home in the State of Georgia. You are receiving this because you contacted us about Joy. <a href="${unsubUrl}" style="color:#9a988c;text-decoration:underline;">Unsubscribe</a>.`
+          : `Licensed as a personal care home in the State of Georgia. Questions about this message? Just reply to this email or call ${escapeText(BUSINESS.phone)}.`
+      }
     </p>
   </td></tr>
 
@@ -280,6 +305,57 @@ export async function sendTestEmail(
     subject: `[TEST] ${subj}`,
     html: wrapEmail(inner, unsubUrl),
     headers: { "List-Unsubscribe": `<${unsubUrl}>` },
+  });
+  return true;
+}
+
+/**
+ * Send a deposit request from hello@joyseniorcare.com (via Resend), carrying
+ * the PayPal-hosted payment link. This is transactional (a specific family, a
+ * specific amount), so the letter shell renders WITHOUT the marketing
+ * unsubscribe footer, and replies go to the business inbox. No-ops (returns
+ * false) when email is not configured.
+ */
+export async function sendDepositEmail(input: {
+  to: string;
+  name: string;
+  amountFormatted: string; // e.g. "$500.00"
+  payUrl: string;
+  note?: string | null;
+}): Promise<boolean> {
+  if (!resend) {
+    console.info("[email] RESEND_API_KEY not set; deposit email skipped.");
+    return false;
+  }
+  const first = (input.name || "").trim().split(/\s+/)[0] || "there";
+  const note = (input.note || "").trim();
+
+  // Joy voice (§2): short sentences, no em-dashes (parentheses for asides), no
+  // banned words, Mellissa named where care/help is offered.
+  const bodyMd = [
+    `Hi ${first},`,
+    ``,
+    `Thank you for choosing Joy. To reserve the room, we are requesting a move-in deposit of ${input.amountFormatted}.`,
+    ...(note ? [``, note] : []),
+    ``,
+    `You can pay securely below (it goes through PayPal, and any card works, no PayPal account needed).`,
+    ``,
+    `[[button:Pay the deposit|${input.payUrl}]]`,
+    ``,
+    `If the button does not open, here is the link: ${input.payUrl}`,
+    ``,
+    `Any questions, just reply to this email or call us at ${BUSINESS.phone}. Mellissa and the team are glad to help.`,
+    ``,
+    `Warmly,`,
+    `The Joy Senior Living team`,
+  ].join("\n");
+
+  await resend.emails.send({
+    from: FROM,
+    to: input.to,
+    replyTo: BUSINESS.email,
+    subject: `Your deposit request from ${BUSINESS.name}`,
+    html: wrapEmail(renderBody(bodyMd)),
   });
   return true;
 }

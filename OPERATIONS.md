@@ -556,14 +556,25 @@ card numbers.
 3. Redeploy. The **Deposits** screen in the admin turns on. Until the keys are
    set it shows a "PayPal is not connected yet" notice and nothing else breaks.
 
+### How the email is sent
+
+The family is emailed the payment link **from `hello@joyseniorcare.com`**
+(through Resend, the same sender as your other emails), not from PayPal.
+PayPal's own invoice email is turned off on purpose, so the message is branded
+and lands reliably. This means **email must be configured** (`RESEND_API_KEY`,
+see section 10) for the family to be emailed. If it is not, the Deposits screen
+warns you, the invoice is still created, and you can copy its payment link from
+**View** on the row and send it yourself.
+
 ### Sending a deposit request
 
 1. Admin → **Deposits**.
 2. Enter the family member's name and email. The amount pre-fills from your
    default (Site Settings → Deposits); change it for this family if needed. Add
-   an optional note that shows on the invoice.
-3. **Send deposit request.** PayPal emails the invoice. The request appears in
-   **History** with its status (Sent → Paid).
+   an optional note that shows in the email and on the invoice.
+3. **Send deposit request.** We email them a "Pay the deposit" button from
+   `hello@joyseniorcare.com`. The request appears in **History** with its
+   status (Sent → Paid).
 
 The mode badge on the screen tells you at a glance whether you are in
 **Sandbox** (test) or **Live** (real payments).

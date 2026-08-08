@@ -14,9 +14,12 @@ import {
   updateDepositStatus,
   dollarsToCents,
   centsToValue,
+  formatMoney,
   mapPaypalStatus,
 } from "@/lib/deposits";
 import { getSettings } from "@/lib/settings";
+import { emailEnabled, sendDepositEmail } from "@/lib/email";
+import { BUSINESS } from "@/lib/site";
 
 export type DepositResult =
   | { ok: true; message: string }
@@ -71,6 +74,28 @@ export async function sendDepositRequest(input: {
       amountValue: centsToValue(cents),
       note,
     });
+    const payUrl = invoice.recipientViewUrl;
+
+    // Email the payment link ourselves from hello@joyseniorcare.com (PayPal's
+    // own email is suppressed). Non-fatal: if it fails, the invoice still
+    // exists and the office can copy the link from the row's "View".
+    let emailed = false;
+    let emailError: string | null = null;
+    if (payUrl && emailEnabled()) {
+      try {
+        emailed = await sendDepositEmail({
+          to: email,
+          name,
+          amountFormatted: formatMoney(cents, "USD"),
+          payUrl,
+          note: note ?? null,
+        });
+      } catch (e) {
+        console.error("[sendDepositRequest] email send failed", e);
+        emailError = e instanceof Error ? e.message : "email failed";
+      }
+    }
+
     await insertDepositRequest({
       leadId: input.leadId || null,
       recipientName: name,
@@ -80,14 +105,35 @@ export async function sendDepositRequest(input: {
       note: note ?? null,
       providerInvoiceId: invoice.id,
       invoiceNumber: invoice.invoiceNumber ?? null,
-      invoiceUrl: invoice.recipientViewUrl ?? null,
+      invoiceUrl: payUrl ?? null,
       status: mapPaypalStatus(invoice.status),
       createdBy: adminEmail,
     });
     revalidatePath("/admin/deposits");
+
+    if (emailed) {
+      return {
+        ok: true,
+        message: `Deposit request emailed to ${email} from ${BUSINESS.email}. It will show as paid here once they pay.`,
+      };
+    }
+    if (!emailEnabled()) {
+      return {
+        ok: true,
+        message: `Invoice created, but email is not turned on (set RESEND_API_KEY). Use "View" on the row to copy the payment link and send it yourself.`,
+      };
+    }
+    if (!payUrl) {
+      return {
+        ok: true,
+        message: `Invoice created, but PayPal has not returned a payment link yet. Click "Refresh" on the row, then use "View" to copy it.`,
+      };
+    }
     return {
       ok: true,
-      message: `Deposit request sent to ${email}. PayPal will email the invoice and track payment.`,
+      message: `Invoice created, but the email could not be sent${
+        emailError ? ` (${emailError})` : ""
+      }. Use "View" on the row to copy the payment link and send it yourself.`,
     };
   } catch (err) {
     console.error("[sendDepositRequest]", err);
