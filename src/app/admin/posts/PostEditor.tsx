@@ -7,6 +7,7 @@ import { savePost, removePost } from "./actions";
 import type { Post } from "@/lib/posts";
 import { suggestHeroPrompt, defaultHeroAlt } from "@/lib/hero-prompt";
 import { btn, BackLink, Badge } from "@/components/admin/ui";
+import { SITE_URL } from "@/lib/site";
 import ConfirmButton from "@/components/admin/ConfirmButton";
 import { useToast } from "@/components/admin/Toast";
 import { formatDateTime } from "@/lib/format";
@@ -440,6 +441,21 @@ export default function PostEditor({
             </Field>
           </div>
         </details>
+
+        {/* Google Business Profile post */}
+        <GooglePostPanel
+          fields={{
+            title: f.title,
+            excerpt: f.excerpt,
+            body: f.body,
+            slug: f.slug,
+            hero_image: f.hero_image,
+          }}
+          onError={(msg) => {
+            setError(msg);
+            toastError(msg);
+          }}
+        />
       </div>
     </div>
   );
@@ -713,6 +729,166 @@ function AiDraftPanel({
               {busy ? "Writing…" : "Write a draft"}
             </button>
           </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ---------- Google Business Profile post ---------- */
+
+// Cheap slugify (mirrors lib/posts slugify) so we can show the post URL before
+// the post is saved, without importing server-only code into this client file.
+function slugify(input: string): string {
+  return input
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)+/g, "");
+}
+
+function GooglePostPanel({
+  fields,
+  onError,
+}: {
+  fields: {
+    title: string;
+    excerpt: string;
+    body: string;
+    slug: string;
+    hero_image: string;
+  };
+  onError: (msg: string) => void;
+}) {
+  const { success } = useToast();
+  const [open, setOpen] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [summary, setSummary] = useState("");
+
+  const slug = fields.slug || slugify(fields.title);
+  const url = `${SITE_URL}/blog/${slug}`;
+
+  async function generate() {
+    if (!fields.title.trim()) {
+      onError("Add a title first, then write the Google post.");
+      return;
+    }
+    setBusy(true);
+    try {
+      const res = await fetch("/api/admin/google-post", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: fields.title,
+          excerpt: fields.excerpt,
+          body: fields.body,
+        }),
+      });
+      const json = await res.json();
+      if (!res.ok || !json.ok) {
+        onError(json.error || "Could not write the Google post.");
+        return;
+      }
+      setSummary(json.summary as string);
+    } catch {
+      onError("Could not write the Google post.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function copy(text: string, what: string) {
+    try {
+      await navigator.clipboard.writeText(text);
+      success(`${what} copied.`);
+    } catch {
+      onError("Could not copy. Select the text and copy manually.");
+    }
+  }
+
+  return (
+    <div className="rounded-xl border border-line bg-white px-4 py-3 shadow-sm">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className="text-sm font-medium text-ink"
+      >
+        {open ? "Post to Google Business Profile (hide)" : "Post to Google Business Profile"}
+      </button>
+
+      {open && (
+        <div className="mt-4 space-y-3">
+          <p className="text-xs leading-relaxed text-ink-faint">
+            Google no longer lets sites post automatically, so this writes a
+            ready-to-paste update. Generate it, tweak if you like, then in the
+            Google Business Profile app tap <strong>Add update</strong>, paste
+            the text, add the <strong>Learn more</strong> button with the link
+            below, drop in your hero image, and post.
+          </p>
+
+          <button
+            type="button"
+            onClick={generate}
+            disabled={busy}
+            className={btn("primary", "sm", "bg-sage hover:bg-sage/90")}
+          >
+            {busy ? "Writing…" : summary ? "Rewrite the Google post" : "✨ Write a Google post"}
+          </button>
+
+          {summary && (
+            <div className="space-y-2">
+              <div>
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-medium text-ink">Post text</span>
+                  <span className="text-xs text-ink-faint">
+                    {summary.length}/1500
+                  </span>
+                </div>
+                <textarea
+                  value={summary}
+                  onChange={(e) => setSummary(e.target.value.slice(0, 1500))}
+                  rows={6}
+                  className={INPUT}
+                />
+                <button
+                  type="button"
+                  onClick={() => copy(summary, "Post text")}
+                  className={btn("secondary", "sm", "mt-2")}
+                >
+                  Copy post text
+                </button>
+              </div>
+
+              <div>
+                <span className="text-xs font-medium text-ink">
+                  Button link (paste into the &ldquo;Learn more&rdquo; button)
+                </span>
+                <div className="mt-1 flex flex-wrap items-center gap-2">
+                  <code className="min-w-0 flex-1 truncate rounded-lg border border-line bg-paper px-3 py-2 text-xs text-ink-soft">
+                    {url}
+                  </code>
+                  <button
+                    type="button"
+                    onClick={() => copy(url, "Link")}
+                    className={btn("secondary", "sm")}
+                  >
+                    Copy link
+                  </button>
+                </div>
+                {!fields.slug && (
+                  <p className="mt-1 text-xs text-ink-faint">
+                    Save the post first to lock in this link.
+                  </p>
+                )}
+              </div>
+
+              {fields.hero_image && (
+                <p className="text-xs text-ink-faint">
+                  Tip: use this post&rsquo;s hero image on the Google update too.
+                </p>
+              )}
+            </div>
+          )}
         </div>
       )}
     </div>

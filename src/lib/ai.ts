@@ -192,6 +192,64 @@ export async function describePhoto(imageUrl: string): Promise<PhotoMeta> {
 }
 
 /* ------------------------------------------------------------------ */
+/* GOOGLE BUSINESS PROFILE POST                                         */
+/* ------------------------------------------------------------------ */
+
+const GOOGLE_POST_SYSTEM_PROMPT = `You turn a Joy blog post into a short GOOGLE BUSINESS PROFILE update (the "posts" that show on Google Maps and Search for a local business), for ${BUSINESS.name}, a 24-bed personal care home in Loganville, Georgia, led by ${BUSINESS.director.name}.
+
+FORMAT:
+- One or two short paragraphs, roughly 600 to 1200 characters (HARD CAP 1400). No markdown, no headings, no hashtags, no emoji spam (at most one tasteful emoji, usually none).
+- Open with a concrete hook drawn from the post (not a definition). Make a local reader want to click.
+- Mention Loganville, Georgia naturally once (it helps local search), only where it fits.
+- End with a gentle nudge to read more or reach out (e.g. "Read the full post" or "Call us at ${BUSINESS.phone} to come see it."). Do NOT paste a URL in the text; the link is attached as a separate button.
+
+TWO RULES GOVERN EVERY WORD.
+VOICE (§2): No em-dashes (use parentheses). BANNED words: "loved ones", "vibrant", "journey", "personalized care plans", "boutique", "intimate" (say "small"), "top-tier", "deserve more". Short, plain, warm, honest, never sales-y.
+COMPLIANCE (§4): Joy is a PERSONAL CARE HOME, never "assisted living". You may reference "assisted living" ONLY as the category families search for, immediately followed by what Joy actually is. Allowed self-descriptions: "senior living", "personal care home", "memory care". Invent no facts, prices, or quotes.
+
+Return ONLY the post text, nothing else (no preamble, no quotes around it).`;
+
+/**
+ * Turn a published blog post into a ready-to-paste Google Business Profile
+ * update. Returns just the summary text (the operator pastes it into the Google
+ * app and attaches the post link as the button). Capped defensively at 1450
+ * characters (Google's limit is ~1500).
+ */
+export async function draftGooglePost(input: {
+  title: string;
+  excerpt?: string | null;
+  body?: string | null;
+}): Promise<string> {
+  if (!aiEnabled()) {
+    throw new Error("AI is not configured (set ANTHROPIC_API_KEY).");
+  }
+
+  const client = new Anthropic();
+
+  const userPrompt = [
+    `Turn this blog post into a Google Business Profile update, following the rules.`,
+    `Title: ${input.title}`,
+    input.excerpt ? `Excerpt: ${input.excerpt}` : "",
+    input.body ? `Full post (for context):\n${input.body.slice(0, 2500)}` : "",
+  ]
+    .filter(Boolean)
+    .join("\n\n");
+
+  const response = await client.messages.create({
+    model: MODEL,
+    max_tokens: 1024,
+    system: GOOGLE_POST_SYSTEM_PROMPT,
+    messages: [{ role: "user", content: userPrompt }],
+  });
+
+  const textBlock = response.content.find((b) => b.type === "text");
+  if (!textBlock || textBlock.type !== "text") {
+    throw new Error("The AI did not return a Google post.");
+  }
+  return textBlock.text.trim().slice(0, 1450);
+}
+
+/* ------------------------------------------------------------------ */
 /* EMAIL DRAFTING                                                       */
 /* ------------------------------------------------------------------ */
 

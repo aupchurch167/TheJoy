@@ -217,6 +217,24 @@ the editor. **It never publishes on its own.** Always read and edit before
 publishing. This needs `ANTHROPIC_API_KEY` set (see `.env.example`); without
 it, you just write posts by hand.
 
+### Post to Google Business Profile
+
+Google stopped letting websites post to Business Profiles automatically, so the
+editor gives you the next best thing. In any post, open **"Post to Google
+Business Profile"** and click **✨ Write a Google post**. It writes a short,
+in-voice update (under Google's 1,500-character limit), which you can edit.
+Then:
+
+1. **Copy post text**.
+2. In the Google Business Profile app (or business.google.com), tap **Add
+   update** and paste the text.
+3. Add a **Learn more** button and paste the **link** shown in the panel
+   (**Copy link**), so it points back to the full post.
+4. Add the post's hero image, and publish.
+
+Posting fresh updates like this regularly is good for local SEO. Needs
+`ANTHROPIC_API_KEY` (same key as AI drafting).
+
 ### Images
 
 To upload images (hero or inside a post), set up an S3-compatible bucket
