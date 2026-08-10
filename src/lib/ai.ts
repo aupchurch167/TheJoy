@@ -201,7 +201,8 @@ FORMAT:
 - One or two short paragraphs, roughly 600 to 1200 characters (HARD CAP 1400). No markdown, no headings, no hashtags, no emoji spam (at most one tasteful emoji, usually none).
 - Open with a concrete hook drawn from the post (not a definition). Make a local reader want to click.
 - Mention Loganville, Georgia naturally once (it helps local search), only where it fits.
-- End with a gentle nudge to read more or reach out (e.g. "Read the full post" or "Call us at ${BUSINESS.phone} to come see it."). Do NOT paste a URL in the text; the link is attached as a separate button.
+- End with a gentle, low-key nudge to read more or visit (e.g. "Read the full post." or "We would be glad to show you the house."). Keep it soft, not a sales pitch.
+- CRITICAL: do NOT put any phone number, URL, email address, or price anywhere in the text. Google Business Profile REJECTS posts that contain contact details in the body. The phone and the link belong on the button, never in the words.
 
 TWO RULES GOVERN EVERY WORD.
 VOICE (§2): No em-dashes (use parentheses). BANNED words: "loved ones", "vibrant", "journey", "personalized care plans", "boutique", "intimate" (say "small"), "top-tier", "deserve more". Short, plain, warm, honest, never sales-y.
@@ -246,7 +247,22 @@ export async function draftGooglePost(input: {
   if (!textBlock || textBlock.type !== "text") {
     throw new Error("The AI did not return a Google post.");
   }
-  return textBlock.text.trim().slice(0, 1450);
+  return stripContactDetails(textBlock.text.trim()).slice(0, 1450);
+}
+
+/**
+ * Belt-and-suspenders: Google Business Profile rejects posts that contain a
+ * phone number, URL, or email in the body. Drop any whole sentence carrying one
+ * (removing the sentence, not just the token, avoids leaving a broken fragment
+ * like "call us at ."). Falls back to the original text if that would empty it.
+ */
+function stripContactDetails(text: string): string {
+  const contact =
+    /(\+?1[\s.\-]?)?\(?\d{3}\)?[\s.\-]?\d{3}[\s.\-]?\d{4}|https?:\/\/\S+|\bwww\.\S+|[\w.+-]+@[\w-]+\.\w+/i;
+  const sentences = text.split(/(?<=[.!?])\s+/);
+  const kept = sentences.filter((s) => !contact.test(s));
+  const out = kept.join(" ").replace(/\s{2,}/g, " ").trim();
+  return out || text;
 }
 
 /* ------------------------------------------------------------------ */
