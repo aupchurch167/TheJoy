@@ -2,6 +2,7 @@ import { requireAdmin } from "@/lib/require-admin";
 import { hasDatabase } from "@/lib/db";
 import { getPhotos } from "@/lib/photos";
 import { storageEnabled } from "@/lib/storage";
+import { aiEnabled } from "@/lib/ai";
 import GalleryManager from "./GalleryManager";
 import { PageHeader, ButtonLink, NotConnected } from "@/components/admin/ui";
 
@@ -43,7 +44,7 @@ export default async function AdminGalleryPage() {
         </div>
       )}
 
-      <GalleryManager photos={photos} />
+      <GalleryManager photos={photos} aiReady={aiEnabled()} />
     </>
   );
 }

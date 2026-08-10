@@ -6,6 +6,8 @@ import {
   addPhotoAction,
   removePhotoAction,
   updatePhotoImageAction,
+  suggestPhotoMetaAction,
+  generatePhotoMetaAction,
 } from "./actions";
 import type { Photo } from "@/lib/photos";
 import { Card, Input, Button, EmptyState, SectionLabel } from "@/components/admin/ui";
@@ -16,7 +18,13 @@ import { useToast } from "@/components/admin/Toast";
 // The public gallery renders square tiles, so crops are 1:1.
 const GALLERY_ASPECT = 1;
 
-export default function GalleryManager({ photos }: { photos: Photo[] }) {
+export default function GalleryManager({
+  photos,
+  aiReady,
+}: {
+  photos: Photo[];
+  aiReady: boolean;
+}) {
   const router = useRouter();
   const { success, error: toastError } = useToast();
   const fileRef = useRef<HTMLInputElement>(null);
@@ -26,6 +34,35 @@ export default function GalleryManager({ photos }: { photos: Photo[] }) {
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState("");
   const [pending, start] = useTransition();
+  // AI suggest (add form) + per-photo generate spinners.
+  const [suggesting, setSuggesting] = useState(false);
+  const [aiBusyId, setAiBusyId] = useState<string | null>(null);
+
+  async function onSuggest() {
+    if (!imageUrl) return;
+    setSuggesting(true);
+    const res = await suggestPhotoMetaAction({ imageUrl });
+    setSuggesting(false);
+    if (!res.ok) {
+      toastError(res.error);
+      return;
+    }
+    setCaption(res.meta.caption);
+    setAlt(res.meta.alt);
+    success("AI suggested a caption and alt text. Review, then add.");
+  }
+
+  async function onGenerateForPhoto(id: string) {
+    setAiBusyId(id);
+    const res = await generatePhotoMetaAction(id);
+    setAiBusyId(null);
+    if (!res.ok) {
+      toastError(res.error);
+      return;
+    }
+    success(`AI caption saved: “${res.meta.caption}”`);
+    router.refresh();
+  }
 
   // Crop state for the add form (blob src) and for editing an existing photo.
   const [addCropSrc, setAddCropSrc] = useState<string | null>(null);
@@ -158,6 +195,17 @@ export default function GalleryManager({ photos }: { photos: Photo[] }) {
                 className="h-24 w-24 rounded-lg object-cover ring-1 ring-line"
               />
               <div className="flex-1 space-y-2">
+                {aiReady && (
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    size="sm"
+                    onClick={onSuggest}
+                    disabled={suggesting}
+                  >
+                    {suggesting ? "Looking at the photo…" : "✨ Suggest caption & alt (AI)"}
+                  </Button>
+                )}
                 <Input
                   value={caption}
                   onChange={(e) => setCaption(e.target.value)}
@@ -168,6 +216,11 @@ export default function GalleryManager({ photos }: { photos: Photo[] }) {
                   onChange={(e) => setAlt(e.target.value)}
                   placeholder="Describe the photo (alt text, for accessibility)"
                 />
+                {aiReady && (
+                  <p className="text-xs text-ink-faint">
+                    AI describes only what is in the photo. Review before adding.
+                  </p>
+                )}
               </div>
             </div>
           )}
@@ -213,6 +266,17 @@ export default function GalleryManager({ photos }: { photos: Photo[] }) {
                     />
                     {/* Hover actions */}
                     <div className="absolute inset-x-0 bottom-0 flex justify-end gap-1.5 bg-gradient-to-t from-ink/70 to-transparent p-2 opacity-0 transition-opacity group-hover:opacity-100">
+                      {aiReady && (
+                        <button
+                          type="button"
+                          onClick={() => onGenerateForPhoto(p.id)}
+                          disabled={aiBusyId === p.id}
+                          title="Write caption & alt text with AI"
+                          className="rounded-md bg-white/90 px-2.5 py-1 text-xs font-semibold text-ink shadow-sm hover:bg-white disabled:opacity-60"
+                        >
+                          {aiBusyId === p.id ? "…" : "✨ AI"}
+                        </button>
+                      )}
                       <button
                         type="button"
                         onClick={() => setEditing(p)}

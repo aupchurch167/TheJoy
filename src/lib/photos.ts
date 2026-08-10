@@ -33,6 +33,19 @@ export async function updatePhotoImage(
   await query(`UPDATE photos SET image_url = $1 WHERE id = $2`, [imageUrl, id]);
 }
 
+/** Update a photo's caption + alt text (e.g. from the AI describe action). */
+export async function updatePhotoMeta(
+  id: string,
+  caption: string | null,
+  alt: string | null
+): Promise<void> {
+  await query(`UPDATE photos SET caption = $1, image_alt = $2 WHERE id = $3`, [
+    caption,
+    alt,
+    id,
+  ]);
+}
+
 export async function deletePhoto(id: string): Promise<void> {
   await query(`DELETE FROM photos WHERE id = $1`, [id]);
 }

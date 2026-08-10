@@ -451,6 +451,19 @@ otherwise paste an image URL), add a caption and a short description, and click
 **Add to gallery**. Remove a photo anytime. Real photos of Joy only, no stock.
 The public gallery is linked in the site footer.
 
+**AI caption & alt text (for SEO + accessibility).** With AI set up
+(`ANTHROPIC_API_KEY`, see §9), you can let it write these for you:
+
+- On the **add** form, after you pick a photo, click **✨ Suggest caption & alt
+  (AI)**. It looks at the photo and fills both fields; review and edit before
+  you click Add.
+- For a photo already in the gallery, hover it and click **✨ AI** to write and
+  save a caption + alt text right away.
+
+The AI describes only what is actually in the picture (it never invents names,
+events, or places) and follows Joy's voice and the personal-care-home rules.
+Good alt text helps search engines and screen readers understand each photo.
+
 ---
 
 ## 12. Automation and polish (Phase 5)

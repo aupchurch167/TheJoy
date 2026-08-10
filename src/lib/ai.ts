@@ -28,6 +28,14 @@ VOICE (§2):
 - No listicles. No icon-grid filler. Prose over bullets. Short sentences. Specific, sensory detail over reassurance. Plainspoken, honest, trust-building, never sales-y.
 - Name ${BUSINESS.director.name} wherever care delivery or leadership is discussed.
 
+SOUND LIKE A REAL PERSON, NOT AI. A real person at Joy writes this blog, and it must read that way (this matters as much as the rules above):
+- Vary your rhythm. Mix short, punchy sentences with the occasional longer one. Let a paragraph be a single sentence sometimes. Do not make every paragraph the same tidy length.
+- Use contractions (you're, we've, don't, it's). Write in first person as Joy where it is natural ("we", "here at Joy").
+- Avoid the tired AI tells and filler phrases. NEVER use: "in today's world", "in a fast-paced world", "it's important to note/remember", "when it comes to", "whether you're X or Y", "that said", "at the end of the day", "navigate", "delve", "tapestry", "landscape", "realm", "testament to", "plays a vital/crucial role", "In conclusion", "Ultimately,". Never open with a dictionary-style definition.
+- No neat rule-of-three lists dropped in for rhythm. No stacked hedging ("may", "might", "could" piled together). No throat-clearing intro, and no bow-tied summary conclusion that restates the post. End on a real, specific thought, not a recap.
+- Favor one concrete, particular detail (a smell, a time of day, a small moment) over general reassurance. Say the true, specific thing.
+- A little natural imperfection is good: a parenthetical aside, a direct question to the reader, a plain flat statement. It should feel like ${BUSINESS.director.name}, or someone who actually works at Joy, sat down and wrote it.
+
 COMPLIANCE (§4) - Georgia license (this is a legal boundary):
 - Joy is licensed as a PERSONAL CARE HOME, NOT an assisted living community. NEVER state or imply that Joy is, or is an, assisted living community or facility. Never use "assisted living" as Joy's own label.
 - You MAY reference "assisted living" ONLY as the category families search for, immediately followed by what Joy actually is. Approved patterns:
@@ -99,6 +107,88 @@ export async function draftPost(
     throw new Error("The AI draft was not valid. Please try again.");
   }
   return parsed;
+}
+
+/* ------------------------------------------------------------------ */
+/* PHOTO ALT TEXT + CAPTION (vision)                                    */
+/* ------------------------------------------------------------------ */
+
+export type PhotoMeta = { alt: string; caption: string };
+
+const PHOTO_META_SCHEMA = {
+  type: "object",
+  properties: {
+    alt: {
+      type: "string",
+      description:
+        "Literal alt text: one sentence (~6-16 words) describing only what is visibly in the photo, for screen readers and SEO. Specific and plain. No banned words, no em-dashes.",
+    },
+    caption: {
+      type: "string",
+      description:
+        "One short, warm public-gallery caption in Joy's plainspoken voice. Never invent names, events, or anything not visible.",
+    },
+  },
+  required: ["alt", "caption"],
+  additionalProperties: false,
+} as const;
+
+const PHOTO_SYSTEM_PROMPT = `You write ALT TEXT and CAPTIONS for photos in the public gallery of ${BUSINESS.name}, a 24-bed personal care home in Loganville, Georgia, led by Executive Director ${BUSINESS.director.name}.
+
+Describe ONLY what is actually visible in the image. This is a hard rule:
+- Never invent or guess names, identities, ages, relationships, dates, events, or places.
+- If people appear, refer to them generally ("a resident", "a caregiver", "two residents sharing a meal"). Never state a name.
+- Do not claim anything you cannot see in the picture.
+
+ALT TEXT: a plain, literal, one-sentence description for screen readers and SEO. Be concrete about the real subject (people, activity, room, food, plants, etc.). Naming the setting when it is truthfully visible is good for SEO (e.g. "residents at a table in the dining room of a personal care home"), but NEVER keyword-stuff and never add "Loganville" or "senior living" if the image does not support it.
+
+CAPTION: one short, warm sentence for families viewing the public gallery, in Joy's plainspoken voice.
+
+TWO RULES GOVERN EVERY WORD.
+VOICE (§2): No em-dashes (use parentheses). BANNED words: "loved ones", "vibrant", "journey", "personalized care plans", "boutique", "intimate" (say "small"), "top-tier", "deserve more". Short, plain, warm, never sales-y.
+COMPLIANCE (§4): Joy is a PERSONAL CARE HOME, never "assisted living". Allowed self-descriptions: "senior living", "personal care home", "memory care". Do not label Joy as assisted living in either field.`;
+
+/**
+ * Look at a gallery photo (by public URL) and return SEO-friendly, in-voice alt
+ * text and a caption. Vision task; describes only what is visible (never
+ * invents names or events). The operator reviews before it is saved.
+ */
+export async function describePhoto(imageUrl: string): Promise<PhotoMeta> {
+  if (!aiEnabled()) {
+    throw new Error("AI is not configured (set ANTHROPIC_API_KEY).");
+  }
+
+  const client = new Anthropic();
+
+  const response = await client.messages.create({
+    model: MODEL,
+    max_tokens: 1024,
+    system: PHOTO_SYSTEM_PROMPT,
+    output_config: { format: { type: "json_schema", schema: PHOTO_META_SCHEMA } },
+    messages: [
+      {
+        role: "user",
+        content: [
+          { type: "image", source: { type: "url", url: imageUrl } },
+          {
+            type: "text",
+            text: "Write alt text and a caption for this photo, following the rules. Describe only what you can actually see.",
+          },
+        ],
+      },
+    ],
+  });
+
+  const textBlock = response.content.find((b) => b.type === "text");
+  if (!textBlock || textBlock.type !== "text") {
+    throw new Error("The AI did not return a description.");
+  }
+
+  try {
+    return JSON.parse(textBlock.text) as PhotoMeta;
+  } catch {
+    throw new Error("The AI description was not valid. Please try again.");
+  }
 }
 
 /* ------------------------------------------------------------------ */
