@@ -92,13 +92,31 @@ export async function unsubscribeByToken(token: string): Promise<boolean> {
 
 /* ---------------- Phase 3: lifecycle + drip + reporting ---------------- */
 
-export async function getAllLeads(source?: string): Promise<Lead[]> {
+/** Optional created_at bounds (ISO strings) for date-range filtering. */
+export type DateRange = { from?: string | null; to?: string | null };
+
+export async function getAllLeads(
+  opts: { source?: string } & DateRange = {}
+): Promise<Lead[]> {
+  const conds = ["audience = 'leads'"];
+  const params: unknown[] = [];
+  if (opts.source) {
+    params.push(opts.source);
+    conds.push(`source = $${params.length}`);
+  }
+  if (opts.from) {
+    params.push(opts.from);
+    conds.push(`created_at >= $${params.length}`);
+  }
+  if (opts.to) {
+    params.push(opts.to);
+    conds.push(`created_at <= $${params.length}`);
+  }
   return query<Lead>(
     `SELECT * FROM leads
-      WHERE audience = 'leads'
-      ${source ? "AND source = $1" : ""}
+      WHERE ${conds.join(" AND ")}
       ORDER BY created_at DESC`,
-    source ? [source] : []
+    params
   );
 }
 
@@ -294,7 +312,19 @@ export type SourceReportRow = {
 };
 
 /** Source attribution: leads grouped by source with lifecycle counts. */
-export async function getSourceReport(): Promise<SourceReportRow[]> {
+export async function getSourceReport(
+  range: DateRange = {}
+): Promise<SourceReportRow[]> {
+  const conds = ["audience = 'leads'"];
+  const params: unknown[] = [];
+  if (range.from) {
+    params.push(range.from);
+    conds.push(`created_at >= $${params.length}`);
+  }
+  if (range.to) {
+    params.push(range.to);
+    conds.push(`created_at <= $${params.length}`);
+  }
   const rows = await query<{
     source: string;
     total: string;
@@ -308,9 +338,10 @@ export async function getSourceReport(): Promise<SourceReportRow[]> {
             COUNT(*) FILTER (WHERE stage = 'moved_in') AS moved_in,
             COUNT(*) FILTER (WHERE stage = 'lost') AS lost
        FROM leads
-      WHERE audience = 'leads'
+      WHERE ${conds.join(" AND ")}
       GROUP BY source
-      ORDER BY total DESC`
+      ORDER BY total DESC`,
+    params
   );
   return rows.map((r) => ({
     source: r.source,

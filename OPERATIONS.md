@@ -343,6 +343,17 @@ lean less on any single one (like A Place for Mom).
 Leads are tagged by `source` (`homepage_form` today; TalkFurther webhook and
 APFM import land in Phase 5).
 
+**Filter by date.** At the top of the Leads page, pick **Last 7 days**, **Last
+30 days**, **Last 90 days**, **All time**, or set a custom **From / To** range.
+The stat cards (total leads, toured, moved in, tour rate) and the By-source
+table all update to that range, so you can see "how many leads this month" at a
+glance. The date filter and the source filter stack.
+
+**Open a lead.** Click a lead's **name** to see its full detail: the message
+they sent, email/phone (with one-click Email / Call), source, when it came in,
+and its stage (which you can change right there). A 💬 next to a name in the
+list means that lead left a message.
+
 ### The scheduled worker (Railway cron) — required for Phase 3
 
 Drip emails and scheduled sends are driven by a small worker at `/api/cron`.

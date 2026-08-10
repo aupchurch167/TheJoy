@@ -17,6 +17,7 @@ export async function updateLeadStage(input: unknown): Promise<{ ok: boolean }> 
   try {
     await setLeadStage(parsed.data.id, parsed.data.stage);
     revalidatePath("/admin/leads");
+    revalidatePath(`/admin/leads/${parsed.data.id}`);
     return { ok: true };
   } catch (err) {
     console.error("[updateLeadStage]", err);

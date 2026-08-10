@@ -1,6 +1,8 @@
+import Link from "next/link";
 import { requireAdmin } from "@/lib/require-admin";
 import { hasDatabase } from "@/lib/db";
 import { getAllLeads, getSourceReport } from "@/lib/leads";
+import { resolveRange, type RangeKey } from "@/lib/date-range";
 import { formatDate, formatPercent, orDash } from "@/lib/format";
 import StageSelect from "./StageSelect";
 import {
@@ -18,13 +20,27 @@ import {
 
 export const dynamic = "force-dynamic";
 
+const PRESETS: { key: RangeKey; label: string; range?: string }[] = [
+  { key: "all", label: "All time" },
+  { key: "7d", label: "Last 7 days", range: "7d" },
+  { key: "30d", label: "Last 30 days", range: "30d" },
+  { key: "90d", label: "Last 90 days", range: "90d" },
+];
+
 export default async function LeadsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ source?: string }>;
+  searchParams: Promise<{
+    source?: string;
+    range?: string;
+    from?: string;
+    to?: string;
+  }>;
 }) {
   await requireAdmin();
-  const { source } = await searchParams;
+  const sp = await searchParams;
+  const source = sp.source;
+  const range = resolveRange(sp);
 
   if (!hasDatabase()) {
     return (
@@ -36,8 +52,8 @@ export default async function LeadsPage({
   }
 
   const [report, leads] = await Promise.all([
-    getSourceReport(),
-    getAllLeads(source),
+    getSourceReport({ from: range.from, to: range.to }),
+    getAllLeads({ source, from: range.from, to: range.to }),
   ]);
 
   const totalLeads = report.reduce((n, r) => n + r.total, 0);
@@ -45,14 +61,89 @@ export default async function LeadsPage({
   const totalMovedIn = report.reduce((n, r) => n + r.moved_in, 0);
   const tourRate = totalLeads > 0 ? totalToured / totalLeads : null;
 
+  // Build a leads URL, always preserving the active source filter.
+  const hrefWith = (params: Record<string, string | undefined>) => {
+    const q = new URLSearchParams();
+    if (source) q.set("source", source);
+    for (const [k, v] of Object.entries(params)) if (v) q.set(k, v);
+    const s = q.toString();
+    return `/admin/leads${s ? `?${s}` : ""}`;
+  };
+
   return (
     <>
       <PageHeader
         title="Leads"
-        description="Everyone who has reached out, and where they came from. Update a stage inline as families progress."
+        description="Everyone who has reached out, and where they came from. Filter by date, open a lead to read its message, and update a stage as families progress."
       />
 
-      {/* Summary stats */}
+      {/* Date filter */}
+      <div className="mb-6 rounded-xl border border-line bg-white p-4 shadow-sm">
+        <div className="flex flex-wrap items-center gap-2">
+          {PRESETS.map((p) => {
+            const active = range.key === p.key;
+            return (
+              <Link
+                key={p.key}
+                href={hrefWith({ range: p.range })}
+                className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
+                  active
+                    ? "bg-clay/10 text-clay"
+                    : "text-ink-soft hover:bg-surface"
+                }`}
+              >
+                {p.label}
+              </Link>
+            );
+          })}
+
+          {/* Custom range (GET form; from/to imply a custom range) */}
+          <form
+            method="get"
+            action="/admin/leads"
+            className="ml-auto flex flex-wrap items-center gap-2"
+          >
+            {source && <input type="hidden" name="source" value={source} />}
+            <label className="text-xs text-ink-faint">
+              From{" "}
+              <input
+                type="date"
+                name="from"
+                defaultValue={sp.from || ""}
+                className="ml-1 h-9 rounded-lg border border-line bg-white px-2 text-sm text-ink focus:border-clay focus:outline-none focus:ring-2 focus:ring-clay/30"
+              />
+            </label>
+            <label className="text-xs text-ink-faint">
+              To{" "}
+              <input
+                type="date"
+                name="to"
+                defaultValue={sp.to || ""}
+                className="ml-1 h-9 rounded-lg border border-line bg-white px-2 text-sm text-ink focus:border-clay focus:outline-none focus:ring-2 focus:ring-clay/30"
+              />
+            </label>
+            <button
+              type="submit"
+              className="h-9 rounded-lg bg-clay px-3 text-sm font-semibold text-white hover:bg-clay-dark"
+            >
+              Apply
+            </button>
+          </form>
+        </div>
+        <p className="mt-3 text-xs text-ink-faint">
+          Showing <span className="font-medium text-ink-soft">{range.label}</span>
+          {range.key === "custom" && (
+            <>
+              {" · "}
+              <Link href={hrefWith({})} className="text-clay hover:text-clay-dark">
+                Reset
+              </Link>
+            </>
+          )}
+        </p>
+      </div>
+
+      {/* Summary stats (reflect the selected range) */}
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         <StatCard label="Total leads" value={totalLeads} />
         <StatCard label="Toured" value={totalToured} tone="warning" />
@@ -75,8 +166,8 @@ export default async function LeadsPage({
           {report.length === 0 ? (
             <EmptyState
               icon="📊"
-              title="No leads yet"
-              description="Once families submit the contact form or arrive through TalkFurther, they'll show up here by source."
+              title="No leads in this range"
+              description="Try a wider date range, or check back as families reach out."
             />
           ) : (
             <TableWrap>
@@ -117,8 +208,8 @@ export default async function LeadsPage({
             )}
           </SectionLabel>
           {source && (
-            <ButtonLink href="/admin/leads" variant="ghost" size="sm">
-              Clear filter
+            <ButtonLink href={hrefWith({ range: sp.range })} variant="ghost" size="sm">
+              Clear source filter
             </ButtonLink>
           )}
         </div>
@@ -126,19 +217,8 @@ export default async function LeadsPage({
           {leads.length === 0 ? (
             <EmptyState
               icon="🧾"
-              title={source ? "No leads from this source" : "No leads yet"}
-              description={
-                source
-                  ? "Try clearing the filter to see every lead."
-                  : "New leads from the contact form and TalkFurther will appear here."
-              }
-              action={
-                source ? (
-                  <ButtonLink href="/admin/leads" variant="secondary">
-                    Clear filter
-                  </ButtonLink>
-                ) : undefined
-              }
+              title="No leads to show"
+              description="Try a wider date range or clear the source filter. New leads from the contact form and TalkFurther appear here."
             />
           ) : (
             <TableWrap>
@@ -155,9 +235,17 @@ export default async function LeadsPage({
                 {leads.map((lead) => (
                   <tr key={lead.id} className="transition-colors hover:bg-surface">
                     <Td>
-                      <span className="font-medium text-ink">
+                      <Link
+                        href={`/admin/leads/${lead.id}`}
+                        className="font-medium text-clay hover:text-clay-dark hover:underline"
+                      >
                         {orDash(lead.name)}
-                      </span>
+                      </Link>
+                      {lead.message && (
+                        <span className="ml-2 align-middle text-xs text-ink-faint">
+                          💬
+                        </span>
+                      )}
                       {lead.unsubscribed_at && (
                         <Badge tone="neutral" className="ml-2">
                           unsubscribed
