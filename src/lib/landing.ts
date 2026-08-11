@@ -43,13 +43,14 @@ export const COST_LEDGER = {
   home: {
     label: "Staying home",
     rows: [
-      { item: "24/7 home care", value: "$15–25K/mo" },
-      { item: "Groceries, cooking", value: "on you" },
-      { item: "Utilities, upkeep, taxes", value: "on you" },
+      { item: "In-home caregiver, 8–10 hours a day", value: "$6–9K/mo" },
+      { item: "Groceries, cooking", value: "$400–600/mo" },
+      { item: "Utilities, upkeep, taxes", value: "$800–1,200/mo" },
       { item: "Medication management", value: "on you" },
-      { item: "Your unpaid 2am shifts", value: "every night" },
+      { item: "The other 14 hours, including 2am", value: "on you" },
     ],
-    close: "Two of those you can invoice. The rest you pay in sleep.",
+    close:
+      "That adds up to $7,200 to $10,800 a month. And the nights are still yours.",
   },
   joy: {
     label: "One rate at Joy",
@@ -63,6 +64,38 @@ export const COST_LEDGER = {
     close:
       "One number. One check. Nobody to schedule at 6am when an aide calls out.",
   },
+};
+
+/**
+ * At-home cost calculator (the /cost bridge: our estimates, then hers, then the
+ * invitation). Copy and default numbers live here because the rate helper and
+ * the "starts at" figures are copy claims, editable in one place.
+ *
+ * joyFrom mirrors RATES (personal $4,500, memory $5,500). If a rate changes,
+ * change it in both places. The rate helper's "$28 to $32 an hour in 2026" is a
+ * market claim; update the year and range when it stops being true.
+ */
+export const COST_CALCULATOR = {
+  heading: "Run your own numbers",
+  subhead:
+    "Every house is different. Put in what you are actually paying, or about to pay, and see where it lands.",
+  defaults: {
+    paidHours: 8,
+    hourlyRate: 29,
+    groceries: 500,
+    utilities: 300,
+    homeCosts: 700,
+    other: 0,
+  },
+  joyFrom: { personal: 4500, memory: 5500 },
+  helpers: {
+    paidHelp: "Drag to what she has now, or zero if you are the one covering it.",
+    hourlyRate:
+      "Georgia agency rates run $28 to $32 an hour in 2026. Private hires run less, but payroll, backup coverage, and screening are on you.",
+    other: "Transportation, yard, alarm monitoring, whatever else the house costs.",
+  },
+  disclaimer:
+    "Your exact rate at Joy depends on the care your parent needs. Mellissa sets it after meeting them, not before.",
 };
 
 export const COST_FAQ: { title: string; body: string }[] = [

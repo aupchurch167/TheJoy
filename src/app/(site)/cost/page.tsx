@@ -11,6 +11,7 @@ import Accordion from "@/components/Accordion";
 import CtaBand from "@/components/landing/CtaBand";
 import ProofPulse from "@/components/landing/ProofPulse";
 import FamilyQuote from "@/components/landing/FamilyQuote";
+import CostCalculator from "@/components/landing/CostCalculator";
 
 export const metadata: Metadata = {
   title: "What it costs",
@@ -131,6 +132,9 @@ export default function CostPage() {
           </div>
         </div>
       </section>
+
+      {/* At-home cost calculator (the bridge: our estimates, then hers). */}
+      <CostCalculator memoryEnabled={MEMORY_CARE.enabled} />
 
       <CtaBand headline="Bring your numbers. We'll go through them at the kitchen table." />
 
