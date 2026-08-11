@@ -125,6 +125,16 @@ const NAV: NavItem[] = [
     ),
   },
   {
+    href: "/admin/links",
+    label: "Link in bio",
+    icon: icon(
+      <>
+        <path d="M10 13a5 5 0 0 0 7 0l2-2a5 5 0 0 0-7-7l-1 1" />
+        <path d="M14 11a5 5 0 0 0-7 0l-2 2a5 5 0 0 0 7 7l1-1" />
+      </>
+    ),
+  },
+  {
     href: "/admin/seo",
     label: "SEO",
     icon: icon(
