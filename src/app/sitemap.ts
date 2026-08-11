@@ -2,6 +2,7 @@ import type { MetadataRoute } from "next";
 import { SITE_URL, MEMORY_CARE, visibleServiceDetails } from "@/lib/site";
 import { hasDatabase } from "@/lib/db";
 import { getPublishedPosts } from "@/lib/posts";
+import { TOWNS } from "@/lib/landing";
 
 export const dynamic = "force-dynamic";
 
@@ -13,6 +14,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${SITE_URL}/tour`, changeFrequency: "yearly", priority: 0.9 },
     { url: `${SITE_URL}/cost`, changeFrequency: "monthly", priority: 0.8 },
     { url: `${SITE_URL}/reviews`, changeFrequency: "monthly", priority: 0.6 },
+    { url: `${SITE_URL}/when-its-time`, changeFrequency: "monthly", priority: 0.7 },
+    { url: `${SITE_URL}/tour-checklist`, changeFrequency: "monthly", priority: 0.7 },
+    { url: `${SITE_URL}/small-home-difference`, changeFrequency: "monthly", priority: 0.7 },
+    ...Object.keys(TOWNS).map((town) => ({
+      url: `${SITE_URL}/serving/${town}`,
+      changeFrequency: "monthly" as const,
+      priority: 0.6,
+    })),
     { url: `${SITE_URL}/blog`, changeFrequency: "weekly", priority: 0.6 },
     { url: `${SITE_URL}/gallery`, changeFrequency: "monthly", priority: 0.4 },
   ];
