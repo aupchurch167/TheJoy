@@ -30,6 +30,7 @@ export type PhotoSlotKey =
   | "logo"
   | "logo_mark"
   | "hero"
+  | "cost_hero"
   | "mellissa"
   | "tuesday"
   | "home_services"
@@ -86,6 +87,16 @@ export const SITE_PHOTO_SLOTS: PhotoSlot[] = [
     alt: HERO_PHOTO.alt,
     aspect: "aspect-[4/3]",
     group: "Homepage",
+  },
+  {
+    key: "cost_hero",
+    settingKey: "photo_cost_hero",
+    label: "Cost page hero",
+    hint: "The wide photo at the top of the What it costs page. A warm shot of the home or a shared moment works well.",
+    defaultSrc: HERO_PHOTO.src,
+    alt: "A quiet morning at Joy Senior Living, a small personal care home in Loganville, Georgia",
+    aspect: "aspect-[16/9]",
+    group: "Cost page",
   },
   {
     key: "mellissa",
@@ -182,6 +193,7 @@ export type SitePhotos = {
   logo: ResolvedLogo;
   logoMark: ResolvedLogo;
   hero: ResolvedPhoto;
+  costHero: ResolvedPhoto;
   mellissa: ResolvedPhoto;
   community: ResolvedPhoto[];
   tuesday: ResolvedPhoto;
@@ -239,6 +251,7 @@ export const getSitePhotos = cache(async (): Promise<SitePhotos> => {
   const src = (slot: PhotoSlot) => map.get(slot.settingKey) || slot.defaultSrc;
   const bySlot = (k: PhotoSlotKey) => SITE_PHOTO_SLOTS.find((s) => s.key === k)!;
   const hero = bySlot("hero");
+  const costHero = bySlot("cost_hero");
   const mellissa = bySlot("mellissa");
   const tuesday = bySlot("tuesday");
   const homeServices = bySlot("home_services");
@@ -255,6 +268,7 @@ export const getSitePhotos = cache(async (): Promise<SitePhotos> => {
       set: logoMarkUrl !== "",
     },
     hero: { src: src(hero), alt: hero.alt },
+    costHero: { src: src(costHero), alt: costHero.alt },
     mellissa: { src: src(mellissa), alt: mellissa.alt },
     community: SITE_PHOTO_SLOTS.filter((s) => s.key.startsWith("community")).map(
       (s) => ({ src: src(s), alt: s.alt })

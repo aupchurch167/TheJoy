@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { BUSINESS, OG_IMAGE, MEMORY_CARE } from "@/lib/site";
+import { BUSINESS, OG_IMAGE } from "@/lib/site";
 import {
   RATES,
   RATES_NOTE,
@@ -7,6 +7,8 @@ import {
   COST_FAQ,
   COST_VALUE_QUOTE,
 } from "@/lib/landing";
+import { getSitePhotos } from "@/lib/site-photos";
+import Photo from "@/components/Photo";
 import Accordion from "@/components/Accordion";
 import CtaBand from "@/components/landing/CtaBand";
 import ProofPulse from "@/components/landing/ProofPulse";
@@ -16,7 +18,7 @@ import CostCalculator from "@/components/landing/CostCalculator";
 export const metadata: Metadata = {
   title: "What it costs",
   description:
-    "Joy Senior Living's rates in Loganville, GA. Personal care from $4,500/mo, memory care from $5,500/mo, respite up to $250/day. One rate, and what it replaces.",
+    "Joy Senior Living's rates in Loganville, GA. Senior living from $5,500 a month, respite from $300 a day. The number, and what it replaces.",
   alternates: { canonical: "/cost" },
   openGraph: {
     title: `What it costs | ${BUSINESS.name}`,
@@ -27,8 +29,8 @@ export const metadata: Metadata = {
   },
 };
 
-export default function CostPage() {
-  const rates = RATES.filter((r) => !r.requiresMemoryCare || MEMORY_CARE.enabled);
+export default async function CostPage() {
+  const { costHero } = await getSitePhotos();
 
   return (
     <>
@@ -45,35 +47,19 @@ export default function CostPage() {
         </p>
       </section>
 
-      <CtaBand headline="Come stand in it. Mellissa gives every tour herself." />
-
-      {/* Rates */}
-      <section className="border-b border-line bg-white py-14 sm:py-16">
-        <div className="mx-auto max-w-5xl px-5">
-          <h2 className="font-display text-2xl font-semibold text-ink sm:text-3xl">
-            Our rates
-          </h2>
-          <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-3">
-            {rates.map((r) => (
-              <div
-                key={r.key}
-                className="rounded-2xl border border-line bg-paper p-6"
-              >
-                <p className="text-sm font-semibold uppercase tracking-wide text-ink-faint">
-                  {r.label}
-                </p>
-                <p className="mt-2 font-display text-4xl font-semibold leading-none text-ink">
-                  {r.amount}
-                </p>
-                <p className="mt-1.5 text-ink-soft">{r.unit}</p>
-              </div>
-            ))}
-          </div>
-          <p className="mt-6 max-w-[38em] text-lg leading-relaxed text-ink-soft">
-            {RATES_NOTE}
-          </p>
-        </div>
+      {/* Hero image */}
+      <section className="mx-auto max-w-5xl px-5 pb-10">
+        <Photo
+          src={costHero.src}
+          alt={costHero.alt}
+          priority
+          rounded="rounded-3xl"
+          sizes="(max-width: 1024px) 100vw, 1024px"
+          className="aspect-[16/9] w-full"
+        />
       </section>
+
+      <CtaBand headline="Come stand in it. Mellissa gives every tour herself." />
 
       {/* What the number replaces (ledger) */}
       <section className="mx-auto max-w-5xl px-5 py-16">
@@ -134,7 +120,35 @@ export default function CostPage() {
       </section>
 
       {/* At-home cost calculator (the bridge: our estimates, then hers). */}
-      <CostCalculator memoryEnabled={MEMORY_CARE.enabled} />
+      <CostCalculator />
+
+      {/* Rates (below the calculator: her numbers first, then ours). */}
+      <section className="border-y border-line bg-white py-14 sm:py-16">
+        <div className="mx-auto max-w-5xl px-5">
+          <h2 className="font-display text-2xl font-semibold text-ink sm:text-3xl">
+            Our rates
+          </h2>
+          <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2">
+            {RATES.map((r) => (
+              <div
+                key={r.key}
+                className="rounded-2xl border border-line bg-paper p-6"
+              >
+                <p className="text-sm font-semibold uppercase tracking-wide text-ink-faint">
+                  {r.label}
+                </p>
+                <p className="mt-2 font-display text-4xl font-semibold leading-none text-ink">
+                  {r.amount}
+                </p>
+                <p className="mt-1.5 text-ink-soft">{r.unit}</p>
+              </div>
+            ))}
+          </div>
+          <p className="mt-6 max-w-[38em] text-lg leading-relaxed text-ink-soft">
+            {RATES_NOTE}
+          </p>
+        </div>
+      </section>
 
       <CtaBand headline="Bring your numbers. We'll go through them at the kitchen table." />
 

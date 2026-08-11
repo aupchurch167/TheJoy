@@ -20,17 +20,9 @@ export const RATES: {
   label: string;
   amount: string;
   unit: string;
-  requiresMemoryCare?: boolean;
 }[] = [
-  { key: "personal", label: "Personal Care", amount: "$4,500", unit: "from, per month" },
-  {
-    key: "memory",
-    label: "Memory Care",
-    amount: "$5,500",
-    unit: "from, per month",
-    requiresMemoryCare: true,
-  },
-  { key: "respite", label: "Respite", amount: "$250", unit: "up to, per day" },
+  { key: "senior", label: "Senior Living", amount: "$5,500", unit: "from, per month" },
+  { key: "respite", label: "Respite", amount: "$300", unit: "from, per day" },
 ];
 
 export const RATES_NOTE =
@@ -71,9 +63,9 @@ export const COST_LEDGER = {
  * invitation). Copy and default numbers live here because the rate helper and
  * the "starts at" figures are copy claims, editable in one place.
  *
- * joyFrom mirrors RATES (personal $4,500, memory $5,500). If a rate changes,
- * change it in both places. The rate helper's "$28 to $32 an hour in 2026" is a
- * market claim; update the year and range when it stops being true.
+ * joyFrom mirrors the Senior Living rate in RATES ($5,500). If that rate
+ * changes, change it in both places. The rate helper's "$28 to $32 an hour in
+ * 2026" is a market claim; update the year and range when it stops being true.
  */
 export const COST_CALCULATOR = {
   heading: "Run your own numbers",
@@ -87,7 +79,8 @@ export const COST_CALCULATOR = {
     homeCosts: 700,
     other: 0,
   },
-  joyFrom: { personal: 4500, memory: 5500 },
+  joyFrom: 5500,
+  joyLabel: "Senior living",
   helpers: {
     paidHelp: "Drag to what she has now, or zero if you are the one covering it.",
     hourlyRate:

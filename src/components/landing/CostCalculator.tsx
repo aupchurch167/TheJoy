@@ -9,8 +9,6 @@ const C = COST_CALCULATOR;
 /** Hours per month a caregiver bills (24 * 30.4 / 24 = 30.4 days). */
 const DAYS_PER_MONTH = 30.4;
 
-type CareType = "personal" | "memory";
-
 declare global {
   interface Window {
     dataLayer?: Record<string, unknown>[];
@@ -52,18 +50,13 @@ function fireInteractionOnce() {
  * carry equal weight on purpose: some families come out cheaper at home, and
  * the tool has to survive that honestly.
  */
-export default function CostCalculator({
-  memoryEnabled,
-}: {
-  memoryEnabled: boolean;
-}) {
+export default function CostCalculator() {
   const [paidHours, setPaidHours] = useState(C.defaults.paidHours);
   const [hourlyRate, setHourlyRate] = useState(String(C.defaults.hourlyRate));
   const [groceries, setGroceries] = useState(String(C.defaults.groceries));
   const [utilities, setUtilities] = useState(String(C.defaults.utilities));
   const [homeCosts, setHomeCosts] = useState(String(C.defaults.homeCosts));
   const [other, setOther] = useState(String(C.defaults.other));
-  const [careType, setCareType] = useState<CareType>("personal");
   const [interacted, setInteracted] = useState(false);
 
   // Any change to a control counts as an interaction (fires the GTM event once).
@@ -81,7 +74,7 @@ export default function CostCalculator({
     num(homeCosts) +
     num(other);
   const unpaidHours = (24 - paidHours) * 7;
-  const joyRate = careType === "memory" ? C.joyFrom.memory : C.joyFrom.personal;
+  const joyRate = C.joyFrom;
   const homeRounded = Math.round(homeTotal / 50) * 50;
 
   // calculator_result_viewed: 3s after the last change, debounced. Each change
@@ -95,7 +88,7 @@ export default function CostCalculator({
         window.dataLayer.push({
           event: "calculator_result_viewed",
           home_total: homeRounded,
-          care_type: careType,
+          care_type: "senior_living",
           paid_hours: paidHours,
         });
       } catch {
@@ -103,12 +96,12 @@ export default function CostCalculator({
       }
       track("calculator_result_viewed", {
         home_total: String(homeRounded),
-        care_type: careType,
+        care_type: "senior_living",
         paid_hours: String(paidHours),
       });
     }, 3000);
     return () => clearTimeout(t);
-  }, [interacted, homeRounded, careType, paidHours]);
+  }, [interacted, homeRounded, paidHours]);
 
   const hourLabel = `Paid help: ${paidHours} ${paidHours === 1 ? "hour" : "hours"} a day`;
 
@@ -254,45 +247,6 @@ export default function CostCalculator({
               {C.helpers.other}
             </span>
           </label>
-
-          {/* Care at Joy toggle */}
-          <fieldset className="flex w-full flex-col gap-2 border-0 p-0">
-            <legend className="text-base font-semibold text-ink">Care at Joy</legend>
-            <div className="mt-1 flex gap-3">
-              <button
-                type="button"
-                aria-pressed={careType === "personal"}
-                onClick={() => {
-                  setCareType("personal");
-                  onInteract();
-                }}
-                className={`min-h-12 flex-1 rounded-lg border px-4 text-base font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-clay/40 ${
-                  careType === "personal"
-                    ? "border-clay bg-clay text-white"
-                    : "border-line bg-white text-clay-dark hover:bg-surface"
-                }`}
-              >
-                Personal Care
-              </button>
-              {memoryEnabled && (
-                <button
-                  type="button"
-                  aria-pressed={careType === "memory"}
-                  onClick={() => {
-                    setCareType("memory");
-                    onInteract();
-                  }}
-                  className={`min-h-12 flex-1 rounded-lg border px-4 text-base font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-clay/40 ${
-                    careType === "memory"
-                      ? "border-clay bg-clay text-white"
-                      : "border-line bg-white text-clay-dark hover:bg-surface"
-                  }`}
-                >
-                  Memory Care
-                </button>
-              )}
-            </div>
-          </fieldset>
         </div>
 
         {/* Outputs */}
@@ -308,6 +262,7 @@ export default function CostCalculator({
             <p className="mt-1 whitespace-nowrap font-display text-4xl font-semibold text-ink">
               {money(joyRate)}
             </p>
+            <p className="mt-1 text-sm text-ink-soft">{C.joyLabel}</p>
           </div>
         </div>
 
