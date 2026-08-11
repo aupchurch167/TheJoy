@@ -15,7 +15,7 @@ export default async function SiteFooter() {
 
   return (
     <footer className="border-t border-line bg-white/60">
-      <div className="mx-auto grid max-w-6xl gap-8 px-5 py-12 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="mx-auto grid max-w-6xl gap-8 px-5 py-12 sm:grid-cols-2 lg:grid-cols-4">
         <div>
           <Link
             href="/"
@@ -113,6 +113,37 @@ export default async function SiteFooter() {
                 </a>
               </li>
             )}
+          </ul>
+        </div>
+
+        <div className="text-sm text-ink-soft">
+          <p className="font-semibold text-ink">For families</p>
+          <ul className="mt-2 space-y-1.5">
+            <li>
+              <Link href="/cost" className="hover:text-clay">
+                What it costs
+              </Link>
+            </li>
+            <li>
+              <Link href="/reviews" className="hover:text-clay">
+                Reviews
+              </Link>
+            </li>
+            <li>
+              <Link href="/when-its-time" className="hover:text-clay">
+                When it&rsquo;s time
+              </Link>
+            </li>
+            <li>
+              <Link href="/tour-checklist" className="hover:text-clay">
+                Tour checklist
+              </Link>
+            </li>
+            <li>
+              <Link href="/small-home-difference" className="hover:text-clay">
+                The small-home difference
+              </Link>
+            </li>
           </ul>
         </div>
       </div>
