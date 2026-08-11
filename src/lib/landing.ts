@@ -301,7 +301,7 @@ export const CHECKLIST_GROUPS: {
     items: [
       { q: "What is your license, and can I see the state's last inspection?", why: "Public record. A good home hands it over." },
       { q: "What do you do after a fall, that day and the week after?", why: "Ask about the last one." },
-      { q: "How far is the hospital, and who rides with her?", why: "Nobody should go alone." },
+      { q: "If she has to go to the hospital, how does that work and who goes with her?", why: "Ask what the home does, and what falls to family." },
       { q: "What can't you handle here?", why: "Every honest home has a list." },
       { q: "How do you handle wandering, if that starts?", why: "Ask specifically, not generally." },
     ],
