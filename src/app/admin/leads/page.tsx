@@ -4,9 +4,12 @@ import { hasDatabase } from "@/lib/db";
 import {
   getAllLeads,
   countLeads,
+  countSubscribers,
+  countUnsubscribed,
   getSourceReport,
   IMPORT_SOURCE_PREFIX,
 } from "@/lib/leads";
+import { getDeliverabilityStats } from "@/lib/broadcasts";
 import { resolveRange, type RangeKey } from "@/lib/date-range";
 import { formatDate, formatPercent, formatSource, orDash } from "@/lib/format";
 import StageSelect from "./StageSelect";
@@ -71,15 +74,28 @@ export default async function LeadsPage({
   }
 
   const listOpts = { source, from: range.from, to: range.to, excludeImports };
-  const [report, leads, totalLeadRows] = await Promise.all([
-    getSourceReport({ from: range.from, to: range.to, excludeImports }),
-    getAllLeads({ ...listOpts, limit: PAGE_SIZE, offset }),
-    countLeads(listOpts),
-  ]);
+  const [report, leads, totalLeadRows, subscribers, unsubscribed, deliver] =
+    await Promise.all([
+      getSourceReport({ from: range.from, to: range.to, excludeImports }),
+      getAllLeads({ ...listOpts, limit: PAGE_SIZE, offset }),
+      countLeads(listOpts),
+      countSubscribers("leads"),
+      countUnsubscribed("leads"),
+      getDeliverabilityStats(),
+    ]);
 
   const pageCount = Math.max(1, Math.ceil(totalLeadRows / PAGE_SIZE));
   const firstRow = totalLeadRows === 0 ? 0 : offset + 1;
   const lastRow = offset + leads.length;
+
+  // List health (list-wide, not date-scoped). Deliverability rates flag a bad
+  // list before it hurts sending reputation. Thresholds follow inbox-provider
+  // guidance (complaints >= 0.1%, bounces >= 2%).
+  const bounceRate = deliver.sent > 0 ? deliver.bounced / deliver.sent : 0;
+  const complaintRate =
+    deliver.sent > 0 ? deliver.complained / deliver.sent : 0;
+  const deliverabilityWarning =
+    deliver.sent >= 50 && (bounceRate >= 0.02 || complaintRate >= 0.001);
 
   const totalLeads = report.reduce((n, r) => n + r.total, 0);
   const totalToured = report.reduce((n, r) => n + r.toured, 0);
@@ -230,6 +246,46 @@ export default async function LeadsPage({
           hint="Share of leads who toured"
         />
       </div>
+
+      {/* List health (list-wide) */}
+      <section className="mt-8">
+        <SectionLabel>List health</SectionLabel>
+        <div className="mt-3 grid grid-cols-2 gap-4 lg:grid-cols-4">
+          <StatCard
+            label="Subscribers"
+            value={subscribers}
+            hint="Consented, can receive email"
+          />
+          <StatCard
+            label="Unsubscribed"
+            value={unsubscribed}
+            tone="neutral"
+          />
+          <StatCard
+            label="Bounce rate"
+            value={deliver.sent > 0 ? formatPercent(bounceRate) : "—"}
+            tone={bounceRate >= 0.02 ? "danger" : undefined}
+            hint={`${deliver.bounced} of ${deliver.sent} sent`}
+          />
+          <StatCard
+            label="Complaint rate"
+            value={deliver.sent > 0 ? formatPercent(complaintRate) : "—"}
+            tone={complaintRate >= 0.001 ? "danger" : undefined}
+            hint={`${deliver.complained} spam report(s)`}
+          />
+        </div>
+        {deliverabilityWarning && (
+          <div className="mt-3 flex items-start gap-3 rounded-xl border border-danger/30 bg-danger/10 px-4 py-3 text-sm text-ink-soft">
+            <span aria-hidden>⚠️</span>
+            <p>
+              <strong className="text-ink">Deliverability is running hot.</strong>{" "}
+              Bounces or spam complaints are above the safe range. Slow down,
+              stop emailing cold/imported segments, and confirm the Resend
+              webhook is connected so bad addresses suppress themselves.
+            </p>
+          </div>
+        )}
+      </section>
 
       {/* Source attribution report */}
       <section className="mt-10">

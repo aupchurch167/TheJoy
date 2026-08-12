@@ -342,6 +342,16 @@ export async function countSubscribers(
   return Number(rows[0]?.n ?? 0);
 }
 
+/** Unsubscribed contacts in an audience. */
+export async function countUnsubscribed(audience: Audience): Promise<number> {
+  const rows = await query<{ n: string }>(
+    `SELECT COUNT(*) AS n FROM leads
+      WHERE audience = $1 AND unsubscribed_at IS NOT NULL`,
+    [audience]
+  );
+  return Number(rows[0]?.n ?? 0);
+}
+
 /** Distinct source tags present in an audience (for the segment picker). */
 export async function getAudienceSources(audience: Audience): Promise<string[]> {
   const rows = await query<{ source: string }>(

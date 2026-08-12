@@ -209,6 +209,39 @@ export async function getBroadcastResults(
   };
 }
 
+/**
+ * List-wide deliverability across all email sends (for the Leads health strip).
+ * Rates off this let you catch a bad list before it wrecks your reputation.
+ */
+export async function getDeliverabilityStats(): Promise<{
+  sent: number;
+  delivered: number;
+  bounced: number;
+  complained: number;
+}> {
+  const rows = await query<{
+    sent: string;
+    delivered: string;
+    bounced: string;
+    complained: string;
+  }>(
+    `SELECT
+        COUNT(*) FILTER (WHERE error IS NULL)             AS sent,
+        COUNT(*) FILTER (WHERE delivered_at IS NOT NULL)  AS delivered,
+        COUNT(*) FILTER (WHERE bounced_at IS NOT NULL)    AS bounced,
+        COUNT(*) FILTER (WHERE complained_at IS NOT NULL) AS complained
+       FROM broadcast_recipients`
+  );
+  const r = rows[0];
+  const n = (v?: string) => Number(v ?? 0);
+  return {
+    sent: n(r?.sent),
+    delivered: n(r?.delivered),
+    bounced: n(r?.bounced),
+    complained: n(r?.complained),
+  };
+}
+
 /* ---------------- Saved recipient segments ---------------- */
 
 export type SavedSegment = {
