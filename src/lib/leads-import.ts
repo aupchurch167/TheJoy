@@ -1,16 +1,21 @@
 /**
  * Parse a pasted or uploaded CSV of OLD leads (that did not come from the
  * website) into clean rows for the leads-audience import. Same field rules and
- * "import[:channel]" source convention as scripts/import-leads.mjs, so the
- * admin upload and the CLI behave identically.
+ * "import[:channel]" source convention as scripts/import-leads.mjs.
  *
- * Client-safe (pure string work), so the admin panel can preview counts before
- * anything touches the database.
+ * Two modes:
+ *  - Auto: header names are matched to fields by alias (used by the CLI).
+ *  - Mapped: the admin upload inspects the file's headers, lets the operator
+ *    map each field to a column, and passes that map in. This is what makes
+ *    real-world exports (APFM, CRMs) import without renaming columns first.
+ *
+ * Client-safe (pure string work), so the admin panel can inspect headers and
+ * preview counts before anything touches the database.
  */
 
 export type CleanLead = {
-  /** Never empty: the leads.name column is NOT NULL, so a nameless row falls
-   *  back to the email's local part. */
+  /** Never empty: leads.name is NOT NULL, so a nameless row falls back to the
+   *  email's local part. */
   name: string;
   email: string;
   phone: string | null;
@@ -29,7 +34,41 @@ export type ParsedLeads = {
   dupeInFile: number;
 };
 
+/** Fields the importer understands. `name` may also be composed from first+last. */
+export type LeadFieldKey =
+  | "name"
+  | "first"
+  | "last"
+  | "email"
+  | "phone"
+  | "source"
+  | "date"
+  | "message";
+
+/** Field -> column index in the file (missing = not mapped). */
+export type LeadColumnMap = Partial<Record<LeadFieldKey, number>>;
+
+export type CsvInspection = {
+  /** Trimmed header cells, in file order. */
+  headers: string[];
+  /** Raw data rows (cells), for a preview. */
+  rows: string[][];
+  /** Best-guess field -> column mapping from the headers. */
+  guess: LeadColumnMap;
+};
+
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+const FIELD_ALIASES: Record<LeadFieldKey, string[]> = {
+  name: ["name", "full name", "fullname", "contact name", "contact"],
+  first: ["first name", "firstname", "first", "given name"],
+  last: ["last name", "lastname", "last", "surname", "family name"],
+  email: ["email address", "email", "e-mail", "e mail"],
+  phone: ["phone number", "phone", "mobile", "cell", "telephone", "number"],
+  source: ["lead source", "source", "channel", "origin", "referrer"],
+  date: ["created at", "created_at", "signup date", "date created", "created", "date", "added", "inquiry date"],
+  message: ["message", "notes", "note", "comments", "comment"],
+};
 
 /** Quote-aware CSV to a matrix of string cells. */
 function parseMatrix(text: string): string[][] {
@@ -66,14 +105,6 @@ function parseMatrix(text: string): string[][] {
   return rows;
 }
 
-/** First non-empty value among possible column names. */
-function pick(rec: Record<string, string>, names: string[]): string {
-  for (const n of names) {
-    if (rec[n] !== undefined && rec[n] !== "") return rec[n];
-  }
-  return "";
-}
-
 /** Tidy a per-row channel into a short source suffix ("Facebook Ad" -> "facebook_ad"). */
 function slugChannel(s: string): string {
   return s
@@ -89,48 +120,109 @@ function toIso(s: string): string | null {
   return Number.isNaN(t) ? null : new Date(t).toISOString();
 }
 
-/** Fallback display name from an email (the part before "@"). */
 function nameFromEmail(email: string): string {
   return email.split("@")[0] || email;
 }
 
-export function parseLeadsCsv(text: string, baseSource = "import"): ParsedLeads {
+/**
+ * Find an unclaimed column for a field by matching header aliases (exact match
+ * first, then substring), skipping columns already taken by another field.
+ */
+function guessCol(
+  headersLower: string[],
+  aliases: string[],
+  taken: Set<number>
+): number {
+  for (const a of aliases) {
+    for (let i = 0; i < headersLower.length; i++) {
+      if (!taken.has(i) && headersLower[i] === a) return i;
+    }
+  }
+  for (const a of aliases) {
+    for (let i = 0; i < headersLower.length; i++) {
+      if (!taken.has(i) && headersLower[i].includes(a)) return i;
+    }
+  }
+  return -1;
+}
+
+// Assign specific fields before generic ones (email before name, etc.) and
+// never map two fields to the same column, so a "Contact Email" header is not
+// also claimed as the name.
+const GUESS_ORDER: LeadFieldKey[] = [
+  "email",
+  "date",
+  "phone",
+  "source",
+  "first",
+  "last",
+  "message",
+  "name",
+];
+
+/** Best-guess mapping from header names. Only sets fields it finds. */
+export function guessLeadMapping(headers: string[]): LeadColumnMap {
+  const lower = headers.map((h) => h.trim().toLowerCase());
+  const taken = new Set<number>();
+  const map: LeadColumnMap = {};
+  for (const key of GUESS_ORDER) {
+    const i = guessCol(lower, FIELD_ALIASES[key], taken);
+    if (i >= 0) {
+      map[key] = i;
+      taken.add(i);
+    }
+  }
+  return map;
+}
+
+/** Read the header row + data rows + a guessed mapping (for the mapping UI). */
+export function inspectLeadsCsv(text: string): CsvInspection {
   const matrix = parseMatrix(text).filter((r) => r.some((c) => c.trim() !== ""));
-  if (matrix.length < 1) {
+  if (!matrix.length) return { headers: [], rows: [], guess: {} };
+  const headers = matrix[0].map((h) => h.trim());
+  const rows = matrix.slice(1);
+  return { headers, rows, guess: guessLeadMapping(headers) };
+}
+
+/** Read a mapped cell (trimmed), or "" when the field is unmapped/out of range. */
+function cell(row: string[], idx: number | undefined): string {
+  if (idx === undefined || idx < 0 || idx >= row.length) return "";
+  return (row[idx] ?? "").trim();
+}
+
+/**
+ * Parse the CSV into clean rows. When `map` is given, columns are read by that
+ * mapping; otherwise the mapping is guessed from the header names.
+ */
+export function parseLeadsCsv(
+  text: string,
+  baseSource = "import",
+  map?: LeadColumnMap
+): ParsedLeads {
+  const { headers, rows } = inspectLeadsCsv(text);
+  if (!headers.length) {
     return { rows: [], total: 0, noEmail: 0, badEmail: 0, dupeInFile: 0 };
   }
-  const header = matrix[0].map((h) => h.trim().toLowerCase());
-  const records = matrix.slice(1).map((r) => {
-    const o: Record<string, string> = {};
-    header.forEach((h, i) => (o[h] = (r[i] ?? "").trim()));
-    return o;
-  });
-
+  const m = map ?? guessLeadMapping(headers);
   const base = slugChannel(baseSource) || "import";
+
   const seen = new Set<string>();
-  const rows: CleanLead[] = [];
+  const out: CleanLead[] = [];
   let noEmail = 0;
   let badEmail = 0;
   let dupeInFile = 0;
 
-  for (const r of records) {
-    const first = pick(r, ["first", "first name", "firstname"]);
-    const last = pick(r, ["last", "last name", "lastname"]);
-    const name =
-      pick(r, ["name", "full name", "fullname", "contact", "contact name"]) ||
-      [first, last].filter(Boolean).join(" ").trim();
-    const email = pick(r, ["email", "email address", "e-mail"]).toLowerCase();
-    const phone = pick(r, ["phone", "phone number", "mobile", "cell", "number"]);
-    const channel = pick(r, ["source", "channel", "origin", "lead source"]);
-    const dateRaw = pick(r, [
-      "date",
-      "created",
-      "created_at",
-      "created at",
-      "added",
-      "signup date",
-    ]);
-    const message = pick(r, ["message", "notes", "note", "comment", "comments"]);
+  for (const r of rows) {
+    const email = cell(r, m.email).toLowerCase();
+    const composed = [cell(r, m.first), cell(r, m.last)]
+      .filter(Boolean)
+      .join(" ")
+      .trim();
+    const name = cell(r, m.name) || composed;
+    const phone = cell(r, m.phone);
+    const channel = cell(r, m.source);
+    const message = cell(r, m.message);
+    const dateRaw = cell(r, m.date);
 
     if (!email) {
       noEmail++;
@@ -146,7 +238,7 @@ export function parseLeadsCsv(text: string, baseSource = "import"): ParsedLeads 
     }
     seen.add(email);
 
-    rows.push({
+    out.push({
       name: name || nameFromEmail(email),
       email,
       phone: phone || null,
@@ -156,5 +248,5 @@ export function parseLeadsCsv(text: string, baseSource = "import"): ParsedLeads 
     });
   }
 
-  return { rows, total: records.length, noEmail, badEmail, dupeInFile };
+  return { rows: out, total: rows.length, noEmail, badEmail, dupeInFile };
 }

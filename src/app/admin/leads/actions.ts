@@ -32,11 +32,25 @@ export async function updateLeadStage(input: unknown): Promise<{ ok: boolean }> 
 
 /* ---------------- CSV lead import (pre-website leads) ---------------- */
 
+const ColIndex = z.number().int().min(0).max(1000);
 const ImportSchema = z.object({
   csv: z.string().min(1).max(2_000_000),
   source: z.string().trim().max(40).optional(),
   hold: z.boolean().optional(),
   commit: z.boolean().optional(),
+  // Column mapping from the admin's mapping step (field -> column index).
+  map: z
+    .object({
+      name: ColIndex.optional(),
+      first: ColIndex.optional(),
+      last: ColIndex.optional(),
+      email: ColIndex.optional(),
+      phone: ColIndex.optional(),
+      source: ColIndex.optional(),
+      date: ColIndex.optional(),
+      message: ColIndex.optional(),
+    })
+    .optional(),
 });
 
 export type ImportLeadsResult =
@@ -69,10 +83,16 @@ export async function importLeads(input: unknown): Promise<ImportLeadsResult> {
   const base = parsed.data.source?.trim() || "import";
   const consent = !parsed.data.hold;
   const commit = parsed.data.commit === true;
+  const map = parsed.data.map;
+
+  // A mapping without an email column can never produce leads; say so plainly.
+  if (map && map.email === undefined) {
+    return { ok: false, error: "Choose which column holds the email address." };
+  }
 
   let rows, stats;
   try {
-    stats = parseLeadsCsv(parsed.data.csv, base);
+    stats = parseLeadsCsv(parsed.data.csv, base, map);
     rows = stats.rows;
   } catch {
     return { ok: false, error: "Could not read that CSV. Check the format." };
@@ -82,7 +102,7 @@ export async function importLeads(input: unknown): Promise<ImportLeadsResult> {
     return {
       ok: false,
       error:
-        "No usable rows found. The file needs a header row and an email column.",
+        "No usable rows found. Map the email column (and check the file has data rows).",
     };
   }
 
