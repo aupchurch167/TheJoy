@@ -554,6 +554,13 @@ function GenerateHeroPanel({
   const [open, setOpen] = useState(false);
   const [prompt, setPrompt] = useState("");
   const [busy, setBusy] = useState(false);
+  // Rotates the suggested scene so re-suggesting lands on something different.
+  const variant = useRef(0);
+
+  function nextSuggestion() {
+    variant.current += 1;
+    setPrompt(suggestHeroPrompt(fields, variant.current));
+  }
 
   function toggle() {
     setOpen((o) => {
@@ -604,8 +611,10 @@ function GenerateHeroPanel({
       {open && (
         <div className="mt-3 grid gap-2">
           <p className="text-xs leading-relaxed text-ink-faint">
-            Describe the image you want (we suggested one from your title, edit it
-            freely). Gemini creates it and saves it as the hero image. These are
+            Describe the image you want. We suggest one from your title, excerpt,
+            and category (edit it freely, or press &ldquo;Suggest another&rdquo;
+            for a different scene). Gemini creates it and saves it as the hero
+            image. These are
             AI illustrations, not real photos of Joy, so keep them atmospheric
             (light, a porch, hands, a table), never fake photos of the home,
             residents, or staff. Review before publishing.
@@ -628,11 +637,11 @@ function GenerateHeroPanel({
             </button>
             <button
               type="button"
-              onClick={() => setPrompt(suggestHeroPrompt(fields))}
+              onClick={nextSuggestion}
               disabled={busy}
               className={btn("secondary", "sm")}
             >
-              Suggest a prompt
+              Suggest another
             </button>
           </div>
         </div>
