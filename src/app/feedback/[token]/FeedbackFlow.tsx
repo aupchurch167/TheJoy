@@ -47,11 +47,13 @@ export default function FeedbackFlow({
   reviewUrls,
   phone,
   residentName,
+  logo,
 }: {
   token: string;
   reviewUrls: ReviewUrls;
   phone: string;
   residentName: string;
+  logo: { src: string; set: boolean };
 }) {
   const who = residentName || "your family member";
   const [step, setStep] = useState<"survey" | "positive" | "concern" | "called">(
@@ -157,12 +159,23 @@ export default function FeedbackFlow({
     <main className="flex flex-1 justify-center bg-paper">
       <div className="flex w-full max-w-[35rem] flex-col gap-4 px-5 pb-16 pt-10">
         <header className="text-center">
-          <p className="font-display text-3xl font-semibold italic leading-none text-clay">
-            Joy
-          </p>
-          <p className="mt-1.5 text-[0.7rem] font-medium uppercase tracking-[0.22em] text-ink-faint">
-            Senior Living · Personal Care Home
-          </p>
+          {logo.set ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={logo.src}
+              alt="Joy Senior Living"
+              className="mx-auto h-12 w-auto"
+            />
+          ) : (
+            <>
+              <p className="font-display text-3xl font-semibold italic leading-none text-clay">
+                Joy
+              </p>
+              <p className="mt-1.5 text-[0.7rem] font-medium uppercase tracking-[0.22em] text-ink-faint">
+                Senior Living · Personal Care Home
+              </p>
+            </>
+          )}
         </header>
 
         {/* SURVEY */}
