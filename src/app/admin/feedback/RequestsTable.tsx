@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Badge, EmptyState, TableWrap, Th, Td } from "@/components/admin/ui";
 import { orDash, formatDate } from "@/lib/format";
-import { ResendButton } from "./CallbackControls";
+import { ResendButton, CopyLinkButton } from "./CallbackControls";
 import type { FeedbackRequestRow } from "@/lib/feedback";
 
 const DAY = 24 * 60 * 60 * 1000;
@@ -18,9 +18,11 @@ const RECOMMEND: Record<string, string> = {
 export default function RequestsTable({
   rows,
   now,
+  baseUrl,
 }: {
   rows: FeedbackRequestRow[];
   now: number;
+  baseUrl: string;
 }) {
   const [open, setOpen] = useState<string | null>(null);
 
@@ -115,11 +117,15 @@ export default function RequestsTable({
                   {r.would_recommend ? RECOMMEND[r.would_recommend] : "—"}
                 </Td>
                 <Td className="text-right">
-                  {resendable && (
-                    <span onClick={(e) => e.stopPropagation()}>
-                      <ResendButton id={r.id} />
-                    </span>
-                  )}
+                  <div
+                    className="flex flex-col items-end gap-1"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    {!completed && (
+                      <CopyLinkButton url={`${baseUrl}/feedback/${r.token}`} />
+                    )}
+                    {resendable && <ResendButton id={r.id} />}
+                  </div>
                 </Td>
               </tr>
               {isOpen && hasDetail && (

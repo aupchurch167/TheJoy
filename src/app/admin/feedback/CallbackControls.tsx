@@ -1,12 +1,36 @@
 "use client";
 
-import { useTransition } from "react";
+import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Select } from "@/components/admin/ui";
 import { useToast } from "@/components/admin/Toast";
 import { updateCallbackStatus } from "./actions";
 import { resendSurvey } from "./actions";
 import type { CallbackStatus } from "@/lib/feedback";
+
+export function CopyLinkButton({ url }: { url: string }) {
+  const { success, error } = useToast();
+  const [copied, setCopied] = useState(false);
+  return (
+    <button
+      type="button"
+      onClick={async () => {
+        try {
+          await navigator.clipboard.writeText(url);
+          setCopied(true);
+          success("Survey link copied.");
+          setTimeout(() => setCopied(false), 1500);
+        } catch {
+          error("Could not copy. Select the link and copy it by hand.");
+        }
+      }}
+      className="whitespace-nowrap text-xs font-semibold text-clay hover:text-clay-dark"
+      title={url}
+    >
+      {copied ? "Copied ✓" : "Copy link"}
+    </button>
+  );
+}
 
 export function CallbackStatusControl({
   id,

@@ -1,6 +1,7 @@
 import { requireAdmin } from "@/lib/require-admin";
 import { hasDatabase } from "@/lib/db";
 import { listFeedbackRequests, listCallbackRequests } from "@/lib/feedback";
+import { SITE_URL } from "@/lib/site";
 import { formatDate, orDash } from "@/lib/format";
 import SendSurveyForm from "./SendSurveyForm";
 import { CallbackStatusControl } from "./CallbackControls";
@@ -61,7 +62,7 @@ export default async function FeedbackPage() {
           see the detailed ratings and written answers.
         </p>
         <div className="mt-3">
-          <RequestsTable rows={sorted} now={now} />
+          <RequestsTable rows={sorted} now={now} baseUrl={SITE_URL} />
         </div>
       </section>
 
