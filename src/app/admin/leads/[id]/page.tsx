@@ -3,7 +3,7 @@ import { requireAdmin } from "@/lib/require-admin";
 import { hasDatabase } from "@/lib/db";
 import { getLeadById } from "@/lib/leads";
 import { toMailHref, toTelHref } from "@/lib/settings";
-import { orDash } from "@/lib/format";
+import { orDash, formatSource } from "@/lib/format";
 import StageSelect from "../StageSelect";
 import {
   PageHeader,
@@ -138,7 +138,7 @@ export default async function LeadDetailPage({
               "—"
             )}
           </Row>
-          <Row label="Source">{orDash(lead.source)}</Row>
+          <Row label="Source">{formatSource(lead.source)}</Row>
           <Row label="Received">{dateTime(lead.created_at)}</Row>
           <Row label="Stage updated">{dateTime(lead.stage_updated_at)}</Row>
           <Row label="Email consent">{lead.consent ? "Yes" : "No"}</Row>

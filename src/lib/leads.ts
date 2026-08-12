@@ -151,9 +151,18 @@ export type DateRange = { from?: string | null; to?: string | null };
  */
 export const IMPORT_SOURCE_PREFIX = "import";
 
-export async function getAllLeads(
-  opts: { source?: string; excludeImports?: boolean } & DateRange = {}
-): Promise<Lead[]> {
+type LeadListOpts = {
+  source?: string;
+  excludeImports?: boolean;
+  limit?: number;
+  offset?: number;
+} & DateRange;
+
+/** Shared WHERE for the leads list + its count (keeps them in sync). */
+function leadListWhere(opts: LeadListOpts): {
+  where: string;
+  params: unknown[];
+} {
   const conds = ["audience = 'leads'"];
   const params: unknown[] = [];
   if (opts.source) {
@@ -171,12 +180,31 @@ export async function getAllLeads(
     params.push(opts.to);
     conds.push(`created_at <= $${params.length}`);
   }
-  return query<Lead>(
-    `SELECT * FROM leads
-      WHERE ${conds.join(" AND ")}
-      ORDER BY created_at DESC`,
+  return { where: conds.join(" AND "), params };
+}
+
+export async function getAllLeads(opts: LeadListOpts = {}): Promise<Lead[]> {
+  const { where, params } = leadListWhere(opts);
+  let sql = `SELECT * FROM leads WHERE ${where} ORDER BY created_at DESC`;
+  if (opts.limit != null) {
+    params.push(opts.limit);
+    sql += ` LIMIT $${params.length}`;
+  }
+  if (opts.offset != null) {
+    params.push(opts.offset);
+    sql += ` OFFSET $${params.length}`;
+  }
+  return query<Lead>(sql, params);
+}
+
+/** Total leads matching the same filters (for pagination). */
+export async function countLeads(opts: LeadListOpts = {}): Promise<number> {
+  const { where, params } = leadListWhere(opts);
+  const rows = await query<{ n: string }>(
+    `SELECT COUNT(*) AS n FROM leads WHERE ${where}`,
     params
   );
+  return Number(rows[0]?.n ?? 0);
 }
 
 export async function getLeadById(id: string): Promise<Lead | null> {

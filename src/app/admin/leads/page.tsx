@@ -3,11 +3,12 @@ import { requireAdmin } from "@/lib/require-admin";
 import { hasDatabase } from "@/lib/db";
 import {
   getAllLeads,
+  countLeads,
   getSourceReport,
   IMPORT_SOURCE_PREFIX,
 } from "@/lib/leads";
 import { resolveRange, type RangeKey } from "@/lib/date-range";
-import { formatDate, formatPercent, orDash } from "@/lib/format";
+import { formatDate, formatPercent, formatSource, orDash } from "@/lib/format";
 import StageSelect from "./StageSelect";
 import ImportLeadsPanel from "./ImportLeadsPanel";
 import {
@@ -41,6 +42,7 @@ export default async function LeadsPage({
     from?: string;
     to?: string;
     imports?: string;
+    page?: string;
   }>;
 }) {
   await requireAdmin();
@@ -54,6 +56,11 @@ export default async function LeadsPage({
     sp.imports === "1" || Boolean(source?.startsWith(IMPORT_SOURCE_PREFIX));
   const excludeImports = !showImports;
 
+  // Pagination for the (potentially large) lead list.
+  const PAGE_SIZE = 50;
+  const pageNum = Math.max(1, Number(sp.page) || 1);
+  const offset = (pageNum - 1) * PAGE_SIZE;
+
   if (!hasDatabase()) {
     return (
       <>
@@ -63,10 +70,16 @@ export default async function LeadsPage({
     );
   }
 
-  const [report, leads] = await Promise.all([
+  const listOpts = { source, from: range.from, to: range.to, excludeImports };
+  const [report, leads, totalLeadRows] = await Promise.all([
     getSourceReport({ from: range.from, to: range.to, excludeImports }),
-    getAllLeads({ source, from: range.from, to: range.to, excludeImports }),
+    getAllLeads({ ...listOpts, limit: PAGE_SIZE, offset }),
+    countLeads(listOpts),
   ]);
+
+  const pageCount = Math.max(1, Math.ceil(totalLeadRows / PAGE_SIZE));
+  const firstRow = totalLeadRows === 0 ? 0 : offset + 1;
+  const lastRow = offset + leads.length;
 
   const totalLeads = report.reduce((n, r) => n + r.total, 0);
   const totalToured = report.reduce((n, r) => n + r.toured, 0);
@@ -79,6 +92,19 @@ export default async function LeadsPage({
     if (source) q.set("source", source);
     if (sp.imports === "1") q.set("imports", "1");
     for (const [k, v] of Object.entries(params)) if (v) q.set(k, v);
+    const s = q.toString();
+    return `/admin/leads${s ? `?${s}` : ""}`;
+  };
+
+  // Link to a specific page, preserving all active filters.
+  const pageHref = (n: number) => {
+    const q = new URLSearchParams();
+    if (source) q.set("source", source);
+    if (sp.range) q.set("range", sp.range);
+    if (sp.from) q.set("from", sp.from);
+    if (sp.to) q.set("to", sp.to);
+    if (sp.imports === "1") q.set("imports", "1");
+    if (n > 1) q.set("page", String(n));
     const s = q.toString();
     return `/admin/leads${s ? `?${s}` : ""}`;
   };
@@ -233,7 +259,7 @@ export default async function LeadsPage({
               <tbody className="divide-y divide-line">
                 {report.map((r) => (
                   <tr key={r.source} className="transition-colors hover:bg-surface">
-                    <Td className="font-medium text-ink">{orDash(r.source)}</Td>
+                    <Td className="font-medium text-ink">{formatSource(r.source)}</Td>
                     <Td className="text-right text-ink-soft">{r.total}</Td>
                     <Td className="text-right text-ink-soft">{r.toured}</Td>
                     <Td className="text-right text-ink-soft">{r.moved_in}</Td>
@@ -253,7 +279,7 @@ export default async function LeadsPage({
             All leads{" "}
             {source && (
               <Badge tone="info" className="ml-1 normal-case tracking-normal">
-                source: {source}
+                source: {formatSource(source)}
               </Badge>
             )}
           </SectionLabel>
@@ -310,7 +336,7 @@ export default async function LeadsPage({
                         <div className="text-ink-faint">{lead.phone}</div>
                       )}
                     </Td>
-                    <Td className="text-ink-soft">{orDash(lead.source)}</Td>
+                    <Td className="text-ink-soft">{formatSource(lead.source)}</Td>
                     <Td className="whitespace-nowrap text-ink-faint">
                       {formatDate(lead.created_at)}
                     </Td>
@@ -321,6 +347,44 @@ export default async function LeadsPage({
                 ))}
               </tbody>
             </TableWrap>
+          )}
+
+          {/* Pagination */}
+          {totalLeadRows > 0 && (
+            <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
+              <p className="text-xs text-ink-faint">
+                Showing{" "}
+                <span className="font-medium text-ink-soft">
+                  {firstRow}&ndash;{lastRow}
+                </span>{" "}
+                of <span className="font-medium text-ink-soft">{totalLeadRows}</span>
+              </p>
+              {pageCount > 1 && (
+                <div className="flex items-center gap-2">
+                  {pageNum > 1 ? (
+                    <ButtonLink href={pageHref(pageNum - 1)} variant="secondary" size="sm">
+                      &larr; Previous
+                    </ButtonLink>
+                  ) : (
+                    <span className="rounded-lg border border-line px-3 py-1.5 text-sm text-ink-faint opacity-50">
+                      &larr; Previous
+                    </span>
+                  )}
+                  <span className="text-xs text-ink-faint">
+                    Page {pageNum} of {pageCount}
+                  </span>
+                  {pageNum < pageCount ? (
+                    <ButtonLink href={pageHref(pageNum + 1)} variant="secondary" size="sm">
+                      Next &rarr;
+                    </ButtonLink>
+                  ) : (
+                    <span className="rounded-lg border border-line px-3 py-1.5 text-sm text-ink-faint opacity-50">
+                      Next &rarr;
+                    </span>
+                  )}
+                </div>
+              )}
+            </div>
           )}
         </div>
       </section>

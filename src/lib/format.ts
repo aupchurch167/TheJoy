@@ -62,3 +62,22 @@ export function orDash(value?: string | number | null): string {
   const s = String(value).trim();
   return s === "" ? "—" : s;
 }
+
+/**
+ * Human-friendly label for a lead source. The stored value keeps its
+ * "import:" prefix (that is how imported leads stay separate from website
+ * leads), but for display we drop the prefix and humanize the rest, e.g.
+ * "import:a_place_for_mom" -> "A Place For Mom", "homepage_form" -> "Homepage
+ * Form". A bare "import" shows as "Imported".
+ */
+export function formatSource(value?: string | null): string {
+  const s = (value ?? "").trim();
+  if (s === "") return "—";
+  if (s === "import") return "Imported";
+  const cleaned = s.replace(/^import:/, "").replace(/[_-]+/g, " ").trim();
+  return cleaned
+    .split(" ")
+    .filter(Boolean)
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(" ");
+}

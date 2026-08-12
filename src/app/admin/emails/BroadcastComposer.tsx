@@ -16,7 +16,7 @@ import { templatesForAudience } from "@/lib/email-templates";
 import { btn, BackLink, Badge, Card } from "@/components/admin/ui";
 import ConfirmButton from "@/components/admin/ConfirmButton";
 import { useToast } from "@/components/admin/Toast";
-import { formatDateTime } from "@/lib/format";
+import { formatDateTime, formatSource } from "@/lib/format";
 
 const INPUT =
   "w-full rounded-lg border border-line bg-white px-3 py-2.5 text-sm text-ink placeholder:text-ink-faint transition-colors focus:border-clay focus:outline-none focus:ring-2 focus:ring-clay/30";
@@ -370,7 +370,7 @@ export default function BroadcastComposer({
                             : "border-line bg-white text-ink-soft hover:bg-surface"
                         }`}
                       >
-                        {s}
+                        {formatSource(s)}
                       </button>
                     );
                   })}
