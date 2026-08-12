@@ -1,9 +1,11 @@
 import { requireAdmin } from "@/lib/require-admin";
 import { hasDatabase } from "@/lib/db";
 import { listFeedbackRequests, listCallbackRequests } from "@/lib/feedback";
+import { getSubscribedByAudience } from "@/lib/leads";
 import { SITE_URL } from "@/lib/site";
 import { formatDate, orDash } from "@/lib/format";
 import SendSurveyForm from "./SendSurveyForm";
+import SendToAllButton from "./SendToAllButton";
 import { CallbackStatusControl } from "./CallbackControls";
 import RequestsTable from "./RequestsTable";
 import {
@@ -30,10 +32,12 @@ export default async function FeedbackPage() {
     );
   }
 
-  const [requests, callbacks] = await Promise.all([
+  const [requests, callbacks, families] = await Promise.all([
     listFeedbackRequests(),
     listCallbackRequests(),
+    getSubscribedByAudience("families"),
   ]);
+  const familyCount = families.length;
 
   // Concerns to the top, then newest first.
   const sorted = [...requests].sort((a, b) => {
@@ -51,7 +55,12 @@ export default async function FeedbackPage() {
       <PageHeader
         title="Family feedback"
         description="Send a short survey to a family. Happy families are pointed to public reviews; concerns come here first, with an alert to you, so you can make it right."
-        actions={<SendSurveyForm />}
+        actions={
+          <div className="flex flex-wrap items-center gap-2">
+            <SendToAllButton count={familyCount} />
+            <SendSurveyForm />
+          </div>
+        }
       />
 
       {/* Requests */}

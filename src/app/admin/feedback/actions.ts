@@ -8,8 +8,16 @@ import {
   markRequestSent,
   getRequestById,
   setCallbackStatus,
+  getOpenRequestEmails,
 } from "@/lib/feedback";
+import { getSubscribedByAudience } from "@/lib/leads";
 import { sendSurveyInvitation, emailEnabled } from "@/lib/email";
+
+/** First name from a resident's full name, for email personalization. */
+function firstName(full: string | null): string | null {
+  const f = (full ?? "").trim().split(/\s+/)[0];
+  return f || null;
+}
 
 export type FeedbackActionResult =
   | { ok: true; message: string }
@@ -56,6 +64,66 @@ export async function sendSurvey(input: unknown): Promise<FeedbackActionResult> 
   } catch (err) {
     console.error("[sendSurvey]", err);
     return { ok: false, error: "Could not send the survey. Is the database connected?" };
+  }
+}
+
+/**
+ * Send the survey to every active family contact with an email, skipping anyone
+ * who already has an outstanding (not-yet-completed) survey so no one is
+ * double-invited. One tokenized request per contact.
+ */
+export async function sendSurveyToAllFamilies(): Promise<FeedbackActionResult> {
+  const { email } = await requireAdmin();
+  if (!emailEnabled()) {
+    return {
+      ok: false,
+      error: "Email is not configured yet (RESEND_API_KEY). Add it first.",
+    };
+  }
+  try {
+    const [families, openEmails] = await Promise.all([
+      getSubscribedByAudience("families"),
+      getOpenRequestEmails(),
+    ]);
+
+    let sent = 0;
+    let skipped = 0;
+    for (const contact of families) {
+      const to = (contact.email ?? "").trim().toLowerCase();
+      if (!to || openEmails.has(to)) {
+        skipped++;
+        continue;
+      }
+      const request = await createFeedbackRequest({
+        familyName: contact.name,
+        familyEmail: to,
+        residentFirstName: firstName(contact.resident_name),
+        createdBy: email,
+      });
+      const ok = await sendSurveyInvitation(request);
+      if (ok) await markRequestSent(request.id);
+      sent++;
+      openEmails.add(to); // guard against duplicate contacts in the list
+    }
+
+    revalidatePath("/admin/feedback");
+    if (sent === 0) {
+      return {
+        ok: true,
+        message: skipped
+          ? `No new surveys sent. ${skipped} family member(s) already have an open survey.`
+          : "No active family members with an email were found.",
+      };
+    }
+    return {
+      ok: true,
+      message: `Sent ${sent} survey${sent === 1 ? "" : "s"}${
+        skipped ? `, skipped ${skipped} who already have an open one` : ""
+      }.`,
+    };
+  } catch (err) {
+    console.error("[sendSurveyToAllFamilies]", err);
+    return { ok: false, error: "Could not send. Is the database connected?" };
   }
 }
 

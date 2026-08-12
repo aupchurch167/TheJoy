@@ -123,6 +123,15 @@ export async function markRequestCompleted(id: string): Promise<void> {
   );
 }
 
+/** Emails that already have an outstanding (not completed) survey request. */
+export async function getOpenRequestEmails(): Promise<Set<string>> {
+  const rows = await query<{ family_email: string }>(
+    `SELECT DISTINCT lower(family_email) AS family_email
+       FROM feedback_requests WHERE completed_at IS NULL`
+  );
+  return new Set(rows.map((r) => r.family_email));
+}
+
 export async function getRequestByToken(
   token: string
 ): Promise<FeedbackRequest | null> {

@@ -365,19 +365,19 @@ export async function sendSurveyInvitation(request: {
   const body = [
     `Hi ${firstName},`,
     ``,
-    `It has been a joy having ${who} with us. I would love to know how things feel from your side. It takes about two minutes, and you can answer anonymously if you prefer.`,
+    `It has been a joy having ${who} with us. We would love to know how things feel from your side. It takes about two minutes, and you can answer anonymously if you prefer.`,
     ``,
     `[[button:Share how it is going|${url}]]`,
     ``,
     `Warmly,`,
-    `Mellissa`,
+    `The Joy team`,
     `Joy Senior Living, a personal care home`,
   ].join("\n");
 
   await resend.emails.send({
     from: FROM,
     to: request.family_email,
-    subject: "How are things going?",
+    subject: "[The Joy] How are things going?",
     html: wrapEmail(renderBody(body), undefined, false),
   });
   return true;
