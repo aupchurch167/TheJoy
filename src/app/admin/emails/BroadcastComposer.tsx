@@ -342,6 +342,48 @@ export default function BroadcastComposer({
     }
   }
 
+  // Insert a snippet at the caret in the Message textarea (or append if the
+  // textarea was never focused), then restore focus after the inserted text.
+  function insertAtCursor(snippet: string) {
+    const el = bodyRef.current;
+    const start = el ? el.selectionStart : body.length;
+    const end = el ? el.selectionEnd : body.length;
+    const next = body.slice(0, start) + snippet + body.slice(end);
+    setBody(next);
+    requestAnimationFrame(() => {
+      const pos = start + snippet.length;
+      if (bodyRef.current) {
+        bodyRef.current.focus();
+        bodyRef.current.setSelectionRange(pos, pos);
+      }
+    });
+  }
+
+  // The insert popover (link / button) and its fields.
+  const [insertKind, setInsertKind] = useState<null | "link" | "button">(null);
+  const [insText, setInsText] = useState("");
+  const [insUrl, setInsUrl] = useState("");
+
+  function openInsert(kind: "link" | "button") {
+    setInsertKind(kind);
+    setInsText("");
+    setInsUrl("");
+  }
+
+  function confirmInsert() {
+    const url = insUrl.trim();
+    if (!url) {
+      toastError("Add a link (a web address, tel:, or mailto:).");
+      return;
+    }
+    if (insertKind === "link") {
+      insertAtCursor(`[${insText.trim() || url}](${url})`);
+    } else if (insertKind === "button") {
+      insertAtCursor(`\n\n[[button:${insText.trim() || "Button"}|${url}]]\n\n`);
+    }
+    setInsertKind(null);
+  }
+
   async function uploadImage(file: File) {
     setError("");
     const fd = new FormData();
@@ -353,7 +395,7 @@ export default function BroadcastComposer({
       toastError(json.error || "Upload failed.");
       return;
     }
-    setBody((b) => `${b}\n\n![](${json.url})\n`);
+    insertAtCursor(`\n\n![](${json.url})\n\n`);
   }
 
   if (sent) {
@@ -755,10 +797,21 @@ export default function BroadcastComposer({
         </label>
 
         <div>
-          <div className="mb-2 flex items-center justify-between">
+          <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
             <label className="text-sm font-medium text-ink">Message</label>
             <div className="flex items-center gap-2">
-              <PhotoButton onFile={uploadImage} />
+              {tab === "write" && (
+                <div className="flex items-center gap-1">
+                  <ToolButton onClick={() => openInsert("link")}>Link</ToolButton>
+                  <ToolButton onClick={() => openInsert("button")}>
+                    Button
+                  </ToolButton>
+                  <ToolButton onClick={() => insertAtCursor("\n\n[[divider]]\n\n")}>
+                    Divider
+                  </ToolButton>
+                  <PhotoButton onFile={uploadImage} />
+                </div>
+              )}
               <div className="flex overflow-hidden rounded-lg border border-line text-sm">
                 <button
                   onClick={() => setTab("write")}
@@ -775,6 +828,51 @@ export default function BroadcastComposer({
               </div>
             </div>
           </div>
+
+          {/* Insert link / button popover */}
+          {insertKind && tab === "write" && (
+            <div className="mb-2 rounded-lg border border-clay/30 bg-clay/5 p-3">
+              <div className="grid gap-2 sm:grid-cols-[1fr_1.4fr_auto] sm:items-end">
+                <label className="block">
+                  <span className="text-xs font-medium text-ink-soft">
+                    {insertKind === "button" ? "Button label" : "Link text"}
+                  </span>
+                  <input
+                    value={insText}
+                    onChange={(e) => setInsText(e.target.value)}
+                    placeholder={insertKind === "button" ? "Book a tour" : "our reviews"}
+                    className={`${INPUT} mt-1 h-9`}
+                  />
+                </label>
+                <label className="block">
+                  <span className="text-xs font-medium text-ink-soft">Link</span>
+                  <input
+                    value={insUrl}
+                    onChange={(e) => setInsUrl(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && confirmInsert()}
+                    placeholder="https://… , tel:+1…, or mailto:…"
+                    className={`${INPUT} mt-1 h-9`}
+                  />
+                </label>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={confirmInsert}
+                    className={btn("primary", "sm")}
+                  >
+                    Insert
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setInsertKind(null)}
+                    className={btn("ghost", "sm")}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
           {tab === "write" ? (
             <textarea
               ref={bodyRef}
@@ -794,10 +892,14 @@ export default function BroadcastComposer({
             </div>
           )}
           <p className="mt-2 text-xs text-ink-faint">
-            The Joy letterhead, badges, and an unsubscribe link are added
+            Use the toolbar above to drop in a{" "}
+            <strong className="font-semibold">Link</strong>,{" "}
+            <strong className="font-semibold">Button</strong>,{" "}
+            <strong className="font-semibold">Divider</strong>, or{" "}
+            <strong className="font-semibold">Photo</strong> at your cursor. The
+            Joy letterhead, badges, and an unsubscribe link are added
             automatically (opted-out recipients are always skipped). Personalize
-            with <code>{"{{first_name}}"}</code>, and add a button with{" "}
-            <code>[[button:Call us|tel:+14706843569]]</code>. Use{" "}
+            with <code>{"{{first_name}}"}</code>. Use{" "}
             <strong className="font-semibold">Send test</strong> to see the final
             design.
           </p>
@@ -905,6 +1007,24 @@ export default function BroadcastComposer({
         </div>
       </div>
     </div>
+  );
+}
+
+function ToolButton({
+  onClick,
+  children,
+}: {
+  onClick: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="rounded-lg border border-line bg-white px-2.5 py-1.5 text-sm font-medium text-ink-soft transition-colors hover:bg-surface hover:text-ink"
+    >
+      {children}
+    </button>
   );
 }
 
