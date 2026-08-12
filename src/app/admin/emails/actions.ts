@@ -9,6 +9,9 @@ import {
   scheduleBroadcast,
   deleteBroadcast,
   getBroadcastById,
+  createSavedSegment,
+  deleteSavedSegment,
+  type SavedSegment,
 } from "@/lib/broadcasts";
 import {
   processDueBroadcasts,
@@ -227,6 +230,70 @@ export async function sendTest(input: unknown): Promise<TestResult> {
   } catch (err) {
     console.error("[sendTest]", err);
     return { ok: false, error: "Could not send the test. Please try again." };
+  }
+}
+
+/** Clone a broadcast (any status) into a fresh draft you can edit and resend. */
+export async function duplicateBroadcast(
+  id: string
+): Promise<{ ok: true; id: string } | { ok: false }> {
+  await requireAdmin();
+  try {
+    const b = await getBroadcastById(id);
+    if (!b) return { ok: false };
+    const copy = await createBroadcast(
+      `Copy of ${b.subject}`.slice(0, 200),
+      b.body,
+      b.audience,
+      "email",
+      b.filters
+    );
+    revalidatePath("/admin/emails");
+    return { ok: true, id: copy.id };
+  } catch (err) {
+    console.error("[duplicateBroadcast]", err);
+    return { ok: false };
+  }
+}
+
+const SaveSegmentSchema = z.object({
+  name: z.string().trim().min(1, "Name the segment.").max(80),
+  audience: z.enum(["leads", "families"]).default("leads"),
+  filters: FiltersSchema,
+});
+
+export async function saveSegment(
+  input: unknown
+): Promise<{ ok: true; segment: SavedSegment } | { ok: false; error: string }> {
+  await requireAdmin();
+  const parsed = SaveSegmentSchema.safeParse(input);
+  if (!parsed.success)
+    return { ok: false, error: parsed.error.issues[0]?.message ?? "Invalid." };
+  const seg = normalizeFilters(parsed.data.filters);
+  if (!seg) return { ok: false, error: "Add at least one filter to save." };
+  try {
+    const segment = await createSavedSegment(
+      parsed.data.name,
+      parsed.data.audience,
+      seg
+    );
+    revalidatePath("/admin/emails");
+    return { ok: true, segment };
+  } catch (err) {
+    console.error("[saveSegment]", err);
+    return { ok: false, error: "Could not save the segment." };
+  }
+}
+
+export async function removeSegment(id: string): Promise<{ ok: boolean }> {
+  await requireAdmin();
+  try {
+    await deleteSavedSegment(id);
+    revalidatePath("/admin/emails");
+    return { ok: true };
+  } catch (err) {
+    console.error("[removeSegment]", err);
+    return { ok: false };
   }
 }
 

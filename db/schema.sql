@@ -152,6 +152,29 @@ ALTER TABLE broadcasts
 -- it always reflects current opt-outs.
 ALTER TABLE broadcasts ADD COLUMN IF NOT EXISTS filters JSONB;
 
+-- Engagement + delivery tracking (fed by the Resend webhook). provider_message_id
+-- is the id Resend returns at send time; the webhook matches events back to the
+-- recipient by it. The timestamps power the per-broadcast results view; a bounce
+-- or complaint also suppresses the lead (see the webhook route).
+ALTER TABLE broadcast_recipients ADD COLUMN IF NOT EXISTS provider_message_id TEXT;
+ALTER TABLE broadcast_recipients ADD COLUMN IF NOT EXISTS delivered_at TIMESTAMPTZ;
+ALTER TABLE broadcast_recipients ADD COLUMN IF NOT EXISTS opened_at TIMESTAMPTZ;
+ALTER TABLE broadcast_recipients ADD COLUMN IF NOT EXISTS clicked_at TIMESTAMPTZ;
+ALTER TABLE broadcast_recipients ADD COLUMN IF NOT EXISTS bounced_at TIMESTAMPTZ;
+ALTER TABLE broadcast_recipients ADD COLUMN IF NOT EXISTS complained_at TIMESTAMPTZ;
+CREATE INDEX IF NOT EXISTS broadcast_recipients_msgid_idx
+  ON broadcast_recipients (provider_message_id);
+
+-- Saved recipient segments: name a set of filters ("A Place for Mom, still new")
+-- so a broadcast can reuse it instead of rebuilding the filters each time.
+CREATE TABLE IF NOT EXISTS saved_segments (
+  id         UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name       TEXT NOT NULL,
+  audience   TEXT NOT NULL DEFAULT 'leads',
+  filters    JSONB NOT NULL DEFAULT '{}'::jsonb,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
 -- Broadcasts can be email or SMS (text blast). The subject is unused for SMS.
 ALTER TABLE broadcasts ADD COLUMN IF NOT EXISTS channel TEXT NOT NULL DEFAULT 'email'
   CHECK (channel IN ('email', 'sms'));

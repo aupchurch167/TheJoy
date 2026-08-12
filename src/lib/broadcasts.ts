@@ -123,14 +123,123 @@ export async function markBroadcastSent(
 export async function recordRecipient(
   broadcastId: string,
   leadId: string,
-  error?: string
+  opts?: { error?: string; providerMessageId?: string }
 ): Promise<void> {
   await query(
-    `INSERT INTO broadcast_recipients (broadcast_id, lead_id, error)
-     VALUES ($1, $2, $3)
+    `INSERT INTO broadcast_recipients (broadcast_id, lead_id, error, provider_message_id)
+     VALUES ($1, $2, $3, $4)
      ON CONFLICT (broadcast_id, lead_id) DO NOTHING`,
-    [broadcastId, leadId, error ?? null]
+    [broadcastId, leadId, opts?.error ?? null, opts?.providerMessageId ?? null]
   );
+}
+
+/** A Resend engagement/delivery event mapped to a recipient timestamp column. */
+export type EngagementEvent =
+  | "delivered"
+  | "opened"
+  | "clicked"
+  | "bounced"
+  | "complained";
+
+const EVENT_COLUMN: Record<EngagementEvent, string> = {
+  delivered: "delivered_at",
+  opened: "opened_at",
+  clicked: "clicked_at",
+  bounced: "bounced_at",
+  complained: "complained_at",
+};
+
+/**
+ * Stamp an engagement event on the recipient identified by the Resend message
+ * id. Idempotent (COALESCE keeps the first timestamp). Returns the matched
+ * lead_id (so the caller can suppress on bounce/complaint), or null.
+ */
+export async function applyEngagementEvent(
+  providerMessageId: string,
+  event: EngagementEvent
+): Promise<string | null> {
+  const col = EVENT_COLUMN[event];
+  const rows = await query<{ lead_id: string }>(
+    `UPDATE broadcast_recipients
+        SET ${col} = COALESCE(${col}, now())
+      WHERE provider_message_id = $1
+      RETURNING lead_id`,
+    [providerMessageId]
+  );
+  return rows[0]?.lead_id ?? null;
+}
+
+export type BroadcastResults = {
+  sent: number;
+  delivered: number;
+  opened: number;
+  clicked: number;
+  bounced: number;
+  complained: number;
+  failed: number;
+};
+
+/** Aggregate delivery + engagement counts for one broadcast. */
+export async function getBroadcastResults(
+  broadcastId: string
+): Promise<BroadcastResults> {
+  const rows = await query<Record<keyof BroadcastResults, string>>(
+    `SELECT
+        COUNT(*) FILTER (WHERE error IS NULL)          AS sent,
+        COUNT(*) FILTER (WHERE delivered_at IS NOT NULL) AS delivered,
+        COUNT(*) FILTER (WHERE opened_at IS NOT NULL)  AS opened,
+        COUNT(*) FILTER (WHERE clicked_at IS NOT NULL) AS clicked,
+        COUNT(*) FILTER (WHERE bounced_at IS NOT NULL) AS bounced,
+        COUNT(*) FILTER (WHERE complained_at IS NOT NULL) AS complained,
+        COUNT(*) FILTER (WHERE error IS NOT NULL)      AS failed
+       FROM broadcast_recipients
+      WHERE broadcast_id = $1`,
+    [broadcastId]
+  );
+  const r = rows[0];
+  const n = (v?: string) => Number(v ?? 0);
+  return {
+    sent: n(r?.sent),
+    delivered: n(r?.delivered),
+    opened: n(r?.opened),
+    clicked: n(r?.clicked),
+    bounced: n(r?.bounced),
+    complained: n(r?.complained),
+    failed: n(r?.failed),
+  };
+}
+
+/* ---------------- Saved recipient segments ---------------- */
+
+export type SavedSegment = {
+  id: string;
+  name: string;
+  audience: Audience;
+  filters: LeadSegment;
+  created_at: string;
+};
+
+export async function listSavedSegments(): Promise<SavedSegment[]> {
+  return query<SavedSegment>(
+    `SELECT * FROM saved_segments ORDER BY lower(name) ASC`
+  );
+}
+
+export async function createSavedSegment(
+  name: string,
+  audience: Audience,
+  filters: LeadSegment
+): Promise<SavedSegment> {
+  const rows = await query<SavedSegment>(
+    `INSERT INTO saved_segments (name, audience, filters)
+     VALUES ($1, $2, $3) RETURNING *`,
+    [name, audience, JSON.stringify(filters)]
+  );
+  return rows[0];
+}
+
+export async function deleteSavedSegment(id: string): Promise<void> {
+  await query(`DELETE FROM saved_segments WHERE id = $1`, [id]);
 }
 
 /** Successful sends across ALL broadcasts in the last 60 minutes (rate limit). */

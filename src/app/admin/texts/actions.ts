@@ -143,7 +143,9 @@ export async function sendTextBlast(input: unknown): Promise<BlastResult> {
   let failed = 0;
   for (const r of recipients) {
     const res = await sendSms(r.phone ?? "", content);
-    await recordRecipient(broadcast.id, r.id, res.ok ? undefined : res.error);
+    await recordRecipient(broadcast.id, r.id, {
+      error: res.ok ? undefined : res.error,
+    });
     if (res.ok) sent++;
     else failed++;
     await new Promise((resolve) => setTimeout(resolve, 120));

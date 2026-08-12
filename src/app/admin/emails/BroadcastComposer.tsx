@@ -9,8 +9,15 @@ import {
   removeBroadcast,
   sendTest,
   previewRecipients,
+  duplicateBroadcast,
+  saveSegment,
+  removeSegment,
 } from "./actions";
-import type { Broadcast } from "@/lib/broadcasts";
+import type {
+  Broadcast,
+  BroadcastResults,
+  SavedSegment,
+} from "@/lib/broadcasts";
 import type { Audience } from "@/lib/leads";
 import { templatesForAudience } from "@/lib/email-templates";
 import { btn, BackLink, Badge, Card } from "@/components/admin/ui";
@@ -36,9 +43,13 @@ const STAGES: { key: string; label: string }[] = [
 export default function BroadcastComposer({
   broadcast,
   sources = [],
+  segments = [],
+  results = null,
 }: {
   broadcast?: Broadcast | null;
   sources?: string[];
+  segments?: SavedSegment[];
+  results?: BroadcastResults | null;
 }) {
   const router = useRouter();
   const { success, error: toastError } = useToast();
@@ -81,6 +92,68 @@ export default function BroadcastComposer({
     setFStages([]);
     setFFrom("");
     setFTo("");
+  }
+
+  // Saved segments (load / save / delete).
+  const [savedSegments, setSavedSegments] = useState<SavedSegment[]>(segments);
+
+  function loadSegment(segId: string) {
+    const seg = savedSegments.find((s) => s.id === segId);
+    if (!seg) return;
+    setFSources(seg.filters.sources ?? []);
+    setFStages(seg.filters.stages ?? []);
+    setFFrom(seg.filters.createdFrom?.slice(0, 10) ?? "");
+    setFTo(seg.filters.createdTo?.slice(0, 10) ?? "");
+    success(`Loaded segment: ${seg.name}`);
+  }
+
+  function onSaveSegment() {
+    const name = window.prompt("Name this segment (e.g. “Facebook, still new”):");
+    if (!name?.trim()) return;
+    start(async () => {
+      const res = await saveSegment({
+        name: name.trim(),
+        audience,
+        filters: currentFilters,
+      });
+      if (!res.ok) {
+        toastError(res.error);
+        return;
+      }
+      setSavedSegments((list) =>
+        [...list, res.segment].sort((a, b) =>
+          a.name.toLowerCase().localeCompare(b.name.toLowerCase())
+        )
+      );
+      success(`Saved segment: ${res.segment.name}`);
+    });
+  }
+
+  function onDeleteSegment(segId: string) {
+    const seg = savedSegments.find((s) => s.id === segId);
+    if (!seg || !window.confirm(`Delete the saved segment “${seg.name}”?`)) return;
+    start(async () => {
+      const res = await removeSegment(segId);
+      if (!res.ok) {
+        toastError("Could not delete the segment.");
+        return;
+      }
+      setSavedSegments((list) => list.filter((s) => s.id !== segId));
+      success("Segment deleted.");
+    });
+  }
+
+  function onDuplicate() {
+    if (!broadcast?.id) return;
+    start(async () => {
+      const res = await duplicateBroadcast(broadcast.id);
+      if (!res.ok) {
+        toastError("Could not duplicate this email.");
+        return;
+      }
+      success("Duplicated as a new draft.");
+      router.push(`/admin/emails/${res.id}`);
+    });
   }
 
   // Live recipient count as audience/filters change (debounced).
@@ -265,15 +338,67 @@ export default function BroadcastComposer({
   }
 
   if (sent) {
+    const pct = (n: number) =>
+      results && results.sent > 0
+        ? ` (${Math.round((n / results.sent) * 100)}%)`
+        : "";
+    const stats: { label: string; value: number; suffix?: string }[] = results
+      ? [
+          { label: "Sent", value: results.sent },
+          { label: "Delivered", value: results.delivered, suffix: pct(results.delivered) },
+          { label: "Opened", value: results.opened, suffix: pct(results.opened) },
+          { label: "Clicked", value: results.clicked, suffix: pct(results.clicked) },
+          { label: "Bounced", value: results.bounced },
+          { label: "Complaints", value: results.complained },
+        ]
+      : [];
     return (
       <div className="max-w-3xl">
         <BackLink href="/admin/emails">All emails</BackLink>
-        <div className="mt-3 mb-6 flex items-center gap-3">
-          <h1 className="font-display text-2xl font-semibold text-ink sm:text-3xl">
-            Email
-          </h1>
-          <Badge tone="success">sent</Badge>
+        <div className="mt-3 mb-6 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <h1 className="font-display text-2xl font-semibold text-ink sm:text-3xl">
+              Email
+            </h1>
+            <Badge tone="success">sent</Badge>
+          </div>
+          <button onClick={onDuplicate} disabled={pending} className={btn("secondary", "sm")}>
+            {pending ? "Working…" : "Duplicate"}
+          </button>
         </div>
+
+        {results && (
+          <Card className="mb-6">
+            <p className="text-xs font-semibold uppercase tracking-wide text-ink-faint">
+              Results
+            </p>
+            <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3">
+              {stats.map((s) => (
+                <div key={s.label} className="rounded-lg border border-line bg-surface px-3 py-2.5">
+                  <div className="text-xl font-semibold text-ink">
+                    {s.value}
+                    {s.suffix && (
+                      <span className="ml-1 text-sm font-normal text-ink-faint">
+                        {s.suffix}
+                      </span>
+                    )}
+                  </div>
+                  <div className="text-xs text-ink-faint">{s.label}</div>
+                </div>
+              ))}
+            </div>
+            {results.bounced + results.complained > 0 && (
+              <p className="mt-3 text-xs text-ink-faint">
+                Bounced and complained addresses are unsubscribed automatically.
+              </p>
+            )}
+            <p className="mt-2 text-xs text-ink-faint">
+              Opens and clicks update as recipients engage (via the email
+              provider), so these numbers keep climbing for a while after a send.
+            </p>
+          </Card>
+        )}
+
         <Card>
           <p className="font-medium text-ink">{broadcast?.subject}</p>
           <p className="mt-1 text-sm text-ink-faint">
@@ -351,6 +476,50 @@ export default function BroadcastComposer({
               >
                 {counting ? "counting…" : `${count ?? 0} recipient${count === 1 ? "" : "s"}`}
               </span>
+            </div>
+
+            {/* Saved segments: load a named filter set, or save the current one. */}
+            <div className="mt-3 flex flex-wrap items-center gap-2">
+              <select
+                value=""
+                onChange={(e) => {
+                  if (e.target.value) loadSegment(e.target.value);
+                  e.target.value = "";
+                }}
+                className="h-9 rounded-lg border border-line bg-white px-2 text-sm text-ink focus:border-clay focus:outline-none focus:ring-2 focus:ring-clay/30"
+              >
+                <option value="">Load a saved segment…</option>
+                {savedSegments.map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {s.name}
+                  </option>
+                ))}
+              </select>
+              <button
+                type="button"
+                onClick={onSaveSegment}
+                disabled={!hasFilter || pending}
+                className="h-9 rounded-lg border border-line bg-white px-3 text-xs font-semibold text-ink-soft hover:bg-surface disabled:opacity-50"
+              >
+                Save current
+              </button>
+              {savedSegments.length > 0 && (
+                <select
+                  value=""
+                  onChange={(e) => {
+                    if (e.target.value) onDeleteSegment(e.target.value);
+                    e.target.value = "";
+                  }}
+                  className="h-9 rounded-lg border border-line bg-white px-2 text-xs text-ink-faint focus:border-clay focus:outline-none"
+                >
+                  <option value="">Delete a segment…</option>
+                  {savedSegments.map((s) => (
+                    <option key={s.id} value={s.id}>
+                      {s.name}
+                    </option>
+                  ))}
+                </select>
+              )}
             </div>
 
             {sources.length > 0 && (

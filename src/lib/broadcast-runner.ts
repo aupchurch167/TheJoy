@@ -82,22 +82,25 @@ async function sendBatch(
       break;
     }
     try {
-      const ok = await sendMarketingEmail(lead, broadcast.subject, broadcast.body);
-      if (!ok) {
+      const messageId = await sendMarketingEmail(
+        lead,
+        broadcast.subject,
+        broadcast.body,
+        { broadcastId: broadcast.id }
+      );
+      if (!messageId) {
         // Email not configured mid-run: stop and let a later run retry.
         return { sent, done: false };
       }
-      await recordRecipient(broadcast.id, lead.id);
+      await recordRecipient(broadcast.id, lead.id, { providerMessageId: messageId });
       sent++;
     } catch (err) {
       // Record the failure so we don't retry a bad address forever. It does not
       // count against the rate budget (no message left the building).
       console.error("[broadcast] send failed for", lead.email, err);
-      await recordRecipient(
-        broadcast.id,
-        lead.id,
-        err instanceof Error ? err.message : "unknown"
-      );
+      await recordRecipient(broadcast.id, lead.id, {
+        error: err instanceof Error ? err.message : "unknown",
+      });
     }
   }
   // Done when we walked the whole pending list without stopping at the cap.

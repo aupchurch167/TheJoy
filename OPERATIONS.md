@@ -421,6 +421,39 @@ America/New_York**, overridable by env:
 The metering runs on the cron worker, so keep the cron hitting `/api/cron`
 regularly (see the cron section) for queued sends to drain.
 
+### Deliverability webhook (bounces, complaints, opens, clicks)
+
+Point Resend at the app so bad addresses stop themselves and you get real
+results:
+
+1. In Resend > **Webhooks**, add an endpoint: `https://joyseniorcare.com/api/webhooks/resend`.
+2. Subscribe to `email.delivered`, `email.opened`, `email.clicked`,
+   `email.bounced`, `email.complained`.
+3. Copy the endpoint's **Signing secret** (starts with `whsec_`) into the env
+   var `RESEND_WEBHOOK_SECRET`, then redeploy.
+
+With it set:
+
+- A **hard bounce** or **spam complaint** automatically unsubscribes that
+  address (a suppression list) so it is never emailed again. This protects your
+  sending reputation.
+- **Delivered / opened / clicked** counts show on each sent email's **Results**
+  panel. Opens and clicks keep climbing for a while after a send.
+
+Until `RESEND_WEBHOOK_SECRET` is set the endpoint safely ignores events (it
+can't verify them), so nothing breaks; you just don't get suppression or stats
+yet. The one-click unsubscribe header (Gmail/Yahoo requirement) works with no
+setup.
+
+### Segments, duplicating, and results
+
+- **Refine recipients** on a new email can be saved as a named **segment** and
+  reloaded later ("Load a saved segment").
+- Any sent email has a **Duplicate** button that opens a fresh editable draft
+  with the same subject, body, audience, and filters.
+- A sent email's **Results** panel shows sent / delivered / opened / clicked /
+  bounced / complaints (delivery data needs the webhook above).
+
 ---
 
 ## 11. Family emails and the photo gallery (Phase 4)

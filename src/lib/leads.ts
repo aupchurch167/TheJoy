@@ -125,6 +125,24 @@ export async function insertImportedLead(input: {
   );
 }
 
+/**
+ * Suppress an address after a hard bounce or spam complaint: mark every lead
+ * row with this email unsubscribed and pause its drip, so we never send to it
+ * again. Returns how many rows were suppressed.
+ */
+export async function suppressLeadByEmail(email: string): Promise<number> {
+  const rows = await query<{ id: string }>(
+    `UPDATE leads
+        SET unsubscribed_at = COALESCE(unsubscribed_at, now()),
+            drip_status = 'paused'
+      WHERE lower(email) = lower($1)
+        AND unsubscribed_at IS NULL
+      RETURNING id`,
+    [email]
+  );
+  return rows.length;
+}
+
 /** Mark a lead unsubscribed by its token. Returns true if a row was updated. */
 export async function unsubscribeByToken(token: string): Promise<boolean> {
   const rows = await query<{ id: string }>(

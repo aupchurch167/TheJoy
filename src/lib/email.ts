@@ -31,8 +31,26 @@ export function emailEnabled(): boolean {
   return resend !== null;
 }
 
+/** The human-facing unsubscribe page (the visible footer link). */
 function unsubscribeUrl(token: string): string {
   return `${SITE_URL}/unsubscribe?token=${token}`;
+}
+
+/** The machine one-click unsubscribe endpoint (accepts POST). */
+function oneClickUnsubscribeUrl(token: string): string {
+  return `${SITE_URL}/api/unsubscribe?token=${token}`;
+}
+
+/**
+ * List-Unsubscribe headers. Gmail/Yahoo bulk-sender rules want one-click
+ * unsubscribe: the header URL must accept a POST, signaled by
+ * List-Unsubscribe-Post. Better inbox placement and required at our volume.
+ */
+function unsubscribeHeaders(token: string): Record<string, string> {
+  return {
+    "List-Unsubscribe": `<${oneClickUnsubscribeUrl(token)}>`,
+    "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+  };
 }
 
 /** The letterhead logo (a live https URL so it loads in recipients' inboxes). */
@@ -269,26 +287,30 @@ ${badgesRow}
 export async function sendMarketingEmail(
   lead: Lead,
   subject: string,
-  markdownBody: string
-): Promise<boolean> {
+  markdownBody: string,
+  opts?: { broadcastId?: string }
+): Promise<string | null> {
   if (!resend) {
     console.info("[email] RESEND_API_KEY not set; skipping send to", lead.email);
-    return false;
+    return null;
   }
   // Phone-only family contacts have no email; nothing to send.
-  if (!lead.email) return false;
-  const unsubUrl = unsubscribeUrl(lead.unsubscribe_token);
+  if (!lead.email) return null;
   const subj = applyMergeFields(subject, lead);
   const inner = renderBody(applyMergeFields(markdownBody, lead));
 
-  await resend.emails.send({
+  const { data } = await resend.emails.send({
     from: FROM,
     to: lead.email,
     subject: subj,
-    html: wrapEmail(inner, unsubUrl),
-    headers: { "List-Unsubscribe": `<${unsubUrl}>` },
+    html: wrapEmail(inner, unsubscribeUrl(lead.unsubscribe_token)),
+    headers: unsubscribeHeaders(lead.unsubscribe_token),
+    ...(opts?.broadcastId
+      ? { tags: [{ name: "broadcast_id", value: opts.broadcastId }] }
+      : {}),
   });
-  return true;
+  // Returns Resend's message id so the caller can match webhook events to it.
+  return data?.id ?? null;
 }
 
 /**
@@ -307,7 +329,6 @@ export async function sendTestEmail(
     return false;
   }
   const sample = { name: "Sarah" };
-  const unsubUrl = unsubscribeUrl("test-preview");
   const subj = applyMergeFields(subject, sample);
   const inner = renderBody(applyMergeFields(markdownBody || "", sample));
 
@@ -315,8 +336,8 @@ export async function sendTestEmail(
     from: FROM,
     to,
     subject: `[TEST] ${subj}`,
-    html: wrapEmail(inner, unsubUrl),
-    headers: { "List-Unsubscribe": `<${unsubUrl}>` },
+    html: wrapEmail(inner, unsubscribeUrl("test-preview")),
+    headers: unsubscribeHeaders("test-preview"),
   });
   return true;
 }
