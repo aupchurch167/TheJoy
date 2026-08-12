@@ -116,6 +116,7 @@ export default async function LeadDetailPage({
         </div>
 
         <div className="mt-4">
+          <Row label="Resident">{orDash(lead.resident_name)}</Row>
           <Row label="Email">
             {lead.email ? (
               <a

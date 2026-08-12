@@ -275,6 +275,7 @@ export default async function LeadsPage({
               <thead>
                 <tr className="border-b border-line">
                   <Th>Name</Th>
+                  <Th>Resident</Th>
                   <Th>Contact</Th>
                   <Th>Source</Th>
                   <Th>Added</Th>
@@ -302,6 +303,7 @@ export default async function LeadsPage({
                         </Badge>
                       )}
                     </Td>
+                    <Td className="text-ink-soft">{orDash(lead.resident_name)}</Td>
                     <Td className="text-ink-soft">
                       <div className="break-all">{orDash(lead.email)}</div>
                       {lead.phone && (

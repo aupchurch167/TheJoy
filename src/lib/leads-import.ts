@@ -24,6 +24,8 @@ export type CleanLead = {
   source: string;
   /** ISO original date when the row supplied one; null falls back to now(). */
   createdAt: string | null;
+  /** The senior the inquiry is about (the lead is usually the adult child). */
+  residentName: string | null;
 };
 
 export type ParsedLeads = {
@@ -43,7 +45,8 @@ export type LeadFieldKey =
   | "phone"
   | "source"
   | "date"
-  | "message";
+  | "message"
+  | "resident";
 
 /** Field -> column index in the file (missing = not mapped). */
 export type LeadColumnMap = Partial<Record<LeadFieldKey, number>>;
@@ -68,6 +71,7 @@ const FIELD_ALIASES: Record<LeadFieldKey, string[]> = {
   source: ["lead source", "source", "channel", "origin", "referrer"],
   date: ["created at", "created_at", "signup date", "date created", "created", "date", "added", "inquiry date"],
   message: ["message", "notes", "note", "comments", "comment"],
+  resident: ["resident name", "resident", "senior", "prospect", "patient", "care recipient", "for whom"],
 };
 
 /** Quote-aware CSV to a matrix of string cells. */
@@ -154,6 +158,7 @@ const GUESS_ORDER: LeadFieldKey[] = [
   "date",
   "phone",
   "source",
+  "resident",
   "first",
   "last",
   "message",
@@ -223,6 +228,7 @@ export function parseLeadsCsv(
     const channel = cell(r, m.source);
     const message = cell(r, m.message);
     const dateRaw = cell(r, m.date);
+    const residentName = cell(r, m.resident);
 
     if (!email) {
       noEmail++;
@@ -245,6 +251,7 @@ export function parseLeadsCsv(
       message: message || null,
       source: channel ? `${base}:${slugChannel(channel)}` : base,
       createdAt: toIso(dateRaw),
+      residentName: residentName || null,
     });
   }
 

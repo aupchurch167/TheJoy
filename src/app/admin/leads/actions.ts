@@ -49,6 +49,7 @@ const ImportSchema = z.object({
       source: ColIndex.optional(),
       date: ColIndex.optional(),
       message: ColIndex.optional(),
+      resident: ColIndex.optional(),
     })
     .optional(),
 });
@@ -127,6 +128,7 @@ export async function importLeads(input: unknown): Promise<ImportLeadsResult> {
             source: r.source,
             consent,
             createdAt: r.createdAt,
+            residentName: r.residentName,
           });
           added++;
         } catch (rowErr) {
