@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { BUSINESS, OG_IMAGE } from "@/lib/site";
 import {
   getLinkInBio,
@@ -7,7 +8,10 @@ import {
   LINKINBIO_LICENSE_LINE,
   type LinkRow,
 } from "@/lib/linkinbio";
+import { hasDatabase } from "@/lib/db";
+import { getPublishedPosts } from "@/lib/posts";
 import Photo from "@/components/Photo";
+import LeadForm from "@/components/LeadForm";
 
 // Live: staff edits in /admin/links show on the next render.
 export const dynamic = "force-dynamic";
@@ -74,6 +78,12 @@ export default async function LinksPage() {
   const domain = deriveDomain(c.siteHref);
   const trust = c.trust.filter((r) => r.href.trim() && r.label.trim());
   const community = c.community.filter((r) => r.href.trim() && r.label.trim());
+
+  // Most recent published post for the preview card (hidden if none / no DB).
+  const latest =
+    c.showBlog && hasDatabase()
+      ? await getPublishedPosts(1).then((p) => p[0]).catch(() => undefined)
+      : undefined;
 
   return (
     <main className="flex flex-1 justify-center bg-paper">
@@ -187,6 +197,59 @@ export default async function LinksPage() {
                 )}
               </a>
             ))}
+          </section>
+        )}
+
+        {/* Latest blog post preview */}
+        {latest && (
+          <section className="flex flex-col gap-3">
+            <p className="font-mono text-[11px] font-medium uppercase tracking-[0.12em] text-ink-faint">
+              {c.blogHeading}
+            </p>
+            <Link
+              href={`/blog/${latest.slug}`}
+              className="group overflow-hidden rounded-2xl bg-white ring-1 ring-line transition-shadow hover:shadow-md"
+            >
+              {latest.hero_image && (
+                <Photo
+                  src={latest.hero_image}
+                  alt={latest.hero_image_alt || latest.title}
+                  rounded="rounded-none"
+                  sizes="(max-width: 480px) 100vw, 480px"
+                  className="aspect-[16/9] w-full"
+                />
+              )}
+              <div className="flex flex-col gap-1.5 p-5">
+                {latest.category && (
+                  <span className="font-mono text-[11px] uppercase tracking-[0.08em] text-clay">
+                    {latest.category}
+                  </span>
+                )}
+                <span className="font-display text-lg font-semibold leading-snug text-ink group-hover:text-clay">
+                  {latest.title}
+                </span>
+                {latest.excerpt && (
+                  <span className="line-clamp-2 text-sm leading-relaxed text-ink-soft">
+                    {latest.excerpt}
+                  </span>
+                )}
+                <span className="mt-1 text-sm font-semibold text-clay">
+                  Read the post &rarr;
+                </span>
+              </div>
+            </Link>
+          </section>
+        )}
+
+        {/* Quick lead form */}
+        {c.showForm && (
+          <section>
+            <LeadForm
+              compact
+              source="links"
+              heading={c.formHeading}
+              blurb={c.formBlurb}
+            />
           </section>
         )}
 

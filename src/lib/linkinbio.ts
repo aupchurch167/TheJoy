@@ -35,6 +35,13 @@ export type LinkInBioContent = {
   photoCaption: string;
   trust: LinkRow[]; // capped at 3
   community: LinkRow[]; // capped at 2
+  /** Latest-post preview card. */
+  showBlog: boolean;
+  blogHeading: string;
+  /** Quick lead form at the bottom. */
+  showForm: boolean;
+  formHeading: string;
+  formBlurb: string;
   footAddress: string;
   footPhone: string;
 };
@@ -88,6 +95,12 @@ export function linkInBioDefaults(): LinkInBioContent {
       },
       { label: "Careers at Joy", note: "", href: "" },
     ],
+    showBlog: true,
+    blogHeading: "From the blog",
+    showForm: true,
+    formHeading: "Have a question?",
+    formBlurb:
+      "Send a short note and Mellissa will get back to you. Or call anytime.",
     footAddress: BUSINESS_ADDRESS_ONE_LINE,
     footPhone: BUSINESS.phone,
   };
@@ -130,6 +143,11 @@ function coerce(stored: Partial<LinkInBioContent> | null): LinkInBioContent {
     photoCaption: stored.photoCaption ?? d.photoCaption,
     trust: rows(stored.trust, d.trust, 3),
     community: rows(stored.community, d.community, 2),
+    showBlog: typeof stored.showBlog === "boolean" ? stored.showBlog : d.showBlog,
+    blogHeading: stored.blogHeading ?? d.blogHeading,
+    showForm: typeof stored.showForm === "boolean" ? stored.showForm : d.showForm,
+    formHeading: stored.formHeading ?? d.formHeading,
+    formBlurb: stored.formBlurb ?? d.formBlurb,
     footAddress: stored.footAddress ?? d.footAddress,
     footPhone: stored.footPhone ?? d.footPhone,
   };
@@ -200,6 +218,9 @@ export function validateLinkInBio(content: LinkInBioContent): string | null {
     content.callLabel,
     content.dirLabel,
     content.photoCaption,
+    content.blogHeading,
+    content.formHeading,
+    content.formBlurb,
     ...content.trust.flatMap((r) => [r.label, r.note]),
     ...content.community.flatMap((r) => [r.label, r.note]),
     content.footAddress,

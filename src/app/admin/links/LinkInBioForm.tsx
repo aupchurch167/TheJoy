@@ -17,8 +17,13 @@ type FlatKey =
   | "dirHref"
   | "photoUrl"
   | "photoCaption"
+  | "blogHeading"
+  | "formHeading"
+  | "formBlurb"
   | "footAddress"
   | "footPhone";
+
+type BoolKey = "showBlog" | "showForm";
 
 export default function LinkInBioForm({
   initial,
@@ -32,6 +37,9 @@ export default function LinkInBioForm({
   const [pending, start] = useTransition();
 
   const setFlat = (key: FlatKey, value: string) =>
+    setC((prev) => ({ ...prev, [key]: value }));
+
+  const setBool = (key: BoolKey, value: boolean) =>
     setC((prev) => ({ ...prev, [key]: value }));
 
   const setRow = (
@@ -260,6 +268,69 @@ export default function LinkInBioForm({
               </Field>
             </div>
           ))}
+        </div>
+      </Card>
+
+      {/* Blog preview */}
+      <Card>
+        <SectionLabel>Blog preview</SectionLabel>
+        <p className="mt-1 mb-4 text-sm text-ink-soft">
+          Shows a card for your most recent published post. It updates on its
+          own as you publish (hidden when there are no posts yet).
+        </p>
+        <div className="grid gap-4">
+          <label className="flex items-start gap-3">
+            <input
+              type="checkbox"
+              checked={c.showBlog}
+              onChange={(e) => setBool("showBlog", e.target.checked)}
+              className="mt-0.5 h-5 w-5 rounded border-line text-clay focus:ring-clay/30"
+            />
+            <span className="text-sm font-medium text-ink">
+              Show the latest post
+            </span>
+          </label>
+          <Field label="Section heading" htmlFor="lib-blogHeading">
+            <Input
+              id="lib-blogHeading"
+              value={c.blogHeading}
+              onChange={(e) => setFlat("blogHeading", e.target.value)}
+            />
+          </Field>
+        </div>
+      </Card>
+
+      {/* Quick form */}
+      <Card>
+        <SectionLabel>Quick form</SectionLabel>
+        <p className="mt-1 mb-4 text-sm text-ink-soft">
+          A short contact form at the bottom. Submissions land in Leads (tagged
+          &ldquo;links&rdquo;), same as the rest of the site.
+        </p>
+        <div className="grid gap-4">
+          <label className="flex items-start gap-3">
+            <input
+              type="checkbox"
+              checked={c.showForm}
+              onChange={(e) => setBool("showForm", e.target.checked)}
+              className="mt-0.5 h-5 w-5 rounded border-line text-clay focus:ring-clay/30"
+            />
+            <span className="text-sm font-medium text-ink">Show the form</span>
+          </label>
+          <Field label="Form heading" htmlFor="lib-formHeading">
+            <Input
+              id="lib-formHeading"
+              value={c.formHeading}
+              onChange={(e) => setFlat("formHeading", e.target.value)}
+            />
+          </Field>
+          <Field label="Form blurb" htmlFor="lib-formBlurb">
+            <Input
+              id="lib-formBlurb"
+              value={c.formBlurb}
+              onChange={(e) => setFlat("formBlurb", e.target.value)}
+            />
+          </Field>
         </div>
       </Card>
 
