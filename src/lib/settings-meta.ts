@@ -21,6 +21,10 @@ export const SETTING_KEYS = [
   // Deposits (PayPal)
   "deposit_amount",
   "deposit_note",
+  // Family feedback + review funnel
+  "google_review_url",
+  "apfm_review_url",
+  "feedback_alert_emails",
 ] as const;
 
 export type SettingKey = (typeof SETTING_KEYS)[number];
@@ -30,6 +34,8 @@ export const URL_KEYS: SettingKey[] = [
   "careers_url",
   "talkfurther_url",
   "promo_cta_url",
+  "google_review_url",
+  "apfm_review_url",
 ];
 
 /** Boolean keys, stored as "on" (true) or "" (false), rendered as a toggle. */
@@ -48,6 +54,9 @@ export const OPTIONAL_KEYS: SettingKey[] = [
   "promo_cta_url",
   "deposit_amount",
   "deposit_note",
+  "google_review_url",
+  "apfm_review_url",
+  "feedback_alert_emails",
 ];
 
 export type SettingType = "text" | "url" | "textarea" | "bool";
@@ -125,6 +134,24 @@ export const SETTING_META: Record<
     hint: "A short line shown to the family on every deposit invoice, e.g. what the deposit holds. Leave blank for none.",
     type: "textarea",
     group: "Deposits (PayPal)",
+  },
+  google_review_url: {
+    label: "Google review link",
+    hint: "Your Google “write a review” link. Shown on the feedback thank-you page. Leave blank to hide the Google button.",
+    type: "url",
+    group: "Family feedback",
+  },
+  apfm_review_url: {
+    label: "A Place for Mom review link",
+    hint: "Your A Place for Mom review link. Shown on the feedback thank-you page. Leave blank to hide the APFM button.",
+    type: "url",
+    group: "Family feedback",
+  },
+  feedback_alert_emails: {
+    label: "Concern alert recipients",
+    hint: "Comma-separated emails that get an alert when a family flags a concern (rating 3 or below). Seed with Adam and Mellissa.",
+    type: "text",
+    group: "Family feedback",
   },
 };
 

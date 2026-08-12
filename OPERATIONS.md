@@ -461,6 +461,34 @@ setup.
 
 ---
 
+## 10b. Family feedback and the review funnel
+
+`/admin > Feedback` sends a short survey to a family and routes the result:
+happy families are pointed toward public reviews, concerns come to you first.
+
+Setup (Site settings → Family feedback):
+
+- **Google review link** and **A Place for Mom review link** — the "write a
+  review" URLs. Blank hides that button on the thank-you page.
+- **Concern alert recipients** — comma-separated emails (Adam + Mellissa) that
+  get an alert whenever a family rates 3 or below.
+
+Using it:
+
+- **Send survey**: enter the family name, email, and (optional) resident first
+  name. The family gets a short note from Mellissa with a private link.
+- The family rates 1-5 and can add comments. **4-5** lands on a thank-you that
+  leads with the review buttons; **1-3** leads with a callback request (review
+  links still appear below, unemphasized — Google prohibits hiding them).
+- A rating of **3 or below** emails the alert recipients immediately, callback
+  or not. A callback request emails them again with the contact details.
+- **Anonymous**: a family can keep answers unlinked. You still see the survey
+  was completed, just not which answers were theirs. If they ask for a callback,
+  the callback holds the contact info they chose to give.
+- **Callback requests** table: mark each open / contacted / resolved.
+- Links are single-use; a completed link shows a plain "no longer active" page.
+- Automatic sends (30/90 days post move-in) are deferred to the Phase 5 cron.
+
 ## 11. Family emails and the photo gallery (Phase 4)
 
 ### The family list

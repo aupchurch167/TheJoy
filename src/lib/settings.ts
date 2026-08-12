@@ -48,6 +48,14 @@ function defaults(): SiteSettings {
     // per request); note shown to the family on the invoice is off by default.
     deposit_amount: "500",
     deposit_note: "",
+    // Family feedback funnel: review links (blank hides the button) and who
+    // gets a concern alert (falls back to the lead-notify address / business).
+    google_review_url: "",
+    apfm_review_url: "",
+    feedback_alert_emails:
+      process.env.FEEDBACK_ALERT_TO ||
+      process.env.LEAD_NOTIFY_TO ||
+      BUSINESS.email,
   };
 }
 
@@ -84,6 +92,12 @@ export const getSettings = cache(async (): Promise<SiteSettings> => {
       // real "" (off) when stored blank.
       deposit_amount: get("deposit_amount") || d.deposit_amount,
       deposit_note: get("deposit_note") ?? d.deposit_note,
+      // Feedback: review URLs are real "" (hide button) when blank; alert
+      // emails fall back to the default recipients.
+      google_review_url: get("google_review_url") ?? d.google_review_url,
+      apfm_review_url: get("apfm_review_url") ?? d.apfm_review_url,
+      feedback_alert_emails:
+        get("feedback_alert_emails") || d.feedback_alert_emails,
     };
   } catch {
     return d;

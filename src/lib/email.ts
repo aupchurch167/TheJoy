@@ -343,6 +343,101 @@ export async function sendTestEmail(
 }
 
 /**
+ * Family feedback survey invitation. Personal and short (spec §Emails), signed
+ * from Mellissa, with a single button to the tokenized survey. Transactional
+ * (a specific family we already work with), so no marketing unsubscribe footer.
+ */
+export async function sendSurveyInvitation(request: {
+  family_name: string;
+  family_email: string;
+  resident_first_name: string | null;
+  token: string;
+}): Promise<boolean> {
+  if (!resend) {
+    console.info("[email] RESEND_API_KEY not set; survey invite skipped.");
+    return false;
+  }
+  const url = `${SITE_URL}/feedback/${request.token}`;
+  const who = request.resident_first_name
+    ? `${request.resident_first_name}`
+    : "your family";
+  const firstName = request.family_name.trim().split(/\s+/)[0] || "there";
+  const body = [
+    `Hi ${firstName},`,
+    ``,
+    `How are things going for ${who} at Joy? I would love to hear, the good and anything we could do better.`,
+    ``,
+    `It takes about two minutes.`,
+    ``,
+    `[[button:Share how it is going|${url}]]`,
+    ``,
+    `Thank you,`,
+    `Mellissa`,
+  ].join("\n");
+
+  await resend.emails.send({
+    from: FROM,
+    to: request.family_email,
+    subject: "How are things going?",
+    html: wrapEmail(renderBody(body), undefined, false),
+  });
+  return true;
+}
+
+/**
+ * Internal alert when a family flags a concern (rating 3 or below). Sent to the
+ * feedback_alert_emails recipients. Respects anonymity: an anonymous response
+ * shows as "Anonymous" and never reveals which family it came from. Fired on
+ * low-rating submit and again on a callback request (with contact details).
+ */
+export async function sendConcernAlert(input: {
+  to: string[];
+  familyLabel: string; // family name, or "Anonymous"
+  rating: number;
+  goingWell?: string | null;
+  couldBeBetter?: string | null;
+  suggestions?: string | null;
+  callback?: { name: string; phone: string; preferredTime?: string | null };
+}): Promise<boolean> {
+  if (!resend) {
+    console.info("[email] RESEND_API_KEY not set; concern alert skipped.");
+    return false;
+  }
+  const to = input.to.map((e) => e.trim()).filter(Boolean);
+  if (!to.length) return false;
+
+  const lines: string[] = [
+    `**Family concern flagged**`,
+    ``,
+    `From: ${input.familyLabel}`,
+    `Rating: ${input.rating} of 5`,
+  ];
+  if (input.goingWell) lines.push(``, `Going well:`, input.goingWell);
+  if (input.couldBeBetter)
+    lines.push(``, `Could be better:`, input.couldBeBetter);
+  if (input.suggestions) lines.push(``, `Suggestions:`, input.suggestions);
+  if (input.callback) {
+    lines.push(
+      ``,
+      `[[divider]]`,
+      `**Callback requested**`,
+      `Name: ${input.callback.name}`,
+      `Phone: ${input.callback.phone}`
+    );
+    if (input.callback.preferredTime)
+      lines.push(`Preferred time: ${input.callback.preferredTime}`);
+  }
+
+  await resend.emails.send({
+    from: FROM,
+    to,
+    subject: `Family concern flagged: ${input.familyLabel}`,
+    html: wrapEmail(renderBody(lines.join("\n")), undefined, false),
+  });
+  return true;
+}
+
+/**
  * Send a deposit request from hello@joyseniorcare.com (via Resend), carrying
  * the PayPal-hosted payment link. This is transactional (a specific family, a
  * specific amount), so the letter shell renders WITHOUT the marketing

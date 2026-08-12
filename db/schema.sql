@@ -315,3 +315,56 @@ INSERT INTO site_settings (key, value) VALUES
   ('deposit_amount', '500'),
   ('deposit_note',   '')
 ON CONFLICT (key) DO NOTHING;
+
+-- ==========================================================================
+-- Change Set 02: family feedback + review funnel
+-- ==========================================================================
+
+-- A survey invitation to one family. The token is the survey URL secret; the
+-- request is stamped sent_at when emailed and completed_at when the family
+-- finishes (even anonymously). created_by is the admin who sent it.
+CREATE TABLE IF NOT EXISTS feedback_requests (
+  id                  UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  family_name         TEXT NOT NULL,
+  family_email        TEXT NOT NULL,
+  resident_first_name TEXT,
+  token               TEXT UNIQUE NOT NULL,
+  sent_at             TIMESTAMPTZ,
+  completed_at        TIMESTAMPTZ,
+  created_by          TEXT NOT NULL,
+  created_at          TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS feedback_requests_created_idx
+  ON feedback_requests (created_at DESC);
+
+-- One survey response. request_id is NULL when the family chose anonymity, so
+-- their answers can never be tied back to them. sentiment is 'positive' (4-5)
+-- or 'concern' (1-3), computed at submit.
+CREATE TABLE IF NOT EXISTS feedback_responses (
+  id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  request_id      UUID REFERENCES feedback_requests(id),
+  overall_rating  INT NOT NULL CHECK (overall_rating BETWEEN 1 AND 5),
+  going_well      TEXT,
+  could_be_better TEXT,
+  suggestions     TEXT,
+  is_anonymous    BOOLEAN NOT NULL DEFAULT false,
+  sentiment       TEXT NOT NULL,
+  created_at      TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS feedback_responses_created_idx
+  ON feedback_responses (created_at DESC);
+
+-- A request for a personal callback (from the concern path). Holds contact
+-- info even when the underlying response is anonymous.
+CREATE TABLE IF NOT EXISTS callback_requests (
+  id             UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  response_id    UUID REFERENCES feedback_responses(id),
+  contact_name   TEXT NOT NULL,
+  contact_phone  TEXT NOT NULL,
+  preferred_time TEXT,
+  status         TEXT NOT NULL DEFAULT 'open'
+                   CHECK (status IN ('open', 'contacted', 'resolved')),
+  created_at     TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS callback_requests_status_idx
+  ON callback_requests (status, created_at DESC);
