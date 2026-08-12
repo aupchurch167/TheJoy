@@ -10,28 +10,75 @@ import {
   deleteBroadcast,
   getBroadcastById,
 } from "@/lib/broadcasts";
-import { processDueBroadcasts } from "@/lib/broadcast-runner";
+import {
+  processDueBroadcasts,
+  throttleSummary,
+} from "@/lib/broadcast-runner";
+import { countSubscribers, type LeadSegment } from "@/lib/leads";
 import { emailEnabled, sendTestEmail } from "@/lib/email";
+
+// Recipient segment. Empty arrays / blanks are normalized to "no filter".
+const FiltersSchema = z
+  .object({
+    sources: z.array(z.string().trim().max(80)).max(200).optional(),
+    stages: z.array(z.enum(["new", "toured", "moved_in", "lost"])).optional(),
+    createdFrom: z.string().trim().optional(),
+    createdTo: z.string().trim().optional(),
+  })
+  .optional();
+
+/** Drop empty parts so an all-empty segment persists as null (whole audience). */
+function normalizeFilters(f: z.infer<typeof FiltersSchema>): LeadSegment | null {
+  if (!f) return null;
+  const seg: LeadSegment = {};
+  if (f.sources?.length) seg.sources = f.sources;
+  if (f.stages?.length) seg.stages = f.stages;
+  if (f.createdFrom) seg.createdFrom = new Date(f.createdFrom).toISOString();
+  if (f.createdTo) seg.createdTo = new Date(f.createdTo).toISOString();
+  return Object.keys(seg).length ? seg : null;
+}
 
 const BaseSchema = z.object({
   id: z.string().uuid().optional(),
   subject: z.string().trim().min(1, "A subject is required.").max(200),
   body: z.string().max(50000).optional(),
   audience: z.enum(["leads", "families"]).default("leads"),
+  filters: FiltersSchema,
 });
 
 async function upsert(
   id: string | undefined,
   subject: string,
   body: string,
-  audience: "leads" | "families"
+  audience: "leads" | "families",
+  filters: LeadSegment | null
 ) {
   if (id) {
-    const updated = await updateBroadcast(id, subject, body);
+    const updated = await updateBroadcast(id, subject, body, filters);
     if (updated) return updated.id;
   }
-  const created = await createBroadcast(subject, body, audience);
+  const created = await createBroadcast(subject, body, audience, "email", filters);
   return created.id;
+}
+
+/** Live recipient count for the composer as filters change. */
+export async function previewRecipients(input: unknown): Promise<number> {
+  await requireAdmin();
+  const parsed = z
+    .object({
+      audience: z.enum(["leads", "families"]).default("leads"),
+      filters: FiltersSchema,
+    })
+    .safeParse(input);
+  if (!parsed.success) return 0;
+  try {
+    return await countSubscribers(
+      parsed.data.audience,
+      normalizeFilters(parsed.data.filters) ?? undefined
+    );
+  } catch {
+    return 0;
+  }
 }
 
 export type ActionResult =
@@ -48,7 +95,8 @@ export async function saveDraft(input: unknown): Promise<ActionResult> {
       parsed.data.id,
       parsed.data.subject,
       parsed.data.body ?? "",
-      parsed.data.audience
+      parsed.data.audience,
+      normalizeFilters(parsed.data.filters)
     );
     revalidatePath("/admin/emails");
     return { ok: true, id, message: "Saved as draft." };
@@ -82,7 +130,8 @@ export async function sendOrSchedule(input: unknown): Promise<ActionResult> {
       parsed.data.id,
       parsed.data.subject,
       parsed.data.body ?? "",
-      parsed.data.audience
+      parsed.data.audience,
+      normalizeFilters(parsed.data.filters)
     );
 
     const now = new Date();
@@ -93,9 +142,25 @@ export async function sendOrSchedule(input: unknown): Promise<ActionResult> {
     await scheduleBroadcast(id, scheduledAt);
 
     if (sendNow) {
+      const total = await countSubscribers(
+        parsed.data.audience,
+        normalizeFilters(parsed.data.filters) ?? undefined
+      );
       const sent = await processDueBroadcasts();
       revalidatePath("/admin/emails");
-      return { ok: true, id, message: `Sent to ${sent} lead(s).` };
+
+      const remaining = Math.max(0, total - sent);
+      let message: string;
+      if (total === 0) {
+        message = "No recipients match. Nothing was sent.";
+      } else if (sent === 0) {
+        message = `Queued for ${total} recipient(s). Sending is metered (${throttleSummary()}) and picks up in the next send window.`;
+      } else if (remaining > 0) {
+        message = `Sending to ${total}. ${sent} went out now; the rest send gradually (${throttleSummary()}) to protect deliverability.`;
+      } else {
+        message = `Sent to ${sent} recipient(s).`;
+      }
+      return { ok: true, id, message };
     }
 
     revalidatePath("/admin/emails");

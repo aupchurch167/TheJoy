@@ -1,9 +1,15 @@
 "use client";
 
-import { useRef, useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Markdown from "@/components/Markdown";
-import { saveDraft, sendOrSchedule, removeBroadcast, sendTest } from "./actions";
+import {
+  saveDraft,
+  sendOrSchedule,
+  removeBroadcast,
+  sendTest,
+  previewRecipients,
+} from "./actions";
 import type { Broadcast } from "@/lib/broadcasts";
 import type { Audience } from "@/lib/leads";
 import { templatesForAudience } from "@/lib/email-templates";
@@ -20,10 +26,19 @@ const AUDIENCE_LABEL: Record<Audience, string> = {
   families: "the family list (current residents' families)",
 };
 
+const STAGES: { key: string; label: string }[] = [
+  { key: "new", label: "New" },
+  { key: "toured", label: "Toured" },
+  { key: "moved_in", label: "Moved in" },
+  { key: "lost", label: "Lost" },
+];
+
 export default function BroadcastComposer({
   broadcast,
+  sources = [],
 }: {
   broadcast?: Broadcast | null;
+  sources?: string[];
 }) {
   const router = useRouter();
   const { success, error: toastError } = useToast();
@@ -34,6 +49,60 @@ export default function BroadcastComposer({
   const [subject, setSubject] = useState(broadcast?.subject ?? "");
   const [body, setBody] = useState(broadcast?.body ?? "");
   const [when, setWhen] = useState("");
+
+  // Recipient segment (drill into the leads audience).
+  const f0 = broadcast?.filters ?? null;
+  const [fSources, setFSources] = useState<string[]>(f0?.sources ?? []);
+  const [fStages, setFStages] = useState<string[]>(f0?.stages ?? []);
+  const [fFrom, setFFrom] = useState<string>(f0?.createdFrom?.slice(0, 10) ?? "");
+  const [fTo, setFTo] = useState<string>(f0?.createdTo?.slice(0, 10) ?? "");
+  const [count, setCount] = useState<number | null>(null);
+  const [counting, setCounting] = useState(false);
+
+  // Build the filter payload; only the leads audience is segmentable.
+  const currentFilters =
+    audience === "leads"
+      ? {
+          sources: fSources,
+          stages: fStages,
+          createdFrom: fFrom || undefined,
+          createdTo: fTo || undefined,
+        }
+      : undefined;
+  const hasFilter =
+    audience === "leads" &&
+    (fSources.length > 0 || fStages.length > 0 || !!fFrom || !!fTo);
+
+  function toggle(list: string[], set: (v: string[]) => void, val: string) {
+    set(list.includes(val) ? list.filter((x) => x !== val) : [...list, val]);
+  }
+  function clearFilters() {
+    setFSources([]);
+    setFStages([]);
+    setFFrom("");
+    setFTo("");
+  }
+
+  // Live recipient count as audience/filters change (debounced).
+  useEffect(() => {
+    let cancelled = false;
+    const filters =
+      audience === "leads"
+        ? { sources: fSources, stages: fStages, createdFrom: fFrom || undefined, createdTo: fTo || undefined }
+        : undefined;
+    const t = setTimeout(async () => {
+      setCounting(true);
+      const n = await previewRecipients({ audience, filters });
+      if (!cancelled) {
+        setCount(n);
+        setCounting(false);
+      }
+    }, 250);
+    return () => {
+      cancelled = true;
+      clearTimeout(t);
+    };
+  }, [audience, fSources, fStages, fFrom, fTo]);
   const [tab, setTab] = useState<"write" | "preview">("write");
   const [error, setError] = useState("");
   const [pending, start] = useTransition();
@@ -55,7 +124,7 @@ export default function BroadcastComposer({
   function onSaveDraft() {
     setError("");
     start(async () => {
-      const res = await saveDraft({ id, subject, body, audience });
+      const res = await saveDraft({ id, subject, body, audience, filters: currentFilters });
       if (!res.ok) {
         setError(res.error);
         toastError(res.error);
@@ -77,6 +146,7 @@ export default function BroadcastComposer({
           subject,
           body,
           audience,
+          filters: currentFilters,
           when: when || undefined,
         });
         if (!res.ok) {
@@ -263,6 +333,111 @@ export default function BroadcastComposer({
               family nights, a monthly note, event photos. Never individual
               resident details, and never anything urgent (that stays a phone
               call).
+            </p>
+          </div>
+        )}
+
+        {/* Refine recipients: drill into the leads audience by source, stage, date. */}
+        {audience === "leads" && (
+          <div className="rounded-xl border border-line bg-white p-4 shadow-sm">
+            <div className="flex items-center justify-between gap-3">
+              <span className="text-sm font-medium text-ink">
+                Refine recipients{" "}
+                <span className="text-ink-faint">(optional)</span>
+              </span>
+              <span
+                className="rounded-full bg-clay/10 px-2.5 py-1 text-xs font-semibold text-clay"
+                aria-live="polite"
+              >
+                {counting ? "counting…" : `${count ?? 0} recipient${count === 1 ? "" : "s"}`}
+              </span>
+            </div>
+
+            {sources.length > 0 && (
+              <div className="mt-3">
+                <p className="text-xs font-medium text-ink-soft">Source / tag</p>
+                <div className="mt-1.5 flex max-h-32 flex-wrap gap-1.5 overflow-y-auto">
+                  {sources.map((s) => {
+                    const on = fSources.includes(s);
+                    return (
+                      <button
+                        key={s}
+                        type="button"
+                        onClick={() => toggle(fSources, setFSources, s)}
+                        className={`rounded-full border px-2.5 py-1 text-xs font-medium transition-colors ${
+                          on
+                            ? "border-clay bg-clay text-white"
+                            : "border-line bg-white text-ink-soft hover:bg-surface"
+                        }`}
+                      >
+                        {s}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            <div className="mt-3">
+              <p className="text-xs font-medium text-ink-soft">Stage</p>
+              <div className="mt-1.5 flex flex-wrap gap-1.5">
+                {STAGES.map((st) => {
+                  const on = fStages.includes(st.key);
+                  return (
+                    <button
+                      key={st.key}
+                      type="button"
+                      onClick={() => toggle(fStages, setFStages, st.key)}
+                      className={`rounded-full border px-2.5 py-1 text-xs font-medium transition-colors ${
+                        on
+                          ? "border-clay bg-clay text-white"
+                          : "border-line bg-white text-ink-soft hover:bg-surface"
+                      }`}
+                    >
+                      {st.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="mt-3 flex flex-wrap items-end gap-3">
+              <label className="block">
+                <span className="text-xs font-medium text-ink-soft">
+                  Added from
+                </span>
+                <input
+                  type="date"
+                  value={fFrom}
+                  onChange={(e) => setFFrom(e.target.value)}
+                  className="mt-1 block h-9 rounded-lg border border-line bg-white px-2 text-sm text-ink focus:border-clay focus:outline-none focus:ring-2 focus:ring-clay/30"
+                />
+              </label>
+              <label className="block">
+                <span className="text-xs font-medium text-ink-soft">
+                  Added to
+                </span>
+                <input
+                  type="date"
+                  value={fTo}
+                  onChange={(e) => setFTo(e.target.value)}
+                  className="mt-1 block h-9 rounded-lg border border-line bg-white px-2 text-sm text-ink focus:border-clay focus:outline-none focus:ring-2 focus:ring-clay/30"
+                />
+              </label>
+              {hasFilter && (
+                <button
+                  type="button"
+                  onClick={clearFilters}
+                  className="h-9 text-xs font-medium text-ink-faint underline underline-offset-2 hover:text-clay"
+                >
+                  Clear filters
+                </button>
+              )}
+            </div>
+
+            <p className="mt-2.5 text-xs text-ink-faint">
+              Leave everything unchecked to reach the whole audience. Opted-out
+              recipients are always excluded from the count.
             </p>
           </div>
         )}
@@ -487,8 +662,12 @@ export default function BroadcastComposer({
                 title="Send this email now?"
                 message={
                   <>
-                    This sends to {AUDIENCE_LABEL[audience]}. This cannot be
-                    undone.
+                    This sends to {count ?? 0} recipient
+                    {count === 1 ? "" : "s"}
+                    {hasFilter
+                      ? " matching your filters"
+                      : ` (${AUDIENCE_LABEL[audience]})`}
+                    . This cannot be undone.
                   </>
                 }
                 confirmLabel="Send now"

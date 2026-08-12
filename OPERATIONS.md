@@ -395,6 +395,32 @@ All of the above needs `RESEND_API_KEY` (and a verified `joyseniorcare.com`
 sending domain in Resend). Without it, leads are still saved and drips/broadcasts
 just wait; you can compose and save, but nothing sends until Resend is set.
 
+### Targeting a broadcast (Send to)
+
+On a new email, **Send to** picks the audience (leads or families). For the
+**leads** audience a **Refine recipients** panel lets you narrow the send by
+**source/tag** (e.g. `import:facebook`, `homepage_form`), **stage** (new,
+toured, moved in, lost), and a **date-added range**. A live count shows how many
+people match; opted-out contacts are always excluded. Leaving everything
+unchecked reaches the whole audience. The segment is resolved at send time, so
+it reflects the latest opt-outs.
+
+### Send throttling (deliverability)
+
+Broadcasts are metered so a big blast doesn't trip spam filters: at most a set
+number of emails per rolling hour, and only during a daytime window (nothing
+overnight). A large send trickles out over several hours and continues on the
+next cron run; nobody is emailed twice. Defaults are **30/hour, 8:00-21:00
+America/New_York**, overridable by env:
+
+- `BROADCAST_HOURLY_CAP` — max sends per rolling hour (default `30`).
+- `BROADCAST_SEND_START_HOUR` / `BROADCAST_SEND_END_HOUR` — daytime window,
+  0-23 (defaults `8` and `21`).
+- `BROADCAST_TZ` — timezone for the window (default `America/New_York`).
+
+The metering runs on the cron worker, so keep the cron hitting `/api/cron`
+regularly (see the cron section) for queued sends to drain.
+
 ---
 
 ## 11. Family emails and the photo gallery (Phase 4)

@@ -147,6 +147,11 @@ ALTER TABLE broadcasts DROP CONSTRAINT IF EXISTS broadcasts_audience_check;
 ALTER TABLE broadcasts
   ADD CONSTRAINT broadcasts_audience_check CHECK (audience IN ('leads', 'families'));
 
+-- Recipient segment (JSON): drill into the audience by source, stage, and
+-- creation date. NULL / {} means the whole audience. Resolved at send time so
+-- it always reflects current opt-outs.
+ALTER TABLE broadcasts ADD COLUMN IF NOT EXISTS filters JSONB;
+
 -- Broadcasts can be email or SMS (text blast). The subject is unused for SMS.
 ALTER TABLE broadcasts ADD COLUMN IF NOT EXISTS channel TEXT NOT NULL DEFAULT 'email'
   CHECK (channel IN ('email', 'sms'));

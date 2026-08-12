@@ -1,6 +1,6 @@
 import { query } from "./db";
 
-import type { Audience } from "./leads";
+import type { Audience, LeadSegment } from "./leads";
 
 export type BroadcastStatus = "draft" | "scheduled" | "sending" | "sent";
 export type BroadcastChannel = "email" | "sms";
@@ -15,6 +15,8 @@ export type Broadcast = {
   scheduled_at: string | null;
   sent_at: string | null;
   sent_count: number;
+  /** Recipient segment within the audience; null = the whole audience. */
+  filters: LeadSegment | null;
   created_at: string;
   updated_at: string;
 };
@@ -34,12 +36,13 @@ export async function createBroadcast(
   subject: string,
   body: string,
   audience: Audience = "leads",
-  channel: BroadcastChannel = "email"
+  channel: BroadcastChannel = "email",
+  filters: LeadSegment | null = null
 ): Promise<Broadcast> {
   const rows = await query<Broadcast>(
-    `INSERT INTO broadcasts (subject, body, audience, channel)
-     VALUES ($1, $2, $3, $4) RETURNING *`,
-    [subject, body, audience, channel]
+    `INSERT INTO broadcasts (subject, body, audience, channel, filters)
+     VALUES ($1, $2, $3, $4, $5) RETURNING *`,
+    [subject, body, audience, channel, filters ? JSON.stringify(filters) : null]
   );
   return rows[0];
 }
@@ -54,12 +57,13 @@ export async function getSmsBroadcasts(): Promise<Broadcast[]> {
 export async function updateBroadcast(
   id: string,
   subject: string,
-  body: string
+  body: string,
+  filters: LeadSegment | null = null
 ): Promise<Broadcast | null> {
   const rows = await query<Broadcast>(
-    `UPDATE broadcasts SET subject = $2, body = $3, updated_at = now()
+    `UPDATE broadcasts SET subject = $2, body = $3, filters = $4, updated_at = now()
      WHERE id = $1 AND status IN ('draft','scheduled') RETURNING *`,
-    [id, subject, body]
+    [id, subject, body, filters ? JSON.stringify(filters) : null]
   );
   return rows[0] ?? null;
 }
@@ -126,6 +130,34 @@ export async function recordRecipient(
      VALUES ($1, $2, $3)
      ON CONFLICT (broadcast_id, lead_id) DO NOTHING`,
     [broadcastId, leadId, error ?? null]
+  );
+}
+
+/** Successful sends across ALL broadcasts in the last 60 minutes (rate limit). */
+export async function sentInLastHour(): Promise<number> {
+  const rows = await query<{ n: string }>(
+    `SELECT COUNT(*) AS n FROM broadcast_recipients
+      WHERE error IS NULL AND sent_at >= now() - interval '1 hour'`
+  );
+  return Number(rows[0]?.n ?? 0);
+}
+
+/** Successful sends recorded for one broadcast (its running total). */
+export async function sentCountForBroadcast(id: string): Promise<number> {
+  const rows = await query<{ n: string }>(
+    `SELECT COUNT(*) AS n FROM broadcast_recipients
+      WHERE broadcast_id = $1 AND error IS NULL`,
+    [id]
+  );
+  return Number(rows[0]?.n ?? 0);
+}
+
+/** Return a partially-sent broadcast to the queue so the next run continues it. */
+export async function requeueBroadcast(id: string): Promise<void> {
+  await query(
+    `UPDATE broadcasts SET status = 'scheduled', updated_at = now()
+      WHERE id = $1 AND status = 'sending'`,
+    [id]
   );
 }
 

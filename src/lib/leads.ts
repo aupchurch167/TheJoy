@@ -224,23 +224,87 @@ export async function getDripCandidates(): Promise<Lead[]> {
 }
 
 /**
- * Active, opted-in subscribers for a given audience (broadcast recipients).
+ * A recipient segment: drill into an audience by source, stage, and creation
+ * date. An empty/undefined segment means the whole audience. Used to target
+ * broadcasts ("send to leads from Facebook, still 'new', added since June").
+ */
+export type LeadSegment = {
+  sources?: string[];
+  stages?: LeadStage[];
+  createdFrom?: string | null;
+  createdTo?: string | null;
+};
+
+/** Build the shared subscriber WHERE clause (base opt-in rules + segment). */
+function segmentWhere(
+  audience: Audience,
+  seg?: LeadSegment
+): { where: string; params: unknown[] } {
+  const params: unknown[] = [audience];
+  const conds = [
+    "audience = $1",
+    "unsubscribed_at IS NULL",
+    "consent = TRUE",
+    "email IS NOT NULL AND email <> ''",
+    "(audience <> 'families' OR active = TRUE)",
+  ];
+  if (seg?.sources?.length) {
+    params.push(seg.sources);
+    conds.push(`source = ANY($${params.length}::text[])`);
+  }
+  if (seg?.stages?.length) {
+    params.push(seg.stages);
+    conds.push(`stage = ANY($${params.length}::text[])`);
+  }
+  if (seg?.createdFrom) {
+    params.push(seg.createdFrom);
+    conds.push(`created_at >= $${params.length}`);
+  }
+  if (seg?.createdTo) {
+    params.push(seg.createdTo);
+    conds.push(`created_at <= $${params.length}`);
+  }
+  return { where: conds.join(" AND "), params };
+}
+
+/**
+ * Active, opted-in subscribers for an audience, optionally narrowed by segment.
  * Rows without an email (phone-only family contacts) are skipped, and for the
  * families audience only contacts of currently-active residents are included.
  */
 export async function getSubscribedByAudience(
-  audience: Audience
+  audience: Audience,
+  seg?: LeadSegment
 ): Promise<Lead[]> {
+  const { where, params } = segmentWhere(audience, seg);
   return query<Lead>(
-    `SELECT * FROM leads
-      WHERE audience = $1
-        AND unsubscribed_at IS NULL
-        AND consent = TRUE
-        AND email IS NOT NULL AND email <> ''
-        AND (audience <> 'families' OR active = TRUE)
-      ORDER BY created_at ASC`,
+    `SELECT * FROM leads WHERE ${where} ORDER BY created_at ASC`,
+    params
+  );
+}
+
+/** How many recipients a segment resolves to right now (for the composer). */
+export async function countSubscribers(
+  audience: Audience,
+  seg?: LeadSegment
+): Promise<number> {
+  const { where, params } = segmentWhere(audience, seg);
+  const rows = await query<{ n: string }>(
+    `SELECT COUNT(*) AS n FROM leads WHERE ${where}`,
+    params
+  );
+  return Number(rows[0]?.n ?? 0);
+}
+
+/** Distinct source tags present in an audience (for the segment picker). */
+export async function getAudienceSources(audience: Audience): Promise<string[]> {
+  const rows = await query<{ source: string }>(
+    `SELECT DISTINCT source FROM leads
+      WHERE audience = $1 AND source IS NOT NULL AND source <> ''
+      ORDER BY source`,
     [audience]
   );
+  return rows.map((r) => r.source);
 }
 
 /* ---------------- Phase 4: family members (families audience) ---------------- */
