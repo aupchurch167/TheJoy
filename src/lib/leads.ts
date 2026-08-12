@@ -100,13 +100,16 @@ export async function insertImportedLead(input: {
   consent: boolean;
   createdAt?: string | null;
   residentName?: string | null;
+  stage?: LeadStage | null;
 }): Promise<void> {
+  const stage: LeadStage = input.stage ?? "new";
   await query(
     `INSERT INTO leads
        (name, email, phone, message, source, audience, consent, drip_status,
-        created_at, resident_name)
+        created_at, resident_name, stage, stage_updated_at)
      VALUES ($1, $2, $3, $4, $5, 'leads', $6, 'completed',
-             COALESCE($7::timestamptz, now()), $8)`,
+             COALESCE($7::timestamptz, now()), $8, $9,
+             CASE WHEN $9 <> 'new' THEN now() ELSE NULL END)`,
     [
       // name is NOT NULL: fall back to the email's local part.
       input.name?.trim() || input.email.split("@")[0] || input.email,
@@ -117,6 +120,7 @@ export async function insertImportedLead(input: {
       input.consent,
       input.createdAt ?? null,
       input.residentName?.trim() || null,
+      stage,
     ]
   );
 }

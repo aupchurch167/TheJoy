@@ -26,7 +26,11 @@ export type CleanLead = {
   createdAt: string | null;
   /** The senior the inquiry is about (the lead is usually the adult child). */
   residentName: string | null;
+  /** Lifecycle stage; null falls back to the DB default ('new'). */
+  stage: LeadStage | null;
 };
+
+export type LeadStage = "new" | "toured" | "moved_in" | "lost";
 
 export type ParsedLeads = {
   rows: CleanLead[];
@@ -46,7 +50,8 @@ export type LeadFieldKey =
   | "source"
   | "date"
   | "message"
-  | "resident";
+  | "resident"
+  | "stage";
 
 /** Field -> column index in the file (missing = not mapped). */
 export type LeadColumnMap = Partial<Record<LeadFieldKey, number>>;
@@ -72,7 +77,24 @@ const FIELD_ALIASES: Record<LeadFieldKey, string[]> = {
   date: ["created at", "created_at", "signup date", "date created", "created", "date", "added", "inquiry date"],
   message: ["message", "notes", "note", "comments", "comment"],
   resident: ["resident name", "resident", "senior", "prospect", "patient", "care recipient", "for whom"],
+  stage: ["stage", "status", "lead status", "lifecycle", "disposition", "pipeline"],
 };
+
+/**
+ * Normalize a free-text stage/status value to one of the four lifecycle stages.
+ * Unrecognized values return null (the row keeps the DB default, 'new').
+ */
+export function normalizeStage(raw: string): LeadStage | null {
+  const s = raw.trim().toLowerCase();
+  if (!s) return null;
+  if (/(moved|move.?in|admitted|resident|closed.?won|\bwon\b|placed|move in)/.test(s))
+    return "moved_in";
+  if (/(tour|toured|visit|visited|appointment|scheduled)/.test(s)) return "toured";
+  if (/(lost|closed.?lost|dead|declin|not interested|disqualif|unqualif|no longer|cancel)/.test(s))
+    return "lost";
+  if (/(new|inquir|lead|open|prospect|contact|active)/.test(s)) return "new";
+  return null;
+}
 
 /** Quote-aware CSV to a matrix of string cells. */
 function parseMatrix(text: string): string[][] {
@@ -158,6 +180,7 @@ const GUESS_ORDER: LeadFieldKey[] = [
   "date",
   "phone",
   "source",
+  "stage",
   "resident",
   "first",
   "last",
@@ -229,6 +252,7 @@ export function parseLeadsCsv(
     const message = cell(r, m.message);
     const dateRaw = cell(r, m.date);
     const residentName = cell(r, m.resident);
+    const stage = normalizeStage(cell(r, m.stage));
 
     if (!email) {
       noEmail++;
@@ -252,6 +276,7 @@ export function parseLeadsCsv(
       source: channel ? `${base}:${slugChannel(channel)}` : base,
       createdAt: toIso(dateRaw),
       residentName: residentName || null,
+      stage,
     });
   }
 

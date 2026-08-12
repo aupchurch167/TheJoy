@@ -24,6 +24,7 @@ const FIELDS: { key: LeadFieldKey; label: string; required?: boolean }[] = [
   { key: "last", label: "Last name" },
   { key: "phone", label: "Phone" },
   { key: "resident", label: "Resident name" },
+  { key: "stage", label: "Stage / status" },
   { key: "source", label: "Source / channel" },
   { key: "date", label: "Original date" },
   { key: "message", label: "Notes" },
