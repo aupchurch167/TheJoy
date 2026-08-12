@@ -9,6 +9,7 @@ import {
 import { resolveRange, type RangeKey } from "@/lib/date-range";
 import { formatDate, formatPercent, orDash } from "@/lib/format";
 import StageSelect from "./StageSelect";
+import ImportLeadsPanel from "./ImportLeadsPanel";
 import {
   PageHeader,
   Badge,
@@ -100,6 +101,9 @@ export default async function LeadsPage({
         title="Leads"
         description="Everyone who has reached out, and where they came from. Filter by date, open a lead to read its message, and update a stage as families progress."
       />
+
+      {/* CSV import (old, pre-website leads) */}
+      <ImportLeadsPanel />
 
       {/* Date filter */}
       <div className="mb-6 rounded-xl border border-line bg-white p-4 shadow-sm">

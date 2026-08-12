@@ -77,6 +77,47 @@ export async function leadExists(
   return rows.length > 0;
 }
 
+/** True if any leads-audience contact already has this email (import dedupe). */
+export async function leadEmailExists(email: string): Promise<boolean> {
+  const rows = await query<{ id: string }>(
+    `SELECT id FROM leads WHERE audience = 'leads' AND lower(email) = lower($1) LIMIT 1`,
+    [email]
+  );
+  return rows.length > 0;
+}
+
+/**
+ * Insert an old (pre-website) lead from the CSV import: audience 'leads',
+ * drip skipped ('completed'), optional original created_at. `consent` is FALSE
+ * when the batch is held out for a re-permission email.
+ */
+export async function insertImportedLead(input: {
+  name?: string | null;
+  email: string;
+  phone?: string | null;
+  message?: string | null;
+  source: string;
+  consent: boolean;
+  createdAt?: string | null;
+}): Promise<void> {
+  await query(
+    `INSERT INTO leads
+       (name, email, phone, message, source, audience, consent, drip_status,
+        created_at)
+     VALUES ($1, $2, $3, $4, $5, 'leads', $6, 'completed',
+             COALESCE($7::timestamptz, now()))`,
+    [
+      input.name ?? null,
+      input.email.toLowerCase(),
+      input.phone ?? null,
+      input.message ?? null,
+      input.source,
+      input.consent,
+      input.createdAt ?? null,
+    ]
+  );
+}
+
 /** Mark a lead unsubscribed by its token. Returns true if a row was updated. */
 export async function unsubscribeByToken(token: string): Promise<boolean> {
   const rows = await query<{ id: string }>(
