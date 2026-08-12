@@ -11,6 +11,7 @@ import {
   getBroadcastById,
   createSavedSegment,
   deleteSavedSegment,
+  countNonOpeners,
   type SavedSegment,
 } from "@/lib/broadcasts";
 import {
@@ -145,10 +146,14 @@ export async function sendOrSchedule(input: unknown): Promise<ActionResult> {
     await scheduleBroadcast(id, scheduledAt);
 
     if (sendNow) {
-      const total = await countSubscribers(
-        parsed.data.audience,
-        normalizeFilters(parsed.data.filters) ?? undefined
-      );
+      // A resend-to-non-openers targets the parent's non-openers, not a segment.
+      const saved = await getBroadcastById(id);
+      const total = saved?.resend_of
+        ? await countNonOpeners(saved.resend_of)
+        : await countSubscribers(
+            parsed.data.audience,
+            normalizeFilters(parsed.data.filters) ?? undefined
+          );
       const sent = await processDueBroadcasts();
       revalidatePath("/admin/emails");
 
@@ -253,6 +258,37 @@ export async function duplicateBroadcast(
   } catch (err) {
     console.error("[duplicateBroadcast]", err);
     return { ok: false };
+  }
+}
+
+/** Start a follow-up email to everyone who didn't open the original. */
+export async function resendToNonOpeners(
+  parentId: string
+): Promise<{ ok: true; id: string } | { ok: false; error: string }> {
+  await requireAdmin();
+  try {
+    const parent = await getBroadcastById(parentId);
+    if (!parent) return { ok: false, error: "Original email not found." };
+    const remaining = await countNonOpeners(parentId);
+    if (remaining === 0) {
+      return {
+        ok: false,
+        error: "No non-openers yet (or opens are still coming in).",
+      };
+    }
+    const draft = await createBroadcast(
+      parent.subject,
+      parent.body,
+      parent.audience,
+      "email",
+      null,
+      parentId
+    );
+    revalidatePath("/admin/emails");
+    return { ok: true, id: draft.id };
+  } catch (err) {
+    console.error("[resendToNonOpeners]", err);
+    return { ok: false, error: "Could not start the resend." };
   }
 }
 

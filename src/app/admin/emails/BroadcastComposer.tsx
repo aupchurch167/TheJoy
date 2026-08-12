@@ -12,6 +12,7 @@ import {
   duplicateBroadcast,
   saveSegment,
   removeSegment,
+  resendToNonOpeners,
 } from "./actions";
 import type {
   Broadcast,
@@ -45,12 +46,15 @@ export default function BroadcastComposer({
   sources = [],
   segments = [],
   results = null,
+  resendInfo = null,
 }: {
   broadcast?: Broadcast | null;
   sources?: string[];
   segments?: SavedSegment[];
   results?: BroadcastResults | null;
+  resendInfo?: { parentSubject: string; count: number } | null;
 }) {
+  const isResend = !!resendInfo;
   const router = useRouter();
   const { success, error: toastError } = useToast();
   const [id, setId] = useState<string | undefined>(broadcast?.id);
@@ -156,8 +160,23 @@ export default function BroadcastComposer({
     });
   }
 
-  // Live recipient count as audience/filters change (debounced).
+  function onResend() {
+    if (!broadcast?.id) return;
+    start(async () => {
+      const res = await resendToNonOpeners(broadcast.id);
+      if (!res.ok) {
+        toastError(res.error);
+        return;
+      }
+      success("Draft ready. Give it a fresh subject, then send.");
+      router.push(`/admin/emails/${res.id}`);
+    });
+  }
+
+  // Live recipient count as audience/filters change (debounced). A resend has a
+  // fixed non-opener count, so skip the segment count there.
   useEffect(() => {
+    if (isResend) return;
     let cancelled = false;
     const filters =
       audience === "leads"
@@ -175,7 +194,7 @@ export default function BroadcastComposer({
       cancelled = true;
       clearTimeout(t);
     };
-  }, [audience, fSources, fStages, fFrom, fTo]);
+  }, [isResend, audience, fSources, fStages, fFrom, fTo]);
   const [tab, setTab] = useState<"write" | "preview">("write");
   const [error, setError] = useState("");
   const [pending, start] = useTransition();
@@ -362,9 +381,20 @@ export default function BroadcastComposer({
             </h1>
             <Badge tone="success">sent</Badge>
           </div>
-          <button onClick={onDuplicate} disabled={pending} className={btn("secondary", "sm")}>
-            {pending ? "Working…" : "Duplicate"}
-          </button>
+          <div className="flex items-center gap-2">
+            {results && results.opened < results.sent && (
+              <button
+                onClick={onResend}
+                disabled={pending}
+                className={btn("secondary", "sm")}
+              >
+                Resend to non-openers
+              </button>
+            )}
+            <button onClick={onDuplicate} disabled={pending} className={btn("secondary", "sm")}>
+              {pending ? "Working…" : "Duplicate"}
+            </button>
+          </div>
         </div>
 
         {results && (
@@ -431,7 +461,23 @@ export default function BroadcastComposer({
       )}
 
       <div className="grid gap-5">
+        {/* Resend-to-non-openers banner (replaces audience choice + segment). */}
+        {isResend && resendInfo && (
+          <div className="rounded-xl border border-clay/30 bg-clay/5 px-4 py-3 text-sm text-ink-soft">
+            <p>
+              <strong className="text-ink">Follow-up to non-openers</strong> of
+              &ldquo;{resendInfo.parentSubject}&rdquo;. This will go to the{" "}
+              <strong className="text-ink">{resendInfo.count}</strong> recipient
+              {resendInfo.count === 1 ? "" : "s"} who have not opened it yet
+              (recalculated when you send). Give it a{" "}
+              <strong className="text-ink">different subject</strong> so it reads
+              as a fresh note.
+            </p>
+          </div>
+        )}
+
         {/* Audience */}
+        {!isResend && (
         <label className="block">
           <span className="text-sm font-medium text-ink">Send to</span>
           {isNew ? (
@@ -449,8 +495,9 @@ export default function BroadcastComposer({
             <p className="mt-1 text-ink">{AUDIENCE_LABEL[audience]}</p>
           )}
         </label>
+        )}
 
-        {audience === "families" && (
+        {!isResend && audience === "families" && (
           <div className="flex items-start gap-3 rounded-xl border border-gold/30 bg-gold/10 px-4 py-3 text-sm text-ink-soft">
             <span aria-hidden>⚠️</span>
             <p>
@@ -463,7 +510,7 @@ export default function BroadcastComposer({
         )}
 
         {/* Refine recipients: drill into the leads audience by source, stage, date. */}
-        {audience === "leads" && (
+        {!isResend && audience === "leads" && (
           <div className="rounded-xl border border-line bg-white p-4 shadow-sm">
             <div className="flex items-center justify-between gap-3">
               <span className="text-sm font-medium text-ink">
@@ -830,14 +877,23 @@ export default function BroadcastComposer({
                 confirmVariant="primary"
                 title="Send this email now?"
                 message={
-                  <>
-                    This sends to {count ?? 0} recipient
-                    {count === 1 ? "" : "s"}
-                    {hasFilter
-                      ? " matching your filters"
-                      : ` (${AUDIENCE_LABEL[audience]})`}
-                    . This cannot be undone.
-                  </>
+                  isResend && resendInfo ? (
+                    <>
+                      This sends to the {resendInfo.count} recipient
+                      {resendInfo.count === 1 ? "" : "s"} who have not opened
+                      &ldquo;{resendInfo.parentSubject}&rdquo;. This cannot be
+                      undone.
+                    </>
+                  ) : (
+                    <>
+                      This sends to {count ?? 0} recipient
+                      {count === 1 ? "" : "s"}
+                      {hasFilter
+                        ? " matching your filters"
+                        : ` (${AUDIENCE_LABEL[audience]})`}
+                      . This cannot be undone.
+                    </>
+                  )
                 }
                 confirmLabel="Send now"
                 onConfirm={onSend}

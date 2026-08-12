@@ -9,6 +9,7 @@ import {
   alreadySentLeadIds,
   sentInLastHour,
   sentCountForBroadcast,
+  getNonOpeners,
   type Broadcast,
 } from "./broadcasts";
 
@@ -67,10 +68,12 @@ async function sendBatch(
   broadcast: Broadcast,
   cap: number
 ): Promise<{ sent: number; done: boolean }> {
-  const leads = await getSubscribedByAudience(
-    broadcast.audience,
-    broadcast.filters ?? undefined
-  );
+  const leads = broadcast.resend_of
+    ? await getNonOpeners(broadcast.resend_of)
+    : await getSubscribedByAudience(
+        broadcast.audience,
+        broadcast.filters ?? undefined
+      );
   const already = await alreadySentLeadIds(broadcast.id);
   const pending = leads.filter((l) => !already.has(l.id));
 

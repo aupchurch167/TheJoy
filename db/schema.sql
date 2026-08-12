@@ -165,6 +165,12 @@ ALTER TABLE broadcast_recipients ADD COLUMN IF NOT EXISTS complained_at TIMESTAM
 CREATE INDEX IF NOT EXISTS broadcast_recipients_msgid_idx
   ON broadcast_recipients (provider_message_id);
 
+-- A follow-up "resend to non-openers": when set, this broadcast targets the
+-- recipients of the parent broadcast who did NOT open it (resolved at send time,
+-- so it still honors new opt-outs). Its own subject is usually different.
+ALTER TABLE broadcasts ADD COLUMN IF NOT EXISTS resend_of UUID
+  REFERENCES broadcasts(id) ON DELETE SET NULL;
+
 -- Saved recipient segments: name a set of filters ("A Place for Mom, still new")
 -- so a broadcast can reuse it instead of rebuilding the filters each time.
 CREATE TABLE IF NOT EXISTS saved_segments (

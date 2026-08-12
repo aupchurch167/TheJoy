@@ -17,6 +17,8 @@ export type Broadcast = {
   sent_count: number;
   /** Recipient segment within the audience; null = the whole audience. */
   filters: LeadSegment | null;
+  /** When set, targets the non-openers of this parent broadcast. */
+  resend_of: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -37,14 +39,59 @@ export async function createBroadcast(
   body: string,
   audience: Audience = "leads",
   channel: BroadcastChannel = "email",
-  filters: LeadSegment | null = null
+  filters: LeadSegment | null = null,
+  resendOf: string | null = null
 ): Promise<Broadcast> {
   const rows = await query<Broadcast>(
-    `INSERT INTO broadcasts (subject, body, audience, channel, filters)
-     VALUES ($1, $2, $3, $4, $5) RETURNING *`,
-    [subject, body, audience, channel, filters ? JSON.stringify(filters) : null]
+    `INSERT INTO broadcasts (subject, body, audience, channel, filters, resend_of)
+     VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
+    [
+      subject,
+      body,
+      audience,
+      channel,
+      filters ? JSON.stringify(filters) : null,
+      resendOf,
+    ]
   );
   return rows[0];
+}
+
+/**
+ * Recipients of a broadcast who did NOT open it and are still subscribed
+ * (for a "resend to non-openers"). Resolved live so new opt-outs are honored.
+ */
+export async function getNonOpeners(parentBroadcastId: string) {
+  return query<import("./leads").Lead>(
+    `SELECT l.* FROM leads l
+       JOIN broadcast_recipients br
+         ON br.lead_id = l.id AND br.broadcast_id = $1
+      WHERE br.error IS NULL
+        AND br.opened_at IS NULL
+        AND l.unsubscribed_at IS NULL
+        AND l.consent = TRUE
+        AND l.email IS NOT NULL AND l.email <> ''
+      ORDER BY l.created_at ASC`,
+    [parentBroadcastId]
+  );
+}
+
+/** Count of current non-openers (for the composer). */
+export async function countNonOpeners(
+  parentBroadcastId: string
+): Promise<number> {
+  const rows = await query<{ n: string }>(
+    `SELECT COUNT(*) AS n FROM leads l
+       JOIN broadcast_recipients br
+         ON br.lead_id = l.id AND br.broadcast_id = $1
+      WHERE br.error IS NULL
+        AND br.opened_at IS NULL
+        AND l.unsubscribed_at IS NULL
+        AND l.consent = TRUE
+        AND l.email IS NOT NULL AND l.email <> ''`,
+    [parentBroadcastId]
+  );
+  return Number(rows[0]?.n ?? 0);
 }
 
 /** SMS text blasts, most recent first (for the Texts page). */

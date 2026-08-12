@@ -451,6 +451,11 @@ setup.
   reloaded later ("Load a saved segment").
 - Any sent email has a **Duplicate** button that opens a fresh editable draft
   with the same subject, body, audience, and filters.
+- **Resend to non-openers**: a sent email (with opens tracked) has a button that
+  starts a follow-up to just the people who have not opened it. Give the
+  follow-up a **new subject** and send. The recipient set is recalculated at
+  send time, so anyone who opened, unsubscribed, or bounced in the meantime is
+  dropped. (Needs the deliverability webhook so opens are known.)
 - A sent email's **Results** panel shows sent / delivered / opened / clicked /
   bounced / complaints (delivery data needs the webhook above).
 
