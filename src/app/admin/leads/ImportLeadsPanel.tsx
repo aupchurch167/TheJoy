@@ -156,6 +156,11 @@ export default function ImportLeadsPanel() {
                   invalid email, {preview.dupeInFile} duplicate in file.
                 </p>
               )}
+              {preview.failed > 0 && (
+                <p className="mt-1 text-xs font-medium text-danger">
+                  {preview.failed} row(s) could not be imported.
+                </p>
+              )}
             </div>
           )}
 

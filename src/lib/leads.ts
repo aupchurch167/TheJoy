@@ -107,7 +107,8 @@ export async function insertImportedLead(input: {
      VALUES ($1, $2, $3, $4, $5, 'leads', $6, 'completed',
              COALESCE($7::timestamptz, now()))`,
     [
-      input.name ?? null,
+      // name is NOT NULL: fall back to the email's local part.
+      input.name?.trim() || input.email.split("@")[0] || input.email,
       input.email.toLowerCase(),
       input.phone ?? null,
       input.message ?? null,

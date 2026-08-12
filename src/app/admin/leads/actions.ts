@@ -47,6 +47,7 @@ export type ImportLeadsResult =
       usable: number;
       added: number;
       alreadyInList: number;
+      failed: number;
       noEmail: number;
       badEmail: number;
       dupeInFile: number;
@@ -88,23 +89,33 @@ export async function importLeads(input: unknown): Promise<ImportLeadsResult> {
   try {
     let added = 0;
     let alreadyInList = 0;
+    let failed = 0;
     for (const r of rows) {
+      // A duplicate-check failure is a real DB problem: let the outer catch
+      // report it. A single INSERT failure only drops that one row.
       if (await leadEmailExists(r.email)) {
         alreadyInList++;
         continue;
       }
       if (commit) {
-        await insertImportedLead({
-          name: r.name,
-          email: r.email,
-          phone: r.phone,
-          message: r.message,
-          source: r.source,
-          consent,
-          createdAt: r.createdAt,
-        });
+        try {
+          await insertImportedLead({
+            name: r.name,
+            email: r.email,
+            phone: r.phone,
+            message: r.message,
+            source: r.source,
+            consent,
+            createdAt: r.createdAt,
+          });
+          added++;
+        } catch (rowErr) {
+          console.error("[importLeads] row failed", r.email, rowErr);
+          failed++;
+        }
+      } else {
+        added++; // preview: count as importable
       }
-      added++;
     }
 
     if (commit) revalidatePath("/admin/leads");
@@ -112,6 +123,7 @@ export async function importLeads(input: unknown): Promise<ImportLeadsResult> {
     const heldNote = !consent
       ? " Held out of broadcasts (consent off) for a re-permission email."
       : "";
+    const failNote = failed > 0 ? ` ${failed} row(s) could not be imported.` : "";
     return {
       ok: true,
       committed: commit,
@@ -119,11 +131,12 @@ export async function importLeads(input: unknown): Promise<ImportLeadsResult> {
       usable: rows.length,
       added,
       alreadyInList,
+      failed,
       noEmail: stats.noEmail,
       badEmail: stats.badEmail,
       dupeInFile: stats.dupeInFile,
       message: commit
-        ? `Imported ${added} lead${added === 1 ? "" : "s"}, skipped ${alreadyInList} already in the list.${heldNote}`
+        ? `Imported ${added} lead${added === 1 ? "" : "s"}, skipped ${alreadyInList} already in the list.${failNote}${heldNote}`
         : `Ready to import ${added} new lead${added === 1 ? "" : "s"} (${alreadyInList} already in the list).`,
     };
   } catch (err) {

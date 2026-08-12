@@ -140,7 +140,8 @@ for (const r of records) {
   const source = channel ? `${baseSource}:${slugChannel(channel)}` : baseSource;
 
   clean.push({
-    name: name || null,
+    // leads.name is NOT NULL: fall back to the email's local part.
+    name: name || email.split("@")[0] || email,
     email,
     phone: phone || null,
     message: message || null,

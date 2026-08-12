@@ -9,7 +9,9 @@
  */
 
 export type CleanLead = {
-  name: string | null;
+  /** Never empty: the leads.name column is NOT NULL, so a nameless row falls
+   *  back to the email's local part. */
+  name: string;
   email: string;
   phone: string | null;
   message: string | null;
@@ -87,6 +89,11 @@ function toIso(s: string): string | null {
   return Number.isNaN(t) ? null : new Date(t).toISOString();
 }
 
+/** Fallback display name from an email (the part before "@"). */
+function nameFromEmail(email: string): string {
+  return email.split("@")[0] || email;
+}
+
 export function parseLeadsCsv(text: string, baseSource = "import"): ParsedLeads {
   const matrix = parseMatrix(text).filter((r) => r.some((c) => c.trim() !== ""));
   if (matrix.length < 1) {
@@ -140,7 +147,7 @@ export function parseLeadsCsv(text: string, baseSource = "import"): ParsedLeads 
     seen.add(email);
 
     rows.push({
-      name: name || null,
+      name: name || nameFromEmail(email),
       email,
       phone: phone || null,
       message: message || null,
