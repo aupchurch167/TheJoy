@@ -1,7 +1,11 @@
 import Link from "next/link";
 import { requireAdmin } from "@/lib/require-admin";
 import { hasDatabase } from "@/lib/db";
-import { getAllLeads, getSourceReport } from "@/lib/leads";
+import {
+  getAllLeads,
+  getSourceReport,
+  IMPORT_SOURCE_PREFIX,
+} from "@/lib/leads";
 import { resolveRange, type RangeKey } from "@/lib/date-range";
 import { formatDate, formatPercent, orDash } from "@/lib/format";
 import StageSelect from "./StageSelect";
@@ -35,12 +39,19 @@ export default async function LeadsPage({
     range?: string;
     from?: string;
     to?: string;
+    imports?: string;
   }>;
 }) {
   await requireAdmin();
   const sp = await searchParams;
   const source = sp.source;
   const range = resolveRange(sp);
+
+  // Imported (pre-website) leads are hidden by default so website numbers stay
+  // clean. Show them when toggled on, or when the source filter is an import.
+  const showImports =
+    sp.imports === "1" || Boolean(source?.startsWith(IMPORT_SOURCE_PREFIX));
+  const excludeImports = !showImports;
 
   if (!hasDatabase()) {
     return (
@@ -52,8 +63,8 @@ export default async function LeadsPage({
   }
 
   const [report, leads] = await Promise.all([
-    getSourceReport({ from: range.from, to: range.to }),
-    getAllLeads({ source, from: range.from, to: range.to }),
+    getSourceReport({ from: range.from, to: range.to, excludeImports }),
+    getAllLeads({ source, from: range.from, to: range.to, excludeImports }),
   ]);
 
   const totalLeads = report.reduce((n, r) => n + r.total, 0);
@@ -65,10 +76,23 @@ export default async function LeadsPage({
   const hrefWith = (params: Record<string, string | undefined>) => {
     const q = new URLSearchParams();
     if (source) q.set("source", source);
+    if (sp.imports === "1") q.set("imports", "1");
     for (const [k, v] of Object.entries(params)) if (v) q.set(k, v);
     const s = q.toString();
     return `/admin/leads${s ? `?${s}` : ""}`;
   };
+
+  // Toggle imports on/off while keeping the current date range.
+  const importsToggleHref = (() => {
+    const q = new URLSearchParams();
+    if (source) q.set("source", source);
+    if (sp.range) q.set("range", sp.range);
+    if (sp.from) q.set("from", sp.from);
+    if (sp.to) q.set("to", sp.to);
+    if (sp.imports !== "1") q.set("imports", "1");
+    const s = q.toString();
+    return `/admin/leads${s ? `?${s}` : ""}`;
+  })();
 
   return (
     <>
@@ -137,6 +161,28 @@ export default async function LeadsPage({
               {" · "}
               <Link href={hrefWith({})} className="text-clay hover:text-clay-dark">
                 Reset
+              </Link>
+            </>
+          )}
+          {" · "}
+          {showImports ? (
+            <>
+              Including imported (pre-website) leads{" "}
+              <Link
+                href={importsToggleHref}
+                className="text-clay hover:text-clay-dark"
+              >
+                Hide imports
+              </Link>
+            </>
+          ) : (
+            <>
+              Website leads only{" "}
+              <Link
+                href={importsToggleHref}
+                className="text-clay hover:text-clay-dark"
+              >
+                Show imported
               </Link>
             </>
           )}

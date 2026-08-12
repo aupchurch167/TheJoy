@@ -95,14 +95,25 @@ export async function unsubscribeByToken(token: string): Promise<boolean> {
 /** Optional created_at bounds (ISO strings) for date-range filtering. */
 export type DateRange = { from?: string | null; to?: string | null };
 
+/**
+ * Old leads bulk-imported from before the website (via scripts/import-leads.mjs)
+ * carry a source starting with this prefix. The leads list and attribution
+ * report exclude them by default so website metrics are not muddied; they are
+ * still full subscribers and reachable by broadcasts.
+ */
+export const IMPORT_SOURCE_PREFIX = "import";
+
 export async function getAllLeads(
-  opts: { source?: string } & DateRange = {}
+  opts: { source?: string; excludeImports?: boolean } & DateRange = {}
 ): Promise<Lead[]> {
   const conds = ["audience = 'leads'"];
   const params: unknown[] = [];
   if (opts.source) {
     params.push(opts.source);
     conds.push(`source = $${params.length}`);
+  }
+  if (opts.excludeImports) {
+    conds.push(`source NOT LIKE '${IMPORT_SOURCE_PREFIX}%'`);
   }
   if (opts.from) {
     params.push(opts.from);
@@ -313,7 +324,7 @@ export type SourceReportRow = {
 
 /** Source attribution: leads grouped by source with lifecycle counts. */
 export async function getSourceReport(
-  range: DateRange = {}
+  range: DateRange & { excludeImports?: boolean } = {}
 ): Promise<SourceReportRow[]> {
   const conds = ["audience = 'leads'"];
   const params: unknown[] = [];
@@ -324,6 +335,9 @@ export async function getSourceReport(
   if (range.to) {
     params.push(range.to);
     conds.push(`created_at <= $${params.length}`);
+  }
+  if (range.excludeImports) {
+    conds.push(`source NOT LIKE '${IMPORT_SOURCE_PREFIX}%'`);
   }
   const rows = await query<{
     source: string;
