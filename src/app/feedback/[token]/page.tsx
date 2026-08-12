@@ -56,6 +56,7 @@ export default async function FeedbackPage({
         apfm: settings.apfm_review_url,
       }}
       phone={phone}
+      residentName={request.resident_first_name ?? ""}
     />
   );
 }

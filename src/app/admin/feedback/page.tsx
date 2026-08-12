@@ -3,10 +3,10 @@ import { hasDatabase } from "@/lib/db";
 import { listFeedbackRequests, listCallbackRequests } from "@/lib/feedback";
 import { formatDate, orDash } from "@/lib/format";
 import SendSurveyForm from "./SendSurveyForm";
-import { CallbackStatusControl, ResendButton } from "./CallbackControls";
+import { CallbackStatusControl } from "./CallbackControls";
+import RequestsTable from "./RequestsTable";
 import {
   PageHeader,
-  Badge,
   EmptyState,
   NotConnected,
   SectionLabel,
@@ -16,8 +16,6 @@ import {
 } from "@/components/admin/ui";
 
 export const dynamic = "force-dynamic";
-
-const DAY = 24 * 60 * 60 * 1000;
 
 export default async function FeedbackPage() {
   await requireAdmin();
@@ -58,87 +56,12 @@ export default async function FeedbackPage() {
       {/* Requests */}
       <section>
         <SectionLabel>Surveys</SectionLabel>
+        <p className="mt-1 text-sm text-ink-soft">
+          Concerns are flagged and sorted to the top. Click a completed row to
+          see the detailed ratings and written answers.
+        </p>
         <div className="mt-3">
-          {sorted.length === 0 ? (
-            <EmptyState
-              icon="📝"
-              title="No surveys yet"
-              description="Use “Send survey” to invite a family to share how things are going."
-            />
-          ) : (
-            <TableWrap>
-              <thead>
-                <tr className="border-b border-line">
-                  <Th>Family</Th>
-                  <Th>Sent</Th>
-                  <Th>Status</Th>
-                  <Th>Rating</Th>
-                  <Th />
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-line">
-                {sorted.map((r) => {
-                  const completed = !!r.completed_at;
-                  const anonymous = completed && r.rating == null;
-                  const concern = r.sentiment === "concern";
-                  const ageFrom = r.sent_at ?? r.created_at;
-                  const resendable =
-                    !completed &&
-                    now - new Date(ageFrom).getTime() > 14 * DAY;
-                  return (
-                    <tr
-                      key={r.id}
-                      className={`transition-colors hover:bg-surface ${
-                        concern ? "bg-danger/[0.04]" : ""
-                      }`}
-                    >
-                      <Td>
-                        <div className="font-medium text-ink">
-                          {orDash(r.family_name)}
-                        </div>
-                        <div className="text-xs text-ink-faint">
-                          {r.family_email}
-                        </div>
-                      </Td>
-                      <Td className="whitespace-nowrap text-ink-faint">
-                        {r.sent_at ? formatDate(r.sent_at) : "—"}
-                      </Td>
-                      <Td>
-                        {completed ? (
-                          anonymous ? (
-                            <Badge tone="neutral">completed · anonymous</Badge>
-                          ) : (
-                            <Badge tone="success">completed</Badge>
-                          )
-                        ) : r.sent_at ? (
-                          <Badge tone="info">sent</Badge>
-                        ) : (
-                          <Badge tone="neutral">created</Badge>
-                        )}
-                      </Td>
-                      <Td>
-                        {r.rating != null ? (
-                          <span className="flex items-center gap-2">
-                            <span className="font-medium text-ink">
-                              {r.rating}/5
-                            </span>
-                            <Badge tone={concern ? "danger" : "success"}>
-                              {concern ? "concern" : "positive"}
-                            </Badge>
-                          </span>
-                        ) : (
-                          "—"
-                        )}
-                      </Td>
-                      <Td className="text-right">
-                        {resendable && <ResendButton id={r.id} />}
-                      </Td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </TableWrap>
-          )}
+          <RequestsTable rows={sorted} now={now} />
         </div>
       </section>
 

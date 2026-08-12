@@ -360,19 +360,18 @@ export async function sendSurveyInvitation(request: {
   const url = `${SITE_URL}/feedback/${request.token}`;
   const who = request.resident_first_name
     ? `${request.resident_first_name}`
-    : "your family";
+    : "your family member";
   const firstName = request.family_name.trim().split(/\s+/)[0] || "there";
   const body = [
     `Hi ${firstName},`,
     ``,
-    `How are things going for ${who} at Joy? I would love to hear, the good and anything we could do better.`,
-    ``,
-    `It takes about two minutes.`,
+    `It has been a joy having ${who} with us. I would love to know how things feel from your side. It takes about two minutes, and you can answer anonymously if you prefer.`,
     ``,
     `[[button:Share how it is going|${url}]]`,
     ``,
-    `Thank you,`,
+    `Warmly,`,
     `Mellissa`,
+    `Joy Senior Living, a personal care home`,
   ].join("\n");
 
   await resend.emails.send({
@@ -394,6 +393,8 @@ export async function sendConcernAlert(input: {
   to: string[];
   familyLabel: string; // family name, or "Anonymous"
   rating: number;
+  dimensions?: { label: string; value: string }[];
+  recommend?: string | null;
   goingWell?: string | null;
   couldBeBetter?: string | null;
   suggestions?: string | null;
@@ -412,6 +413,11 @@ export async function sendConcernAlert(input: {
     `From: ${input.familyLabel}`,
     `Rating: ${input.rating} of 5`,
   ];
+  if (input.recommend) lines.push(`Would recommend: ${input.recommend}`);
+  if (input.dimensions?.length) {
+    lines.push(``, `Ratings:`);
+    for (const d of input.dimensions) lines.push(`- ${d.label}: ${d.value}`);
+  }
   if (input.goingWell) lines.push(``, `Going well:`, input.goingWell);
   if (input.couldBeBetter)
     lines.push(``, `Could be better:`, input.couldBeBetter);

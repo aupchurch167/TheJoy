@@ -17,9 +17,23 @@ import { sendConcernAlert } from "@/lib/email";
  * survey token is the gate. Anonymity is honored end to end.
  */
 
+const Dim = z.number().int().min(1).max(3).nullable().optional();
 const SubmitSchema = z.object({
   token: z.string().min(10).max(200),
   rating: z.number().int().min(1).max(5),
+  dimensions: z
+    .object({
+      care: Dim,
+      communication: Dim,
+      dining: Dim,
+      home_feel: Dim,
+      engagement: Dim,
+    })
+    .optional(),
+  recommend: z
+    .enum(["definitely", "probably", "not_sure", "no"])
+    .nullable()
+    .optional(),
   goingWell: z.string().max(4000).optional(),
   couldBeBetter: z.string().max(4000).optional(),
   suggestions: z.string().max(4000).optional(),
@@ -37,6 +51,41 @@ function alertRecipients(csv: string): string[] {
     .filter(Boolean);
 }
 
+const DIM_LABEL: Record<string, string> = {
+  care: "Care",
+  communication: "Communication",
+  dining: "Meals and dining",
+  home_feel: "Feels like home",
+  engagement: "Activities",
+};
+const DIM_VALUE: Record<number, string> = { 1: "Needs work", 2: "Okay", 3: "Great" };
+const RECOMMEND_LABEL: Record<string, string> = {
+  definitely: "Definitely",
+  probably: "Probably",
+  not_sure: "Not sure",
+  no: "No",
+};
+
+/** Turn a response's dimension columns into labeled rows for the alert email. */
+function dimensionRows(resp: {
+  rating_care: number | null;
+  rating_communication: number | null;
+  rating_dining: number | null;
+  rating_home_feel: number | null;
+  rating_engagement: number | null;
+}): { label: string; value: string }[] {
+  const map: [string, number | null][] = [
+    ["care", resp.rating_care],
+    ["communication", resp.rating_communication],
+    ["dining", resp.rating_dining],
+    ["home_feel", resp.rating_home_feel],
+    ["engagement", resp.rating_engagement],
+  ];
+  return map
+    .filter(([, v]) => v != null)
+    .map(([k, v]) => ({ label: DIM_LABEL[k], value: DIM_VALUE[v as number] }));
+}
+
 export async function submitFeedback(input: unknown): Promise<SubmitResult> {
   const parsed = SubmitSchema.safeParse(input);
   if (!parsed.success) return { ok: false, error: "Please check your answers." };
@@ -48,22 +97,35 @@ export async function submitFeedback(input: unknown): Promise<SubmitResult> {
     }
 
     const anonymous = parsed.data.anonymous === true;
+    const d = parsed.data.dimensions ?? {};
     const response = await submitResponse({
       request,
       rating: parsed.data.rating,
+      dimensions: {
+        care: d.care ?? null,
+        communication: d.communication ?? null,
+        dining: d.dining ?? null,
+        home_feel: d.home_feel ?? null,
+        engagement: d.engagement ?? null,
+      },
+      recommend: parsed.data.recommend ?? null,
       goingWell: parsed.data.goingWell,
       couldBeBetter: parsed.data.couldBeBetter,
       suggestions: parsed.data.suggestions,
       anonymous,
     });
 
-    // Concern (rating <= 3): alert the team immediately, callback or not.
+    // Concern sentiment: alert the team immediately, callback or not.
     if (response.sentiment === "concern") {
       const settings = await getSettings();
       await sendConcernAlert({
         to: alertRecipients(settings.feedback_alert_emails),
         familyLabel: anonymous ? "Anonymous" : request.family_name,
         rating: response.overall_rating,
+        dimensions: dimensionRows(response),
+        recommend: response.would_recommend
+          ? RECOMMEND_LABEL[response.would_recommend]
+          : null,
         goingWell: response.going_well,
         couldBeBetter: response.could_be_better,
         suggestions: response.suggestions,
@@ -124,6 +186,10 @@ export async function submitCallback(input: unknown): Promise<CallbackResult> {
       to: alertRecipients(settings.feedback_alert_emails),
       familyLabel,
       rating: response.overall_rating,
+      dimensions: dimensionRows(response),
+      recommend: response.would_recommend
+        ? RECOMMEND_LABEL[response.would_recommend]
+        : null,
       goingWell: response.going_well,
       couldBeBetter: response.could_be_better,
       suggestions: response.suggestions,

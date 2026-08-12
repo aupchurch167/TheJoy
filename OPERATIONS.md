@@ -477,11 +477,20 @@ Using it:
 
 - **Send survey**: enter the family name, email, and (optional) resident first
   name. The family gets a short note from Mellissa with a private link.
-- The family rates 1-5 and can add comments. **4-5** lands on a thank-you that
-  leads with the review buttons; **1-3** leads with a callback request (review
-  links still appear below, unemphasized — Google prohibits hiding them).
-- A rating of **3 or below** emails the alert recipients immediately, callback
-  or not. A callback request emails them again with the contact details.
+- The family taps five **hearts** for the overall rating, then optionally rates
+  five areas (care, communication, dining, feels-like-home, activities) and
+  whether they would recommend Joy, and can add written comments.
+- **Sentiment** is more than the heart count: a response is a **concern** if the
+  overall is 3 or below, OR any area is "Needs work", OR they would not clearly
+  recommend ("Not sure"/"No"). So a 5-heart response with one "Needs work" still
+  routes to the concern path.
+- **Positive** lands on a review-first thank-you (Google + A Place for Mom).
+  **Concern** leads with a callback request and, per the owner's decision, does
+  **not** show review links on that path.
+- A concern emails the alert recipients immediately, callback or not. A callback
+  request emails them again with the contact details and the ratings.
+- In the admin, click a completed row to expand its per-area ratings, recommend
+  answer, and written comments.
 - **Anonymous**: a family can keep answers unlinked. You still see the survey
   was completed, just not which answers were theirs. If they ask for a callback,
   the callback holds the contact info they chose to give.

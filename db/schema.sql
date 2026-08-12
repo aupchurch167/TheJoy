@@ -344,6 +344,14 @@ CREATE TABLE IF NOT EXISTS feedback_responses (
   id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   request_id      UUID REFERENCES feedback_requests(id),
   overall_rating  INT NOT NULL CHECK (overall_rating BETWEEN 1 AND 5),
+  -- Optional dimension taps: 1 = Needs work, 2 = Okay, 3 = Great.
+  rating_care          INT CHECK (rating_care BETWEEN 1 AND 3),
+  rating_communication INT CHECK (rating_communication BETWEEN 1 AND 3),
+  rating_dining        INT CHECK (rating_dining BETWEEN 1 AND 3),
+  rating_home_feel     INT CHECK (rating_home_feel BETWEEN 1 AND 3),
+  rating_engagement    INT CHECK (rating_engagement BETWEEN 1 AND 3),
+  -- 'definitely' | 'probably' | 'not_sure' | 'no'
+  would_recommend TEXT,
   going_well      TEXT,
   could_be_better TEXT,
   suggestions     TEXT,
@@ -351,6 +359,13 @@ CREATE TABLE IF NOT EXISTS feedback_responses (
   sentiment       TEXT NOT NULL,
   created_at      TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+-- Safe to re-run on a DB created before the dimension columns existed.
+ALTER TABLE feedback_responses ADD COLUMN IF NOT EXISTS rating_care INT;
+ALTER TABLE feedback_responses ADD COLUMN IF NOT EXISTS rating_communication INT;
+ALTER TABLE feedback_responses ADD COLUMN IF NOT EXISTS rating_dining INT;
+ALTER TABLE feedback_responses ADD COLUMN IF NOT EXISTS rating_home_feel INT;
+ALTER TABLE feedback_responses ADD COLUMN IF NOT EXISTS rating_engagement INT;
+ALTER TABLE feedback_responses ADD COLUMN IF NOT EXISTS would_recommend TEXT;
 CREATE INDEX IF NOT EXISTS feedback_responses_created_idx
   ON feedback_responses (created_at DESC);
 
