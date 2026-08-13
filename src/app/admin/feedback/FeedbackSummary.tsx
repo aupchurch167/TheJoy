@@ -1,4 +1,4 @@
-import { Card, StatCard, SectionLabel } from "@/components/admin/ui";
+import { Card, StatCard, SectionLabel, ButtonLink } from "@/components/admin/ui";
 import type { FeedbackSummary as Summary } from "@/lib/feedback";
 
 const DIMENSIONS: { key: keyof Summary["dimensions"]; label: string }[] = [
@@ -27,7 +27,14 @@ function dimWord(v: number): string {
   return "Needs work";
 }
 
-export default function FeedbackSummary({ summary }: { summary: Summary }) {
+export default function FeedbackSummary({
+  summary,
+  reportHref,
+}: {
+  summary: Summary;
+  /** When set, shows a prominent link to the full shareable report. */
+  reportHref?: string;
+}) {
   const {
     sent,
     completed,
@@ -47,7 +54,14 @@ export default function FeedbackSummary({ summary }: { summary: Summary }) {
 
   return (
     <section className="mb-10">
-      <SectionLabel>At a glance</SectionLabel>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <SectionLabel>At a glance</SectionLabel>
+        {reportHref && (
+          <ButtonLink href={reportHref} variant="secondary" size="sm">
+            View full report and trends →
+          </ButtonLink>
+        )}
+      </div>
 
       <div className="mt-3 grid grid-cols-2 gap-4 lg:grid-cols-4">
         <StatCard
