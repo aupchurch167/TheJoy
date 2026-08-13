@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { requireAdmin } from "@/lib/require-admin";
 import { hasDatabase } from "@/lib/db";
-import { getFamilyMembers } from "@/lib/leads";
+import { getFamilyMembers, countFamiliesTextable } from "@/lib/leads";
 import FamilyManager from "./FamilyManager";
 import { PageHeader, NotConnected } from "@/components/admin/ui";
 
@@ -19,7 +19,10 @@ export default async function FamiliesPage() {
     );
   }
 
-  const members = await getFamilyMembers();
+  const [members, textableCount] = await Promise.all([
+    getFamilyMembers(),
+    countFamiliesTextable(),
+  ]);
 
   return (
     <>
@@ -50,7 +53,7 @@ export default async function FamiliesPage() {
         </p>
       </div>
 
-      <FamilyManager members={members} />
+      <FamilyManager members={members} textableCount={textableCount} />
     </>
   );
 }

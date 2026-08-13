@@ -60,7 +60,12 @@ export default function SendToAllButton({
   const channelWord =
     channel === "email" ? "email" : channel === "sms" ? "a text" : "email and text";
 
+  // Texting needs families opted in; if none are, point the operator to fix it.
+  const noTextRecipients =
+    (channel === "sms" || channel === "both") && smsCount === 0;
+
   return (
+    <div className="flex flex-col items-end gap-1">
     <div className="flex items-center gap-2">
       {options.length > 1 && (
         <Select
@@ -101,6 +106,19 @@ export default function SendToAllButton({
       >
         {pending ? "Sending…" : "Send to all families"}
       </Button>
+    </div>
+      {noTextRecipients && (
+        <p className="max-w-xs text-right text-xs text-ink-faint">
+          No family has texts turned on yet. Turn them on under{" "}
+          <a
+            href="/admin/families"
+            className="font-medium text-clay hover:text-clay-dark"
+          >
+            Family list
+          </a>
+          .
+        </p>
+      )}
     </div>
   );
 }

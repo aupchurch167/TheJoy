@@ -406,17 +406,21 @@ export type FamilyMemberInput = {
   source?: string;
   /** Set to unsubscribe on insert (e.g. imported "do not contact"). */
   unsubscribed?: boolean;
+  /** Opt this contact into text messages on insert. */
+  smsConsent?: boolean;
 };
 
 export async function insertFamilyMember(
   input: FamilyMemberInput
 ): Promise<Lead> {
   const email = input.email?.trim() ? input.email.trim().toLowerCase() : null;
+  // Only opt into texts when a phone is actually on file.
+  const smsConsent = !!input.smsConsent && !!input.phone?.trim();
   const rows = await query<Lead>(
     `INSERT INTO leads
        (name, email, phone, source, audience, consent, drip_status,
-        resident_name, relation, active, unsubscribed_at)
-     VALUES ($1, $2, $3, $4, 'families', TRUE, 'completed', $5, $6, $7, $8)
+        resident_name, relation, active, unsubscribed_at, sms_consent)
+     VALUES ($1, $2, $3, $4, 'families', TRUE, 'completed', $5, $6, $7, $8, $9)
      RETURNING *`,
     [
       input.name,
@@ -427,9 +431,41 @@ export async function insertFamilyMember(
       input.relation?.trim() || null,
       input.active ?? true,
       input.unsubscribed ? new Date().toISOString() : null,
+      smsConsent,
     ]
   );
   return rows[0];
+}
+
+/**
+ * Turn on text consent for every active family contact that has a phone and
+ * has not opted out. Returns how many were newly enabled. Lets the operator
+ * opt in their existing families in one step (they attest they have permission).
+ */
+export async function enableSmsForFamiliesWithPhone(): Promise<number> {
+  const rows = await query<{ id: string }>(
+    `UPDATE leads SET sms_consent = TRUE
+      WHERE audience = 'families'
+        AND active = TRUE
+        AND sms_consent = FALSE
+        AND sms_opt_out_at IS NULL
+        AND phone IS NOT NULL AND phone <> ''
+      RETURNING id`
+  );
+  return rows.length;
+}
+
+/** Family contacts that have a phone but texts are not on yet (opt-out excluded). */
+export async function countFamiliesTextable(): Promise<number> {
+  const rows = await query<{ n: string }>(
+    `SELECT COUNT(*) AS n FROM leads
+      WHERE audience = 'families'
+        AND active = TRUE
+        AND sms_consent = FALSE
+        AND sms_opt_out_at IS NULL
+        AND phone IS NOT NULL AND phone <> ''`
+  );
+  return Number(rows[0]?.n ?? 0);
 }
 
 export async function getFamilyMembers(): Promise<Lead[]> {

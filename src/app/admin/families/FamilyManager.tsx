@@ -7,6 +7,7 @@ import {
   removeFamilyMember,
   toggleFamilyActive,
   toggleFamilySmsConsent,
+  enableTextsForAll,
 } from "./actions";
 import type { Lead } from "@/lib/leads";
 import { orDash } from "@/lib/format";
@@ -26,7 +27,13 @@ import ConfirmButton from "@/components/admin/ConfirmButton";
 import { useToast } from "@/components/admin/Toast";
 import FamilyImport from "./FamilyImport";
 
-export default function FamilyManager({ members }: { members: Lead[] }) {
+export default function FamilyManager({
+  members,
+  textableCount,
+}: {
+  members: Lead[];
+  textableCount: number;
+}) {
   const router = useRouter();
   const { success, error: toastError } = useToast();
   const [name, setName] = useState("");
@@ -35,8 +42,10 @@ export default function FamilyManager({ members }: { members: Lead[] }) {
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
   const [optIn, setOptIn] = useState(false);
+  const [smsOptIn, setSmsOptIn] = useState(false);
   const [error, setError] = useState("");
   const [pending, start] = useTransition();
+  const [enabling, startEnable] = useTransition();
 
   const activeCount = members.filter((m) => m.active).length;
 
@@ -51,6 +60,7 @@ export default function FamilyManager({ members }: { members: Lead[] }) {
         phone,
         email,
         optIn,
+        smsOptIn,
       });
       if (!res.ok) {
         setError(res.error);
@@ -62,7 +72,31 @@ export default function FamilyManager({ members }: { members: Lead[] }) {
       setPhone("");
       setEmail("");
       setOptIn(false);
+      setSmsOptIn(false);
       success(`${name.trim() || "Contact"} added.`);
+      router.refresh();
+    });
+  }
+
+  function onEnableAllTexts() {
+    if (
+      !window.confirm(
+        `Turn on texts for ${textableCount} family contact${textableCount === 1 ? "" : "s"} with a phone on file? ` +
+          `Only do this for families who have agreed to receive texts. Each text includes a "Reply STOP to opt out" line.`
+      )
+    )
+      return;
+    startEnable(async () => {
+      const res = await enableTextsForAll();
+      if (!res.ok) {
+        toastError(res.error);
+        return;
+      }
+      success(
+        res.enabled > 0
+          ? `Texts turned on for ${res.enabled} contact${res.enabled === 1 ? "" : "s"}.`
+          : "No contacts needed enabling."
+      );
       router.refresh();
     });
   }
@@ -170,6 +204,21 @@ export default function FamilyManager({ members }: { members: Lead[] }) {
             </label>
           )}
 
+          {phone.trim() && (
+            <label className="mt-3 flex items-start gap-2.5 text-sm text-ink-soft">
+              <input
+                type="checkbox"
+                checked={smsOptIn}
+                onChange={(e) => setSmsOptIn(e.target.checked)}
+                className="mt-0.5 h-4 w-4 accent-clay"
+              />
+              <span>
+                This family agreed to receive text messages from Joy (like a
+                short feedback survey). They can reply STOP anytime.
+              </span>
+            </label>
+          )}
+
           {error && (
             <p className="mt-3 text-sm font-medium text-danger" role="alert">
               {error}
@@ -187,10 +236,31 @@ export default function FamilyManager({ members }: { members: Lead[] }) {
       <FamilyImport />
 
       <div className="mt-8">
-        <SectionLabel>
-          Family contacts{" "}
-          {members.length > 0 && `(${activeCount} active of ${members.length})`}
-        </SectionLabel>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <SectionLabel>
+            Family contacts{" "}
+            {members.length > 0 &&
+              `(${activeCount} active of ${members.length})`}
+          </SectionLabel>
+          {textableCount > 0 && (
+            <Button
+              variant="secondary"
+              size="sm"
+              disabled={enabling}
+              onClick={onEnableAllTexts}
+            >
+              {enabling
+                ? "Turning on…"
+                : `Turn on texts for ${textableCount} with a phone`}
+            </Button>
+          )}
+        </div>
+        {textableCount > 0 && (
+          <p className="mt-1.5 text-xs text-ink-faint">
+            Texts are off by default. Turn them on for families who agreed to be
+            texted so they can receive survey requests by text.
+          </p>
+        )}
         <div className="mt-3">
           {members.length === 0 ? (
             <EmptyState

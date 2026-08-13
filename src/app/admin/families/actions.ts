@@ -10,6 +10,7 @@ import {
   familyContactExists,
   setFamilyActive,
   setFamilySmsConsent,
+  enableSmsForFamiliesWithPhone,
 } from "@/lib/leads";
 import { parseFamilyContacts } from "@/lib/family-import";
 
@@ -30,6 +31,8 @@ const AddSchema = z
       }),
     // Opt-in is only required when an email is provided (so we can email them).
     optIn: z.boolean().optional().default(false),
+    // Text opt-in (only meaningful when a phone is provided).
+    smsOptIn: z.boolean().optional().default(false),
   })
   .refine((d) => d.email === "" || d.optIn === true, {
     message: "Confirm this family agreed to receive Joy emails.",
@@ -55,6 +58,7 @@ export async function addFamilyMember(input: unknown): Promise<FamilyResult> {
       phone: d.phone || null,
       residentName: d.residentName || null,
       relation: d.relation || null,
+      smsConsent: !!d.phone && d.smsOptIn,
     });
     revalidatePath("/admin/families");
     return { ok: true };
@@ -162,6 +166,25 @@ export async function toggleFamilySmsConsent(
   } catch (err) {
     console.error("[toggleFamilySmsConsent]", err);
     return { ok: false };
+  }
+}
+
+/**
+ * Turn on texts for every active family contact with a phone (and no opt-out).
+ * The operator attests they have permission to text these families.
+ */
+export async function enableTextsForAll(): Promise<
+  { ok: true; enabled: number } | { ok: false; error: string }
+> {
+  await requireAdmin();
+  try {
+    const enabled = await enableSmsForFamiliesWithPhone();
+    revalidatePath("/admin/families");
+    revalidatePath("/admin/feedback");
+    return { ok: true, enabled };
+  } catch (err) {
+    console.error("[enableTextsForAll]", err);
+    return { ok: false, error: "Could not update. Is the database connected?" };
   }
 }
 
