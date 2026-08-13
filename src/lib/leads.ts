@@ -172,6 +172,8 @@ export const IMPORT_SOURCE_PREFIX = "import";
 type LeadListOpts = {
   source?: string;
   excludeImports?: boolean;
+  /** Free-text search across name, email, resident name, and phone. */
+  q?: string;
   limit?: number;
   offset?: number;
 } & DateRange;
@@ -189,6 +191,16 @@ function leadListWhere(opts: LeadListOpts): {
   }
   if (opts.excludeImports) {
     conds.push(`source NOT LIKE '${IMPORT_SOURCE_PREFIX}%'`);
+  }
+  const q = opts.q?.trim();
+  if (q) {
+    // Escape LIKE wildcards so a literal % or _ in the query is matched as-is.
+    const pat = `%${q.replace(/[\\%_]/g, "\\$&")}%`;
+    params.push(pat);
+    const p = `$${params.length}`;
+    conds.push(
+      `(name ILIKE ${p} OR email ILIKE ${p} OR resident_name ILIKE ${p} OR phone ILIKE ${p})`
+    );
   }
   if (opts.from) {
     params.push(opts.from);

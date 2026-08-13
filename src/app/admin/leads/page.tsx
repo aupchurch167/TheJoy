@@ -46,11 +46,13 @@ export default async function LeadsPage({
     to?: string;
     imports?: string;
     page?: string;
+    q?: string;
   }>;
 }) {
   await requireAdmin();
   const sp = await searchParams;
   const source = sp.source;
+  const q = sp.q?.trim() || undefined;
   const range = resolveRange(sp);
 
   // Imported (pre-website) leads are hidden by default so website numbers stay
@@ -73,7 +75,7 @@ export default async function LeadsPage({
     );
   }
 
-  const listOpts = { source, from: range.from, to: range.to, excludeImports };
+  const listOpts = { source, q, from: range.from, to: range.to, excludeImports };
   const [report, leads, totalLeadRows, subscribers, unsubscribed, deliver] =
     await Promise.all([
       getSourceReport({ from: range.from, to: range.to, excludeImports }),
@@ -102,38 +104,53 @@ export default async function LeadsPage({
   const totalMovedIn = report.reduce((n, r) => n + r.moved_in, 0);
   const tourRate = totalLeads > 0 ? totalToured / totalLeads : null;
 
-  // Build a leads URL, always preserving the active source filter.
+  // Build a leads URL, always preserving the active source filter + search.
   const hrefWith = (params: Record<string, string | undefined>) => {
-    const q = new URLSearchParams();
-    if (source) q.set("source", source);
-    if (sp.imports === "1") q.set("imports", "1");
-    for (const [k, v] of Object.entries(params)) if (v) q.set(k, v);
-    const s = q.toString();
+    const qs = new URLSearchParams();
+    if (source) qs.set("source", source);
+    if (sp.q) qs.set("q", sp.q);
+    if (sp.imports === "1") qs.set("imports", "1");
+    for (const [k, v] of Object.entries(params)) if (v) qs.set(k, v);
+    const s = qs.toString();
     return `/admin/leads${s ? `?${s}` : ""}`;
   };
 
   // Link to a specific page, preserving all active filters.
   const pageHref = (n: number) => {
-    const q = new URLSearchParams();
-    if (source) q.set("source", source);
-    if (sp.range) q.set("range", sp.range);
-    if (sp.from) q.set("from", sp.from);
-    if (sp.to) q.set("to", sp.to);
-    if (sp.imports === "1") q.set("imports", "1");
-    if (n > 1) q.set("page", String(n));
-    const s = q.toString();
+    const qs = new URLSearchParams();
+    if (source) qs.set("source", source);
+    if (sp.q) qs.set("q", sp.q);
+    if (sp.range) qs.set("range", sp.range);
+    if (sp.from) qs.set("from", sp.from);
+    if (sp.to) qs.set("to", sp.to);
+    if (sp.imports === "1") qs.set("imports", "1");
+    if (n > 1) qs.set("page", String(n));
+    const s = qs.toString();
     return `/admin/leads${s ? `?${s}` : ""}`;
   };
 
-  // Toggle imports on/off while keeping the current date range.
+  // Toggle imports on/off while keeping the current date range + search.
   const importsToggleHref = (() => {
-    const q = new URLSearchParams();
-    if (source) q.set("source", source);
-    if (sp.range) q.set("range", sp.range);
-    if (sp.from) q.set("from", sp.from);
-    if (sp.to) q.set("to", sp.to);
-    if (sp.imports !== "1") q.set("imports", "1");
-    const s = q.toString();
+    const qs = new URLSearchParams();
+    if (source) qs.set("source", source);
+    if (sp.q) qs.set("q", sp.q);
+    if (sp.range) qs.set("range", sp.range);
+    if (sp.from) qs.set("from", sp.from);
+    if (sp.to) qs.set("to", sp.to);
+    if (sp.imports !== "1") qs.set("imports", "1");
+    const s = qs.toString();
+    return `/admin/leads${s ? `?${s}` : ""}`;
+  })();
+
+  // Same filters, but with the search dropped.
+  const clearSearchHref = (() => {
+    const qs = new URLSearchParams();
+    if (source) qs.set("source", source);
+    if (sp.range) qs.set("range", sp.range);
+    if (sp.from) qs.set("from", sp.from);
+    if (sp.to) qs.set("to", sp.to);
+    if (sp.imports === "1") qs.set("imports", "1");
+    const s = qs.toString();
     return `/admin/leads${s ? `?${s}` : ""}`;
   })();
 
@@ -338,6 +355,11 @@ export default async function LeadsPage({
                 source: {formatSource(source)}
               </Badge>
             )}
+            {q && (
+              <Badge tone="info" className="ml-1 normal-case tracking-normal">
+                search: “{q}”
+              </Badge>
+            )}
           </SectionLabel>
           {source && (
             <ButtonLink href={hrefWith({ range: sp.range })} variant="ghost" size="sm">
@@ -345,12 +367,44 @@ export default async function LeadsPage({
             </ButtonLink>
           )}
         </div>
+
+        {/* Search by name, email, resident, or phone (GET; preserves filters). */}
+        <form method="get" action="/admin/leads" className="mt-3 flex flex-wrap items-center gap-2">
+          {source && <input type="hidden" name="source" value={source} />}
+          {sp.range && <input type="hidden" name="range" value={sp.range} />}
+          {sp.from && <input type="hidden" name="from" value={sp.from} />}
+          {sp.to && <input type="hidden" name="to" value={sp.to} />}
+          {sp.imports === "1" && <input type="hidden" name="imports" value="1" />}
+          <input
+            type="search"
+            name="q"
+            defaultValue={q ?? ""}
+            placeholder="Search name, email, resident, or phone"
+            className="h-10 w-full max-w-sm rounded-lg border border-line bg-white px-3 text-sm text-ink focus:border-clay focus:outline-none focus:ring-2 focus:ring-clay/30"
+          />
+          <button
+            type="submit"
+            className="h-10 rounded-lg bg-clay px-4 text-sm font-semibold text-white hover:bg-clay-dark"
+          >
+            Search
+          </button>
+          {q && (
+            <ButtonLink href={clearSearchHref} variant="ghost" size="sm">
+              Clear search
+            </ButtonLink>
+          )}
+        </form>
+
         <div className="mt-3">
           {leads.length === 0 ? (
             <EmptyState
               icon="🧾"
-              title="No leads to show"
-              description="Try a wider date range or clear the source filter. New leads from the contact form and TalkFurther appear here."
+              title={q ? `No leads match “${q}”` : "No leads to show"}
+              description={
+                q
+                  ? "Try a different spelling, or clear the search. Search looks at name, email, resident name, and phone."
+                  : "Try a wider date range or clear the source filter. New leads from the contact form and TalkFurther appear here."
+              }
             />
           ) : (
             <TableWrap>
