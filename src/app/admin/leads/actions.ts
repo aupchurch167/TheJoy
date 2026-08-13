@@ -7,12 +7,14 @@ import {
   setLeadStage,
   leadEmailExists,
   insertImportedLead,
+  unsubscribeLead,
+  resubscribeLead,
 } from "@/lib/leads";
 import { parseLeadsCsv } from "@/lib/leads-import";
 
 const Schema = z.object({
   id: z.string().uuid(),
-  stage: z.enum(["new", "toured", "moved_in", "lost"]),
+  stage: z.enum(["new", "toured", "moved_in", "lost", "deceased"]),
 });
 
 export async function updateLeadStage(input: unknown): Promise<{ ok: boolean }> {
@@ -26,6 +28,25 @@ export async function updateLeadStage(input: unknown): Promise<{ ok: boolean }> 
     return { ok: true };
   } catch (err) {
     console.error("[updateLeadStage]", err);
+    return { ok: false };
+  }
+}
+
+/** Manually unsubscribe (opt out) or re-subscribe a single lead. */
+export async function setLeadSubscription(input: {
+  id: string;
+  subscribed: boolean;
+}): Promise<{ ok: boolean }> {
+  await requireAdmin();
+  if (typeof input?.id !== "string") return { ok: false };
+  try {
+    if (input.subscribed) await resubscribeLead(input.id);
+    else await unsubscribeLead(input.id);
+    revalidatePath("/admin/leads");
+    revalidatePath(`/admin/leads/${input.id}`);
+    return { ok: true };
+  } catch (err) {
+    console.error("[setLeadSubscription]", err);
     return { ok: false };
   }
 }

@@ -9,6 +9,7 @@ const STAGES: { value: string; label: string }[] = [
   { value: "toured", label: "Toured" },
   { value: "moved_in", label: "Moved in" },
   { value: "lost", label: "Lost" },
+  { value: "deceased", label: "Deceased" },
 ];
 
 export default function StageSelect({

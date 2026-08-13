@@ -30,7 +30,7 @@ export type CleanLead = {
   stage: LeadStage | null;
 };
 
-export type LeadStage = "new" | "toured" | "moved_in" | "lost";
+export type LeadStage = "new" | "toured" | "moved_in" | "lost" | "deceased";
 
 export type ParsedLeads = {
   rows: CleanLead[];
@@ -81,16 +81,17 @@ const FIELD_ALIASES: Record<LeadFieldKey, string[]> = {
 };
 
 /**
- * Normalize a free-text stage/status value to one of the four lifecycle stages.
- * Unrecognized values return null (the row keeps the DB default, 'new').
+ * Normalize a free-text stage/status value to a lifecycle stage. Unrecognized
+ * values return null (the row keeps the DB default, 'new').
  */
 export function normalizeStage(raw: string): LeadStage | null {
   const s = raw.trim().toLowerCase();
   if (!s) return null;
+  if (/(deceased|passed away|passed|died|death)/.test(s)) return "deceased";
   if (/(moved|move.?in|admitted|resident|closed.?won|\bwon\b|placed|move in)/.test(s))
     return "moved_in";
   if (/(tour|toured|visit|visited|appointment|scheduled)/.test(s)) return "toured";
-  if (/(lost|closed.?lost|dead|declin|not interested|disqualif|unqualif|no longer|cancel)/.test(s))
+  if (/(lost|closed.?lost|declin|not interested|disqualif|unqualif|no longer|cancel)/.test(s))
     return "lost";
   if (/(new|inquir|lead|open|prospect|contact|active)/.test(s)) return "new";
   return null;

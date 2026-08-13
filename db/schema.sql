@@ -383,3 +383,8 @@ CREATE TABLE IF NOT EXISTS callback_requests (
 );
 CREATE INDEX IF NOT EXISTS callback_requests_status_idx
   ON callback_requests (status, created_at DESC);
+
+-- Widen the lead lifecycle to include 'deceased' (a resident who has passed).
+ALTER TABLE leads DROP CONSTRAINT IF EXISTS leads_stage_check;
+ALTER TABLE leads ADD CONSTRAINT leads_stage_check
+  CHECK (stage IN ('new', 'toured', 'moved_in', 'lost', 'deceased'));

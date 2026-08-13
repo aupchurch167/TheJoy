@@ -12,7 +12,7 @@ export type LeadInput = {
   dripStatus?: DripStatus;
 };
 
-export type LeadStage = "new" | "toured" | "moved_in" | "lost";
+export type LeadStage = "new" | "toured" | "moved_in" | "lost" | "deceased";
 export type DripStatus = "active" | "completed" | "paused";
 export type Audience = "leads" | "families";
 
@@ -141,6 +141,25 @@ export async function suppressLeadByEmail(email: string): Promise<number> {
     [email]
   );
   return rows.length;
+}
+
+/** Admin-initiated unsubscribe of one lead by id (opts them out + pauses drip). */
+export async function unsubscribeLead(id: string): Promise<void> {
+  await query(
+    `UPDATE leads
+        SET unsubscribed_at = COALESCE(unsubscribed_at, now()),
+            drip_status = 'paused'
+      WHERE id = $1`,
+    [id]
+  );
+}
+
+/** Admin re-subscribe (undo a mistaken opt-out). Clears the opt-out timestamp. */
+export async function resubscribeLead(id: string): Promise<void> {
+  await query(
+    `UPDATE leads SET unsubscribed_at = NULL WHERE id = $1`,
+    [id]
+  );
 }
 
 /** Mark a lead unsubscribed by its token. Returns true if a row was updated. */

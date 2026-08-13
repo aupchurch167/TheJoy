@@ -5,6 +5,7 @@ import { getLeadById } from "@/lib/leads";
 import { toMailHref, toTelHref } from "@/lib/settings";
 import { orDash, formatSource } from "@/lib/format";
 import StageSelect from "../StageSelect";
+import SubscriptionButton from "../SubscriptionButton";
 import {
   PageHeader,
   BackLink,
@@ -23,6 +24,7 @@ const STAGE_TONE: Record<string, BadgeTone> = {
   toured: "warning",
   moved_in: "success",
   lost: "neutral",
+  deceased: "neutral",
 };
 
 function dateTime(iso: string | null): string {
@@ -85,6 +87,10 @@ export default async function LeadDetailPage({
                 Call
               </ButtonLink>
             )}
+            <SubscriptionButton
+              id={lead.id}
+              unsubscribed={!!lead.unsubscribed_at}
+            />
           </div>
         }
       />
