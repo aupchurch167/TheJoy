@@ -270,6 +270,47 @@ export async function resendSurvey(id: string): Promise<FeedbackActionResult> {
   }
 }
 
+/**
+ * Send a real survey text to the operator's own phone so they can see exactly
+ * what families receive (wording and a working link). Creates a tokenized
+ * request like any other, so the link resolves end to end.
+ */
+export async function sendTestSurveyText(input: {
+  phone: string;
+}): Promise<FeedbackActionResult> {
+  const { email } = await requireAdmin();
+  if (!smsEnabled())
+    return {
+      ok: false,
+      error: "Text is not configured yet (QUO_API_KEY and QUO_FROM_NUMBER).",
+    };
+  const e164 = toE164(input?.phone);
+  if (!e164) return { ok: false, error: "Enter a valid US phone number." };
+
+  try {
+    const request = await createFeedbackRequest({
+      familyName: "Test",
+      familyPhone: e164,
+      channel: "sms",
+      createdBy: email,
+    });
+    const res = await sendSurveyText({
+      toPhone: e164,
+      familyName: "there",
+      residentFirstName: null,
+      url: `${SITE_URL}/feedback/${request.token}`,
+    });
+    if (!res.ok)
+      return { ok: false, error: res.error ?? "Could not send the text." };
+    await markRequestSent(request.id);
+    revalidatePath("/admin/feedback");
+    return { ok: true, message: `Test text sent to ${e164}. Check your phone.` };
+  } catch (err) {
+    console.error("[sendTestSurveyText]", err);
+    return { ok: false, error: "Could not send. Is the database connected?" };
+  }
+}
+
 const StatusSchema = z.object({
   id: z.string().uuid(),
   status: z.enum(["open", "contacted", "resolved"]),

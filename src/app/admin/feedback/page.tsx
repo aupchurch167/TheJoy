@@ -10,11 +10,12 @@ import {
   countFamilySurveyTextable,
 } from "@/lib/leads";
 import { emailEnabled } from "@/lib/email";
-import { smsEnabled } from "@/lib/sms";
+import { smsEnabled, surveyTextBody } from "@/lib/sms";
 import { SITE_URL } from "@/lib/site";
 import { formatDate, orDash } from "@/lib/format";
 import SendSurveyForm from "./SendSurveyForm";
 import SendToAllButton from "./SendToAllButton";
+import SendTestTextForm from "./SendTestTextForm";
 import { CallbackStatusControl } from "./CallbackControls";
 import RequestsTable from "./RequestsTable";
 import {
@@ -67,6 +68,14 @@ export default async function FeedbackPage() {
         description="Send a short survey to a family. Happy families are pointed to public reviews; concerns come here first, with an alert to you, so you can make it right."
         actions={
           <div className="flex flex-wrap items-center gap-2">
+            <SendTestTextForm
+              smsEnabled={smsEnabled()}
+              preview={surveyTextBody({
+                familyName: "there",
+                residentFirstName: null,
+                url: `${SITE_URL}/feedback/…`,
+              })}
+            />
             <SendToAllButton
               emailCount={familyCount}
               smsCount={smsCount}
