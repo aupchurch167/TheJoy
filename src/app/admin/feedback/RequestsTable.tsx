@@ -78,7 +78,13 @@ export default function RequestsTable({
                     )}
                     {orDash(r.family_name)}
                   </div>
-                  <div className="text-xs text-ink-faint">{r.family_email}</div>
+                  <div className="text-xs text-ink-faint">
+                    {r.family_email || r.family_phone || "—"}
+                    {r.channel === "sms" && " · text"}
+                    {r.channel === "both" && r.family_phone
+                      ? ` · ${r.family_phone}`
+                      : ""}
+                  </div>
                 </Td>
                 <Td className="whitespace-nowrap text-ink-faint">
                   {r.sent_at ? formatDate(r.sent_at) : "—"}

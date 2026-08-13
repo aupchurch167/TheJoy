@@ -22,10 +22,15 @@ export type Dimensions = {
   engagement: number | null;
 };
 
+/** How a survey invitation was delivered. */
+export type SurveyChannel = "email" | "sms" | "both";
+
 export type FeedbackRequest = {
   id: string;
   family_name: string;
-  family_email: string;
+  family_email: string | null;
+  family_phone: string | null;
+  channel: SurveyChannel;
   resident_first_name: string | null;
   token: string;
   sent_at: string | null;
@@ -33,6 +38,13 @@ export type FeedbackRequest = {
   created_by: string;
   created_at: string;
 };
+
+/**
+ * How often a single family may be asked for feedback. A survey invitation
+ * (email OR text) is never sent to the same contact more than once in this
+ * window, so re-running "send to all" only reaches families who are due again.
+ */
+export const SURVEY_MIN_INTERVAL_DAYS = 30;
 
 export type FeedbackResponse = {
   id: string;
@@ -91,18 +103,23 @@ function newToken(): string {
 
 export async function createFeedbackRequest(input: {
   familyName: string;
-  familyEmail: string;
+  familyEmail?: string | null;
+  familyPhone?: string | null;
+  channel?: SurveyChannel;
   residentFirstName?: string | null;
   createdBy: string;
 }): Promise<FeedbackRequest> {
   const rows = await query<FeedbackRequest>(
     `INSERT INTO feedback_requests
-       (family_name, family_email, resident_first_name, token, created_by)
-     VALUES ($1, $2, $3, $4, $5)
+       (family_name, family_email, family_phone, channel, resident_first_name,
+        token, created_by)
+     VALUES ($1, $2, $3, $4, $5, $6, $7)
      RETURNING *`,
     [
       input.familyName.trim(),
-      input.familyEmail.trim().toLowerCase(),
+      input.familyEmail?.trim().toLowerCase() || null,
+      input.familyPhone?.trim() || null,
+      input.channel ?? "email",
       input.residentFirstName?.trim() || null,
       newToken(),
       input.createdBy,
@@ -125,11 +142,38 @@ export async function markRequestCompleted(id: string): Promise<void> {
 
 /** Emails that already have an outstanding (not completed) survey request. */
 export async function getOpenRequestEmails(): Promise<Set<string>> {
-  const rows = await query<{ family_email: string }>(
+  const rows = await query<{ family_email: string | null }>(
     `SELECT DISTINCT lower(family_email) AS family_email
-       FROM feedback_requests WHERE completed_at IS NULL`
+       FROM feedback_requests
+      WHERE completed_at IS NULL AND family_email IS NOT NULL`
   );
-  return new Set(rows.map((r) => r.family_email));
+  return new Set(rows.map((r) => r.family_email!).filter(Boolean));
+}
+
+/**
+ * Contacts (by email and by phone) already asked for feedback within the last
+ * `days`. Used to enforce the once-a-month guardrail across both channels: a
+ * family whose email or phone appears here is not invited again yet.
+ */
+export async function getRecentlyContacted(
+  days = SURVEY_MIN_INTERVAL_DAYS
+): Promise<{ emails: Set<string>; phones: Set<string> }> {
+  const rows = await query<{
+    family_email: string | null;
+    family_phone: string | null;
+  }>(
+    `SELECT lower(family_email) AS family_email, family_phone
+       FROM feedback_requests
+      WHERE created_at >= now() - make_interval(days => $1)`,
+    [days]
+  );
+  const emails = new Set<string>();
+  const phones = new Set<string>();
+  for (const r of rows) {
+    if (r.family_email) emails.add(r.family_email);
+    if (r.family_phone) phones.add(r.family_phone);
+  }
+  return { emails, phones };
 }
 
 export async function getRequestByToken(

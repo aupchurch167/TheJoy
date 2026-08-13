@@ -388,3 +388,17 @@ CREATE INDEX IF NOT EXISTS callback_requests_status_idx
 ALTER TABLE leads DROP CONSTRAINT IF EXISTS leads_stage_check;
 ALTER TABLE leads ADD CONSTRAINT leads_stage_check
   CHECK (stage IN ('new', 'toured', 'moved_in', 'lost', 'deceased'));
+
+-- Survey requests can go out by email and/or text now. Record which channel(s)
+-- were used and the phone we texted, so the once-a-month guardrail can look at
+-- both. Email is no longer required (a text-only family may have no email).
+ALTER TABLE feedback_requests
+  ADD COLUMN IF NOT EXISTS channel TEXT NOT NULL DEFAULT 'email';
+ALTER TABLE feedback_requests
+  ADD COLUMN IF NOT EXISTS family_phone TEXT;
+ALTER TABLE feedback_requests ALTER COLUMN family_email DROP NOT NULL;
+-- The guardrail (and cadence) query filters requests by recency, per contact.
+CREATE INDEX IF NOT EXISTS feedback_requests_email_created_idx
+  ON feedback_requests (lower(family_email), created_at DESC);
+CREATE INDEX IF NOT EXISTS feedback_requests_phone_created_idx
+  ON feedback_requests (family_phone, created_at DESC);

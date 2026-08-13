@@ -94,3 +94,23 @@ export async function sendSms(to: string, content: string): Promise<SmsResult> {
     return { ok: false, error: "Could not reach Quo." };
   }
 }
+
+/**
+ * Text a family the feedback-survey link. Short, plain, from Joy Senior Living
+ * (a personal care home), with the required opt-out line. `url` is the tokenized
+ * survey link so the text works with no email attached.
+ */
+export async function sendSurveyText(input: {
+  toPhone: string;
+  familyName: string;
+  residentFirstName?: string | null;
+  url: string;
+}): Promise<SmsResult> {
+  const first = input.familyName.trim().split(/\s+/)[0] || "there";
+  const who = input.residentFirstName?.trim() || "your family member";
+  const content =
+    `Hi ${first}, it is the team at Joy Senior Living. We would love to know how things are going with ${who}. ` +
+    `This quick survey takes about two minutes (you can answer anonymously): ${input.url}` +
+    `\n\nReply STOP to opt out.`;
+  return sendSms(input.toPhone, content);
+}

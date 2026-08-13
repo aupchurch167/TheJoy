@@ -349,7 +349,7 @@ export async function sendTestEmail(
  */
 export async function sendSurveyInvitation(request: {
   family_name: string;
-  family_email: string;
+  family_email: string | null;
   resident_first_name: string | null;
   token: string;
 }): Promise<boolean> {
@@ -357,6 +357,7 @@ export async function sendSurveyInvitation(request: {
     console.info("[email] RESEND_API_KEY not set; survey invite skipped.");
     return false;
   }
+  if (!request.family_email) return false; // text-only request, nothing to email
   const url = `${SITE_URL}/feedback/${request.token}`;
   const who = request.resident_first_name
     ? `${request.resident_first_name}`

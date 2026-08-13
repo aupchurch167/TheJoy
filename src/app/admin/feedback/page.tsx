@@ -1,7 +1,13 @@
 import { requireAdmin } from "@/lib/require-admin";
 import { hasDatabase } from "@/lib/db";
-import { listFeedbackRequests, listCallbackRequests } from "@/lib/feedback";
-import { getSubscribedByAudience } from "@/lib/leads";
+import {
+  listFeedbackRequests,
+  listCallbackRequests,
+  SURVEY_MIN_INTERVAL_DAYS,
+} from "@/lib/feedback";
+import { getSubscribedByAudience, getSmsRecipients } from "@/lib/leads";
+import { emailEnabled } from "@/lib/email";
+import { smsEnabled } from "@/lib/sms";
 import { SITE_URL } from "@/lib/site";
 import { formatDate, orDash } from "@/lib/format";
 import SendSurveyForm from "./SendSurveyForm";
@@ -32,12 +38,14 @@ export default async function FeedbackPage() {
     );
   }
 
-  const [requests, callbacks, families] = await Promise.all([
+  const [requests, callbacks, families, smsRecipients] = await Promise.all([
     listFeedbackRequests(),
     listCallbackRequests(),
     getSubscribedByAudience("families"),
+    getSmsRecipients(),
   ]);
   const familyCount = families.length;
+  const smsCount = smsRecipients.length;
 
   // Concerns to the top, then newest first.
   const sorted = [...requests].sort((a, b) => {
@@ -57,7 +65,13 @@ export default async function FeedbackPage() {
         description="Send a short survey to a family. Happy families are pointed to public reviews; concerns come here first, with an alert to you, so you can make it right."
         actions={
           <div className="flex flex-wrap items-center gap-2">
-            <SendToAllButton count={familyCount} />
+            <SendToAllButton
+              emailCount={familyCount}
+              smsCount={smsCount}
+              emailEnabled={emailEnabled()}
+              smsEnabled={smsEnabled()}
+              intervalDays={SURVEY_MIN_INTERVAL_DAYS}
+            />
             <SendSurveyForm />
           </div>
         }
