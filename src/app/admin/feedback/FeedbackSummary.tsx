@@ -89,6 +89,14 @@ export default function FeedbackSummary({ summary }: { summary: Summary }) {
         />
       </div>
 
+      {responses === 0 && (
+        <p className="mt-3 text-sm text-ink-faint">
+          No responses yet. These numbers fill in as families complete the
+          survey. The dimension and recommend breakdowns appear once you have a
+          first response.
+        </p>
+      )}
+
       {responses > 0 && (
         <div className="mt-4 grid gap-4 lg:grid-cols-2">
           {/* Dimension averages */}

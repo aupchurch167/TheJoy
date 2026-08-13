@@ -26,10 +26,13 @@ export default async function AdminLayout({
   return (
     <ToastProvider>
       <div className="min-h-full bg-paper">
-        <AdminNav email={session?.user?.email} />
+        {/* Nav is hidden when printing so report pages export clean. */}
+        <div className="print:hidden">
+          <AdminNav email={session?.user?.email} />
+        </div>
         {/* Sidebar is 15rem (w-60) on desktop; offset the content to match. */}
-        <div className="lg:pl-60">
-          <main className="mx-auto max-w-5xl px-5 py-8 sm:px-8 sm:py-10">
+        <div className="lg:pl-60 print:pl-0">
+          <main className="mx-auto max-w-5xl px-5 py-8 sm:px-8 sm:py-10 print:max-w-none print:py-0">
             {children}
           </main>
         </div>

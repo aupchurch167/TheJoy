@@ -4,10 +4,10 @@ import { useState } from "react";
 import { Badge, EmptyState, TableWrap, Th, Td } from "@/components/admin/ui";
 import { orDash, formatDate } from "@/lib/format";
 import { ResendButton, CopyLinkButton } from "./CallbackControls";
+import ResponseReader from "./ResponseReader";
 import type { FeedbackRequestRow } from "@/lib/feedback";
 
 const DAY = 24 * 60 * 60 * 1000;
-const DIM_VALUE: Record<number, string> = { 1: "Needs work", 2: "Okay", 3: "Great" };
 const RECOMMEND: Record<string, string> = {
   definitely: "Definitely",
   probably: "Probably",
@@ -24,7 +24,14 @@ export default function RequestsTable({
   now: number;
   baseUrl: string;
 }) {
-  const [open, setOpen] = useState<string | null>(null);
+  // Rows with a linked, non-anonymous response are the ones you can read.
+  const detailRows = rows.filter((r) => r.rating != null);
+  const [readerIdx, setReaderIdx] = useState<number | null>(null);
+
+  function openReaderFor(row: FeedbackRequestRow) {
+    const i = detailRows.findIndex((d) => d.id === row.id);
+    if (i >= 0) setReaderIdx(i);
+  }
 
   if (rows.length === 0) {
     return (
@@ -37,45 +44,51 @@ export default function RequestsTable({
   }
 
   return (
-    <TableWrap>
-      <thead>
-        <tr className="border-b border-line">
-          <Th>Family</Th>
-          <Th>Sent</Th>
-          <Th>Status</Th>
-          <Th>Overall</Th>
-          <Th>Recommend</Th>
-          <Th />
-        </tr>
-      </thead>
-      <tbody className="divide-y divide-line">
-        {rows.map((r) => {
-          const completed = !!r.completed_at;
-          const anonymous = completed && r.rating == null;
-          const concern = r.sentiment === "concern";
-          const hasDetail = r.rating != null; // linked, non-anonymous
-          const resendable =
-            !completed &&
-            now - new Date(r.sent_at ?? r.created_at).getTime() > 14 * DAY;
-          const dims: [string, number | null][] = [
-            ["Care", r.rating_care],
-            ["Communication", r.rating_communication],
-            ["Meals and dining", r.rating_dining],
-            ["Feels like home", r.rating_home_feel],
-            ["Activities", r.rating_engagement],
-          ];
-          const isOpen = open === r.id;
-          return (
-            <FragmentRow key={r.id}>
+    <>
+      {detailRows.length > 0 && (
+        <div className="mb-3 flex items-center justify-between gap-3">
+          <p className="text-sm text-ink-soft">
+            {detailRows.length} response{detailRows.length === 1 ? "" : "s"} to read.
+          </p>
+          <button
+            type="button"
+            onClick={() => setReaderIdx(0)}
+            className="rounded-lg bg-clay px-3.5 py-1.5 text-sm font-medium text-white transition-colors hover:bg-clay-dark"
+          >
+            Read responses →
+          </button>
+        </div>
+      )}
+
+      <TableWrap>
+        <thead>
+          <tr className="border-b border-line">
+            <Th>Family</Th>
+            <Th>Sent</Th>
+            <Th>Status</Th>
+            <Th>Overall</Th>
+            <Th>Recommend</Th>
+            <Th />
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-line">
+          {rows.map((r) => {
+            const completed = !!r.completed_at;
+            const anonymous = completed && r.rating == null;
+            const concern = r.sentiment === "concern";
+            const hasDetail = r.rating != null;
+            const resendable =
+              !completed &&
+              now - new Date(r.sent_at ?? r.created_at).getTime() > 14 * DAY;
+            return (
               <tr
+                key={r.id}
                 className={`transition-colors hover:bg-surface ${concern ? "bg-danger/[0.04]" : ""} ${hasDetail ? "cursor-pointer" : ""}`}
-                onClick={() => hasDetail && setOpen(isOpen ? null : r.id)}
+                onClick={() => hasDetail && openReaderFor(r)}
               >
                 <Td>
                   <div className="flex items-center gap-1.5 font-medium text-ink">
-                    {hasDetail && (
-                      <span className="text-ink-faint">{isOpen ? "▾" : "▸"}</span>
-                    )}
+                    {hasDetail && <span className="text-ink-faint">▸</span>}
                     {orDash(r.family_name)}
                   </div>
                   <div className="text-xs text-ink-faint">
@@ -134,59 +147,19 @@ export default function RequestsTable({
                   </div>
                 </Td>
               </tr>
-              {isOpen && hasDetail && (
-                <tr className="bg-surface/60">
-                  <td colSpan={6} className="px-4 py-4">
-                    <div className="grid gap-4 sm:grid-cols-2">
-                      <div>
-                        <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-ink-faint">
-                          Ratings
-                        </p>
-                        <ul className="space-y-1 text-sm">
-                          {dims.map(([lbl, v]) => (
-                            <li key={lbl} className="flex justify-between gap-3">
-                              <span className="text-ink-soft">{lbl}</span>
-                              <span
-                                className={
-                                  v === 1 ? "font-medium text-danger" : "text-ink"
-                                }
-                              >
-                                {v != null ? DIM_VALUE[v] : "—"}
-                              </span>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                      <div className="space-y-3 text-sm">
-                        <Answer label="Going well" value={r.going_well} />
-                        <Answer label="Could be better" value={r.could_be_better} />
-                        <Answer label="Suggestions" value={r.suggestions} />
-                      </div>
-                    </div>
-                  </td>
-                </tr>
-              )}
-            </FragmentRow>
-          );
-        })}
-      </tbody>
-    </TableWrap>
-  );
-}
+            );
+          })}
+        </tbody>
+      </TableWrap>
 
-function Answer({ label, value }: { label: string; value: string | null }) {
-  if (!value) return null;
-  return (
-    <div>
-      <p className="text-xs font-semibold uppercase tracking-wide text-ink-faint">
-        {label}
-      </p>
-      <p className="mt-0.5 whitespace-pre-wrap text-ink">{value}</p>
-    </div>
+      {readerIdx != null && (
+        <ResponseReader
+          rows={detailRows}
+          index={readerIdx}
+          onIndex={setReaderIdx}
+          onClose={() => setReaderIdx(null)}
+        />
+      )}
+    </>
   );
-}
-
-// tbody children must be <tr>; this passthrough lets us return two rows per item.
-function FragmentRow({ children }: { children: React.ReactNode }) {
-  return <>{children}</>;
 }

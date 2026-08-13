@@ -22,6 +22,7 @@ import { CallbackStatusControl } from "./CallbackControls";
 import RequestsTable from "./RequestsTable";
 import {
   PageHeader,
+  ButtonLink,
   EmptyState,
   NotConnected,
   SectionLabel,
@@ -71,6 +72,9 @@ export default async function FeedbackPage() {
         description="Send a short survey to a family. Happy families are pointed to public reviews; concerns come here first, with an alert to you, so you can make it right."
         actions={
           <div className="flex flex-wrap items-center gap-2">
+            <ButtonLink href="/admin/feedback/report" variant="ghost" size="sm">
+              Report
+            </ButtonLink>
             <SendTestTextForm
               smsEnabled={smsEnabled()}
               preview={surveyTextBody({
