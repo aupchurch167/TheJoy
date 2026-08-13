@@ -3,6 +3,7 @@ import { hasDatabase } from "@/lib/db";
 import {
   listFeedbackRequests,
   listCallbackRequests,
+  getFeedbackSummary,
   SURVEY_MIN_INTERVAL_DAYS,
 } from "@/lib/feedback";
 import {
@@ -16,6 +17,7 @@ import { formatDate, orDash } from "@/lib/format";
 import SendSurveyForm from "./SendSurveyForm";
 import SendToAllButton from "./SendToAllButton";
 import SendTestTextForm from "./SendTestTextForm";
+import FeedbackSummary from "./FeedbackSummary";
 import { CallbackStatusControl } from "./CallbackControls";
 import RequestsTable from "./RequestsTable";
 import {
@@ -42,11 +44,12 @@ export default async function FeedbackPage() {
     );
   }
 
-  const [requests, callbacks, families, smsCount] = await Promise.all([
+  const [requests, callbacks, families, smsCount, summary] = await Promise.all([
     listFeedbackRequests(),
     listCallbackRequests(),
     getSubscribedByAudience("families"),
     countFamilySurveyTextable(),
+    getFeedbackSummary(),
   ]);
   const familyCount = families.length;
 
@@ -87,6 +90,9 @@ export default async function FeedbackPage() {
           </div>
         }
       />
+
+      {/* Compilation */}
+      <FeedbackSummary summary={summary} />
 
       {/* Requests */}
       <section>

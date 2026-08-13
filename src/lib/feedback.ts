@@ -211,6 +211,98 @@ export type FeedbackRequestRow = FeedbackRequest & {
   suggestions: string | null;
 };
 
+/** Rolled-up feedback numbers for the compilation view. */
+export type FeedbackSummary = {
+  sent: number; // survey requests that were actually sent
+  completed: number; // requests marked completed (incl. anonymous)
+  responseRate: number | null; // completed / sent, 0..1
+  responses: number; // response rows on file (incl. anonymous)
+  anonymous: number;
+  avgOverall: number | null; // mean hearts, 1..5
+  positive: number;
+  concern: number;
+  openCallbacks: number;
+  /** Mean of each dimension on the 1..3 scale (null when never rated). */
+  dimensions: {
+    care: number | null;
+    communication: number | null;
+    dining: number | null;
+    home_feel: number | null;
+    engagement: number | null;
+  };
+  /** Would-recommend counts. */
+  recommend: { definitely: number; probably: number; not_sure: number; no: number };
+};
+
+const numOrNull = (v: unknown): number | null =>
+  v === null || v === undefined ? null : Number(v);
+
+/**
+ * Aggregate every response on file (anonymous included, since those still carry
+ * a rating) plus request/callback counts, for the compilation strip.
+ */
+export async function getFeedbackSummary(): Promise<FeedbackSummary> {
+  const [reqRows, respRows, cbRows] = await Promise.all([
+    query<{ sent: string; completed: string }>(
+      `SELECT
+         COUNT(*) FILTER (WHERE sent_at IS NOT NULL) AS sent,
+         COUNT(*) FILTER (WHERE completed_at IS NOT NULL) AS completed
+       FROM feedback_requests`
+    ),
+    query<Record<string, string | null>>(
+      `SELECT
+         COUNT(*) AS responses,
+         COUNT(*) FILTER (WHERE is_anonymous) AS anonymous,
+         AVG(overall_rating) AS avg_overall,
+         COUNT(*) FILTER (WHERE sentiment = 'positive') AS positive,
+         COUNT(*) FILTER (WHERE sentiment = 'concern') AS concern,
+         AVG(rating_care) AS avg_care,
+         AVG(rating_communication) AS avg_communication,
+         AVG(rating_dining) AS avg_dining,
+         AVG(rating_home_feel) AS avg_home_feel,
+         AVG(rating_engagement) AS avg_engagement,
+         COUNT(*) FILTER (WHERE would_recommend = 'definitely') AS rec_definitely,
+         COUNT(*) FILTER (WHERE would_recommend = 'probably') AS rec_probably,
+         COUNT(*) FILTER (WHERE would_recommend = 'not_sure') AS rec_not_sure,
+         COUNT(*) FILTER (WHERE would_recommend = 'no') AS rec_no
+       FROM feedback_responses`
+    ),
+    query<{ n: string }>(
+      `SELECT COUNT(*) AS n FROM callback_requests WHERE status = 'open'`
+    ),
+  ]);
+
+  const req = reqRows[0] ?? { sent: "0", completed: "0" };
+  const r = respRows[0] ?? {};
+  const sent = Number(req.sent ?? 0);
+  const completed = Number(req.completed ?? 0);
+
+  return {
+    sent,
+    completed,
+    responseRate: sent > 0 ? completed / sent : null,
+    responses: Number(r.responses ?? 0),
+    anonymous: Number(r.anonymous ?? 0),
+    avgOverall: numOrNull(r.avg_overall),
+    positive: Number(r.positive ?? 0),
+    concern: Number(r.concern ?? 0),
+    openCallbacks: Number(cbRows[0]?.n ?? 0),
+    dimensions: {
+      care: numOrNull(r.avg_care),
+      communication: numOrNull(r.avg_communication),
+      dining: numOrNull(r.avg_dining),
+      home_feel: numOrNull(r.avg_home_feel),
+      engagement: numOrNull(r.avg_engagement),
+    },
+    recommend: {
+      definitely: Number(r.rec_definitely ?? 0),
+      probably: Number(r.rec_probably ?? 0),
+      not_sure: Number(r.rec_not_sure ?? 0),
+      no: Number(r.rec_no ?? 0),
+    },
+  };
+}
+
 export async function listFeedbackRequests(): Promise<FeedbackRequestRow[]> {
   return query<FeedbackRequestRow>(
     `SELECT r.*,
