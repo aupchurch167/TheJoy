@@ -237,17 +237,46 @@ export type FeedbackSummary = {
 const numOrNull = (v: unknown): number | null =>
   v === null || v === undefined ? null : Number(v);
 
+/** Optional reporting window (ISO timestamps). Omit a bound to leave it open. */
+export type FeedbackRange = { from?: string | null; to?: string | null };
+
+/** Build a "created_at BETWEEN ..." clause, pushing bound params as it goes. */
+function rangeClause(
+  col: string,
+  range: FeedbackRange | undefined,
+  params: unknown[]
+): string {
+  const conds: string[] = [];
+  if (range?.from) {
+    params.push(range.from);
+    conds.push(`${col} >= $${params.length}`);
+  }
+  if (range?.to) {
+    params.push(range.to);
+    conds.push(`${col} <= $${params.length}`);
+  }
+  return conds.length ? `WHERE ${conds.join(" AND ")}` : "";
+}
+
 /**
  * Aggregate every response on file (anonymous included, since those still carry
  * a rating) plus request/callback counts, for the compilation strip.
  */
-export async function getFeedbackSummary(): Promise<FeedbackSummary> {
+export async function getFeedbackSummary(
+  range?: FeedbackRange
+): Promise<FeedbackSummary> {
+  const reqParams: unknown[] = [];
+  const reqWhere = rangeClause("created_at", range, reqParams);
+  const respParams: unknown[] = [];
+  const respWhere = rangeClause("created_at", range, respParams);
+
   const [reqRows, respRows, cbRows] = await Promise.all([
     query<{ sent: string; completed: string }>(
       `SELECT
          COUNT(*) FILTER (WHERE sent_at IS NOT NULL) AS sent,
          COUNT(*) FILTER (WHERE completed_at IS NOT NULL) AS completed
-       FROM feedback_requests`
+       FROM feedback_requests ${reqWhere}`,
+      reqParams
     ),
     query<Record<string, string | null>>(
       `SELECT
@@ -265,7 +294,8 @@ export async function getFeedbackSummary(): Promise<FeedbackSummary> {
          COUNT(*) FILTER (WHERE would_recommend = 'probably') AS rec_probably,
          COUNT(*) FILTER (WHERE would_recommend = 'not_sure') AS rec_not_sure,
          COUNT(*) FILTER (WHERE would_recommend = 'no') AS rec_no
-       FROM feedback_responses`
+       FROM feedback_responses ${respWhere}`,
+      respParams
     ),
     query<{ n: string }>(
       `SELECT COUNT(*) AS n FROM callback_requests WHERE status = 'open'`
@@ -328,7 +358,11 @@ export type ReadableResponse = {
 };
 
 /** Every response on file for the reader (attributed and anonymous), concerns first. */
-export async function listReadableResponses(): Promise<ReadableResponse[]> {
+export async function listReadableResponses(
+  range?: FeedbackRange
+): Promise<ReadableResponse[]> {
+  const params: unknown[] = [];
+  const where = rangeClause("resp.created_at", range, params);
   return query<ReadableResponse>(
     `SELECT resp.id, resp.request_id, req.family_name, resp.is_anonymous,
             resp.overall_rating, resp.sentiment, resp.would_recommend,
@@ -338,8 +372,49 @@ export async function listReadableResponses(): Promise<ReadableResponse[]> {
             resp.created_at
        FROM feedback_responses resp
        LEFT JOIN feedback_requests req ON req.id = resp.request_id
-      ORDER BY (resp.sentiment = 'concern') DESC, resp.created_at DESC`
+       ${where}
+      ORDER BY (resp.sentiment = 'concern') DESC, resp.created_at DESC`,
+    params
   );
+}
+
+/** One month's bucket for the trend view. */
+export type FeedbackTrendPoint = {
+  month: string; // 'YYYY-MM'
+  responses: number;
+  avgOverall: number | null;
+  concern: number;
+};
+
+/**
+ * Monthly response counts and average rating, oldest to newest, so the report
+ * can show how feedback changes over time. Limited to the most recent `months`.
+ */
+export async function getFeedbackTrend(months = 12): Promise<FeedbackTrendPoint[]> {
+  const rows = await query<{
+    month: string;
+    responses: string;
+    avg_overall: string | null;
+    concern: string;
+  }>(
+    `SELECT to_char(date_trunc('month', created_at), 'YYYY-MM') AS month,
+            COUNT(*) AS responses,
+            AVG(overall_rating) AS avg_overall,
+            COUNT(*) FILTER (WHERE sentiment = 'concern') AS concern
+       FROM feedback_responses
+      GROUP BY 1
+      ORDER BY 1 DESC
+      LIMIT $1`,
+    [months]
+  );
+  return rows
+    .map((r) => ({
+      month: r.month,
+      responses: Number(r.responses),
+      avgOverall: numOrNull(r.avg_overall),
+      concern: Number(r.concern),
+    }))
+    .reverse();
 }
 
 export async function listFeedbackRequests(): Promise<FeedbackRequestRow[]> {

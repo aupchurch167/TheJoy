@@ -1,10 +1,19 @@
 import { requireAdmin } from "@/lib/require-admin";
 import { hasDatabase } from "@/lib/db";
-import { getFeedbackSummary, listReadableResponses } from "@/lib/feedback";
+import {
+  getFeedbackSummary,
+  listReadableResponses,
+  getFeedbackTrend,
+  type FeedbackRange,
+} from "@/lib/feedback";
+import { aiEnabled } from "@/lib/ai";
 import { formatDate } from "@/lib/format";
 import { BUSINESS } from "@/lib/site";
 import FeedbackSummary from "../FeedbackSummary";
 import PrintButton from "./PrintButton";
+import ReportRange from "./ReportRange";
+import FeedbackTrend from "./FeedbackTrend";
+import AiSummary from "./AiSummary";
 import { PageHeader, BackLink, Card, NotConnected } from "@/components/admin/ui";
 
 export const dynamic = "force-dynamic";
@@ -16,7 +25,57 @@ const RECOMMEND: Record<string, string> = {
   no: "No",
 };
 
-export default async function FeedbackReportPage() {
+type ResolvedRange = FeedbackRange & {
+  preset: string;
+  label: string;
+  fromInput: string; // yyyy-mm-dd for the date input
+  toInput: string;
+};
+
+/** Turn the query params into a concrete window + human label. */
+function resolveRange(sp: {
+  preset?: string;
+  from?: string;
+  to?: string;
+}): ResolvedRange {
+  const preset = sp.preset ?? "all";
+  const now = new Date();
+  const ms = now.getTime();
+  const day = 24 * 60 * 60 * 1000;
+  const iso = (t: number) => new Date(t).toISOString();
+
+  if (preset === "30")
+    return { preset, label: "Last 30 days", from: iso(ms - 30 * day), to: null, fromInput: "", toInput: "" };
+  if (preset === "90")
+    return { preset, label: "Last 90 days", from: iso(ms - 90 * day), to: null, fromInput: "", toInput: "" };
+  if (preset === "365")
+    return { preset, label: "Last 12 months", from: iso(ms - 365 * day), to: null, fromInput: "", toInput: "" };
+  if (preset === "ytd")
+    return {
+      preset,
+      label: `${now.getFullYear()} to date`,
+      from: new Date(now.getFullYear(), 0, 1).toISOString(),
+      to: null,
+      fromInput: "",
+      toInput: "",
+    };
+  if (preset === "custom") {
+    const from = sp.from ? new Date(`${sp.from}T00:00:00`).toISOString() : null;
+    const to = sp.to ? new Date(`${sp.to}T23:59:59`).toISOString() : null;
+    const label =
+      sp.from || sp.to
+        ? `${sp.from ? formatDate(sp.from) : "start"} to ${sp.to ? formatDate(sp.to) : "now"}`
+        : "Custom period";
+    return { preset, label, from, to, fromInput: sp.from ?? "", toInput: sp.to ?? "" };
+  }
+  return { preset: "all", label: "All time", from: null, to: null, fromInput: "", toInput: "" };
+}
+
+export default async function FeedbackReportPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ preset?: string; from?: string; to?: string }>;
+}) {
   await requireAdmin();
 
   if (!hasDatabase()) {
@@ -28,9 +87,12 @@ export default async function FeedbackReportPage() {
     );
   }
 
-  const [summary, responses] = await Promise.all([
-    getFeedbackSummary(),
-    listReadableResponses(),
+  const range = resolveRange(await searchParams);
+
+  const [summary, responses, trend] = await Promise.all([
+    getFeedbackSummary(range),
+    listReadableResponses(range),
+    getFeedbackTrend(12),
   ]);
 
   const generated = formatDate(new Date());
@@ -51,14 +113,14 @@ export default async function FeedbackReportPage() {
         <BackLink href="/admin/feedback">Back to feedback</BackLink>
       </div>
 
-      <div className="mb-6 flex items-start justify-between gap-4">
+      <div className="mb-4 flex items-start justify-between gap-4">
         <div>
           <h1 className="font-display text-3xl font-semibold text-ink">
             Family Feedback Report
           </h1>
           <p className="mt-1 text-sm text-ink-soft">
-            {BUSINESS.name}, a personal care home. Generated {generated}. All
-            responses to date.
+            {BUSINESS.name}, a personal care home. Generated {generated}. Period:{" "}
+            <span className="font-medium text-ink">{range.label}</span>.
           </p>
         </div>
         <div className="print:hidden">
@@ -66,7 +128,24 @@ export default async function FeedbackReportPage() {
         </div>
       </div>
 
+      <div className="mb-6">
+        <ReportRange
+          preset={range.preset}
+          from={range.fromInput}
+          to={range.toInput}
+        />
+      </div>
+
       <FeedbackSummary summary={summary} />
+
+      <AiSummary
+        from={range.from ?? null}
+        to={range.to ?? null}
+        label={range.label}
+        aiEnabled={aiEnabled()}
+      />
+
+      <FeedbackTrend points={trend} />
 
       {/* What families are saying */}
       <section className="mt-8">

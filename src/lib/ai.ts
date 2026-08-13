@@ -110,6 +110,133 @@ export async function draftPost(
 }
 
 /* ------------------------------------------------------------------ */
+/* FAMILY FEEDBACK SUMMARY                                              */
+/* ------------------------------------------------------------------ */
+
+export type FeedbackDigest = {
+  overview: string;
+  praises: string[];
+  improvements: string[];
+  quotes: string[];
+};
+
+const FEEDBACK_DIGEST_SCHEMA = {
+  type: "object",
+  properties: {
+    overview: {
+      type: "string",
+      description:
+        "2 to 4 plain sentences: the overall read across all the feedback (how families feel, the general trend). No banned words, no em-dashes.",
+    },
+    praises: {
+      type: "array",
+      items: { type: "string" },
+      description:
+        "Recurring positive themes families mention, each a short phrase or sentence. Empty if none.",
+    },
+    improvements: {
+      type: "array",
+      items: { type: "string" },
+      description:
+        "Recurring concerns or requests to act on, each a short phrase or sentence. Empty if none.",
+    },
+    quotes: {
+      type: "array",
+      items: { type: "string" },
+      description:
+        "Up to 4 short, representative quotes copied VERBATIM from the comments provided. Never invent or paraphrase a quote.",
+    },
+  },
+  required: ["overview", "praises", "improvements", "quotes"],
+  additionalProperties: false,
+} as const;
+
+const FEEDBACK_SYSTEM_PROMPT = `You summarize FAMILY FEEDBACK for the leadership of ${BUSINESS.name}, a 24-bed personal care home in Loganville, Georgia, led by ${BUSINESS.director.name}. This is an internal analysis to help the team see what families are saying, not marketing copy.
+
+Your job: read the survey responses (ratings and written comments) and distill the key themes honestly.
+- Base EVERYTHING only on the comments provided. Never invent a theme, a number, or a quote. If there is little to go on, say so briefly.
+- Quotes must be copied word for word from the comments. Do not paraphrase a quote or attribute it to anyone by name.
+- Be balanced: surface genuine praise AND real concerns. Do not soften a pattern of complaints.
+- Plain, direct, useful. Short sentences.
+
+STYLE: No em-dashes (use parentheses). Do not use these words: "loved ones", "vibrant", "journey", "personalized care plans", "boutique", "intimate", "top-tier", "deserve more". Refer to Joy as a personal care home, never "assisted living".`;
+
+/**
+ * Summarize a batch of family feedback into an overview, recurring praises and
+ * improvements, and a few verbatim quotes. Grounded only in the comments given,
+ * so it never fabricates. Used by the shareable report.
+ */
+export async function summarizeFeedback(input: {
+  period: string;
+  count: number;
+  avgOverall: number | null;
+  positive: number;
+  concern: number;
+  comments: {
+    rating: number;
+    recommend?: string | null;
+    goingWell?: string | null;
+    couldBeBetter?: string | null;
+    suggestions?: string | null;
+    anonymous?: boolean;
+  }[];
+}): Promise<FeedbackDigest> {
+  if (!aiEnabled()) {
+    throw new Error("AI is not configured (set ANTHROPIC_API_KEY).");
+  }
+
+  const withText = input.comments.filter(
+    (c) => c.goingWell || c.couldBeBetter || c.suggestions
+  );
+  if (withText.length === 0) {
+    return {
+      overview:
+        "No written comments were left in this period, so there is nothing to summarize yet. The ratings above still show how families scored their experience.",
+      praises: [],
+      improvements: [],
+      quotes: [],
+    };
+  }
+
+  const lines = withText.slice(0, 200).map((c, i) => {
+    const parts = [
+      `Response ${i + 1} (rating ${c.rating}/5${c.recommend ? `, would recommend: ${c.recommend}` : ""}${c.anonymous ? ", anonymous" : ""}):`,
+    ];
+    if (c.goingWell) parts.push(`  Going well: ${c.goingWell}`);
+    if (c.couldBeBetter) parts.push(`  Could be better: ${c.couldBeBetter}`);
+    if (c.suggestions) parts.push(`  Suggestions: ${c.suggestions}`);
+    return parts.join("\n");
+  });
+
+  const userPrompt = [
+    `Period: ${input.period}.`,
+    `Totals: ${input.count} responses, average rating ${input.avgOverall != null ? input.avgOverall.toFixed(1) : "n/a"} of 5, ${input.positive} positive and ${input.concern} flagged a concern.`,
+    ``,
+    `Here are the written comments to summarize:`,
+    lines.join("\n\n"),
+  ].join("\n");
+
+  const client = new Anthropic();
+  const response = await client.messages.create({
+    model: MODEL,
+    max_tokens: 2000,
+    system: FEEDBACK_SYSTEM_PROMPT,
+    output_config: { format: { type: "json_schema", schema: FEEDBACK_DIGEST_SCHEMA } },
+    messages: [{ role: "user", content: userPrompt }],
+  });
+
+  const textBlock = response.content.find((b) => b.type === "text");
+  if (!textBlock || textBlock.type !== "text") {
+    throw new Error("The AI did not return a summary.");
+  }
+  try {
+    return JSON.parse(textBlock.text) as FeedbackDigest;
+  } catch {
+    throw new Error("The AI summary was not valid. Please try again.");
+  }
+}
+
+/* ------------------------------------------------------------------ */
 /* PHOTO ALT TEXT + CAPTION (vision)                                    */
 /* ------------------------------------------------------------------ */
 
