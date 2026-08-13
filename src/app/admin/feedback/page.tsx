@@ -5,7 +5,10 @@ import {
   listCallbackRequests,
   SURVEY_MIN_INTERVAL_DAYS,
 } from "@/lib/feedback";
-import { getSubscribedByAudience, getSmsRecipients } from "@/lib/leads";
+import {
+  getSubscribedByAudience,
+  countFamilySurveyTextable,
+} from "@/lib/leads";
 import { emailEnabled } from "@/lib/email";
 import { smsEnabled } from "@/lib/sms";
 import { SITE_URL } from "@/lib/site";
@@ -38,14 +41,13 @@ export default async function FeedbackPage() {
     );
   }
 
-  const [requests, callbacks, families, smsRecipients] = await Promise.all([
+  const [requests, callbacks, families, smsCount] = await Promise.all([
     listFeedbackRequests(),
     listCallbackRequests(),
     getSubscribedByAudience("families"),
-    getSmsRecipients(),
+    countFamilySurveyTextable(),
   ]);
   const familyCount = families.length;
-  const smsCount = smsRecipients.length;
 
   // Concerns to the top, then newest first.
   const sorted = [...requests].sort((a, b) => {

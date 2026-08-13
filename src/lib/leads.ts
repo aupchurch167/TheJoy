@@ -438,6 +438,37 @@ export async function insertFamilyMember(
 }
 
 /**
+ * Family contacts eligible for a SURVEY text: active, with a phone, and not
+ * opted out (replied STOP). Survey requests are relationship messages to the
+ * families we already serve (whose numbers they gave us as their contact), so
+ * they do not require the separate marketing text-consent flag. A STOP opt-out
+ * is always honored. (Marketing text blasts still use getSmsRecipients, which
+ * requires explicit sms_consent.)
+ */
+export async function getFamilySurveyTextRecipients(): Promise<Lead[]> {
+  return query<Lead>(
+    `SELECT * FROM leads
+      WHERE audience = 'families'
+        AND active = TRUE
+        AND sms_opt_out_at IS NULL
+        AND phone IS NOT NULL AND phone <> ''
+      ORDER BY lower(coalesce(resident_name,'')) ASC`
+  );
+}
+
+/** Count of family contacts a survey text could reach (see above). */
+export async function countFamilySurveyTextable(): Promise<number> {
+  const rows = await query<{ n: string }>(
+    `SELECT COUNT(*) AS n FROM leads
+      WHERE audience = 'families'
+        AND active = TRUE
+        AND sms_opt_out_at IS NULL
+        AND phone IS NOT NULL AND phone <> ''`
+  );
+  return Number(rows[0]?.n ?? 0);
+}
+
+/**
  * Turn on text consent for every active family contact that has a phone and
  * has not opted out. Returns how many were newly enabled. Lets the operator
  * opt in their existing families in one step (they attest they have permission).

@@ -213,8 +213,9 @@ export default function FamilyManager({
                 className="mt-0.5 h-4 w-4 accent-clay"
               />
               <span>
-                This family agreed to receive text messages from Joy (like a
-                short feedback survey). They can reply STOP anytime.
+                This family agreed to receive text broadcasts from Joy
+                (community updates). They can reply STOP anytime. (Feedback
+                survey texts do not need this.)
               </span>
             </label>
           )}
@@ -256,9 +257,10 @@ export default function FamilyManager({
           )}
         </div>
         {textableCount > 0 && (
-          <p className="mt-1.5 text-xs text-ink-faint">
-            Texts are off by default. Turn them on for families who agreed to be
-            texted so they can receive survey requests by text.
+          <p className="mt-1.5 max-w-2xl text-xs text-ink-faint">
+            This opts families into text broadcasts (community updates). Feedback
+            survey texts already reach any family with a phone on file, so you do
+            not need this just to send surveys.
           </p>
         )}
         <div className="mt-3">

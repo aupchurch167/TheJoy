@@ -12,7 +12,11 @@ import {
   SURVEY_MIN_INTERVAL_DAYS,
   type SurveyChannel,
 } from "@/lib/feedback";
-import { getSubscribedByAudience, getSmsRecipients, type Lead } from "@/lib/leads";
+import {
+  getSubscribedByAudience,
+  getFamilySurveyTextRecipients,
+  type Lead,
+} from "@/lib/leads";
 import { sendSurveyInvitation, emailEnabled } from "@/lib/email";
 import { smsEnabled, sendSurveyText, toE164 } from "@/lib/sms";
 import { SITE_URL } from "@/lib/site";
@@ -112,7 +116,7 @@ export async function sendSurveyToAllFamilies(input?: {
   try {
     const [emailFamilies, smsFamilies, recent] = await Promise.all([
       canEmail ? getSubscribedByAudience("families") : Promise.resolve([] as Lead[]),
-      canSms ? getSmsRecipients() : Promise.resolve([] as Lead[]),
+      canSms ? getFamilySurveyTextRecipients() : Promise.resolve([] as Lead[]),
       getRecentlyContacted(SURVEY_MIN_INTERVAL_DAYS),
     ]);
 
