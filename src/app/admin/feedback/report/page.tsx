@@ -1,6 +1,6 @@
 import { requireAdmin } from "@/lib/require-admin";
 import { hasDatabase } from "@/lib/db";
-import { getFeedbackSummary, listFeedbackRequests } from "@/lib/feedback";
+import { getFeedbackSummary, listReadableResponses } from "@/lib/feedback";
 import { formatDate } from "@/lib/format";
 import { BUSINESS } from "@/lib/site";
 import FeedbackSummary from "../FeedbackSummary";
@@ -28,18 +28,20 @@ export default async function FeedbackReportPage() {
     );
   }
 
-  const [summary, requests] = await Promise.all([
+  const [summary, responses] = await Promise.all([
     getFeedbackSummary(),
-    listFeedbackRequests(),
+    listReadableResponses(),
   ]);
 
   const generated = formatDate(new Date());
 
-  const completed = requests.filter((r) => r.rating != null);
-  const highlights = completed
+  const nameOf = (r: { family_name: string | null; is_anonymous: boolean }) =>
+    r.is_anonymous || !r.family_name ? "Anonymous" : r.family_name;
+
+  const highlights = responses
     .filter((r) => r.sentiment === "positive" && r.going_well)
     .slice(0, 6);
-  const concerns = completed
+  const concerns = responses
     .filter((r) => r.sentiment === "concern")
     .slice(0, 10);
 
@@ -83,8 +85,7 @@ export default async function FeedbackReportPage() {
                   “{r.going_well}”
                 </p>
                 <p className="mt-2 text-xs text-ink-faint">
-                  {r.family_name}
-                  {r.rating != null ? ` · ${"♥".repeat(r.rating)}` : ""}
+                  {nameOf(r)} · {"♥".repeat(r.overall_rating)}
                 </p>
               </Card>
             ))}
@@ -108,9 +109,9 @@ export default async function FeedbackReportPage() {
                 className="rounded-lg border border-line bg-white p-3 text-sm"
               >
                 <div className="flex items-center justify-between gap-3">
-                  <span className="font-medium text-ink">{r.family_name}</span>
+                  <span className="font-medium text-ink">{nameOf(r)}</span>
                   <span className="text-xs text-ink-faint">
-                    {r.rating != null ? `${r.rating} of 5` : ""}
+                    {r.overall_rating} of 5
                     {r.would_recommend
                       ? ` · ${RECOMMEND[r.would_recommend]}`
                       : ""}

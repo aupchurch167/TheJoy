@@ -2,6 +2,7 @@ import { requireAdmin } from "@/lib/require-admin";
 import { hasDatabase } from "@/lib/db";
 import {
   listFeedbackRequests,
+  listReadableResponses,
   listCallbackRequests,
   getFeedbackSummary,
   SURVEY_MIN_INTERVAL_DAYS,
@@ -45,13 +46,15 @@ export default async function FeedbackPage() {
     );
   }
 
-  const [requests, callbacks, families, smsCount, summary] = await Promise.all([
-    listFeedbackRequests(),
-    listCallbackRequests(),
-    getSubscribedByAudience("families"),
-    countFamilySurveyTextable(),
-    getFeedbackSummary(),
-  ]);
+  const [requests, responses, callbacks, families, smsCount, summary] =
+    await Promise.all([
+      listFeedbackRequests(),
+      listReadableResponses(),
+      listCallbackRequests(),
+      getSubscribedByAudience("families"),
+      countFamilySurveyTextable(),
+      getFeedbackSummary(),
+    ]);
   const familyCount = families.length;
 
   // Concerns to the top, then newest first.
@@ -106,7 +109,12 @@ export default async function FeedbackPage() {
           see the detailed ratings and written answers.
         </p>
         <div className="mt-3">
-          <RequestsTable rows={sorted} now={now} baseUrl={SITE_URL} />
+          <RequestsTable
+            rows={sorted}
+            responses={responses}
+            now={now}
+            baseUrl={SITE_URL}
+          />
         </div>
       </section>
 

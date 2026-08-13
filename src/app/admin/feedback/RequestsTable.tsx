@@ -5,7 +5,7 @@ import { Badge, EmptyState, TableWrap, Th, Td } from "@/components/admin/ui";
 import { orDash, formatDate } from "@/lib/format";
 import { ResendButton, CopyLinkButton } from "./CallbackControls";
 import ResponseReader from "./ResponseReader";
-import type { FeedbackRequestRow } from "@/lib/feedback";
+import type { FeedbackRequestRow, ReadableResponse } from "@/lib/feedback";
 
 const DAY = 24 * 60 * 60 * 1000;
 const RECOMMEND: Record<string, string> = {
@@ -17,19 +17,21 @@ const RECOMMEND: Record<string, string> = {
 
 export default function RequestsTable({
   rows,
+  responses,
   now,
   baseUrl,
 }: {
   rows: FeedbackRequestRow[];
+  responses: ReadableResponse[];
   now: number;
   baseUrl: string;
 }) {
-  // Rows with a linked, non-anonymous response are the ones you can read.
-  const detailRows = rows.filter((r) => r.rating != null);
   const [readerIdx, setReaderIdx] = useState<number | null>(null);
+  const anonCount = responses.filter((r) => r.is_anonymous).length;
 
+  // Clicking a family's row jumps the reader to their response.
   function openReaderFor(row: FeedbackRequestRow) {
-    const i = detailRows.findIndex((d) => d.id === row.id);
+    const i = responses.findIndex((d) => d.request_id === row.id);
     if (i >= 0) setReaderIdx(i);
   }
 
@@ -45,10 +47,14 @@ export default function RequestsTable({
 
   return (
     <>
-      {detailRows.length > 0 && (
+      {responses.length > 0 && (
         <div className="mb-3 flex items-center justify-between gap-3">
           <p className="text-sm text-ink-soft">
-            {detailRows.length} response{detailRows.length === 1 ? "" : "s"} to read.
+            {responses.length} response{responses.length === 1 ? "" : "s"} to read
+            {anonCount > 0
+              ? ` (including ${anonCount} anonymous)`
+              : ""}
+            .
           </p>
           <button
             type="button"
@@ -154,7 +160,7 @@ export default function RequestsTable({
 
       {readerIdx != null && (
         <ResponseReader
-          rows={detailRows}
+          rows={responses}
           index={readerIdx}
           onIndex={setReaderIdx}
           onClose={() => setReaderIdx(null)}

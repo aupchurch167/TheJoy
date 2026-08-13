@@ -303,6 +303,45 @@ export async function getFeedbackSummary(): Promise<FeedbackSummary> {
   };
 }
 
+/**
+ * A single readable response, whether tied to a family or submitted
+ * anonymously. Anonymous rows carry no identity (request_id and family_name are
+ * null) so they can be read without breaking anonymity.
+ */
+export type ReadableResponse = {
+  id: string;
+  request_id: string | null;
+  family_name: string | null;
+  is_anonymous: boolean;
+  overall_rating: number;
+  sentiment: Sentiment;
+  would_recommend: Recommend | null;
+  rating_care: number | null;
+  rating_communication: number | null;
+  rating_dining: number | null;
+  rating_home_feel: number | null;
+  rating_engagement: number | null;
+  going_well: string | null;
+  could_be_better: string | null;
+  suggestions: string | null;
+  created_at: string;
+};
+
+/** Every response on file for the reader (attributed and anonymous), concerns first. */
+export async function listReadableResponses(): Promise<ReadableResponse[]> {
+  return query<ReadableResponse>(
+    `SELECT resp.id, resp.request_id, req.family_name, resp.is_anonymous,
+            resp.overall_rating, resp.sentiment, resp.would_recommend,
+            resp.rating_care, resp.rating_communication, resp.rating_dining,
+            resp.rating_home_feel, resp.rating_engagement,
+            resp.going_well, resp.could_be_better, resp.suggestions,
+            resp.created_at
+       FROM feedback_responses resp
+       LEFT JOIN feedback_requests req ON req.id = resp.request_id
+      ORDER BY (resp.sentiment = 'concern') DESC, resp.created_at DESC`
+  );
+}
+
 export async function listFeedbackRequests(): Promise<FeedbackRequestRow[]> {
   return query<FeedbackRequestRow>(
     `SELECT r.*,

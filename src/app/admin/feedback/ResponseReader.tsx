@@ -3,7 +3,7 @@
 import { useCallback, useEffect } from "react";
 import { Badge } from "@/components/admin/ui";
 import { formatDate } from "@/lib/format";
-import type { FeedbackRequestRow } from "@/lib/feedback";
+import type { ReadableResponse } from "@/lib/feedback";
 
 const DIM_VALUE: Record<number, string> = { 1: "Needs work", 2: "Okay", 3: "Great" };
 const RECOMMEND: Record<string, string> = {
@@ -23,7 +23,7 @@ export default function ResponseReader({
   onIndex,
   onClose,
 }: {
-  rows: FeedbackRequestRow[];
+  rows: ReadableResponse[];
   index: number;
   onIndex: (i: number) => void;
   onClose: () => void;
@@ -78,10 +78,10 @@ export default function ResponseReader({
         {/* Header */}
         <div className="flex items-center justify-between gap-3 border-b border-line px-5 py-3.5">
           <div className="min-w-0">
-            <p className="truncate font-medium text-ink">{r.family_name}</p>
-            <p className="text-xs text-ink-faint">
-              {r.completed_at ? formatDate(r.completed_at) : formatDate(r.created_at)}
+            <p className="truncate font-medium text-ink">
+              {r.is_anonymous || !r.family_name ? "Anonymous" : r.family_name}
             </p>
+            <p className="text-xs text-ink-faint">{formatDate(r.created_at)}</p>
           </div>
           <div className="flex items-center gap-2">
             <span className="whitespace-nowrap text-xs text-ink-faint">
@@ -101,12 +101,13 @@ export default function ResponseReader({
         {/* Body */}
         <div className="flex-1 overflow-y-auto px-5 py-4">
           <div className="flex flex-wrap items-center gap-3">
-            {r.rating != null && (
-              <span className="text-xl font-medium text-clay">
-                {"♥".repeat(r.rating)}
-                <span className="text-ink-faint">{"♥".repeat(5 - r.rating)}</span>
+            <span className="text-xl font-medium text-clay">
+              {"♥".repeat(r.overall_rating)}
+              <span className="text-ink-faint">
+                {"♥".repeat(5 - r.overall_rating)}
               </span>
-            )}
+            </span>
+            {r.is_anonymous && <Badge tone="neutral">anonymous</Badge>}
             <Badge tone={concern ? "danger" : "success"}>
               {concern ? "concern" : "positive"}
             </Badge>
