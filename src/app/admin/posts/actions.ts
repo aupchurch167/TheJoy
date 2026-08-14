@@ -21,6 +21,7 @@ const PostSchema = z.object({
   hero_image: z.string().trim().max(1000).optional(),
   hero_image_alt: z.string().trim().max(300).optional(),
   category: z.string().trim().max(80).optional(),
+  author: z.string().trim().max(120).optional(),
   meta_title: z.string().trim().max(200).optional(),
   meta_description: z.string().trim().max(400).optional(),
   status: z.enum(["draft", "scheduled", "published"]),
@@ -72,6 +73,8 @@ export async function savePost(input: unknown): Promise<SaveResult> {
     hero_image: data.hero_image || null,
     hero_image_alt: data.hero_image_alt || null,
     category: data.category || null,
+    // Persist the chosen author so editing never silently resets it.
+    author: data.author?.trim() || "Joy Senior Living",
     meta_title: data.meta_title || null,
     meta_description: data.meta_description || null,
     status: data.status as PostStatus,

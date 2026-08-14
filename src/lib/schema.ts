@@ -250,15 +250,85 @@ export function breadcrumbJsonLd(items: { name: string; path: string }[]) {
   };
 }
 
-/** Turn a stored author (often a slug like "adam-upchurch") into a Person. */
-function authorPerson(author: string) {
-  const name = /^[a-z0-9]+(?:-[a-z0-9]+)+$/.test(author)
-    ? author
-        .split("-")
-        .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-        .join(" ")
-    : author;
-  return { "@type": "Person", name, url: `${SITE_URL}/about` };
+/**
+ * Real Joy people who earn a Person author (the E-E-A-T signal the field exists
+ * to send). Anyone or anything NOT here (the company name, or a stray/imported
+ * byline) is the publishing Organization, not a Person named after a company.
+ * Keyed by lowercased full name. Mellissa references her established Person
+ * entity (an RN byline on care topics is worth more than any backlink).
+ */
+const PERSON_AUTHORS: Record<
+  string,
+  { name: string; url: string; id?: string; jobTitle?: string; credential?: string }
+> = {
+  "mellissa daniel": {
+    name: BUSINESS.director.name,
+    url: `${SITE_URL}/about`,
+    id: `${SITE_URL}/#mellissa`,
+    jobTitle: BUSINESS.director.title,
+    credential: "RN",
+  },
+  "adam upchurch": {
+    name: "Adam Upchurch",
+    url: `${SITE_URL}/about`,
+  },
+};
+
+// Bare-first-name bylines (from the old import) resolve to the same people, so
+// a post authored "Mellissa" still gets her Person entity, not an Organization.
+PERSON_AUTHORS["mellissa"] = PERSON_AUTHORS["mellissa daniel"];
+PERSON_AUTHORS["adam"] = PERSON_AUTHORS["adam upchurch"];
+
+/** Normalize a stored author (slug like "adam-upchurch" or a plain name). */
+function normalizeAuthorName(author: string): string {
+  const a = (author || "").trim();
+  if (!a) return BUSINESS.name;
+  if (/^[a-z0-9]+(?:-[a-z0-9]+)+$/.test(a)) {
+    return a
+      .split("-")
+      .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+      .join(" ");
+  }
+  return a;
+}
+
+/** Look up a real-person author profile, or null if it is not a known person. */
+function personProfile(author: string) {
+  return PERSON_AUTHORS[normalizeAuthorName(author).toLowerCase()] ?? null;
+}
+
+/**
+ * The schema.org author entity for a post: a Person only for a known real
+ * person (Adam, Mellissa), otherwise the Organization. Never a Person named
+ * after the company.
+ */
+function authorEntity(author: string) {
+  const p = personProfile(author);
+  if (p) {
+    return {
+      "@type": "Person",
+      ...(p.id ? { "@id": p.id } : {}),
+      name: p.name,
+      ...(p.jobTitle ? { jobTitle: p.jobTitle } : {}),
+      url: p.url,
+    };
+  }
+  return {
+    "@type": "Organization",
+    "@id": `${SITE_URL}/#business`,
+    name: BUSINESS.name,
+    url: SITE_URL,
+  };
+}
+
+/**
+ * Human byline for a post. A known person shows their name and credential (e.g.
+ * "Mellissa Daniel, RN"); anything else shows the organization name.
+ */
+export function authorByline(author: string): string {
+  const p = personProfile(author);
+  if (p) return p.credential ? `${p.name}, ${p.credential}` : p.name;
+  return BUSINESS.name;
 }
 
 /** schema.org Article markup for a blog post. */
@@ -273,9 +343,9 @@ export function articleJsonLd(post: Post) {
     image: post.hero_image || undefined,
     datePublished: post.published_at || undefined,
     dateModified: post.updated_at || post.published_at || undefined,
-    // Owner-operator authorship is real E-E-A-T on a YMYL (senior care) site,
-    // so the author is a Person (not the CMS slug as an Organization).
-    author: authorPerson(post.author),
+    // Person only for a real person (E-E-A-T on a YMYL senior-care site);
+    // the company name and stray bylines are the Organization, not a Person.
+    author: authorEntity(post.author),
     publisher: {
       "@type": "Organization",
       name: BUSINESS.name,

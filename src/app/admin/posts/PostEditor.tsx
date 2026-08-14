@@ -25,9 +25,16 @@ type Fields = {
   hero_image: string;
   hero_image_alt: string;
   category: string;
+  author: string;
   meta_title: string;
   meta_description: string;
 };
+
+// Controlled author choices. Real people carry the E-E-A-T signal; everything
+// else is the organization. This is a closed list so a stray byline (e.g. a
+// project manager from another company) can never leak in again.
+const ORG_AUTHOR = "Joy Senior Living";
+const AUTHOR_OPTIONS = [ORG_AUTHOR, "Mellissa Daniel", "Adam Upchurch"];
 
 function fromPost(p?: Post | null): Fields {
   return {
@@ -39,6 +46,7 @@ function fromPost(p?: Post | null): Fields {
     hero_image: p?.hero_image ?? "",
     hero_image_alt: p?.hero_image_alt ?? "",
     category: p?.category ?? "",
+    author: p?.author ?? ORG_AUTHOR,
     meta_title: p?.meta_title ?? "",
     meta_description: p?.meta_description ?? "",
   };
@@ -299,6 +307,27 @@ export default function PostEditor({
             />
           </Field>
         </div>
+
+        <Field
+          label="Author"
+          hint="Use Mellissa (RN) on care and memory-care posts; the company for general updates."
+        >
+          <select
+            value={f.author}
+            onChange={(e) => set("author", e.target.value)}
+            className={INPUT}
+          >
+            {/* Keep the current value selectable even if it is off-list. */}
+            {!AUTHOR_OPTIONS.includes(f.author) && f.author && (
+              <option value={f.author}>{f.author} (current)</option>
+            )}
+            {AUTHOR_OPTIONS.map((a) => (
+              <option key={a} value={a}>
+                {a === ORG_AUTHOR ? `${a} (organization)` : a}
+              </option>
+            ))}
+          </select>
+        </Field>
 
         <Field label="Excerpt" hint="One or two sentences. Shows on cards and previews.">
           <textarea

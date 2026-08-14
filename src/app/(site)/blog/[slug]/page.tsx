@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { hasDatabase } from "@/lib/db";
 import { getPublishedPostBySlug, getPublishedPosts } from "@/lib/posts";
 import { MEMORY_CARE } from "@/lib/site";
-import { articleJsonLd, breadcrumbJsonLd } from "@/lib/schema";
+import { articleJsonLd, breadcrumbJsonLd, authorByline } from "@/lib/schema";
 import { BUSINESS, OG_IMAGE } from "@/lib/site";
 import { getSettings, tourHref } from "@/lib/settings";
 import Markdown from "@/components/Markdown";
@@ -98,7 +98,7 @@ export default async function PostPage({
       <h1 className="mt-2 font-display text-4xl font-semibold leading-tight text-ink">
         {post.title}
       </h1>
-      <p className="mt-3 text-sm text-ink-faint">By {post.author}</p>
+      <p className="mt-3 text-sm text-ink-faint">By {authorByline(post.author)}</p>
 
       {post.hero_image && (
         <Photo
