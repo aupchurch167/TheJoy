@@ -33,136 +33,148 @@ const icon = (path: ReactNode) => (
   </svg>
 );
 
-const NAV: NavItem[] = [
+const DASHBOARD: NavItem = {
+  href: "/admin",
+  label: "Dashboard",
+  icon: icon(
+    <>
+      <rect x="3" y="3" width="7" height="9" rx="1" />
+      <rect x="14" y="3" width="7" height="5" rx="1" />
+      <rect x="14" y="12" width="7" height="9" rx="1" />
+      <rect x="3" y="16" width="7" height="5" rx="1" />
+    </>
+  ),
+};
+
+const SETTINGS: NavItem = {
+  href: "/admin/settings",
+  label: "Settings",
+  icon: icon(
+    <>
+      <circle cx="12" cy="12" r="3" />
+      <path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-2.9 1.2V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-2.9-1.2l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0-1.2-2.9H2a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.2-2.9l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 2.9-1.2V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 2.9 1.2l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0 1.2 2.9H22a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z" />
+    </>
+  ),
+};
+
+// Grouped navigation (labeled zones, same destinations). Gallery + Site photos
+// are merged into one "Media" item (the /admin/media page toggles between them,
+// and the old routes redirect there).
+const GROUPS: { label: string; items: NavItem[] }[] = [
   {
-    href: "/admin",
-    label: "Dashboard",
-    icon: icon(
-      <>
-        <rect x="3" y="3" width="7" height="9" rx="1" />
-        <rect x="14" y="3" width="7" height="5" rx="1" />
-        <rect x="14" y="12" width="7" height="9" rx="1" />
-        <rect x="3" y="16" width="7" height="5" rx="1" />
-      </>
-    ),
+    label: "CRM",
+    items: [
+      {
+        href: "/admin/leads",
+        label: "Leads",
+        icon: icon(
+          <>
+            <path d="M16 20v-1a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v1" />
+            <circle cx="9.5" cy="8" r="3" />
+            <path d="M21 20v-1a4 4 0 0 0-3-3.87" />
+          </>
+        ),
+      },
+      {
+        href: "/admin/families",
+        label: "Families",
+        icon: icon(
+          <path d="M12 21s-7-4.6-9.3-8.4C1 9.5 2.6 6 6 6c2 0 3.2 1.2 4 2.3C10.8 7.2 12 6 14 6c3.4 0 5 3.5 3.3 6.6C19 16.4 12 21 12 21z" />
+        ),
+      },
+      {
+        href: "/admin/deposits",
+        label: "Deposits",
+        icon: icon(
+          <>
+            <rect x="2" y="5" width="20" height="14" rx="2" />
+            <path d="M2 10h20" />
+            <path d="M6 15h4" />
+          </>
+        ),
+      },
+    ],
   },
   {
-    href: "/admin/posts",
-    label: "Posts",
-    icon: icon(
-      <>
-        <path d="M4 4h11l5 5v11a0 0 0 0 1 0 0H4z" />
-        <path d="M14 4v5h5" />
-        <path d="M8 13h8M8 17h6" />
-      </>
-    ),
+    label: "Messaging",
+    items: [
+      {
+        href: "/admin/emails",
+        label: "Emails",
+        icon: icon(
+          <>
+            <rect x="3" y="5" width="18" height="14" rx="2" />
+            <path d="m3 7 9 6 9-6" />
+          </>
+        ),
+      },
+      {
+        href: "/admin/texts",
+        label: "Texts",
+        icon: icon(
+          <path d="M21 11.5a8.38 8.38 0 0 1-8.5 8.5 8.5 8.5 0 0 1-3.8-.9L3 21l1.9-5.7a8.5 8.5 0 0 1-.9-3.8 8.38 8.38 0 0 1 8.5-8.5 8.38 8.38 0 0 1 8.5 8.5z" />
+        ),
+      },
+      {
+        href: "/admin/feedback",
+        label: "Feedback",
+        icon: icon(
+          <>
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+            <path d="M8 10h.01M12 10h.01M16 10h.01" />
+          </>
+        ),
+      },
+    ],
   },
   {
-    href: "/admin/leads",
-    label: "Leads",
-    icon: icon(
-      <>
-        <path d="M16 20v-1a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v1" />
-        <circle cx="9.5" cy="8" r="3" />
-        <path d="M21 20v-1a4 4 0 0 0-3-3.87" />
-      </>
-    ),
-  },
-  {
-    href: "/admin/deposits",
-    label: "Deposits",
-    icon: icon(
-      <>
-        <rect x="2" y="5" width="20" height="14" rx="2" />
-        <path d="M2 10h20" />
-        <path d="M6 15h4" />
-      </>
-    ),
-  },
-  {
-    href: "/admin/emails",
-    label: "Emails",
-    icon: icon(
-      <>
-        <rect x="3" y="5" width="18" height="14" rx="2" />
-        <path d="m3 7 9 6 9-6" />
-      </>
-    ),
-  },
-  {
-    href: "/admin/families",
-    label: "Families",
-    icon: icon(
-      <path d="M12 21s-7-4.6-9.3-8.4C1 9.5 2.6 6 6 6c2 0 3.2 1.2 4 2.3C10.8 7.2 12 6 14 6c3.4 0 5 3.5 3.3 6.6C19 16.4 12 21 12 21z" />
-    ),
-  },
-  {
-    href: "/admin/texts",
-    label: "Texts",
-    icon: icon(
-      <path d="M21 11.5a8.38 8.38 0 0 1-8.5 8.5 8.5 8.5 0 0 1-3.8-.9L3 21l1.9-5.7a8.5 8.5 0 0 1-.9-3.8 8.38 8.38 0 0 1 8.5-8.5 8.38 8.38 0 0 1 8.5 8.5z" />
-    ),
-  },
-  {
-    href: "/admin/feedback",
-    label: "Feedback",
-    icon: icon(
-      <>
-        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-        <path d="M8 10h.01M12 10h.01M16 10h.01" />
-      </>
-    ),
-  },
-  {
-    href: "/admin/gallery",
-    label: "Gallery",
-    icon: icon(
-      <>
-        <rect x="3" y="4" width="18" height="16" rx="2" />
-        <circle cx="9" cy="10" r="1.6" />
-        <path d="m4 18 5-5 4 4 3-3 4 4" />
-      </>
-    ),
-  },
-  {
-    href: "/admin/photos",
-    label: "Site photos",
-    icon: icon(
-      <>
-        <path d="M14.5 4h-5L8 6H4a1 1 0 0 0-1 1v11a1 1 0 0 0 1 1h16a1 1 0 0 0 1-1V7a1 1 0 0 0-1-1h-4z" />
-        <circle cx="12" cy="12.5" r="3.2" />
-      </>
-    ),
-  },
-  {
-    href: "/admin/links",
-    label: "Link in bio",
-    icon: icon(
-      <>
-        <path d="M10 13a5 5 0 0 0 7 0l2-2a5 5 0 0 0-7-7l-1 1" />
-        <path d="M14 11a5 5 0 0 0-7 0l-2 2a5 5 0 0 0 7 7l1-1" />
-      </>
-    ),
-  },
-  {
-    href: "/admin/seo",
-    label: "SEO",
-    icon: icon(
-      <>
-        <path d="M4 19V5M4 19h16" />
-        <path d="M8 16v-4M12 16V8M16 16v-6" />
-      </>
-    ),
-  },
-  {
-    href: "/admin/settings",
-    label: "Settings",
-    icon: icon(
-      <>
-        <circle cx="12" cy="12" r="3" />
-        <path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-2.9 1.2V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-2.9-1.2l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0-1.2-2.9H2a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.2-2.9l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 2.9-1.2V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 2.9 1.2l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0 1.2 2.9H22a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z" />
-      </>
-    ),
+    label: "Content & site",
+    items: [
+      {
+        href: "/admin/posts",
+        label: "Posts",
+        icon: icon(
+          <>
+            <path d="M4 4h11l5 5v11a0 0 0 0 1 0 0H4z" />
+            <path d="M14 4v5h5" />
+            <path d="M8 13h8M8 17h6" />
+          </>
+        ),
+      },
+      {
+        href: "/admin/media",
+        label: "Media",
+        // Old Gallery + Site photos routes now live under Media.
+        match: ["/admin/gallery", "/admin/photos"],
+        icon: icon(
+          <>
+            <rect x="3" y="4" width="18" height="16" rx="2" />
+            <circle cx="9" cy="10" r="1.6" />
+            <path d="m4 18 5-5 4 4 3-3 4 4" />
+          </>
+        ),
+      },
+      {
+        href: "/admin/links",
+        label: "Link in bio",
+        icon: icon(
+          <>
+            <path d="M10 13a5 5 0 0 0 7 0l2-2a5 5 0 0 0-7-7l-1 1" />
+            <path d="M14 11a5 5 0 0 0-7 0l-2 2a5 5 0 0 0 7 7l1-1" />
+          </>
+        ),
+      },
+      {
+        href: "/admin/seo",
+        label: "SEO",
+        icon: icon(
+          <>
+            <path d="M4 19V5M4 19h16" />
+            <path d="M8 16v-4M12 16V8M16 16v-6" />
+          </>
+        ),
+      },
+    ],
   },
 ];
 
@@ -180,33 +192,46 @@ export default function AdminNav({ email }: { email?: string | null }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
 
+  const renderItem = (item: NavItem) => {
+    const active = isActive(pathname, item);
+    return (
+      <Link
+        key={item.href}
+        href={item.href}
+        aria-current={active ? "page" : undefined}
+        className={`flex min-h-11 items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
+          active
+            ? "bg-clay/10 text-clay"
+            : "text-ink-soft hover:bg-surface hover:text-ink"
+        }`}
+      >
+        <span className={active ? "text-clay" : "text-ink-faint"}>
+          {item.icon}
+        </span>
+        {item.label}
+      </Link>
+    );
+  };
+
   const links = (
-    <nav className="flex flex-1 flex-col gap-1">
-      {NAV.map((item) => {
-        const active = isActive(pathname, item);
-        return (
-          <Link
-            key={item.href}
-            href={item.href}
-            aria-current={active ? "page" : undefined}
-            className={`flex min-h-11 items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
-              active
-                ? "bg-clay/10 text-clay"
-                : "text-ink-soft hover:bg-surface hover:text-ink"
-            }`}
-          >
-            <span className={active ? "text-clay" : "text-ink-faint"}>
-              {item.icon}
-            </span>
-            {item.label}
-          </Link>
-        );
-      })}
+    <nav className="flex flex-1 flex-col">
+      <div className="flex flex-col gap-0.5">{renderItem(DASHBOARD)}</div>
+      {GROUPS.map((group) => (
+        <div key={group.label}>
+          <p className="px-3 pb-2 pt-5 text-[11px] font-semibold uppercase tracking-wider text-ink-faint">
+            {group.label}
+          </p>
+          <div className="flex flex-col gap-0.5">
+            {group.items.map(renderItem)}
+          </div>
+        </div>
+      ))}
     </nav>
   );
 
   const footer = (
-    <div className="mt-auto border-t border-line pt-4">
+    <div className="mt-auto flex flex-col gap-0.5 border-t border-line pt-3">
+      {renderItem(SETTINGS)}
       <Link
         href="/"
         className="flex min-h-11 items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-ink-soft transition-colors hover:bg-surface hover:text-ink"

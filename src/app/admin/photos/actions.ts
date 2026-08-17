@@ -39,7 +39,7 @@ export async function saveSitePhoto(
     revalidatePath("/about");
     revalidatePath("/services", "layout");
     revalidatePath("/memory-care");
-    revalidatePath("/admin/photos");
+    revalidatePath("/admin/media");
     return { ok: true };
   } catch (err) {
     console.error("[saveSitePhoto]", err);

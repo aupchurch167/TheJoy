@@ -37,7 +37,7 @@ export async function addPhotoAction(input: unknown): Promise<PhotoResult> {
       parsed.data.caption || null,
       parsed.data.alt || null
     );
-    revalidatePath("/admin/gallery");
+    revalidatePath("/admin/media");
     revalidatePath("/gallery");
     return { ok: true };
   } catch (err) {
@@ -56,7 +56,7 @@ export async function updatePhotoImageAction(
   }
   try {
     await updatePhotoImage(parsed.data.id, parsed.data.imageUrl);
-    revalidatePath("/admin/gallery");
+    revalidatePath("/admin/media");
     revalidatePath("/gallery");
     return { ok: true };
   } catch (err) {
@@ -123,7 +123,7 @@ export async function generatePhotoMetaAction(
   try {
     const meta = await describePhoto(photo.image_url);
     await updatePhotoMeta(id, meta.caption || null, meta.alt || null);
-    revalidatePath("/admin/gallery");
+    revalidatePath("/admin/media");
     revalidatePath("/gallery");
     return { ok: true, meta };
   } catch (err) {
@@ -140,7 +140,7 @@ export async function removePhotoAction(id: string): Promise<{ ok: boolean }> {
   await requireAdmin();
   try {
     await deletePhoto(id);
-    revalidatePath("/admin/gallery");
+    revalidatePath("/admin/media");
     revalidatePath("/gallery");
     return { ok: true };
   } catch (err) {
