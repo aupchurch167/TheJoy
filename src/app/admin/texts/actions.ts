@@ -145,6 +145,7 @@ export async function sendTextBlast(input: unknown): Promise<BlastResult> {
     const res = await sendSms(r.phone ?? "", content);
     await recordRecipient(broadcast.id, r.id, {
       error: res.ok ? undefined : res.error,
+      messageId: broadcast.message_id,
     });
     if (res.ok) sent++;
     else failed++;

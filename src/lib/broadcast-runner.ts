@@ -7,6 +7,7 @@ import {
   requeueBroadcast,
   recordRecipient,
   alreadySentLeadIds,
+  alreadyReceivedLeadIds,
   sentInLastHour,
   sentCountForBroadcast,
   getNonOpeners,
@@ -74,7 +75,12 @@ async function sendBatch(
         broadcast.audience,
         broadcast.filters ?? undefined
       );
-  const already = await alreadySentLeadIds(broadcast.id);
+  // Skip anyone who already received THIS Message on any Send (the once-per-
+  // Message rule); fall back to per-broadcast dedupe for legacy rows with no
+  // message_id.
+  const already = broadcast.message_id
+    ? await alreadyReceivedLeadIds(broadcast.message_id)
+    : await alreadySentLeadIds(broadcast.id);
   const pending = leads.filter((l) => !already.has(l.id));
 
   let sent = 0;
@@ -95,7 +101,10 @@ async function sendBatch(
         // Email not configured mid-run: stop and let a later run retry.
         return { sent, done: false };
       }
-      await recordRecipient(broadcast.id, lead.id, { providerMessageId: messageId });
+      await recordRecipient(broadcast.id, lead.id, {
+        providerMessageId: messageId,
+        messageId: broadcast.message_id,
+      });
       sent++;
     } catch (err) {
       // Record the failure so we don't retry a bad address forever. It does not
@@ -103,6 +112,7 @@ async function sendBatch(
       console.error("[broadcast] send failed for", lead.email, err);
       await recordRecipient(broadcast.id, lead.id, {
         error: err instanceof Error ? err.message : "unknown",
+        messageId: broadcast.message_id,
       });
     }
   }

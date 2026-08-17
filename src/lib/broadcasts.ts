@@ -1,4 +1,5 @@
 import { query } from "./db";
+import { createMessage } from "./messages";
 
 import type { Audience, LeadSegment } from "./leads";
 
@@ -19,6 +20,8 @@ export type Broadcast = {
   filters: LeadSegment | null;
   /** When set, targets the non-openers of this parent broadcast. */
   resend_of: string | null;
+  /** The reusable Message this Send dispatches (the once-per-Message key). */
+  message_id: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -40,11 +43,22 @@ export async function createBroadcast(
   audience: Audience = "leads",
   channel: BroadcastChannel = "email",
   filters: LeadSegment | null = null,
-  resendOf: string | null = null
+  resendOf: string | null = null,
+  opts?: { messageId?: string | null; createdBy?: string | null }
 ): Promise<Broadcast> {
+  // Every Send points at a Message. When no Message is supplied, this compose
+  // gets a fresh one (its own once-per-Message scope). Reusing a messageId
+  // makes this Send subject to the earlier Send's dedupe (same content, skip
+  // whoever already received it); duplicating instead yields a new id.
+  const messageId =
+    opts?.messageId ??
+    (
+      await createMessage({ subject, body, createdBy: opts?.createdBy ?? null })
+    ).id;
+
   const rows = await query<Broadcast>(
-    `INSERT INTO broadcasts (subject, body, audience, channel, filters, resend_of)
-     VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
+    `INSERT INTO broadcasts (subject, body, audience, channel, filters, resend_of, message_id)
+     VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`,
     [
       subject,
       body,
@@ -52,6 +66,7 @@ export async function createBroadcast(
       channel,
       filters ? JSON.stringify(filters) : null,
       resendOf,
+      messageId,
     ]
   );
   return rows[0];
@@ -166,18 +181,53 @@ export async function markBroadcastSent(
   );
 }
 
-/** Record a per-recipient send (idempotent via the composite PK). */
+/**
+ * Record a per-recipient send. Idempotent both within a broadcast (PK) and
+ * across every Send of the same Message (the (message_id, lead_id) unique
+ * index) — ON CONFLICT DO NOTHING catches either, so the once-per-Message rule
+ * holds even under a race.
+ */
 export async function recordRecipient(
   broadcastId: string,
   leadId: string,
-  opts?: { error?: string; providerMessageId?: string }
+  opts?: { error?: string; providerMessageId?: string; messageId?: string | null }
 ): Promise<void> {
   await query(
-    `INSERT INTO broadcast_recipients (broadcast_id, lead_id, error, provider_message_id)
-     VALUES ($1, $2, $3, $4)
-     ON CONFLICT (broadcast_id, lead_id) DO NOTHING`,
-    [broadcastId, leadId, opts?.error ?? null, opts?.providerMessageId ?? null]
+    `INSERT INTO broadcast_recipients (broadcast_id, lead_id, error, provider_message_id, message_id)
+     VALUES ($1, $2, $3, $4, $5)
+     ON CONFLICT DO NOTHING`,
+    [
+      broadcastId,
+      leadId,
+      opts?.error ?? null,
+      opts?.providerMessageId ?? null,
+      opts?.messageId ?? null,
+    ]
   );
+}
+
+/**
+ * Lead ids that have ALREADY received this Message (across any Send of it), so
+ * a re-send skips them. This is the once-per-Message rule at read time; the
+ * unique index is the write-time backstop.
+ */
+export async function alreadyReceivedLeadIds(
+  messageId: string
+): Promise<Set<string>> {
+  const rows = await query<{ lead_id: string }>(
+    `SELECT DISTINCT lead_id FROM broadcast_recipients WHERE message_id = $1`,
+    [messageId]
+  );
+  return new Set(rows.map((r) => r.lead_id));
+}
+
+/** How many contacts already received this Message (for the recipient panel). */
+export async function countAlreadyReceived(messageId: string): Promise<number> {
+  const rows = await query<{ n: string }>(
+    `SELECT COUNT(DISTINCT lead_id) AS n FROM broadcast_recipients WHERE message_id = $1`,
+    [messageId]
+  );
+  return Number(rows[0]?.n ?? 0);
 }
 
 /** A Resend engagement/delivery event mapped to a recipient timestamp column. */

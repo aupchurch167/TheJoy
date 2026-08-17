@@ -402,3 +402,63 @@ CREATE INDEX IF NOT EXISTS feedback_requests_email_created_idx
   ON feedback_requests (lower(family_email), created_at DESC);
 CREATE INDEX IF NOT EXISTS feedback_requests_phone_created_idx
   ON feedback_requests (family_phone, created_at DESC);
+
+-- ==========================================================================
+-- Joy Email v1: Message identity + message-level duplicate protection +
+-- suppression list. Evolves the broadcasts system: a broadcast is a Send; the
+-- reusable content is a Message. The hard rule "a contact receives a given
+-- Message once, ever" is enforced at the DATABASE, not just the UI.
+-- ==========================================================================
+
+-- Reusable email content. Composing an email creates a Message; each dispatch
+-- (a broadcast) points at one. Duplicating a Message (template_of set) yields a
+-- new id, which is how an intentional re-send escapes the once-per-Message rule.
+CREATE TABLE IF NOT EXISTS messages (
+  id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  subject     TEXT NOT NULL DEFAULT '',
+  body        TEXT NOT NULL DEFAULT '',
+  template_of UUID REFERENCES messages(id) ON DELETE SET NULL,
+  is_template BOOLEAN NOT NULL DEFAULT FALSE,
+  created_by  TEXT,
+  created_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at  TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+ALTER TABLE broadcasts ADD COLUMN IF NOT EXISTS message_id UUID
+  REFERENCES messages(id);
+
+-- Backfill: give every existing broadcast its own Message (idempotent; only
+-- touches broadcasts not yet linked).
+DO $$
+DECLARE b RECORD; mid UUID;
+BEGIN
+  FOR b IN SELECT id, subject, body, created_at FROM broadcasts WHERE message_id IS NULL LOOP
+    INSERT INTO messages (subject, body, created_at, updated_at)
+      VALUES (COALESCE(b.subject, ''), COALESCE(b.body, ''), b.created_at, b.created_at)
+      RETURNING id INTO mid;
+    UPDATE broadcasts SET message_id = mid WHERE id = b.id;
+  END LOOP;
+END $$;
+
+-- Per-recipient log carries the Message id so the once-per-Message rule spans
+-- every Send of that Message.
+ALTER TABLE broadcast_recipients ADD COLUMN IF NOT EXISTS message_id UUID;
+UPDATE broadcast_recipients br SET message_id = b.message_id
+  FROM broadcasts b WHERE br.broadcast_id = b.id AND br.message_id IS NULL;
+
+-- THE guarantee: one (message, contact) row, ever. A second attempt to send the
+-- same Message to the same contact is rejected by the database.
+CREATE UNIQUE INDEX IF NOT EXISTS broadcast_recipients_message_lead_uidx
+  ON broadcast_recipients (message_id, lead_id) WHERE message_id IS NOT NULL;
+
+-- Suppression list. An address here is NEVER emailed, no override. Reasons:
+-- 'unsubscribe', 'bounce', 'complaint', 'deceased', 'manual'. Keyed by the
+-- lowercased email so the check is exact regardless of how it was typed.
+CREATE TABLE IF NOT EXISTS suppressions (
+  email      TEXT PRIMARY KEY,
+  reason     TEXT NOT NULL,
+  note       TEXT,
+  created_by TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS suppressions_reason_idx ON suppressions (reason);

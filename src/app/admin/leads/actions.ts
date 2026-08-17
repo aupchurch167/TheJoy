@@ -10,6 +10,7 @@ import {
   unsubscribeLead,
   resubscribeLead,
 } from "@/lib/leads";
+import { getSuppressedEmails } from "@/lib/suppression";
 import { parseLeadsCsv } from "@/lib/leads-import";
 
 const Schema = z.object({
@@ -84,6 +85,7 @@ export type ImportLeadsResult =
       usable: number;
       added: number;
       alreadyInList: number;
+      suppressed: number;
       failed: number;
       noEmail: number;
       badEmail: number;
@@ -130,10 +132,19 @@ export async function importLeads(input: unknown): Promise<ImportLeadsResult> {
   }
 
   try {
+    // The suppression list is absolute: a suppressed address is never imported
+    // (deceased, unsubscribed, or a hard bounce), so a marketing list can never
+    // resurrect someone who opted out.
+    const suppressed = await getSuppressedEmails();
     let added = 0;
     let alreadyInList = 0;
+    let suppressedCount = 0;
     let failed = 0;
     for (const r of rows) {
+      if (suppressed.has(r.email.toLowerCase())) {
+        suppressedCount++;
+        continue;
+      }
       // A duplicate-check failure is a real DB problem: let the outer catch
       // report it. A single INSERT failure only drops that one row.
       if (await leadEmailExists(r.email)) {
@@ -169,6 +180,10 @@ export async function importLeads(input: unknown): Promise<ImportLeadsResult> {
       ? " Held out of broadcasts (consent off) for a re-permission email."
       : "";
     const failNote = failed > 0 ? ` ${failed} row(s) could not be imported.` : "";
+    const supNote =
+      suppressedCount > 0
+        ? ` ${suppressedCount} skipped (on the suppression list).`
+        : "";
     return {
       ok: true,
       committed: commit,
@@ -176,13 +191,14 @@ export async function importLeads(input: unknown): Promise<ImportLeadsResult> {
       usable: rows.length,
       added,
       alreadyInList,
+      suppressed: suppressedCount,
       failed,
       noEmail: stats.noEmail,
       badEmail: stats.badEmail,
       dupeInFile: stats.dupeInFile,
       message: commit
-        ? `Imported ${added} lead${added === 1 ? "" : "s"}, skipped ${alreadyInList} already in the list.${failNote}${heldNote}`
-        : `Ready to import ${added} new lead${added === 1 ? "" : "s"} (${alreadyInList} already in the list).`,
+        ? `Imported ${added} lead${added === 1 ? "" : "s"}, skipped ${alreadyInList} already in the list.${supNote}${failNote}${heldNote}`
+        : `Ready to import ${added} new lead${added === 1 ? "" : "s"} (${alreadyInList} already in the list).${supNote}`,
     };
   } catch (err) {
     console.error("[importLeads]", err);

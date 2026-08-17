@@ -1,4 +1,5 @@
 import { query } from "./db";
+import { suppressEmail } from "./suppression";
 
 export type LeadInput = {
   name: string;
@@ -145,13 +146,16 @@ export async function suppressLeadByEmail(email: string): Promise<number> {
 
 /** Admin-initiated unsubscribe of one lead by id (opts them out + pauses drip). */
 export async function unsubscribeLead(id: string): Promise<void> {
-  await query(
+  const rows = await query<{ email: string | null }>(
     `UPDATE leads
         SET unsubscribed_at = COALESCE(unsubscribed_at, now()),
             drip_status = 'paused'
-      WHERE id = $1`,
+      WHERE id = $1
+      RETURNING email`,
     [id]
   );
+  const email = rows[0]?.email;
+  if (email) await suppressEmail(email, "unsubscribe");
 }
 
 /** Admin re-subscribe (undo a mistaken opt-out). Clears the opt-out timestamp. */
@@ -164,14 +168,16 @@ export async function resubscribeLead(id: string): Promise<void> {
 
 /** Mark a lead unsubscribed by its token. Returns true if a row was updated. */
 export async function unsubscribeByToken(token: string): Promise<boolean> {
-  const rows = await query<{ id: string }>(
+  const rows = await query<{ id: string; email: string | null }>(
     `UPDATE leads
        SET unsubscribed_at = now(), drip_status = 'paused'
      WHERE unsubscribe_token = $1
        AND unsubscribed_at IS NULL
-     RETURNING id`,
+     RETURNING id, email`,
     [token]
   );
+  const email = rows[0]?.email;
+  if (email) await suppressEmail(email, "unsubscribe");
   return rows.length > 0;
 }
 
@@ -263,10 +269,15 @@ export async function getLeadById(id: string): Promise<Lead | null> {
 
 /** Update a lead's lifecycle stage (new/toured/moved_in/lost). */
 export async function setLeadStage(id: string, stage: LeadStage): Promise<void> {
-  await query(
-    `UPDATE leads SET stage = $2, stage_updated_at = now() WHERE id = $1`,
+  const rows = await query<{ email: string | null }>(
+    `UPDATE leads SET stage = $2, stage_updated_at = now() WHERE id = $1
+     RETURNING email`,
     [id, stage]
   );
+  // A resident marked deceased is added to the suppression list, so the family's
+  // contact is never emailed a marketing blast again (no override).
+  const email = rows[0]?.email;
+  if (stage === "deceased" && email) await suppressEmail(email, "deceased");
 }
 
 /** Advance the drip position after a step is sent. */
@@ -324,6 +335,8 @@ function segmentWhere(
     "consent = TRUE",
     "email IS NOT NULL AND email <> ''",
     "(audience <> 'families' OR active = TRUE)",
+    // The suppression list is absolute: a suppressed address is never a recipient.
+    "lower(email) NOT IN (SELECT email FROM suppressions)",
   ];
   if (seg?.sources?.length) {
     params.push(seg.sources);

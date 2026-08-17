@@ -5,6 +5,7 @@ import {
   type EngagementEvent,
 } from "@/lib/broadcasts";
 import { suppressLeadByEmail } from "@/lib/leads";
+import { suppressEmail } from "@/lib/suppression";
 
 /**
  * Resend webhook: delivery + engagement events.
@@ -93,9 +94,13 @@ export async function POST(req: Request): Promise<Response> {
       (data.email_id as string) || (data.id as string) || "";
     if (messageId) await applyEngagementEvent(messageId, event);
 
-    // Hard bounce or spam complaint: stop emailing this address for good.
+    // Hard bounce or spam complaint: stop emailing this address for good. Add
+    // it to the suppression list (never emailed again, no override) and mark
+    // any matching lead unsubscribed.
     if (event === "bounced" || event === "complained") {
+      const reason = event === "bounced" ? "bounce" : "complaint";
       for (const email of emailsOf(data.to)) {
+        await suppressEmail(email, reason, { note: `Resend ${event}` });
         const n = await suppressLeadByEmail(email);
         if (n > 0) console.info(`[resend-webhook] suppressed ${email} (${event})`);
       }
