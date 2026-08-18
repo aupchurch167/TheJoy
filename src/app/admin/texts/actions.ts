@@ -86,16 +86,26 @@ export async function sendTestToAdmins(input: unknown): Promise<TestResult> {
   const content = fullContent(parsed.data);
   let sent = 0;
   let failed = 0;
+  const reasons = new Set<string>();
   for (const n of numbers) {
     const res = await sendSms(n, content);
     if (res.ok) sent++;
-    else failed++;
+    else {
+      failed++;
+      if (res.error) reasons.add(res.error);
+    }
     await new Promise((r) => setTimeout(r, 120));
   }
   if (sent === 0) {
+    // Surface the real reason (Quo's own message, a bad number, or a network
+    // problem) so the fix is obvious instead of a generic "check your setup".
+    const why = reasons.size ? ` ${[...reasons].join(" / ")}` : "";
+    console.error("[sendTestToAdmins] all failed:", [...reasons]);
     return {
       ok: false,
-      error: "Every test text failed. Check the number(s) and Quo setup.",
+      error:
+        `Every test text failed.${why}` +
+        " Confirm QUO_API_KEY and QUO_FROM_NUMBER are set, the from-number is registered for A2P texting in Quo, and the test number is a real mobile.",
     };
   }
   await recordTest(bodyHash(parsed.data));
