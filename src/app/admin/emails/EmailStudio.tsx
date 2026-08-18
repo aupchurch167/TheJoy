@@ -1214,6 +1214,15 @@ function ReviewSheet({
               </div>
             )}
 
+            {count === 0 && !sentState && (
+              <p className="mt-2 text-xs text-danger">
+                No {audienceLabel} to send to yet.{" "}
+                {audience === "families"
+                  ? "Add family contacts (with an email) in the Family list first."
+                  : "There are no subscribed leads for this segment."}
+              </p>
+            )}
+
             {!testSentTo && (
               <div className="mt-3 flex items-center justify-between text-xs text-ink-faint">
                 <span>Send a test to yourself first?</span>
