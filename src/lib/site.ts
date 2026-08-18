@@ -55,10 +55,24 @@ export const TOUR_URL =
  * Public site URL (used for canonical links, sitemap, schema, robots Host).
  * The canonical host is www; non-www requests 301 to it at the DNS/host level.
  * Override with NEXT_PUBLIC_SITE_URL in the env if the domain ever changes.
+ *
+ * www is forced even when the env var is set to the bare apex: canonical /
+ * sitemap / robots must point at the host that actually serves (www), never at
+ * the bare domain that just 301s back to www. A canonical that redirects to
+ * itself stalls Google settling the migration, so this makes the code the
+ * single source of truth and a misconfigured env can't reopen the loop.
  */
-export const SITE_URL = (
+function canonicalSiteUrl(raw: string): string {
+  const noSlash = raw.trim().replace(/\/+$/, "");
+  return noSlash.replace(
+    /^(https?:\/\/)joyseniorcare\.com/i,
+    "$1www.joyseniorcare.com"
+  );
+}
+
+export const SITE_URL = canonicalSiteUrl(
   process.env.NEXT_PUBLIC_SITE_URL || "https://www.joyseniorcare.com"
-).replace(/\/$/, "");
+);
 
 /**
  * Default social-share image (og:image / twitter:image). Points at the
