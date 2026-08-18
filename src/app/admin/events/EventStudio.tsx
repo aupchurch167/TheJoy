@@ -2,6 +2,7 @@
 
 import { useState, useTransition, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { BackLink } from "@/components/admin/ui";
 import ConfirmButton from "@/components/admin/ConfirmButton";
 import { useToast } from "@/components/admin/Toast";
@@ -686,6 +687,12 @@ export default function EventStudio({
                       })
                     )}
                   </div>
+                  <Link
+                    href={`/admin/events/${id}/attendees`}
+                    className="mt-3 inline-block text-xs font-semibold text-clay-dark hover:underline"
+                  >
+                    Full list &amp; printable roster →
+                  </Link>
                 </RailSection>
 
                 <RailSection title="Emails for this event">

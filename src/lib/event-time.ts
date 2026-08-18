@@ -60,6 +60,21 @@ export function formatEventWhen(iso: string | null): string {
   });
 }
 
+/** Month abbreviation + day-of-month in ET, for the events-list date tile. */
+export function eventDateTile(iso: string | null): { month: string; day: string } {
+  if (!iso) return { month: "TBD", day: "•" };
+  const d = new Date(iso);
+  return {
+    month: d.toLocaleString("en-US", { timeZone: TZ, month: "short" }).toUpperCase(),
+    day: d.toLocaleString("en-US", { timeZone: TZ, day: "numeric" }),
+  };
+}
+
+/** True when the stored instant is in the past (event already happened). */
+export function eventIsPast(iso: string | null): boolean {
+  return !!iso && new Date(iso).getTime() < Date.now();
+}
+
 /** Longer format for the invite email + public page. */
 export function formatEventWhenLong(iso: string | null): string {
   if (!iso) return "Date to be announced";
