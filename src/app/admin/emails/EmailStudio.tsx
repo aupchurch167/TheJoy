@@ -402,7 +402,7 @@ export default function EmailStudio({
 
   return (
     <div className="fixed inset-x-0 bottom-0 top-14 z-20 overflow-auto bg-paper lg:left-60 lg:top-0">
-      <div className="mx-auto min-w-[1000px] max-w-[1400px]">
+      <div className="mx-auto min-w-[1280px] max-w-[1520px]">
         <div className="grid grid-cols-[300px_minmax(0,1fr)_284px]">
           {/* ---------- LEFT: the brief ---------- */}
           <aside className="min-h-screen border-r border-line bg-white">
@@ -598,19 +598,19 @@ export default function EmailStudio({
                   "radial-gradient(circle at 50% 0%, #f2f5f6, #e8ecee)",
               }}
             >
-              <p className="mx-auto mb-3 max-w-[560px] text-center text-xs text-ink-faint">
+              <p className="mx-auto mb-3 max-w-[640px] text-center text-xs text-ink-faint">
                 {words
                   ? "[first name] fills in per recipient. Edit the words below the preview."
                   : "Your email appears here."}
               </p>
 
               {words ? (
-                <div className="mx-auto max-w-[560px]">
+                <div className="mx-auto max-w-[640px]">
                   <div className="overflow-hidden rounded-[14px] border border-line bg-white shadow-sm">
                     <iframe
                       title="Email preview"
                       srcDoc={previewHtml}
-                      className="h-[720px] w-full"
+                      className="h-[760px] w-full"
                     />
                   </div>
 
@@ -732,7 +732,7 @@ export default function EmailStudio({
                   </div>
                 </div>
               ) : (
-                <div className="mx-auto flex min-h-[420px] max-w-[560px] items-center justify-center">
+                <div className="mx-auto flex min-h-[420px] max-w-[640px] items-center justify-center">
                   <div className="w-full rounded-[14px] border-2 border-dashed border-line bg-white/60 px-6 py-20 text-center">
                     {busy ? (
                       <p className="animate-pulse text-sm text-clay-dark">
