@@ -288,7 +288,7 @@ export async function sendMarketingEmail(
   lead: Lead,
   subject: string,
   markdownBody: string,
-  opts?: { broadcastId?: string; format?: "markdown" | "html" }
+  opts?: { broadcastId?: string; format?: "markdown" | "html" | "html_standalone" }
 ): Promise<string | null> {
   if (!resend) {
     console.info("[email] RESEND_API_KEY not set; skipping send to", lead.email);
@@ -297,17 +297,26 @@ export async function sendMarketingEmail(
   // Phone-only family contacts have no email; nothing to send.
   if (!lead.email) return null;
   const subj = applyMergeFields(subject, lead);
-  // Designed-HTML emails are already email-safe inner HTML (built by Claude),
-  // so they go straight in; Markdown emails are rendered first. Either way the
-  // letter shell adds the letterhead, badges, and the unsubscribe footer.
-  const merged = applyMergeFields(markdownBody, lead);
-  const inner = opts?.format === "html" ? merged : renderBody(merged);
+  const unsub = unsubscribeUrl(lead.unsubscribe_token);
+  // Three shapes:
+  //  - markdown: render to HTML, wrap in the Joy letter shell.
+  //  - html: email-safe INNER HTML (Claude-built), wrap in the shell.
+  //  - html_standalone: a COMPLETE document that carries its own header/footer
+  //    (e.g. the birthday invite); sent as-is, with {{unsubscribe_url}} filled.
+  const merged = applyUnsubscribe(applyMergeFields(markdownBody, lead), unsub);
+  const html =
+    opts?.format === "html_standalone"
+      ? merged
+      : opts?.format === "html"
+        ? wrapEmail(merged, unsub)
+        : wrapEmail(renderBody(merged), unsub);
 
   const { data } = await resend.emails.send({
     from: FROM,
     to: lead.email,
     subject: subj,
-    html: wrapEmail(inner, unsubscribeUrl(lead.unsubscribe_token)),
+    html,
+    // Always set the one-click header, even for a standalone design.
     headers: unsubscribeHeaders(lead.unsubscribe_token),
     ...(opts?.broadcastId
       ? { tags: [{ name: "broadcast_id", value: opts.broadcastId }] }
@@ -315,6 +324,12 @@ export async function sendMarketingEmail(
   });
   // Returns Resend's message id so the caller can match webhook events to it.
   return data?.id ?? null;
+}
+
+/** Fill the {{unsubscribe_url}} token (used by standalone designs that carry
+ *  their own footer). Harmless on bodies that do not use it. */
+function applyUnsubscribe(html: string, url: string): string {
+  return html.replace(/\{\{\s*unsubscribe_url\s*\}\}/gi, url);
 }
 
 /**
@@ -327,7 +342,7 @@ export async function sendTestEmail(
   to: string,
   subject: string,
   markdownBody: string,
-  format: "markdown" | "html" = "markdown"
+  format: "markdown" | "html" | "html_standalone" = "markdown"
 ): Promise<boolean> {
   if (!resend) {
     console.info("[email] RESEND_API_KEY not set; test send skipped.");
@@ -335,14 +350,20 @@ export async function sendTestEmail(
   }
   const sample = { name: "Sarah" };
   const subj = applyMergeFields(subject, sample);
-  const merged = applyMergeFields(markdownBody || "", sample);
-  const inner = format === "html" ? merged : renderBody(merged);
+  const unsub = unsubscribeUrl("test-preview");
+  const merged = applyUnsubscribe(applyMergeFields(markdownBody || "", sample), unsub);
+  const html =
+    format === "html_standalone"
+      ? merged
+      : format === "html"
+        ? wrapEmail(merged, unsub)
+        : wrapEmail(renderBody(merged), unsub);
 
   await resend.emails.send({
     from: FROM,
     to,
     subject: `[TEST] ${subj}`,
-    html: wrapEmail(inner, unsubscribeUrl("test-preview")),
+    html,
     headers: unsubscribeHeaders("test-preview"),
   });
   return true;

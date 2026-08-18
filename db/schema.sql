@@ -468,3 +468,10 @@ CREATE INDEX IF NOT EXISTS suppressions_reason_idx ON suppressions (reason);
 -- The Joy letter shell (letterhead, badges, unsubscribe footer) wraps either.
 ALTER TABLE broadcasts ADD COLUMN IF NOT EXISTS body_format TEXT NOT NULL DEFAULT 'markdown'
   CHECK (body_format IN ('markdown', 'html'));
+
+-- Designed HTML can also be sent STANDALONE (a complete document, no Joy letter
+-- shell) for pieces like the birthday party invite that carry their own header
+-- and footer. Widen the format check to allow it.
+ALTER TABLE broadcasts DROP CONSTRAINT IF EXISTS broadcasts_body_format_check;
+ALTER TABLE broadcasts ADD CONSTRAINT broadcasts_body_format_check
+  CHECK (body_format IN ('markdown', 'html', 'html_standalone'));

@@ -49,7 +49,7 @@ const BaseSchema = z.object({
   body: z.string().max(200000).optional(),
   audience: z.enum(["leads", "families"]).default("leads"),
   filters: FiltersSchema,
-  format: z.enum(["markdown", "html"]).default("markdown"),
+  format: z.enum(["markdown", "html", "html_standalone"]).default("markdown"),
 });
 
 async function upsert(
@@ -58,7 +58,7 @@ async function upsert(
   body: string,
   audience: "leads" | "families",
   filters: LeadSegment | null,
-  format: "markdown" | "html"
+  format: "markdown" | "html" | "html_standalone"
 ) {
   if (id) {
     const updated = await updateBroadcast(id, subject, body, filters, format);
@@ -193,7 +193,7 @@ export async function sendOrSchedule(input: unknown): Promise<ActionResult> {
 const TestSchema = z.object({
   subject: z.string().trim().min(1, "Add a subject before testing.").max(200),
   body: z.string().max(200000).optional(),
-  format: z.enum(["markdown", "html"]).default("markdown"),
+  format: z.enum(["markdown", "html", "html_standalone"]).default("markdown"),
   to: z
     .string()
     .trim()

@@ -21,6 +21,7 @@ import type {
 } from "@/lib/broadcasts";
 import type { Audience } from "@/lib/leads";
 import { templatesForAudience } from "@/lib/email-templates";
+import { EMAIL_DESIGNS } from "@/lib/email-designs";
 import { btn, BackLink, Badge, Card } from "@/components/admin/ui";
 import ConfirmButton from "@/components/admin/ConfirmButton";
 import { useToast } from "@/components/admin/Toast";
@@ -63,11 +64,13 @@ export default function BroadcastComposer({
   );
   const [subject, setSubject] = useState(broadcast?.subject ?? "");
   const [body, setBody] = useState(broadcast?.body ?? "");
-  // 'markdown' = the letter templates; 'html' = a Claude-designed HTML email.
-  const [format, setFormat] = useState<"markdown" | "html">(
+  // 'markdown' = letter templates; 'html' = designed inner HTML (wrapped in the
+  // Joy shell); 'html_standalone' = a complete design with its own header/footer.
+  const [format, setFormat] = useState<"markdown" | "html" | "html_standalone">(
     broadcast?.body_format ?? "markdown"
   );
-  const isHtml = format === "html";
+  const isStandalone = format === "html_standalone";
+  const isHtml = format === "html" || isStandalone;
   const [when, setWhen] = useState("");
 
   // Recipient segment (drill into the leads audience).
@@ -275,6 +278,22 @@ export default function BroadcastComposer({
     }
   }
 
+  function applyDesign(designId: string) {
+    const d = EMAIL_DESIGNS.find((x) => x.id === designId);
+    if (!d) return;
+    if (
+      (subject.trim() || body.trim()) &&
+      !window.confirm("Replace the current subject and message with this design?")
+    ) {
+      return;
+    }
+    setSubject(d.subject);
+    setBody(d.html);
+    setFormat(d.format);
+    setTab("preview");
+    success(`Loaded design: ${d.label}. Fill in the [placeholders], then Send test.`);
+  }
+
   function applyTemplate(templateId: string) {
     const t = templatesForAudience(audience).find((x) => x.id === templateId);
     if (!t) return;
@@ -345,7 +364,9 @@ export default function BroadcastComposer({
         }
         setSubject(json.draft.subject);
         setBody(json.draft.html);
-        setFormat("html");
+        // Birthday invites are complete standalone designs (their own header +
+        // footer); other occasions are wrapped in the Joy letter shell.
+        setFormat(json.draft.standalone ? "html_standalone" : "html");
         setTab("preview");
         success("Designed email ready. Preview it, then Send test to see it live.");
         return;
@@ -510,12 +531,17 @@ export default function BroadcastComposer({
             ({AUDIENCE_LABEL[broadcast?.audience ?? "leads"]}).
           </p>
           <div className="mt-4 border-t border-line pt-4">
-            {broadcast?.body_format === "html" ? (
+            {broadcast?.body_format === "html" ||
+            broadcast?.body_format === "html_standalone" ? (
               <iframe
                 title="Sent email"
                 sandbox=""
                 className="h-[32rem] w-full overflow-hidden rounded-lg border border-line bg-[#fbf9f5]"
-                srcDoc={`<div style="background:#fbf9f5;padding:24px;font-family:Georgia,'Times New Roman',serif;">${broadcast?.body || ""}</div>`}
+                srcDoc={
+                  broadcast?.body_format === "html_standalone"
+                    ? broadcast?.body || ""
+                    : `<div style="background:#fbf9f5;padding:24px;font-family:Georgia,'Times New Roman',serif;">${broadcast?.body || ""}</div>`
+                }
               />
             ) : (
               <Markdown>{broadcast?.body || ""}</Markdown>
@@ -825,6 +851,30 @@ export default function BroadcastComposer({
               </select>
             )}
           </div>
+          {aiDesign && EMAIL_DESIGNS.length > 0 && (
+            <div className="mt-2.5">
+              <p className="text-xs font-medium text-ink">
+                Or start from a ready-made design
+              </p>
+              <div className="mt-1.5 flex flex-wrap gap-2">
+                {EMAIL_DESIGNS.map((d) => (
+                  <button
+                    key={d.id}
+                    type="button"
+                    onClick={() => applyDesign(d.id)}
+                    className="rounded-lg border border-line bg-white px-3 py-1.5 text-sm font-medium text-ink-soft transition-colors hover:bg-surface hover:text-ink"
+                  >
+                    {d.label}
+                  </button>
+                ))}
+              </div>
+              <p className="mt-1 text-xs text-ink-faint">
+                Loads the finished design; fill in the [placeholders] (resident,
+                day, time) in the message box, then Send test.
+              </p>
+            </div>
+          )}
+
           <textarea
             value={aiContext}
             onChange={(e) => setAiContext(e.target.value)}
@@ -984,7 +1034,11 @@ export default function BroadcastComposer({
                     title="Email preview"
                     sandbox=""
                     className="h-[32rem] w-full border-0 bg-[#fbf9f5]"
-                    srcDoc={`<div style="background:#fbf9f5;padding:24px;font-family:Georgia,'Times New Roman',serif;">${body}</div>`}
+                    srcDoc={
+                      isStandalone
+                        ? body
+                        : `<div style="background:#fbf9f5;padding:24px;font-family:Georgia,'Times New Roman',serif;">${body}</div>`
+                    }
                   />
                 ) : (
                   <div className="px-6 py-6">

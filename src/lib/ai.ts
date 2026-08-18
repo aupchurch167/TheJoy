@@ -1,5 +1,6 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { BUSINESS } from "./site";
+import { BIRTHDAY_INVITE_HTML } from "./email-designs";
 
 /**
  * AI blog drafting via the Anthropic API. The system prompt embeds Joy's
@@ -494,7 +495,12 @@ export type EmailOccasion =
   | "thank_you"
   | "announcement";
 
-export type EmailHtmlDraft = { subject: string; html: string };
+export type EmailHtmlDraft = {
+  subject: string;
+  html: string;
+  /** true = a complete standalone document (its own header/footer, no Joy shell). */
+  standalone: boolean;
+};
 
 const EMAIL_HTML_SCHEMA = {
   type: "object",
@@ -550,10 +556,30 @@ VOICE (§2): NO em-dashes (use parentheses). BANNED words (never use any): "love
 
 COMPLIANCE (§4): Joy is a PERSONAL CARE HOME, never "assisted living" as its label. Allowed self-descriptions: "senior living", "personal care home", "memory care".`;
 
+// Birthday invitations are sent STANDALONE (their own festive header + footer,
+// no Joy letter shell). This prompt asks for a COMPLETE document and anchors it
+// to Joy's approved birthday design so the look stays consistent.
+const EMAIL_HTML_STANDALONE_SYSTEM = `You design a COMPLETE, standalone HTML email for ${BUSINESS.name}, a 24-bed personal care home in Loganville, Georgia, led by ${BUSINESS.director.name}. This one is NOT wrapped in Joy's letter template, so YOU provide the entire document, including its own small footer.
+
+OUTPUT: a full valid HTML email document: <!DOCTYPE html><html>...<head><meta charset + viewport>...</head><body>...</body></html>. Nothing else.
+
+EMAIL-SAFE HTML (inboxes are strict): INLINE styles only (no <style>, no classes), table-based layout (role="presentation", no flexbox/grid/position), web-safe fonts (Georgia serif + a system sans, always with fallbacks, never a web font), no <script>/JS, no external CSS or fonts, no <img> unless a real URL is given (use color bands and emoji instead). Bulletproof buttons only (a styled <a> inside a table cell). Keep within ~600px, fluid tables, mobile-friendly.
+
+MATCH THE REFERENCE DESIGN below (same structure, colors, and footer): a hidden preheader line, a colored hero card with an eyebrow ("You're invited"), a big serif headline naming the celebrant, an italic subtitle, confetti/bunting accents, a white body card with the greeting and two short paragraphs, a dashed "party plan" details card with date/time/place rows (emoji icons), a warm sign-off from ${BUSINESS.director.name} and the team, and a small centered footer.
+
+REQUIRED FOOTER (you must include it): "Joy Senior Living • Loganville, GA" and a line "You're receiving this because you're part of the Joy family." with an Unsubscribe link whose href is EXACTLY {{unsubscribe_url}} (a token filled per recipient at send). NEVER invent an unsubscribe URL.
+
+WHO IS WHO: the RECIPIENT is the family member (greet with {{first_name}}); the celebrant is the RESIDENT (use the resident's name exactly as given, or "[resident's name]" if none). NEVER use {{first_name}} as the celebrant, and NEVER invent, nickname, or shorten a name. Use [bracketed placeholders] for any missing detail (date, time). Invent no specifics.
+
+VOICE (§2): NO em-dashes (use parentheses or commas). BANNED words: "loved ones", "vibrant", "journey", "personalized care plans", "boutique", "intimate", "top-tier", "deserve more". Short, warm sentences. Name ${BUSINESS.director.name}.
+COMPLIANCE (§4): Joy is a PERSONAL CARE HOME, never "assisted living".`;
+
 /**
- * Design a full, occasion-themed email as email-safe INNER HTML (birthday,
- * holiday, event, etc.). The result is sent as-is inside Joy's letter shell,
- * which still adds the letterhead, badges, and the required unsubscribe footer.
+ * Design a full, occasion-themed email. Birthday invitations come back as a
+ * COMPLETE standalone document (their own header/footer, no Joy shell, matching
+ * Joy's approved design); other occasions come back as email-safe INNER HTML
+ * that Joy's letter shell wraps (adding the letterhead, badges, and unsubscribe
+ * footer). `standalone` on the result tells the caller which it is.
  */
 export async function draftEmailHtml(input: {
   context: string;
@@ -563,6 +589,7 @@ export async function draftEmailHtml(input: {
   if (!aiEnabled()) {
     throw new Error("AI is not configured (set ANTHROPIC_API_KEY).");
   }
+  const standalone = input.occasion === "birthday";
   const audienceBrief =
     input.audience === "families"
       ? `This goes to the FAMILIES list (families of current residents). Community-wide and warm; never individual resident details, never anything urgent.`
@@ -575,15 +602,17 @@ export async function draftEmailHtml(input: {
     `Here is what the email is about, in the operator's words:`,
     input.context,
     ``,
-    `Return the subject and the inner body HTML, following every rule. Use [placeholders] for any specific detail not given above.`,
+    standalone
+      ? `Return the subject and the COMPLETE HTML document. Reuse the structure, colors, and footer of this reference design exactly, swapping in the details from above (and [bracketed placeholders] for anything missing):\n\n${BIRTHDAY_INVITE_HTML}`
+      : `Return the subject and the inner body HTML, following every rule. Use [placeholders] for any specific detail not given above.`,
   ].join("\n");
 
   const client = new Anthropic();
   const response = await client.messages.create({
     model: MODEL,
-    max_tokens: 6000,
+    max_tokens: 8000,
     thinking: { type: "adaptive" },
-    system: EMAIL_HTML_SYSTEM,
+    system: standalone ? EMAIL_HTML_STANDALONE_SYSTEM : EMAIL_HTML_SYSTEM,
     output_config: { format: { type: "json_schema", schema: EMAIL_HTML_SCHEMA } },
     messages: [{ role: "user", content: userPrompt }],
   });
@@ -593,7 +622,11 @@ export async function draftEmailHtml(input: {
     throw new Error("The AI did not return an email design.");
   }
   try {
-    return JSON.parse(textBlock.text) as EmailHtmlDraft;
+    const parsed = JSON.parse(textBlock.text) as {
+      subject: string;
+      html: string;
+    };
+    return { ...parsed, standalone };
   } catch {
     throw new Error("The AI email design was not valid. Please try again.");
   }

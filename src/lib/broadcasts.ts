@@ -5,7 +5,7 @@ import type { Audience, LeadSegment } from "./leads";
 
 export type BroadcastStatus = "draft" | "scheduled" | "sending" | "sent";
 export type BroadcastChannel = "email" | "sms";
-export type BroadcastBodyFormat = "markdown" | "html";
+export type BroadcastBodyFormat = "markdown" | "html" | "html_standalone";
 
 export type Broadcast = {
   id: string;
