@@ -27,7 +27,7 @@ function StorageWarning({ uploadsOnly }: { uploadsOnly?: boolean }) {
   );
 }
 
-/** In-page toggle between the two media sections (a URL param keeps it simple). */
+/** Segmented control toggling the two media sections (a URL param keeps it simple). */
 function Tabs({ tab }: { tab: Tab }) {
   const item = (value: Tab, label: string) => {
     const active = tab === value;
@@ -35,10 +35,10 @@ function Tabs({ tab }: { tab: Tab }) {
       <Link
         href={`/admin/media?tab=${value}`}
         aria-current={active ? "page" : undefined}
-        className={`rounded-lg px-3.5 py-1.5 text-sm font-medium transition-colors ${
+        className={`rounded-lg px-[18px] py-2 text-sm font-semibold transition-colors ${
           active
-            ? "bg-clay text-white"
-            : "text-ink-soft hover:bg-surface hover:text-ink"
+            ? "bg-white text-ink shadow-[0_1px_2px_rgba(0,0,0,0.08)]"
+            : "text-ink-soft hover:text-ink"
         }`}
       >
         {label}
@@ -46,7 +46,7 @@ function Tabs({ tab }: { tab: Tab }) {
     );
   };
   return (
-    <div className="mb-6 inline-flex gap-1 rounded-xl border border-line bg-white p-1 shadow-sm">
+    <div className="mb-6 inline-flex gap-[3px] rounded-[11px] bg-surface p-[3px]">
       {item("gallery", "Public gallery")}
       {item("site-photos", "Site photos & logo")}
     </div>
