@@ -11,9 +11,14 @@ import {
   deleteRsvp,
 } from "@/lib/events";
 import { createBroadcast } from "@/lib/broadcasts";
-import { eventInviteHtml } from "@/lib/email-designs";
+import {
+  renderEmailModel,
+  type EmailModel,
+  type EmailTheme,
+} from "@/lib/email-model";
 import { etWallToInstant, formatEventWhenLong } from "@/lib/event-time";
 import { SITE_URL } from "@/lib/site";
+import type { EventRow } from "@/lib/events";
 
 const EventSchema = z.object({
   id: z.string().uuid().optional(),
@@ -101,24 +106,76 @@ export async function createEventEmailDraft(input: {
   try {
     const ev = await getEventById(input.eventId);
     if (!ev) return { ok: false, error: "Event not found." };
-    const { subject, html } = eventInviteHtml({
-      title: ev.title,
-      whenText: formatEventWhenLong(ev.starts_at),
-      where: ev.location || "Joy Senior Living, Loganville",
-      description: ev.description,
-      rsvpUrl: `${SITE_URL}/rsvp/${ev.rsvp_token}`,
-      kind: input.kind,
-      theme: ev.theme,
-      isPotluck: ev.is_potluck,
-      potluckAsk: ev.potluck_ask,
-    });
-    const b = await createBroadcast(subject, html, "families", "email", null, null, {
-      format: "html_standalone",
-      createdBy: email,
-    });
+    const { subject, model } = eventEmailModel(ev, input.kind);
+    const b = await createBroadcast(
+      subject,
+      renderEmailModel(model),
+      "families",
+      "email",
+      null,
+      null,
+      { format: "html_standalone", createdBy: email, modelJson: model }
+    );
     return { ok: true, id: b.id };
   } catch (err) {
     console.error("[createEventEmailDraft]", err);
     return { ok: false, error: "Could not build the email." };
   }
+}
+
+/**
+ * Turn an event into a studio EmailModel (words + theme + a details card + the
+ * RSVP button), so "Send the invite" opens the same canvas-first studio as any
+ * other email, with the look and copy fully editable before it goes out.
+ */
+function eventEmailModel(
+  ev: EventRow,
+  kind: "invite" | "reminder" | "update"
+): { subject: string; model: EmailModel } {
+  const subject =
+    kind === "reminder"
+      ? `Reminder: ${ev.title}`
+      : kind === "update"
+        ? `Update: ${ev.title}`
+        : `You're invited: ${ev.title}`;
+  const eyebrow =
+    kind === "reminder" ? "A friendly reminder" : kind === "update" ? "An update" : "";
+  const lead =
+    kind === "reminder"
+      ? "Just a reminder that this is coming up. We would still love to see you."
+      : kind === "update"
+        ? "A quick update about this gathering."
+        : "We would love for you to join us.";
+
+  const parts = [lead];
+  if (ev.description.trim()) parts.push(ev.description.trim());
+  if (ev.is_potluck) {
+    parts.push(
+      `This one is a potluck. ${ev.potluck_ask?.trim() || "Bring a dish to share if you'd like (there will be plenty either way)."}`
+    );
+  }
+
+  const themeIds: EmailTheme[] = ["classic", "festive", "seasonal", "garden", "elegant"];
+  const theme = (themeIds as string[]).includes(ev.theme)
+    ? (ev.theme as EmailTheme)
+    : "classic";
+
+  const model: EmailModel = {
+    theme,
+    eyebrow,
+    heroTitle: ev.title,
+    heroSub: "",
+    greeting: "Hi {{first_name}},",
+    intro: parts.join("\n\n"),
+    plan: {
+      label: "The details",
+      when: formatEventWhenLong(ev.starts_at),
+      where: ev.location || "Joy Senior Living, Loganville",
+      treats: "",
+    },
+    rsvpUrl: `${SITE_URL}/rsvp/${ev.rsvp_token}`,
+    photoUrl: null,
+    closing: "Warmly,\nMellissa Daniel and the team at Joy Senior Living",
+  };
+  return { subject, model };
 }

@@ -665,7 +665,7 @@ export default function EmailStudio({
                           />
                         </FieldRow>
 
-                        {occasion.planned && (
+                        {(occasion.planned || model.plan) && (
                           <div className="mb-3 rounded-lg border border-line bg-paper p-3">
                             <div className="mb-2 flex items-center justify-between">
                               <span className="text-xs font-semibold text-ink-soft">
