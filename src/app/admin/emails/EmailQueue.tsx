@@ -89,8 +89,8 @@ export default function EmailQueue({
             statusNote = "No recipients match this audience yet";
           } else if (!it.dueNow) {
             statusNote = `Scheduled for ${formatDateTime(it.scheduledAt)}`;
-          } else if (it.priority) {
-            statusNote = "Priority · sends right away";
+          } else if (it.priority || it.audience === "families") {
+            statusNote = "Sends right away (not metered)";
           } else if (!withinWindow) {
             statusNote = "Queued · sends in the next morning send window";
           } else {

@@ -129,13 +129,16 @@ export async function processDueBroadcasts(): Promise<number> {
   // If email is not configured, leave broadcasts scheduled so they send later.
   if (!emailEnabled()) return 0;
 
-  const due = await getDueBroadcasts(); // priority first, then by schedule
-  const priorityDue = due.filter((b) => b.priority);
-  const marketingDue = due.filter((b) => !b.priority);
+  const due = await getDueBroadcasts(); // immediate first, then by schedule
+  // Family emails and event emails go out immediately (not metered); only the
+  // marketing list (leads) is throttled to protect sending reputation.
+  const isImmediate = (b: Broadcast) => b.priority || b.audience === "families";
+  const priorityDue = due.filter(isImmediate);
+  const marketingDue = due.filter((b) => !isImmediate(b));
   let total = 0;
 
-  // 1) PRIORITY (event) emails jump the queue: sent in full, immediately,
-  //    ignoring the hourly cap AND the daytime window. "Send now" means now.
+  // 1) IMMEDIATE (family + event) emails jump the queue: sent in full, right
+  //    away, ignoring the hourly cap AND the daytime window. Send now = now.
   for (const broadcast of priorityDue) {
     const claimed = await markBroadcastSending(broadcast.id);
     if (!claimed) continue; // another run got it

@@ -179,11 +179,12 @@ export async function deleteBroadcast(id: string): Promise<void> {
  * immediately from the admin action, so the cron only handles email.
  */
 export async function getDueBroadcasts(): Promise<Broadcast[]> {
-  // Priority (event) sends first, then by schedule, so they jump the queue.
+  // Immediate sends (event priority + the family list) first, then by schedule,
+  // so they jump the throttled marketing (leads) queue.
   return query<Broadcast>(
     `SELECT * FROM broadcasts
       WHERE status = 'scheduled' AND channel = 'email' AND scheduled_at <= now()
-      ORDER BY priority DESC, scheduled_at ASC`
+      ORDER BY (priority OR audience = 'families') DESC, scheduled_at ASC`
   );
 }
 
