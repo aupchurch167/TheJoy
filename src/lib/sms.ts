@@ -74,25 +74,74 @@ export async function sendSms(to: string, content: string): Promise<SmsResult> {
   const e164 = toE164(to);
   if (!e164) return { ok: false, error: "Invalid phone number." };
 
-  try {
-    const res = await fetch(API_URL, {
-      method: "POST",
-      headers: { Authorization: key, "Content-Type": "application/json" },
-      body: JSON.stringify({ from, to: [e164], content }),
-    });
-    if (res.status === 202 || res.ok) return { ok: true };
-    let detail = `${res.status}`;
+  const payload = JSON.stringify({ from, to: [e164], content });
+  // Quo/OpenPhone occasionally returns a transient gateway error (502/503/504)
+  // or a timeout that has nothing to do with your setup. Retry those a couple
+  // of times with a short backoff before giving up; never retry a 4xx (that is
+  // a real config/permission/rate problem the operator must fix).
+  const MAX_ATTEMPTS = 3;
+  let lastTransient = "";
+  for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
     try {
-      const body = await res.json();
-      detail = body?.message || body?.error || JSON.stringify(body);
-    } catch {
-      /* non-JSON error body */
+      const ctrl = new AbortController();
+      const timer = setTimeout(() => ctrl.abort(), 15000);
+      let res: Response;
+      try {
+        res = await fetch(API_URL, {
+          method: "POST",
+          headers: { Authorization: key, "Content-Type": "application/json" },
+          body: payload,
+          signal: ctrl.signal,
+        });
+      } finally {
+        clearTimeout(timer);
+      }
+
+      if (res.status === 202 || res.ok) return { ok: true };
+
+      // Read the error body once (Quo's own message helps for 4xx).
+      let detail = "";
+      try {
+        const body = await res.json();
+        detail = body?.message || body?.error || JSON.stringify(body);
+      } catch {
+        /* non-JSON error body */
+      }
+
+      if (res.status >= 500) {
+        lastTransient = `Quo is temporarily unavailable (${res.status}${
+          detail ? `: ${detail}` : ""
+        }). This is on Quo's side, not your setup.`;
+        if (attempt < MAX_ATTEMPTS) {
+          await new Promise((r) => setTimeout(r, attempt * 800));
+          continue;
+        }
+        return { ok: false, error: lastTransient };
+      }
+
+      // 4xx: a real problem (auth, unregistered/incapable number, rate limit).
+      const hint =
+        res.status === 429
+          ? " (rate limited: too many texts too fast)"
+          : res.status === 401 || res.status === 403
+            ? " (check QUO_API_KEY and that the number is enabled for A2P texting)"
+            : "";
+      return { ok: false, error: `Quo error ${res.status}${hint}: ${detail || "no detail"}` };
+    } catch (err) {
+      // Network failure or 15s timeout: transient, worth a retry.
+      lastTransient =
+        err instanceof Error && err.name === "AbortError"
+          ? "Quo did not respond in time (timed out)."
+          : "Could not reach Quo (network error).";
+      if (attempt < MAX_ATTEMPTS) {
+        await new Promise((r) => setTimeout(r, attempt * 800));
+        continue;
+      }
+      console.error("[sms] send failed:", err);
+      return { ok: false, error: lastTransient };
     }
-    return { ok: false, error: `Quo error: ${detail}` };
-  } catch (err) {
-    console.error("[sms] send failed:", err);
-    return { ok: false, error: "Could not reach Quo." };
   }
+  return { ok: false, error: lastTransient || "Could not send the text." };
 }
 
 /**

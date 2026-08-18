@@ -99,14 +99,19 @@ export async function sendTestToAdmins(input: unknown): Promise<TestResult> {
   if (sent === 0) {
     // Surface the real reason (Quo's own message, a bad number, or a network
     // problem) so the fix is obvious instead of a generic "check your setup".
-    const why = reasons.size ? ` ${[...reasons].join(" / ")}` : "";
-    console.error("[sendTestToAdmins] all failed:", [...reasons]);
-    return {
-      ok: false,
-      error:
-        `Every test text failed.${why}` +
-        " Confirm QUO_API_KEY and QUO_FROM_NUMBER are set, the from-number is registered for A2P texting in Quo, and the test number is a real mobile.",
-    };
+    const list = [...reasons];
+    const why = list.length ? ` ${list.join(" / ")}` : "";
+    console.error("[sendTestToAdmins] all failed:", list);
+    // A gateway timeout / network blip is transient and on Quo's side; don't
+    // send the operator hunting through their config for it.
+    const transient = list.every((r) =>
+      /temporarily unavailable|did not respond|reach Quo/i.test(r)
+    );
+    const advice =
+      list.length && transient
+        ? " Quo had a temporary problem (this is on their side, not your setup). Wait a minute and try again."
+        : " Confirm QUO_API_KEY and QUO_FROM_NUMBER are set, the from-number is registered for A2P texting in Quo, and the test number is a real mobile.";
+    return { ok: false, error: `Every test text failed.${why}${advice}` };
   }
   await recordTest(bodyHash(parsed.data));
   return { ok: true, sent, failed, total: numbers.length };
