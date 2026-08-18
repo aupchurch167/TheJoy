@@ -165,71 +165,82 @@ function UpcomingCard({ e }: { e: EventListItem }) {
   const isDraft = e.status === "draft";
   const pct = e.capacity > 0 ? Math.min(100, Math.round((e.headcount / e.capacity) * 100)) : 0;
   return (
-    <Link
-      href={`/admin/events/${e.id}`}
-      className="flex items-center gap-4 rounded-2xl border border-line bg-white px-[18px] py-3.5 shadow-[0_1px_3px_rgba(7,20,23,0.04)] transition-shadow hover:border-clay hover:shadow-[0_3px_10px_rgba(7,20,23,0.08)]"
-    >
-      <div className="flex-none rounded-[10px] border border-line bg-paper px-2 py-1.5 text-center" style={{ width: 52 }}>
-        <div
-          className="text-[9.5px] font-bold uppercase tracking-[0.08em]"
-          style={{ color: isDraft ? "#97a0a3" : "#017391" }}
-        >
-          {e.month}
-        </div>
-        <div className="font-display text-xl font-semibold leading-tight text-ink">{e.day}</div>
-      </div>
-      <div className="min-w-0 flex-1">
-        <div className="flex items-center gap-2">
-          <span className="truncate text-[14.5px] font-semibold text-ink">{e.title}</span>
-          <span
-            className="flex-none rounded-full px-2 py-0.5 text-[10.5px] font-bold"
-            style={{ background: b.bg, color: b.col }}
+    <div className="relative flex items-center gap-4 rounded-2xl border border-line bg-white px-[18px] py-3.5 shadow-[0_1px_3px_rgba(7,20,23,0.04)] transition-shadow hover:border-clay hover:shadow-[0_3px_10px_rgba(7,20,23,0.08)]">
+      {/* Whole-card click opens the event; the attendees link below sits on top. */}
+      <Link
+        href={`/admin/events/${e.id}`}
+        aria-label={`Open ${e.title}`}
+        className="absolute inset-0 z-0 rounded-2xl"
+      />
+      <div className="pointer-events-none relative z-10 flex w-full items-center gap-4">
+        <div className="flex-none rounded-[10px] border border-line bg-paper px-2 py-1.5 text-center" style={{ width: 52 }}>
+          <div
+            className="text-[9.5px] font-bold uppercase tracking-[0.08em]"
+            style={{ color: isDraft ? "#97a0a3" : "#017391" }}
           >
-            {b.label}
-          </span>
-          {e.isPotluck && (
-            <span className="flex-none rounded-full bg-gold/15 px-2 py-0.5 text-[10.5px] font-bold text-[#c98a2c]">
-              🍲 Potluck
+            {e.month}
+          </div>
+          <div className="font-display text-xl font-semibold leading-tight text-ink">{e.day}</div>
+        </div>
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-2">
+            <span className="truncate text-[14.5px] font-semibold text-ink">{e.title}</span>
+            <span
+              className="flex-none rounded-full px-2 py-0.5 text-[10.5px] font-bold"
+              style={{ background: b.bg, color: b.col }}
+            >
+              {b.label}
             </span>
+            {e.isPotluck && (
+              <span className="flex-none rounded-full bg-gold/15 px-2 py-0.5 text-[10.5px] font-bold text-[#c98a2c]">
+                🍲 Potluck
+              </span>
+            )}
+          </div>
+          <div className="mt-0.5 truncate text-xs text-ink-faint">
+            {e.when}
+            {e.where ? ` · ${e.where}` : ""}
+          </div>
+          {isDraft && (
+            <div className="mt-1 text-xs text-[#8a6217]">
+              → Not public yet. Finish the details and send the invite.
+            </div>
           )}
         </div>
-        <div className="mt-0.5 truncate text-xs text-ink-faint">
-          {e.when}
-          {e.where ? ` · ${e.where}` : ""}
-        </div>
-        {isDraft && (
-          <div className="mt-1 text-xs text-[#8a6217]">
-            → Not public yet. Finish the details and send the invite.
-          </div>
-        )}
-      </div>
-      <div className="min-w-[120px] flex-none text-right">
-        {isDraft ? (
-          <span className="inline-block rounded-[9px] border border-line px-3 py-1.5 text-xs font-semibold text-clay-dark">
-            Finish &amp; invite →
-          </span>
-        ) : (
-          <>
-            <div
-              className="text-[15px] font-bold"
-              style={{ color: e.headcount > 0 ? "#1c7f27" : "#97a0a3" }}
-            >
-              {e.headcount} coming
-            </div>
-            <div className="mt-0.5 text-[11.5px] text-ink-faint">
-              {e.yes} yes{e.capacity > 0 ? ` · ${e.capacity} max` : ""}
-            </div>
-            {e.capacity > 0 && (
-              <div className="mt-1.5 h-[5px] overflow-hidden rounded-full bg-surface">
-                <div
-                  className="h-full rounded-full"
-                  style={{ width: `${pct}%`, background: pct >= 90 ? "#b7791f" : "#24a332" }}
-                />
+        <div className="min-w-[120px] flex-none text-right">
+          {isDraft ? (
+            <span className="inline-block rounded-[9px] border border-line px-3 py-1.5 text-xs font-semibold text-clay-dark">
+              Finish &amp; invite →
+            </span>
+          ) : (
+            <>
+              <div
+                className="text-[15px] font-bold"
+                style={{ color: e.headcount > 0 ? "#1c7f27" : "#97a0a3" }}
+              >
+                {e.headcount} coming
               </div>
-            )}
-          </>
-        )}
+              <div className="mt-0.5 text-[11.5px] text-ink-faint">
+                {e.yes} yes{e.capacity > 0 ? ` · ${e.capacity} max` : ""}
+              </div>
+              {e.capacity > 0 && (
+                <div className="mt-1.5 h-[5px] overflow-hidden rounded-full bg-surface">
+                  <div
+                    className="h-full rounded-full"
+                    style={{ width: `${pct}%`, background: pct >= 90 ? "#b7791f" : "#24a332" }}
+                  />
+                </div>
+              )}
+              <Link
+                href={`/admin/events/${e.id}/attendees`}
+                className="pointer-events-auto mt-1.5 inline-block text-xs font-semibold text-clay-dark hover:underline"
+              >
+                See attendees →
+              </Link>
+            </>
+          )}
+        </div>
       </div>
-    </Link>
+    </div>
   );
 }
