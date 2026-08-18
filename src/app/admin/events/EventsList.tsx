@@ -72,7 +72,7 @@ export default function EventsList({ events }: { events: EventListItem[] }) {
         </Link>
       </div>
 
-      <div className="mb-5 flex gap-1.5">
+      <div className="admin-scroll-x -mx-1 mb-5 flex gap-1.5 overflow-x-auto px-1">
         {FILTERS.map((f) => {
           const on = filter === f.id;
           return (
@@ -80,7 +80,7 @@ export default function EventsList({ events }: { events: EventListItem[] }) {
               key={f.id}
               type="button"
               onClick={() => setFilter(f.id)}
-              className={`rounded-full border px-3.5 py-1.5 text-xs font-semibold transition-colors ${
+              className={`flex-none whitespace-nowrap rounded-full border px-3.5 py-1.5 text-xs font-semibold transition-colors ${
                 on ? "border-ink bg-ink text-white" : "border-line bg-white text-ink-soft hover:bg-paper"
               }`}
             >

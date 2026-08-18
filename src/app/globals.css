@@ -123,3 +123,12 @@ body {
 .admin-fade {
   animation: admin-fade 0.15s ease-out;
 }
+
+/* Horizontal filter-pill rows on mobile: swipe, no visible scrollbar. */
+.admin-scroll-x {
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.admin-scroll-x::-webkit-scrollbar {
+  display: none;
+}

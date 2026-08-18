@@ -238,11 +238,11 @@ export default function EventStudio({
   const capNum = capacity === "" ? 0 : Number(capacity);
 
   return (
-    <div className="fixed inset-x-0 bottom-0 top-14 z-20 overflow-auto bg-paper lg:left-60 lg:top-0">
-      <div className="mx-auto min-w-[1160px] max-w-[1520px]">
-        <div className="grid grid-cols-[300px_minmax(0,1fr)_284px]">
+    <div className="fixed inset-x-0 bottom-0 top-14 z-20 overflow-auto bg-paper pb-20 lg:left-60 lg:top-0 lg:pb-0">
+      <div className="mx-auto w-full max-w-[1520px] lg:min-w-[1160px]">
+        <div className="grid grid-cols-1 lg:grid-cols-[300px_minmax(0,1fr)_284px]">
           {/* ---------- LEFT: the plan ---------- */}
-          <aside className="min-h-screen border-r border-line bg-white">
+          <aside className="border-b border-line bg-white lg:min-h-screen lg:border-b-0 lg:border-r">
             <div className="px-5 pt-5">
               <BackLink href="/admin/events">All events</BackLink>
               <h1 className="mt-2 font-display text-[22px] font-semibold text-ink">
@@ -434,8 +434,8 @@ export default function EventStudio({
           </aside>
 
           {/* ---------- CENTER: RSVP preview ---------- */}
-          <main className="flex min-h-screen flex-col">
-            <div className="flex items-center gap-3 border-b border-line bg-white px-6 py-3">
+          <main className="flex flex-col lg:min-h-screen">
+            <div className="flex flex-wrap items-center gap-3 border-b border-line bg-white px-4 py-3 sm:px-6">
               <span className="text-[11px] font-bold uppercase tracking-[0.06em] text-ink-faint">
                 The RSVP page families will see
               </span>
@@ -570,7 +570,7 @@ export default function EventStudio({
           </main>
 
           {/* ---------- RIGHT: look & feel + who's coming ---------- */}
-          <aside className="min-h-screen border-l border-line bg-white">
+          <aside className="border-t border-line bg-white lg:min-h-screen lg:border-l lg:border-t-0">
             <RailSection title="Look & feel">
               <div className="grid grid-cols-2 gap-2">
                 {EVENT_THEMES.map((t) => {
@@ -731,6 +731,39 @@ export default function EventStudio({
             )}
           </aside>
         </div>
+      </div>
+
+      {/* pinned action bar (mobile only) */}
+      <div className="fixed inset-x-0 bottom-0 z-30 flex gap-2 border-t border-line bg-white/90 px-4 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] backdrop-blur lg:hidden">
+        {created ? (
+          <>
+            <button
+              type="button"
+              onClick={() => persist(event!.status === "cancelled" ? "published" : event!.status, "Changes saved.")}
+              disabled={saving}
+              className="min-h-[44px] flex-1 rounded-[10px] border border-line bg-white text-sm font-semibold text-ink-soft disabled:opacity-60"
+            >
+              {saving ? "Saving…" : "Save changes"}
+            </button>
+            <button
+              type="button"
+              onClick={() => compose("invite")}
+              disabled={saving}
+              className="min-h-[44px] flex-[1.4] rounded-[10px] bg-clay text-sm font-bold text-white shadow-[0_2px_6px_rgba(1,167,206,0.35)] disabled:opacity-60"
+            >
+              Send the invite →
+            </button>
+          </>
+        ) : (
+          <button
+            type="button"
+            onClick={() => persist("published", "Event created.", true)}
+            disabled={saving}
+            className="min-h-[44px] w-full rounded-[10px] bg-ink text-sm font-bold text-white disabled:opacity-60"
+          >
+            {saving ? "Creating…" : "Create event"}
+          </button>
+        )}
       </div>
     </div>
   );

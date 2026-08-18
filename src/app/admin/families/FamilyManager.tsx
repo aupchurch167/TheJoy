@@ -393,7 +393,7 @@ function ContactRow({
 
   return (
     <div
-      className="grid grid-cols-[1.3fr_1fr_1.2fr_auto] items-center gap-3 border-b border-line px-[18px] py-2.5 last:border-b-0 hover:bg-paper"
+      className="flex flex-col gap-1.5 border-b border-line px-4 py-3 last:border-b-0 hover:bg-paper sm:grid sm:grid-cols-[1.3fr_1fr_1.2fr_auto] sm:items-center sm:gap-3 sm:px-[18px] sm:py-2.5"
       style={{ opacity: m.active ? 1 : 0.55 }}
     >
       <div className="min-w-0">
@@ -402,7 +402,7 @@ function ContactRow({
       </div>
       <div className="whitespace-nowrap text-[12.5px] text-ink-soft">{m.phone || "—"}</div>
       <div
-        className="min-w-0 truncate text-[12.5px]"
+        className="min-w-0 text-[12.5px] sm:truncate"
         style={{
           color: m.unsubscribed_at ? "#97a0a3" : m.email ? "#626d70" : "#c6cdd0",
           textDecoration: m.unsubscribed_at ? "line-through" : "none",
@@ -410,7 +410,7 @@ function ContactRow({
       >
         {m.email || "—"}
       </div>
-      <div className="relative flex items-center justify-end gap-1.5">
+      <div className="relative flex flex-wrap items-center gap-1.5 sm:flex-nowrap sm:justify-end">
         <span
           className="whitespace-nowrap rounded-full px-2.5 py-0.5 text-[10.5px] font-bold"
           style={

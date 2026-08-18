@@ -281,7 +281,7 @@ export default function AdminNav({ email }: { email?: string | null }) {
   return (
     <>
       {/* Mobile top bar */}
-      <header className="sticky top-0 z-40 flex items-center justify-between border-b border-line bg-white px-4 py-3 lg:hidden">
+      <header className="sticky top-0 z-40 flex h-14 items-center justify-between border-b border-line bg-white px-4 lg:hidden">
         <Link href="/admin" className="font-display text-lg font-semibold text-ink">
           Joy Admin
         </Link>

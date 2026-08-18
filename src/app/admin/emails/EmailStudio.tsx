@@ -401,11 +401,11 @@ export default function EmailStudio({
   /* ================================================================ */
 
   return (
-    <div className="fixed inset-x-0 bottom-0 top-14 z-20 overflow-auto bg-paper lg:left-60 lg:top-0">
-      <div className="mx-auto min-w-[1280px] max-w-[1520px]">
-        <div className="grid grid-cols-[300px_minmax(0,1fr)_284px]">
+    <div className="fixed inset-x-0 bottom-0 top-14 z-20 overflow-auto bg-paper pb-20 lg:left-60 lg:top-0 lg:pb-0">
+      <div className="mx-auto w-full max-w-[1520px] lg:min-w-[1280px]">
+        <div className="grid grid-cols-1 lg:grid-cols-[300px_minmax(0,1fr)_284px]">
           {/* ---------- LEFT: the brief ---------- */}
-          <aside className="min-h-screen border-r border-line bg-white">
+          <aside className="border-b border-line bg-white lg:min-h-screen lg:border-b-0 lg:border-r">
             <div className="px-5 pt-5">
               <BackLink href="/admin/emails">All emails</BackLink>
               <h1 className="mt-2 font-display text-[22px] font-semibold text-ink">
@@ -551,9 +551,9 @@ export default function EmailStudio({
           </aside>
 
           {/* ---------- CENTER: canvas ---------- */}
-          <main className="flex min-h-screen flex-col">
+          <main className="flex flex-col lg:min-h-screen">
             {/* top bar */}
-            <div className="flex items-center gap-3 border-b border-line bg-white px-6 py-3">
+            <div className="flex flex-wrap items-center gap-3 border-b border-line bg-white px-4 py-3 sm:px-6">
               <span className="text-xs font-semibold text-ink-faint">Subject</span>
               <input
                 className="flex-1 rounded-md border border-transparent px-2 py-1.5 text-sm font-semibold text-ink transition-colors hover:border-line focus:border-clay focus:outline-none focus:ring-2 focus:ring-clay/25"
@@ -580,7 +580,7 @@ export default function EmailStudio({
                 type="button"
                 onClick={() => setShowReview(true)}
                 disabled={sent}
-                className="whitespace-nowrap rounded-[10px] bg-clay px-4 py-1.5 text-sm font-bold text-white shadow-[0_2px_6px_rgba(1,167,206,0.35)] hover:opacity-95 disabled:opacity-60"
+                className="hidden whitespace-nowrap rounded-[10px] bg-clay px-4 py-1.5 text-sm font-bold text-white shadow-[0_2px_6px_rgba(1,167,206,0.35)] hover:opacity-95 disabled:opacity-60 lg:inline-block"
               >
                 {sent
                   ? sentState!.kind === "sent"
@@ -756,7 +756,7 @@ export default function EmailStudio({
           </main>
 
           {/* ---------- RIGHT: look & feel ---------- */}
-          <aside className="min-h-screen border-l border-line bg-white">
+          <aside className="border-t border-line bg-white lg:min-h-screen lg:border-l lg:border-t-0">
             <RailSection title="Look & feel">
               <div className="grid grid-cols-2 gap-2">
                 {EMAIL_THEMES.map((t) => {
@@ -891,6 +891,29 @@ export default function EmailStudio({
             </RailSection>
           </aside>
         </div>
+      </div>
+
+      {/* pinned action bar (mobile only) */}
+      <div className="fixed inset-x-0 bottom-0 z-30 flex gap-2 border-t border-line bg-white/90 px-4 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] backdrop-blur lg:hidden">
+        <button
+          type="button"
+          onClick={() => saveNow()}
+          className="min-h-[44px] flex-1 rounded-[10px] border border-line bg-white text-sm font-semibold text-ink-soft"
+        >
+          Save draft
+        </button>
+        <button
+          type="button"
+          onClick={() => setShowReview(true)}
+          disabled={sent}
+          className="min-h-[44px] flex-[1.4] rounded-[10px] bg-clay text-sm font-bold text-white shadow-[0_2px_6px_rgba(1,167,206,0.35)] disabled:opacity-60"
+        >
+          {sent
+            ? sentState!.kind === "sent"
+              ? "Sent ✓"
+              : "Scheduled ✓"
+            : "Review & send →"}
+        </button>
       </div>
 
       {showReview && (

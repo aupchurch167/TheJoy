@@ -122,7 +122,7 @@ export default function AttendeesView({
 
       {/* Filters + dishes */}
       <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
-        <div className="flex gap-1.5">
+        <div className="admin-scroll-x -mx-1 flex gap-1.5 overflow-x-auto px-1">
           {FILTERS.map((f) => {
             const on = filter === f.id;
             return (
@@ -130,7 +130,7 @@ export default function AttendeesView({
                 key={f.id}
                 type="button"
                 onClick={() => setFilter(f.id)}
-                className={`rounded-full border px-3.5 py-1.5 text-xs font-semibold transition-colors ${
+                className={`flex-none whitespace-nowrap rounded-full border px-3.5 py-1.5 text-xs font-semibold transition-colors ${
                   on ? "border-ink bg-ink text-white" : "border-line bg-white text-ink-soft hover:bg-paper"
                 }`}
               >
@@ -148,7 +148,7 @@ export default function AttendeesView({
 
       {/* Table */}
       <div className="overflow-hidden rounded-2xl border border-line bg-white shadow-[0_1px_3px_rgba(7,20,23,0.04)]">
-        <div className="grid grid-cols-[1.4fr_0.9fr_0.5fr_1.2fr_1fr_44px] gap-3 border-b border-line bg-paper px-[18px] py-2.5">
+        <div className="hidden grid-cols-[1.4fr_0.9fr_0.5fr_1.2fr_1fr_44px] gap-3 border-b border-line bg-paper px-[18px] py-2.5 sm:grid">
           {["Name", "Response", "Party", "Bringing", "Contact", ""].map((h, i) => (
             <span key={i} className="text-[10.5px] font-bold uppercase tracking-[0.07em] text-ink-faint">
               {h}
@@ -165,9 +165,9 @@ export default function AttendeesView({
             return (
               <div
                 key={r.id}
-                className="grid grid-cols-[1.4fr_0.9fr_0.5fr_1.2fr_1fr_44px] items-center gap-3 border-b border-line px-[18px] py-3 last:border-b-0 hover:bg-paper"
+                className="relative flex flex-col gap-2 border-b border-line px-4 py-3.5 last:border-b-0 hover:bg-paper sm:grid sm:grid-cols-[1.4fr_0.9fr_0.5fr_1.2fr_1fr_44px] sm:items-center sm:gap-3 sm:px-[18px] sm:py-3"
               >
-                <div className="min-w-0">
+                <div className="min-w-0 pr-8 sm:pr-0">
                   <div className="text-[13.5px] font-semibold text-ink">{r.name}</div>
                   {r.note && (
                     <div className="truncate text-[11.5px] text-ink-faint">“{r.note}”</div>
@@ -182,19 +182,21 @@ export default function AttendeesView({
                   </span>
                 </div>
                 <div className="text-[13px] text-ink-soft">
+                  <span className="mr-1 text-[11px] text-ink-faint sm:hidden">Party:</span>
                   {r.response === "yes" ? 1 + r.guests : "—"}
                 </div>
                 <div
-                  className="truncate text-[12.5px]"
+                  className="text-[12.5px] sm:truncate"
                   style={{ color: r.bringing ? "#071417" : "#c6cdd0" }}
                 >
+                  <span className="mr-1 text-[11px] text-ink-faint sm:hidden">Bringing:</span>
                   {r.bringing || "—"}
                 </div>
                 <div className="min-w-0">
-                  <div className="truncate text-xs text-ink-soft">{r.email || "—"}</div>
+                  <div className="text-xs text-ink-soft sm:truncate">{r.email || "—"}</div>
                   {r.phone && <div className="text-[11px] text-ink-faint">{r.phone}</div>}
                 </div>
-                <div className="text-right">
+                <div className="absolute right-2 top-2 sm:static sm:text-right">
                   <ConfirmButton
                     variant="ghost"
                     size="sm"
