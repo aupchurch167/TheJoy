@@ -427,4 +427,166 @@ export const TOWNS: Record<string, Town> = {
       },
     ],
   },
+
+  // VERIFY LOCAL FACTS before publishing: drive minutes, the named highway, and
+  // the hospital reference in each town are best-guess and should be confirmed.
+  grayson: {
+    slug: "grayson",
+    name: "Grayson",
+    driveMinutes: 10,
+    highway: "Highway 20",
+    heroLede:
+      "Joy is about 10 minutes from Grayson, straight down Highway 20 toward Loganville. Close enough that visiting is a habit, not a trip.",
+    distanceHeading: "Ten minutes changes what visiting means",
+    distanceProse: [
+      "When it's ten minutes, you stop planning visits and start just showing up. Wednesday after work. Saturday with the grandkids and a bag of peaches.",
+      "The families who regret a place an hour away all say a version of the same thing: they meant to go more, and the drive kept winning. Grayson is close enough that the drive never wins.",
+    ],
+    distancePull:
+      "The right home an hour away turns into the home you keep meaning to visit.",
+    anchorHeading: "Grayson families usually find us the same two ways.",
+    anchorParas: [
+      "A lot of them are already driving past us. Grayson sits right up Highway 20, so the mother who needs more help is often only a few minutes from the table she'll eat at.",
+      "The rest come by word of mouth: a neighbor off Rosebud Road whose father lived here, a nurse who knows the house is small and that Mellissa runs it herself. Small is the whole point. Twenty-four people, not two hundred.",
+    ],
+    quote: null,
+    faqs: [
+      {
+        title: "How small is small?",
+        body: "Twenty-four residents, one house. That is the size on purpose. Mellissa and the team know each person's name, their coffee, and which grandchild is coming Sunday. A big building can't do that.",
+      },
+      {
+        title: "Is this assisted living?",
+        body: "Families searching for assisted living near Grayson usually find that a personal care home like Joy is a closer fit: the same daily help (bathing, dressing, medications, meals), in a real house instead of a wing off a lobby.",
+      },
+      {
+        title: "Can I come by after work on a weeknight?",
+        body: "Yes, there are no visiting hours. It's her home. Come at six, eat with her if you tell the kitchen, and still be back in Grayson before the night's over.",
+      },
+      {
+        title: "Do you have a room open now?",
+        body: "With 24 rooms it changes week to week. Call (470) 684-3569 and we'll tell you what's actually open, and if we're full, what the wait has really been.",
+      },
+    ],
+  },
+
+  monroe: {
+    slug: "monroe",
+    name: "Monroe",
+    driveMinutes: 15,
+    highway: "Highway 78",
+    heroLede:
+      "Joy is about 15 minutes from Monroe, down Highway 78 into Loganville. Far enough to be its own town, close enough to visit on a Tuesday.",
+    distanceHeading: "Fifteen minutes, and the same county",
+    distanceProse: [
+      "Monroe and Loganville share Walton County, and most of what that means is practical: the same roads, the same hospital, the same church names come up at our table.",
+      "It means a daughter in Monroe can come after supper and still be home before it's dark in the winter. And if there's a hard night, she is fifteen minutes away, not on the far side of Atlanta.",
+    ],
+    distancePull:
+      "Being in the same county sounds small until it's nine at night and you need to be there.",
+    anchorHeading: "Monroe families come to us for reasons close to home.",
+    anchorParas: [
+      "Some start with a discharge planner at Piedmont Walton saying Mom can't go back to the house alone, and a weekend to figure it out. We take those calls and we answer the phone ourselves.",
+      "Others have driven Highway 78 their whole lives and want their mother somewhere on it, near the county they know, cared for by people they can look in the eye. Mellissa is here, not at a corporate office three states away.",
+    ],
+    quote: null,
+    faqs: [
+      {
+        title: "How far is Joy from Piedmont Walton?",
+        body: "About fifteen minutes down Highway 78. Close enough that a hospital discharge to Joy is an easy same-day move, and close enough for the follow-up visits after.",
+      },
+      {
+        title: "Is a personal care home different from assisted living?",
+        body: "In Georgia, yes. Joy is licensed as a personal care home, not an assisted living community. The day-to-day help looks similar (meals, bathing, dressing, medications on time), but it happens in a small house of 24, led by Mellissa.",
+      },
+      {
+        title: "My mother has known these roads her whole life. Will she feel far from home?",
+        body: "That's exactly why families in the same county choose close. Bring her chair, her quilt, her photos. By the second week the room stops feeling like a facility and starts feeling like hers.",
+      },
+      {
+        title: "Do you have an opening?",
+        body: "With 24 rooms it moves fast. Call (470) 684-3569 and we'll tell you what's open today, honestly, and what the wait has looked like if it's full.",
+      },
+    ],
+  },
+
+  lawrenceville: {
+    slug: "lawrenceville",
+    name: "Lawrenceville",
+    driveMinutes: 20,
+    highway: "Highway 20",
+    heroLede:
+      "Joy is about 20 minutes from Lawrenceville, down Highway 20 through Grayson into Loganville. A small house, not a big campus.",
+    distanceHeading: "Twenty minutes to something smaller",
+    distanceProse: [
+      "Lawrenceville has the big buildings, the marketing, the long hallways. Twenty minutes south there's a house with 24 people in it and a kitchen you can smell from the porch.",
+      "Some families want the campus. Others drive the twenty minutes on purpose, because they've walked the big lobbies and want their mother somewhere she'll be known by name instead of by room number.",
+    ],
+    distancePull:
+      "Bigger is easy to find. Small enough to know your parent by name is worth a short drive.",
+    anchorHeading: "Lawrenceville families make the drive on purpose.",
+    anchorParas: [
+      "A discharge planner at Northside Gwinnett often hands out a list of the largest places first. The families who keep looking, who want small, tend to find their way down Highway 20 to us.",
+      "What they're after is usually the same: one person who knows the whole story, not a shift that turns over. Mellissa runs this house herself, and 24 rooms is a number a person can actually hold in their head.",
+    ],
+    quote: null,
+    faqs: [
+      {
+        title: "Why drive twenty minutes when there are places right in Lawrenceville?",
+        body: "Because most of those are large. Joy is 24 rooms in a real house, led by Mellissa, where the staff know your parent's name and habits. Families who want small, not big, make the drive gladly.",
+      },
+      {
+        title: "Is this assisted living?",
+        body: "Families searching assisted living in Lawrenceville often find that a smaller personal care home like Joy fits better: the same daily care, in a house of 24 instead of a campus of hundreds.",
+      },
+      {
+        title: "Can I still visit often from Lawrenceville?",
+        body: "Yes. Twenty minutes down Highway 20, no visiting hours, come whenever. Plenty of our Gwinnett families visit on weeknights and are home before bed.",
+      },
+      {
+        title: "Do you have a room right now?",
+        body: "It changes with 24 rooms. Call (470) 684-3569 for what's open today, and if we're full, we'll tell you honestly what the wait has been.",
+      },
+    ],
+  },
+
+  dacula: {
+    slug: "dacula",
+    name: "Dacula",
+    driveMinutes: 15,
+    highway: "Highway 316 and Highway 20",
+    heroLede:
+      "Joy is about 15 minutes from Dacula, down through Grayson into Loganville. Close enough to visit after work, small enough to feel like home.",
+    distanceHeading: "Fifteen minutes, and a house instead of a campus",
+    distanceProse: [
+      "From Dacula it's a short run south, not a highway ordeal. You can come after work, eat at the shared table, and be home the same evening without it eating the whole night.",
+      "That closeness is the thing families underestimate. When something changes late, being fifteen minutes away means you are there before the worry has time to grow.",
+    ],
+    distancePull:
+      "The distance you pick now is the distance you'll live with on the hard nights.",
+    anchorHeading: "Dacula families choose Joy for the size, and the nearness.",
+    anchorParas: [
+      "A lot of the calls start after a hospital stay, when a planner says home alone isn't safe and there are a couple of days to decide. We answer the phone ourselves and we take those calls.",
+      "The rest come from families who have toured the big places off Highway 316 and wanted something smaller: 24 rooms, one house, led by Mellissa, where a parent is a person and not a room number.",
+    ],
+    quote: null,
+    faqs: [
+      {
+        title: "How long is the drive from Dacula, really?",
+        body: "About fifteen minutes, heading south through Grayson into Loganville. Close enough that weeknight visits stay easy and you're never far when it counts.",
+      },
+      {
+        title: "What makes Joy different from the larger communities near Dacula?",
+        body: "Size. Joy is a personal care home of 24 rooms in a real house, led by Mellissa, not a campus of hundreds. The staff know your parent's name, their coffee, and which grandchild visits.",
+      },
+      {
+        title: "Is a personal care home the same as assisted living?",
+        body: "Families searching for assisted living near Dacula often find a personal care home like Joy is a better fit: the same everyday help (meals, bathing, dressing, medications), in a small house instead of a large facility.",
+      },
+      {
+        title: "Do you have an opening?",
+        body: "With only 24 rooms it changes fast. Call (470) 684-3569 and we'll tell you what's open today, and if we're full, what the wait has actually been.",
+      },
+    ],
+  },
 };
