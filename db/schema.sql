@@ -475,3 +475,48 @@ ALTER TABLE broadcasts ADD COLUMN IF NOT EXISTS body_format TEXT NOT NULL DEFAUL
 ALTER TABLE broadcasts DROP CONSTRAINT IF EXISTS broadcasts_body_format_check;
 ALTER TABLE broadcasts ADD CONSTRAINT broadcasts_body_format_check
   CHECK (body_format IN ('markdown', 'html', 'html_standalone'));
+
+-- ==========================================================================
+-- Events: create an event, send tokenized invite/reminder emails, collect
+-- RSVPs from families/friends/partners on a public form, see who is coming.
+-- ==========================================================================
+
+CREATE TABLE IF NOT EXISTS events (
+  id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  title       TEXT NOT NULL,
+  description TEXT NOT NULL DEFAULT '',
+  location    TEXT,                        -- e.g. "Joy Senior Living, Loganville"
+  starts_at   TIMESTAMPTZ,                 -- event date + start time
+  ends_at     TIMESTAMPTZ,                 -- optional end time
+  capacity    INTEGER,                     -- optional headcount cap (null = no cap)
+  -- Public RSVP link token. Lowercase hex so it survives the path-lowercasing
+  -- middleware, like the feedback tokens.
+  rsvp_token  TEXT UNIQUE NOT NULL,
+  status      TEXT NOT NULL DEFAULT 'draft'
+                CHECK (status IN ('draft', 'published', 'cancelled')),
+  created_by  TEXT,
+  created_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at  TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS events_starts_idx ON events (starts_at DESC);
+
+-- One RSVP per person (per email) per event; re-submitting updates their answer.
+-- Walk-ins without an email are always new rows.
+CREATE TABLE IF NOT EXISTS event_rsvps (
+  id         UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  event_id   UUID NOT NULL REFERENCES events(id) ON DELETE CASCADE,
+  name       TEXT NOT NULL,
+  email      TEXT,
+  phone      TEXT,
+  response   TEXT NOT NULL DEFAULT 'yes'
+               CHECK (response IN ('yes', 'no', 'maybe')),
+  guests     INTEGER NOT NULL DEFAULT 0,   -- additional guests beyond themselves
+  note       TEXT,
+  lead_id    UUID REFERENCES leads(id) ON DELETE SET NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS event_rsvps_event_idx ON event_rsvps (event_id, created_at DESC);
+-- Upsert key: one row per (event, email) when an email is given.
+CREATE UNIQUE INDEX IF NOT EXISTS event_rsvps_event_email_uidx
+  ON event_rsvps (event_id, lower(email)) WHERE email IS NOT NULL;

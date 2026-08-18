@@ -109,6 +109,128 @@ You're receiving this because you're part of the Joy family. <a href="{{unsubscr
 </tbody></table>
 </body></html>`;
 
+function esc(s: string): string {
+  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+/**
+ * A standalone event invitation / reminder / update email: a warm hero, a
+ * details card (when + where), the event description, and one big RSVP button.
+ * Carries its own footer with {{unsubscribe_url}} and greets with {{first_name}}.
+ * Sent as body_format 'html_standalone' (no Joy letter shell).
+ */
+export function eventInviteHtml(input: {
+  title: string;
+  whenText: string;
+  where: string;
+  description: string;
+  rsvpUrl: string;
+  kind: "invite" | "reminder" | "update";
+}): { subject: string; html: string } {
+  const eyebrow =
+    input.kind === "reminder"
+      ? "A friendly reminder"
+      : input.kind === "update"
+        ? "An update"
+        : "You're invited";
+  const intro =
+    input.kind === "reminder"
+      ? "Just a reminder that this is coming up. We would still love to see you."
+      : input.kind === "update"
+        ? "A quick update about this gathering."
+        : "We would love for you to join us.";
+  const subject =
+    input.kind === "reminder"
+      ? `Reminder: ${input.title}`
+      : input.kind === "update"
+        ? `Update: ${input.title}`
+        : `You're invited: ${input.title}`;
+
+  const descHtml = input.description.trim()
+    ? `<tr><td style="padding:6px 36px 22px 36px;font-family:Georgia,'Times New Roman',serif;font-size:17px;line-height:1.6;color:#55555f;mso-line-height-rule:exactly;">${esc(input.description).replace(/\n/g, "<br>")}</td></tr>`
+    : "";
+  const whereRow = input.where
+    ? `<tr>
+<td width="34" valign="top" style="font-size:20px;line-height:1.5;padding:4px 0;">📍</td>
+<td style="font-family:Georgia,'Times New Roman',serif;font-size:17px;line-height:1.5;color:#2b2b33;padding:4px 0;mso-line-height-rule:exactly;"><strong style="color:#017391;">Where:</strong> ${esc(input.where)}</td>
+</tr>`
+    : "";
+
+  const html = `<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
+<title>${esc(subject)}</title>
+</head>
+<body style="margin:0;padding:0;background-color:#fbf9f5;">
+<span style="display:none;font-size:1px;color:#fbf9f5;line-height:1px;max-height:0;max-width:0;opacity:0;overflow:hidden;">${esc(input.whenText)} at Joy. We would love to see you.</span>
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color:#fbf9f5;">
+<tbody><tr><td align="center" style="padding:24px 12px;">
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="600" style="max-width:600px;width:100%;">
+
+<!-- Hero -->
+<tbody><tr><td style="padding:0;">
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color:#017391;border-radius:16px 16px 0 0;">
+<tbody><tr><td align="center" style="padding:34px 28px 6px 28px;">
+<div style="font-family:Arial,Helvetica,sans-serif;font-size:13px;letter-spacing:4px;text-transform:uppercase;color:#bfe3ee;font-weight:bold;mso-line-height-rule:exactly;line-height:1.4;">${esc(eyebrow)}</div>
+</td></tr>
+<tr><td align="center" style="padding:6px 28px 30px 28px;">
+<div style="font-family:Georgia,'Times New Roman',serif;font-size:36px;line-height:1.2;color:#ffffff;font-weight:bold;mso-line-height-rule:exactly;">${esc(input.title)}</div>
+</td></tr>
+</tbody></table>
+</td></tr>
+
+<!-- Body -->
+<tr><td style="padding:0;">
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color:#ffffff;border-radius:0 0 16px 16px;">
+<tbody><tr><td style="padding:30px 36px 0 36px;font-family:Georgia,'Times New Roman',serif;font-size:18px;line-height:1.6;color:#2b2b33;mso-line-height-rule:exactly;">Hi {{first_name}},</td></tr>
+<tr><td style="padding:12px 36px 4px 36px;font-family:Georgia,'Times New Roman',serif;font-size:18px;line-height:1.6;color:#55555f;mso-line-height-rule:exactly;">${esc(intro)}</td></tr>
+${descHtml}
+
+<!-- Details card -->
+<tr><td style="padding:8px 28px 24px 28px;">
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color:#f2f7f8;border-radius:14px;border:1px solid #d5e5e9;">
+<tbody><tr><td style="padding:22px 26px;">
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+<tbody><tr>
+<td width="34" valign="top" style="font-size:20px;line-height:1.5;padding:4px 0;">🗓️</td>
+<td style="font-family:Georgia,'Times New Roman',serif;font-size:17px;line-height:1.5;color:#2b2b33;padding:4px 0;mso-line-height-rule:exactly;"><strong style="color:#017391;">When:</strong> ${esc(input.whenText)}</td>
+</tr>
+${whereRow}
+</tbody></table>
+</td></tr>
+</tbody></table>
+</td></tr>
+
+<!-- RSVP button -->
+<tr><td align="center" style="padding:0 36px 8px 36px;">
+<table role="presentation" cellpadding="0" cellspacing="0" border="0"><tbody><tr>
+<td align="center" style="background-color:#01a7ce;border-radius:8px;">
+<a href="${esc(input.rsvpUrl)}" style="display:inline-block;padding:14px 34px;font-family:Arial,Helvetica,sans-serif;font-size:16px;font-weight:bold;color:#ffffff;text-decoration:none;">RSVP here</a>
+</td>
+</tr></tbody></table>
+</td></tr>
+<tr><td align="center" style="padding:8px 36px 4px 36px;font-family:Georgia,'Times New Roman',serif;font-size:14px;line-height:1.5;color:#8a8a94;mso-line-height-rule:exactly;">Questions? Mellissa Daniel and our team are happy to help.</td></tr>
+
+<tr><td style="padding:14px 36px 30px 36px;font-family:Georgia,'Times New Roman',serif;font-size:18px;line-height:1.6;color:#2b2b33;mso-line-height-rule:exactly;">Warmly,<br>Mellissa Daniel and the team at Joy Senior Living</td></tr>
+</tbody></table>
+</td></tr>
+
+<!-- Footer -->
+<tr><td align="center" style="padding:16px 24px 0 24px;font-family:Arial,Helvetica,sans-serif;font-size:12px;line-height:1.6;color:#a5a5ad;mso-line-height-rule:exactly;">
+Joy Senior Living • Loganville, GA<br>
+You're receiving this because you're part of the Joy family. <a href="{{unsubscribe_url}}" style="color:#a5a5ad;text-decoration:underline;">Unsubscribe</a>
+</td></tr>
+
+</tbody></table>
+</td></tr>
+</tbody></table>
+</body></html>`;
+
+  return { subject, html };
+}
+
 /** Named HTML designs for the composer's design picker. */
 export const EMAIL_DESIGNS: {
   id: string;
