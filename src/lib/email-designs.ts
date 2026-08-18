@@ -9,6 +9,8 @@
  * sending, or let the birthday design generator fill them from your details.
  */
 
+import { eventPalette, type EventTheme } from "./event-theme";
+
 /**
  * The Joy birthday party invitation: confetti strips, a warm hero, and a
  * dashed party-details card. Pronoun-neutral and em-dash-free (house rules).
@@ -126,7 +128,11 @@ export function eventInviteHtml(input: {
   description: string;
   rsvpUrl: string;
   kind: "invite" | "reminder" | "update";
+  theme?: EventTheme | string | null;
+  isPotluck?: boolean;
+  potluckAsk?: string | null;
 }): { subject: string; html: string } {
+  const pal = eventPalette(input.theme);
   const eyebrow =
     input.kind === "reminder"
       ? "A friendly reminder"
@@ -152,8 +158,17 @@ export function eventInviteHtml(input: {
   const whereRow = input.where
     ? `<tr>
 <td width="34" valign="top" style="font-size:20px;line-height:1.5;padding:4px 0;">📍</td>
-<td style="font-family:Georgia,'Times New Roman',serif;font-size:17px;line-height:1.5;color:#2b2b33;padding:4px 0;mso-line-height-rule:exactly;"><strong style="color:#017391;">Where:</strong> ${esc(input.where)}</td>
+<td style="font-family:Georgia,'Times New Roman',serif;font-size:17px;line-height:1.5;color:#2b2b33;padding:4px 0;mso-line-height-rule:exactly;"><strong style="color:${pal.cta};">Where:</strong> ${esc(input.where)}</td>
 </tr>`
+    : "";
+  const potluckHtml = input.isPotluck
+    ? `<tr><td style="padding:0 28px 20px 28px;">
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color:${pal.cardBg};border-radius:14px;border:1px dashed ${pal.cardBorder};">
+<tbody><tr><td style="padding:16px 24px;">
+<div style="font-family:Arial,Helvetica,sans-serif;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#8a6217;font-weight:bold;">🍲 It's a potluck</div>
+<div style="font-family:Georgia,'Times New Roman',serif;font-size:16px;line-height:1.6;color:#2b2b33;margin-top:6px;">${esc(input.potluckAsk?.trim() || "Bring a dish to share if you'd like (there will be plenty either way).")}</div>
+</td></tr></tbody></table>
+</td></tr>`
     : "";
 
   const html = `<!DOCTYPE html>
@@ -171,9 +186,9 @@ export function eventInviteHtml(input: {
 
 <!-- Hero -->
 <tbody><tr><td style="padding:0;">
-<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color:#017391;border-radius:16px 16px 0 0;">
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color:${pal.hero};border-radius:16px 16px 0 0;">
 <tbody><tr><td align="center" style="padding:34px 28px 6px 28px;">
-<div style="font-family:Arial,Helvetica,sans-serif;font-size:13px;letter-spacing:4px;text-transform:uppercase;color:#bfe3ee;font-weight:bold;mso-line-height-rule:exactly;line-height:1.4;">${esc(eyebrow)}</div>
+<div style="font-family:Arial,Helvetica,sans-serif;font-size:13px;letter-spacing:4px;text-transform:uppercase;color:${pal.soft};font-weight:bold;mso-line-height-rule:exactly;line-height:1.4;">${esc(eyebrow)}</div>
 </td></tr>
 <tr><td align="center" style="padding:6px 28px 30px 28px;">
 <div style="font-family:Georgia,'Times New Roman',serif;font-size:36px;line-height:1.2;color:#ffffff;font-weight:bold;mso-line-height-rule:exactly;">${esc(input.title)}</div>
@@ -190,23 +205,24 @@ ${descHtml}
 
 <!-- Details card -->
 <tr><td style="padding:8px 28px 24px 28px;">
-<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color:#f2f7f8;border-radius:14px;border:1px solid #d5e5e9;">
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color:${pal.cardBg};border-radius:14px;border:1px solid ${pal.cardBorder};">
 <tbody><tr><td style="padding:22px 26px;">
 <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
 <tbody><tr>
 <td width="34" valign="top" style="font-size:20px;line-height:1.5;padding:4px 0;">🗓️</td>
-<td style="font-family:Georgia,'Times New Roman',serif;font-size:17px;line-height:1.5;color:#2b2b33;padding:4px 0;mso-line-height-rule:exactly;"><strong style="color:#017391;">When:</strong> ${esc(input.whenText)}</td>
+<td style="font-family:Georgia,'Times New Roman',serif;font-size:17px;line-height:1.5;color:#2b2b33;padding:4px 0;mso-line-height-rule:exactly;"><strong style="color:${pal.cta};">When:</strong> ${esc(input.whenText)}</td>
 </tr>
 ${whereRow}
 </tbody></table>
 </td></tr>
 </tbody></table>
 </td></tr>
+${potluckHtml}
 
 <!-- RSVP button -->
 <tr><td align="center" style="padding:0 36px 8px 36px;">
 <table role="presentation" cellpadding="0" cellspacing="0" border="0"><tbody><tr>
-<td align="center" style="background-color:#01a7ce;border-radius:8px;">
+<td align="center" style="background-color:${pal.cta};border-radius:8px;">
 <a href="${esc(input.rsvpUrl)}" style="display:inline-block;padding:14px 34px;font-family:Arial,Helvetica,sans-serif;font-size:16px;font-weight:bold;color:#ffffff;text-decoration:none;">RSVP here</a>
 </td>
 </tr></tbody></table>

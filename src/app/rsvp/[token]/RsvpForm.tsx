@@ -6,12 +6,21 @@ import { submitRsvp } from "./actions";
 const INPUT =
   "w-full rounded-lg border border-line bg-white px-3.5 py-2.5 text-[15px] text-ink placeholder:text-ink-faint focus:border-clay focus:outline-none focus:ring-2 focus:ring-clay/30";
 
-export default function RsvpForm({ token }: { token: string }) {
+export default function RsvpForm({
+  token,
+  accent = "#01a7ce",
+  isPotluck = false,
+}: {
+  token: string;
+  accent?: string;
+  isPotluck?: boolean;
+}) {
   const [response, setResponse] = useState<"yes" | "no" | "maybe">("yes");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [guests, setGuests] = useState(0);
+  const [bringing, setBringing] = useState("");
   const [note, setNote] = useState("");
   const [error, setError] = useState("");
   const [done, setDone] = useState<null | "yes" | "no" | "maybe">(null);
@@ -21,7 +30,16 @@ export default function RsvpForm({ token }: { token: string }) {
     e.preventDefault();
     setError("");
     start(async () => {
-      const res = await submitRsvp({ token, name, email, phone, response, guests, note });
+      const res = await submitRsvp({
+        token,
+        name,
+        email,
+        phone,
+        response,
+        guests,
+        note,
+        bringing,
+      });
       if (!res.ok) {
         setError(res.error);
         return;
@@ -71,9 +89,14 @@ export default function RsvpForm({ token }: { token: string }) {
             key={o.value}
             type="button"
             onClick={() => setResponse(o.value)}
+            style={
+              response === o.value
+                ? { backgroundColor: accent, borderColor: accent }
+                : undefined
+            }
             className={`rounded-lg border px-3 py-2.5 text-sm font-medium transition-colors ${
               response === o.value
-                ? "border-clay bg-clay text-white"
+                ? "text-white"
                 : "border-line bg-white text-ink-soft hover:bg-surface"
             }`}
           >
@@ -131,6 +154,20 @@ export default function RsvpForm({ token }: { token: string }) {
           </label>
         )}
 
+        {isPotluck && response === "yes" && (
+          <label className="block">
+            <span className="text-sm font-medium text-ink">
+              What are you bringing? (optional)
+            </span>
+            <input
+              className={`${INPUT} mt-1`}
+              value={bringing}
+              onChange={(e) => setBringing(e.target.value)}
+              placeholder="e.g. a peach pie"
+            />
+          </label>
+        )}
+
         <label className="block">
           <span className="text-sm font-medium text-ink">
             Anything you&apos;d like us to know? (optional)
@@ -154,7 +191,8 @@ export default function RsvpForm({ token }: { token: string }) {
       <button
         type="submit"
         disabled={pending}
-        className="mt-4 w-full rounded-lg bg-clay px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-clay-dark disabled:opacity-60"
+        style={{ backgroundColor: accent }}
+        className="mt-4 w-full rounded-lg px-4 py-3 text-sm font-semibold text-white transition-opacity hover:opacity-95 disabled:opacity-60"
       >
         {pending ? "Sending…" : "Send my RSVP"}
       </button>

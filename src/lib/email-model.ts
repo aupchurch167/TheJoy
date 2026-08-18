@@ -11,6 +11,10 @@
  * a valid, unsubscribable email.
  */
 
+import { seasonalMonth, seasonalMonthName } from "./seasonal";
+
+export { seasonalMonthName };
+
 export type EmailTheme =
   | "festive"
   | "classic"
@@ -75,29 +79,6 @@ type Palette = {
   hero_on: boolean; // false for plain letter (no hero band)
 };
 
-const SEASONAL = [
-  { hero: "#4a7fa5", page: "#f2f6fa", accent: "#4a7fa5", eyebrow: "❄ Winter at Joy ❄" },
-  { hero: "#c25b74", page: "#fdf3f5", accent: "#c25b74", eyebrow: "💕 With love from Joy 💕" },
-  { hero: "#4f9d69", page: "#f2f8f3", accent: "#4f9d69", eyebrow: "🍀 First days of spring 🍀" },
-  { hero: "#c9718f", page: "#fbf4f7", accent: "#6ea36a", eyebrow: "🌸 Spring at Joy 🌸" },
-  { hero: "#5faa61", page: "#f3f9f3", accent: "#5faa61", eyebrow: "🌼 May flowers 🌼" },
-  { hero: "#e0972f", page: "#fdf8ec", accent: "#c9821f", eyebrow: "☀️ Hello, summer ☀️" },
-  { hero: "#3b6fae", page: "#f3f6fa", accent: "#cf4636", eyebrow: "🎇 Summer nights 🎇" },
-  { hero: "#d97e50", page: "#fdf5ef", accent: "#c05f31", eyebrow: "🍑 Late-summer porch 🍑" },
-  { hero: "#b0722a", page: "#fbf6ec", accent: "#b0722a", eyebrow: "🍂 Into the fall 🍂" },
-  { hero: "#c96328", page: "#fdf4ec", accent: "#8a5a2b", eyebrow: "🎃 Cozy October 🎃" },
-  { hero: "#8f5b23", page: "#faf5ec", accent: "#8f5b23", eyebrow: "🥧 Giving thanks 🥧" },
-  { hero: "#2e6b46", page: "#f4f8f5", accent: "#b23a30", eyebrow: "🎄 Warm holiday wishes 🎄" },
-];
-
-/** The current-month seasonal accent line (for the composer's explainer note). */
-export function seasonalMonthName(month = new Date().getMonth()): string {
-  return [
-    "January", "February", "March", "April", "May", "June",
-    "July", "August", "September", "October", "November", "December",
-  ][month];
-}
-
 function palette(theme: EmailTheme): Palette {
   switch (theme) {
     case "festive":
@@ -129,7 +110,7 @@ function palette(theme: EmailTheme): Palette {
         a1: "#55555f", a2: "#55555f", a3: "#55555f", confetti: false, hero_on: false,
       };
     case "seasonal": {
-      const m = SEASONAL[new Date().getMonth()];
+      const m = seasonalMonth();
       return {
         page: m.page, hero: m.hero, heroEyebrow: "#ffffff", heroSub: "#f4f4f4",
         eyebrow: m.eyebrow, planBg: "#ffffff", planBorder: `1px solid ${m.accent}33`,

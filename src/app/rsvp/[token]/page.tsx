@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { hasDatabase } from "@/lib/db";
 import { getEventByToken } from "@/lib/events";
 import { formatEventWhenLong } from "@/lib/event-time";
+import { eventPalette } from "@/lib/event-theme";
 import { BUSINESS } from "@/lib/site";
 import RsvpForm from "./RsvpForm";
 
@@ -25,6 +26,10 @@ export default async function RsvpPage({
   if (!event) notFound();
 
   const cancelled = event.status === "cancelled";
+  const pal = eventPalette(event.theme);
+  const potluckAsk =
+    event.potluck_ask?.trim() ||
+    "Bring a dish to share if you'd like (there will be plenty either way).";
 
   return (
     <main className="min-h-screen bg-paper px-4 py-10 sm:py-16">
@@ -34,9 +39,12 @@ export default async function RsvpPage({
         </p>
 
         <div className="mt-6 overflow-hidden rounded-2xl border border-line bg-white shadow-sm">
-          <div className="bg-clay px-6 py-7 text-center">
-            <p className="text-xs font-semibold uppercase tracking-widest text-white/80">
-              You&apos;re invited
+          <div className="px-6 py-7 text-center" style={{ backgroundColor: pal.hero }}>
+            <p
+              className="text-xs font-semibold uppercase tracking-widest"
+              style={{ color: pal.soft }}
+            >
+              {pal.eyebrow}
             </p>
             <h1 className="mt-1.5 font-display text-3xl font-semibold text-white">
               {event.title}
@@ -49,10 +57,26 @@ export default async function RsvpPage({
             {event.location && (
               <p className="mt-1 text-sm text-ink-soft">📍 {event.location}</p>
             )}
+            {event.capacity != null && event.capacity > 0 && (
+              <p className="mt-1 text-sm text-ink-faint">
+                Room for {event.capacity} (RSVPs close when it fills up).
+              </p>
+            )}
             {event.description.trim() && (
               <p className="mt-3 whitespace-pre-wrap text-[15px] leading-relaxed text-ink-soft">
                 {event.description}
               </p>
+            )}
+            {event.is_potluck && (
+              <div
+                className="mt-4 rounded-xl border px-4 py-3"
+                style={{ backgroundColor: pal.cardBg, borderColor: pal.cardBorder }}
+              >
+                <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-ink-soft">
+                  🍲 It&apos;s a potluck
+                </p>
+                <p className="mt-1 text-sm leading-relaxed text-ink">{potluckAsk}</p>
+              </div>
             )}
           </div>
         </div>
@@ -64,7 +88,11 @@ export default async function RsvpPage({
               any questions.
             </div>
           ) : (
-            <RsvpForm token={event.rsvp_token} />
+            <RsvpForm
+              token={event.rsvp_token}
+              accent={pal.cta}
+              isPotluck={event.is_potluck}
+            />
           )}
         </div>
 

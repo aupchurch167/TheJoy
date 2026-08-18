@@ -24,6 +24,9 @@ const EventSchema = z.object({
   endsAt: z.string().trim().optional().default(""),
   capacity: z.coerce.number().int().min(0).max(100000).optional(),
   status: z.enum(["draft", "published", "cancelled"]).default("draft"),
+  theme: z.enum(["classic", "festive", "seasonal", "garden", "elegant"]).default("classic"),
+  isPotluck: z.boolean().optional().default(false),
+  potluckAsk: z.string().trim().max(300).optional().default(""),
 });
 
 export type EventSaveResult =
@@ -44,6 +47,9 @@ export async function saveEvent(input: unknown): Promise<EventSaveResult> {
     endsAt: etWallToInstant(d.endsAt),
     capacity: d.capacity ?? null,
     status: d.status,
+    theme: d.theme,
+    isPotluck: d.isPotluck,
+    potluckAsk: d.isPotluck ? d.potluckAsk : null,
   };
   try {
     const ev = d.id ? await updateEvent(d.id, payload) : await createEvent(payload, email);
@@ -102,6 +108,9 @@ export async function createEventEmailDraft(input: {
       description: ev.description,
       rsvpUrl: `${SITE_URL}/rsvp/${ev.rsvp_token}`,
       kind: input.kind,
+      theme: ev.theme,
+      isPotluck: ev.is_potluck,
+      potluckAsk: ev.potluck_ask,
     });
     const b = await createBroadcast(subject, html, "families", "email", null, null, {
       format: "html_standalone",

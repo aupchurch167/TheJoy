@@ -525,3 +525,10 @@ CREATE UNIQUE INDEX IF NOT EXISTS event_rsvps_event_email_uidx
 -- HTML so a draft can be reopened and re-themed (a look swap re-skins the same
 -- words). Null for broadcasts composed the old way (Markdown / pasted HTML).
 ALTER TABLE broadcasts ADD COLUMN IF NOT EXISTS model_json JSONB;
+
+-- Event Studio: a look (theme) that styles both the RSVP page and the invite
+-- email, plus optional potluck details. RSVPs can note what they're bringing.
+ALTER TABLE events ADD COLUMN IF NOT EXISTS theme TEXT NOT NULL DEFAULT 'classic';
+ALTER TABLE events ADD COLUMN IF NOT EXISTS is_potluck BOOLEAN NOT NULL DEFAULT FALSE;
+ALTER TABLE events ADD COLUMN IF NOT EXISTS potluck_ask TEXT;
+ALTER TABLE event_rsvps ADD COLUMN IF NOT EXISTS bringing TEXT;

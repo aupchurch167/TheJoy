@@ -401,7 +401,7 @@ export default function EmailStudio({
   /* ================================================================ */
 
   return (
-    <div className="min-h-screen bg-paper">
+    <div className="fixed inset-x-0 bottom-0 top-14 z-20 overflow-auto bg-paper lg:left-60 lg:top-0">
       <div className="mx-auto min-w-[1000px] max-w-[1400px]">
         <div className="grid grid-cols-[300px_minmax(0,1fr)_284px]">
           {/* ---------- LEFT: the brief ---------- */}

@@ -809,6 +809,140 @@ export async function draftEmailModel(input: {
   }
 }
 
+/* ------------------------------------------------------------------ */
+/* EVENT PLANNER (event studio)                                        */
+/* ------------------------------------------------------------------ */
+
+export type EventPlanDraft = {
+  title: string;
+  /** ET wall time as a datetime-local value "YYYY-MM-DDTHH:MM", or "" if unclear. */
+  startsAtLocal: string;
+  location: string;
+  /** 0 means no limit. */
+  capacity: number;
+  description: string;
+  isPotluck: boolean;
+  potluckAsk: string;
+};
+
+const EVENT_PLAN_SCHEMA = {
+  type: "object",
+  properties: {
+    title: {
+      type: "string",
+      description: "A short, warm event title (e.g. \"Fall Porch Social\"). No banned words.",
+    },
+    startsAtLocal: {
+      type: "string",
+      description:
+        "The start as a datetime-local value \"YYYY-MM-DDTHH:MM\" in Eastern (Loganville) wall time, inferred from the brief relative to the given today's date. If the brief does not pin down a date AND time, return an empty string (never guess a date).",
+    },
+    location: {
+      type: "string",
+      description: "Where it happens. Default to \"Joy Senior Living, Loganville\" if not given.",
+    },
+    capacity: {
+      type: "integer",
+      description: "Headcount limit if the brief gives one, else 0 for no limit.",
+    },
+    description: {
+      type: "string",
+      description:
+        "Two or three warm, plain sentences about what to expect (shown on the invite and RSVP page). Specific over generic. No banned words, no em-dashes.",
+    },
+    isPotluck: {
+      type: "boolean",
+      description: "True only if the brief clearly says people bring food to share.",
+    },
+    potluckAsk: {
+      type: "string",
+      description:
+        "If a potluck, one short line on what to bring (e.g. \"a side or dessert to share, we'll have the main dish\"). Empty string otherwise.",
+    },
+  },
+  required: ["title", "startsAtLocal", "location", "capacity", "description", "isPotluck", "potluckAsk"],
+  additionalProperties: false,
+} as const;
+
+const EVENT_SYSTEM_PROMPT = `You help plan a community EVENT for ${BUSINESS.name}, a 24-bed personal care home in Loganville, Georgia, led by ${BUSINESS.director.name}. Events go to families, friends, and partners (support groups, birthday parties, dinners, socials). From a short brief you fill in a title, timing, location, capacity, and a warm description families will read on the invite and the RSVP page.
+
+- Infer the date/time only when the brief makes it clear; compute it relative to the given today's date, in Eastern (Loganville) wall time. If it is not clear, leave startsAtLocal empty rather than guessing.
+- Never invent specifics the brief does not support (no made-up prices, headcounts, or menus). Keep the description honest and plain.
+- Default the location to "Joy Senior Living, Loganville" if none is given.
+
+VOICE (§2): NO em-dashes (use parentheses or commas). BANNED words: "loved ones", "vibrant", "journey", "personalized care plans", "boutique", "intimate" (say "small"), "top-tier", "deserve more". Short, warm, plainspoken sentences. Name ${BUSINESS.director.name} where it fits naturally.
+COMPLIANCE (§4): Joy is a PERSONAL CARE HOME, never "assisted living".`;
+
+/** Plan an event from a short brief (title, timing, location, capacity, blurb). */
+export async function draftEventPlan(
+  brief: string,
+  todayIso?: string
+): Promise<EventPlanDraft> {
+  if (!aiEnabled()) {
+    throw new Error("AI drafting is not configured (set ANTHROPIC_API_KEY).");
+  }
+  const today = todayIso || new Date().toISOString().slice(0, 10);
+  const userPrompt = [
+    `Today's date is ${today} (use it to resolve any relative dates).`,
+    `Plan this event from the brief:`,
+    brief,
+  ].join("\n\n");
+
+  const client = new Anthropic();
+  const response = await client.messages.create({
+    model: MODEL,
+    max_tokens: 2000,
+    thinking: { type: "adaptive" },
+    system: EVENT_SYSTEM_PROMPT,
+    output_config: { format: { type: "json_schema", schema: EVENT_PLAN_SCHEMA } },
+    messages: [{ role: "user", content: userPrompt }],
+  });
+  const textBlock = response.content.find((b) => b.type === "text");
+  if (!textBlock || textBlock.type !== "text") {
+    throw new Error("The AI did not return an event plan.");
+  }
+  try {
+    return JSON.parse(textBlock.text) as EventPlanDraft;
+  } catch {
+    throw new Error("The AI event plan was not valid. Please try again.");
+  }
+}
+
+/** Rewrite just the "what to expect" description for an event. */
+export async function draftEventDescription(input: {
+  title: string;
+  whenText?: string;
+  where?: string;
+  isPotluck?: boolean;
+  potluckAsk?: string;
+}): Promise<string> {
+  if (!aiEnabled()) {
+    throw new Error("AI drafting is not configured (set ANTHROPIC_API_KEY).");
+  }
+  const userPrompt = [
+    `Write two or three warm, plain sentences describing what to expect at this event (for the invite and RSVP page). No banned words, no em-dashes. Return only the description text.`,
+    `Event: ${input.title}`,
+    input.whenText ? `When: ${input.whenText}` : "",
+    input.where ? `Where: ${input.where}` : "",
+    input.isPotluck ? `It is a potluck. What to bring: ${input.potluckAsk || "a dish to share"}` : "",
+  ]
+    .filter(Boolean)
+    .join("\n");
+
+  const client = new Anthropic();
+  const response = await client.messages.create({
+    model: MODEL,
+    max_tokens: 700,
+    system: EVENT_SYSTEM_PROMPT,
+    messages: [{ role: "user", content: userPrompt }],
+  });
+  const textBlock = response.content.find((b) => b.type === "text");
+  if (!textBlock || textBlock.type !== "text") {
+    throw new Error("The AI did not return a description.");
+  }
+  return textBlock.text.trim();
+}
+
 export async function draftEmail(
   context: string,
   audience: EmailAudience,

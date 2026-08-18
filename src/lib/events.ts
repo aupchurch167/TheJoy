@@ -22,6 +22,10 @@ export type EventRow = {
   capacity: number | null;
   rsvp_token: string;
   status: EventStatus;
+  /** Look applied to the RSVP page + invite email (see event-theme.ts). */
+  theme: string;
+  is_potluck: boolean;
+  potluck_ask: string | null;
   created_by: string | null;
   created_at: string;
   updated_at: string;
@@ -36,6 +40,8 @@ export type EventRsvp = {
   response: RsvpResponse;
   guests: number;
   note: string | null;
+  /** What a "yes" is bringing (potluck events). */
+  bringing: string | null;
   lead_id: string | null;
   created_at: string;
   updated_at: string;
@@ -49,6 +55,9 @@ export type EventInput = {
   endsAt?: string | null;
   capacity?: number | null;
   status?: EventStatus;
+  theme?: string | null;
+  isPotluck?: boolean;
+  potluckAsk?: string | null;
 };
 
 function newToken(): string {
@@ -64,8 +73,8 @@ export async function createEvent(
   const rows = await query<EventRow>(
     `INSERT INTO events
        (title, description, location, starts_at, ends_at, capacity, status,
-        rsvp_token, created_by)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+        theme, is_potluck, potluck_ask, rsvp_token, created_by)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
      RETURNING *`,
     [
       input.title.trim(),
@@ -75,6 +84,9 @@ export async function createEvent(
       input.endsAt || null,
       input.capacity ?? null,
       input.status ?? "draft",
+      input.theme || "classic",
+      input.isPotluck ?? false,
+      input.potluckAsk?.trim() || null,
       newToken(),
       createdBy ?? null,
     ]
@@ -89,7 +101,8 @@ export async function updateEvent(
   const rows = await query<EventRow>(
     `UPDATE events SET
        title = $2, description = $3, location = $4, starts_at = $5, ends_at = $6,
-       capacity = $7, status = $8, updated_at = now()
+       capacity = $7, status = $8, theme = $9, is_potluck = $10, potluck_ask = $11,
+       updated_at = now()
      WHERE id = $1
      RETURNING *`,
     [
@@ -101,6 +114,9 @@ export async function updateEvent(
       input.endsAt || null,
       input.capacity ?? null,
       input.status ?? "draft",
+      input.theme || "classic",
+      input.isPotluck ?? false,
+      input.potluckAsk?.trim() || null,
     ]
   );
   return rows[0] ?? null;
@@ -144,27 +160,30 @@ export async function upsertRsvp(input: {
   response: RsvpResponse;
   guests?: number | null;
   note?: string | null;
+  bringing?: string | null;
 }): Promise<EventRsvp> {
   const email = input.email?.trim().toLowerCase() || null;
   const guests = Math.max(0, Math.min(20, Math.floor(input.guests ?? 0)));
+  const bringing = input.bringing?.trim() || null;
 
   if (email) {
     const rows = await query<EventRsvp>(
-      `INSERT INTO event_rsvps (event_id, name, email, phone, response, guests, note)
-       VALUES ($1, $2, $3, $4, $5, $6, $7)
+      `INSERT INTO event_rsvps (event_id, name, email, phone, response, guests, note, bringing)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
        ON CONFLICT (event_id, lower(email)) WHERE email IS NOT NULL DO UPDATE SET
          name = EXCLUDED.name, phone = EXCLUDED.phone, response = EXCLUDED.response,
-         guests = EXCLUDED.guests, note = EXCLUDED.note, updated_at = now()
+         guests = EXCLUDED.guests, note = EXCLUDED.note, bringing = EXCLUDED.bringing,
+         updated_at = now()
        RETURNING *`,
-      [input.eventId, input.name.trim(), email, input.phone?.trim() || null, input.response, guests, input.note?.trim() || null]
+      [input.eventId, input.name.trim(), email, input.phone?.trim() || null, input.response, guests, input.note?.trim() || null, bringing]
     );
     return rows[0];
   }
   const rows = await query<EventRsvp>(
-    `INSERT INTO event_rsvps (event_id, name, phone, response, guests, note)
-     VALUES ($1, $2, $3, $4, $5, $6)
+    `INSERT INTO event_rsvps (event_id, name, phone, response, guests, note, bringing)
+     VALUES ($1, $2, $3, $4, $5, $6, $7)
      RETURNING *`,
-    [input.eventId, input.name.trim(), input.phone?.trim() || null, input.response, guests, input.note?.trim() || null]
+    [input.eventId, input.name.trim(), input.phone?.trim() || null, input.response, guests, input.note?.trim() || null, bringing]
   );
   return rows[0];
 }

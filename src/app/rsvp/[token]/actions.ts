@@ -12,6 +12,7 @@ const Schema = z.object({
   response: z.enum(["yes", "no", "maybe"]),
   guests: z.coerce.number().int().min(0).max(20).optional().default(0),
   note: z.string().trim().max(1000).optional().or(z.literal("")),
+  bringing: z.string().trim().max(300).optional().or(z.literal("")),
 });
 
 export type RsvpResult =
@@ -38,6 +39,7 @@ export async function submitRsvp(input: unknown): Promise<RsvpResult> {
       response: d.response,
       guests: d.response === "yes" ? d.guests : 0,
       note: d.note || null,
+      bringing: d.response === "yes" ? d.bringing || null : null,
     });
     return { ok: true, response: d.response };
   } catch (err) {
