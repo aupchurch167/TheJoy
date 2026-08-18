@@ -27,6 +27,8 @@ export type Broadcast = {
   body_format: BroadcastBodyFormat;
   /** Studio structured model (EmailModel JSON) when composed in the studio; null otherwise. */
   model_json: unknown | null;
+  /** Event emails jump ahead of throttled marketing (sent in full, immediately). */
+  priority: boolean;
   created_at: string;
   updated_at: string;
 };
@@ -54,6 +56,7 @@ export async function createBroadcast(
     createdBy?: string | null;
     format?: BroadcastBodyFormat;
     modelJson?: unknown | null;
+    priority?: boolean;
   }
 ): Promise<Broadcast> {
   // Every Send points at a Message. When no Message is supplied, this compose
@@ -67,8 +70,8 @@ export async function createBroadcast(
     ).id;
 
   const rows = await query<Broadcast>(
-    `INSERT INTO broadcasts (subject, body, audience, channel, filters, resend_of, message_id, body_format, model_json)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *`,
+    `INSERT INTO broadcasts (subject, body, audience, channel, filters, resend_of, message_id, body_format, model_json, priority)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING *`,
     [
       subject,
       body,
@@ -79,6 +82,7 @@ export async function createBroadcast(
       messageId,
       opts?.format ?? "markdown",
       opts?.modelJson != null ? JSON.stringify(opts.modelJson) : null,
+      opts?.priority ?? false,
     ]
   );
   return rows[0];
@@ -175,10 +179,11 @@ export async function deleteBroadcast(id: string): Promise<void> {
  * immediately from the admin action, so the cron only handles email.
  */
 export async function getDueBroadcasts(): Promise<Broadcast[]> {
+  // Priority (event) sends first, then by schedule, so they jump the queue.
   return query<Broadcast>(
     `SELECT * FROM broadcasts
       WHERE status = 'scheduled' AND channel = 'email' AND scheduled_at <= now()
-      ORDER BY scheduled_at ASC`
+      ORDER BY priority DESC, scheduled_at ASC`
   );
 }
 

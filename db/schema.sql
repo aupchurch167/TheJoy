@@ -532,3 +532,11 @@ ALTER TABLE events ADD COLUMN IF NOT EXISTS theme TEXT NOT NULL DEFAULT 'classic
 ALTER TABLE events ADD COLUMN IF NOT EXISTS is_potluck BOOLEAN NOT NULL DEFAULT FALSE;
 ALTER TABLE events ADD COLUMN IF NOT EXISTS potluck_ask TEXT;
 ALTER TABLE event_rsvps ADD COLUMN IF NOT EXISTS bringing TEXT;
+
+-- Priority sends: event emails (invites, reminders, updates) jump ahead of the
+-- throttled marketing queue. Priority broadcasts send in full, immediately,
+-- ignoring the hourly cap and the daytime send window. Marketing = FALSE.
+ALTER TABLE broadcasts ADD COLUMN IF NOT EXISTS priority BOOLEAN NOT NULL DEFAULT FALSE;
+CREATE INDEX IF NOT EXISTS broadcasts_due_priority_idx
+  ON broadcasts (priority DESC, scheduled_at)
+  WHERE status = 'scheduled' AND channel = 'email';

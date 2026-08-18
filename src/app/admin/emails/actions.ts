@@ -272,7 +272,7 @@ export async function duplicateBroadcast(
       "email",
       b.filters,
       null,
-      { format: b.body_format, modelJson: b.model_json }
+      { format: b.body_format, modelJson: b.model_json, priority: b.priority }
     );
     revalidatePath("/admin/emails");
     return { ok: true, id: copy.id };
@@ -304,7 +304,7 @@ export async function resendToNonOpeners(
       "email",
       null,
       parentId,
-      { format: parent.body_format, modelJson: parent.model_json }
+      { format: parent.body_format, modelJson: parent.model_json, priority: parent.priority }
     );
     revalidatePath("/admin/emails");
     return { ok: true, id: draft.id };

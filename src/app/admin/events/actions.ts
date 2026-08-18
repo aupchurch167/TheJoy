@@ -114,7 +114,7 @@ export async function createEventEmailDraft(input: {
       "email",
       null,
       null,
-      { format: "html_standalone", createdBy: email, modelJson: model }
+      { format: "html_standalone", createdBy: email, modelJson: model, priority: true }
     );
     return { ok: true, id: b.id };
   } catch (err) {

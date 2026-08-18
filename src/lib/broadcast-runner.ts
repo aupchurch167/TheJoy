@@ -128,34 +128,53 @@ async function sendBatch(
 export async function processDueBroadcasts(): Promise<number> {
   // If email is not configured, leave broadcasts scheduled so they send later.
   if (!emailEnabled()) return 0;
-  // Quiet hours: send nothing overnight; due broadcasts wait for the morning.
-  if (!isWithinSendWindow()) return 0;
 
-  // Hourly budget shared across all broadcasts.
-  let budget = Math.max(0, BROADCAST_HOURLY_CAP - (await sentInLastHour()));
-  if (budget <= 0) return 0;
-
-  const due = await getDueBroadcasts();
+  const due = await getDueBroadcasts(); // priority first, then by schedule
+  const priorityDue = due.filter((b) => b.priority);
+  const marketingDue = due.filter((b) => !b.priority);
   let total = 0;
 
-  for (const broadcast of due) {
-    if (budget <= 0) break;
-
+  // 1) PRIORITY (event) emails jump the queue: sent in full, immediately,
+  //    ignoring the hourly cap AND the daytime window. "Send now" means now.
+  for (const broadcast of priorityDue) {
     const claimed = await markBroadcastSending(broadcast.id);
     if (!claimed) continue; // another run got it
-
-    const { sent, done } = await sendBatch(broadcast, budget);
-    budget -= sent;
+    const { sent, done } = await sendBatch(broadcast, Infinity);
     total += sent;
-
     if (done) {
       await markBroadcastSent(
         broadcast.id,
         await sentCountForBroadcast(broadcast.id)
       );
     } else {
-      // More recipients remain (hit the cap): requeue for the next run.
+      // Only reached if email dropped mid-run; retry on the next pass.
       await requeueBroadcast(broadcast.id);
+    }
+  }
+
+  // 2) MARKETING blasts stay metered by the hourly cap and the daytime window,
+  //    so a large nurture send never looks like spam. Quiet hours: they wait.
+  if (isWithinSendWindow()) {
+    let budget = Math.max(0, BROADCAST_HOURLY_CAP - (await sentInLastHour()));
+    for (const broadcast of marketingDue) {
+      if (budget <= 0) break;
+
+      const claimed = await markBroadcastSending(broadcast.id);
+      if (!claimed) continue; // another run got it
+
+      const { sent, done } = await sendBatch(broadcast, budget);
+      budget -= sent;
+      total += sent;
+
+      if (done) {
+        await markBroadcastSent(
+          broadcast.id,
+          await sentCountForBroadcast(broadcast.id)
+        );
+      } else {
+        // More recipients remain (hit the cap): requeue for the next run.
+        await requeueBroadcast(broadcast.id);
+      }
     }
   }
 
