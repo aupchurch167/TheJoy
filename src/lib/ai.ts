@@ -429,7 +429,10 @@ const EMAIL_SCHEMA = {
 function styleBrief(style: EmailStyle): string {
   switch (style) {
     case "birthday":
-      return `OCCASION: a BIRTHDAY note. Warm and personal. Open with a celebratory headline (e.g. "# Happy birthday, {{first_name}}"). Use a [[banner:...]] for one short, heartfelt cheer, and a [[divider]] before the sign-off. At most ONE tasteful emoji, if any. Keep it genuine, not cartoonish.`;
+      return `OCCASION: a RESIDENT'S BIRTHDAY, sent to the families list as a warm invitation to come celebrate. Get WHO IS WHO exactly right, this is the thing that usually goes wrong:
+- The RECIPIENT is the family member. Greet them with {{first_name}} ("Hi {{first_name}},").
+- The BIRTHDAY PERSON is the RESIDENT, a different person. Use the resident's name exactly as the operator gives it; if no name is given, write "[resident's name]". NEVER put {{first_name}} as the birthday person, and NEVER invent, nickname, or shorten a name (no "MJ", no initials, no pet names).
+Open with a headline about the celebration, naming the resident, e.g. "# Happy birthday, [resident's name]" (NOT the recipient). Write two or three warm sentences inviting the family to the party, with one small specific detail (a favorite cake, a song, cards signed by the hall). Use ONE [[banner:...]] for a short heartfelt toast to the resident ("Here's to [resident's name]!"); a toast is a banner, NEVER a button. State the details plainly, using [date], [time], and "here at Joy" as bracketed placeholders when the operator did not give them, and add ONE [[button:...]] only for a real action (RSVP or Call). Name ${BUSINESS.director.name} and the team as the hosts. At most one tasteful emoji. Genuine and specific, never cartoonish.`;
     case "holiday":
       return `OCCASION: a HOLIDAY / seasonal greeting. Warm and inclusive (do not assume a specific religious holiday unless the operator names one). Use a [[banner:...]] for a short seasonal line and a [[divider]] for a gentle flourish. At most ONE tasteful emoji, if any.`;
     case "event":
@@ -514,7 +517,7 @@ const EMAIL_HTML_SCHEMA = {
 function occasionBrief(occasion: EmailOccasion): string {
   switch (occasion) {
     case "birthday":
-      return `OCCASION: a BIRTHDAY. Celebratory and warm. Open with a bold banner row (a solid festive color band, rounded corners, white serif headline like "Happy Birthday, [Name]") and one tasteful emoji (🎂 or 🎈). Keep it heartfelt, about the person, not sales-y.`;
+      return `OCCASION: a RESIDENT'S BIRTHDAY, sent to families as a warm invitation to celebrate. Get WHO IS WHO exactly right: the RECIPIENT is the family member (greet with {{first_name}}); the BIRTHDAY PERSON is the RESIDENT, a different person (use the resident's name exactly as given, or "[resident's name]" if none). NEVER use {{first_name}} as the birthday person, and NEVER invent, nickname, or shorten a name (no "MJ", no initials). Open with a bold festive banner row (a solid warm color band, rounded corners, a white serif headline like "Happy Birthday, [resident's name]") and one tasteful emoji (🎂 or 🎈). Write two or three heartfelt sentences about the resident and the celebration, with one small specific detail. Put the party details in a clearly boxed block (date, time, place as [bracketed] placeholders when not given) and one bulletproof RSVP/Call button. Warm, about the resident, never sales-y.`;
     case "holiday":
       return `OCCASION: a HOLIDAY / seasonal greeting. Warm, inclusive (do not assume a specific religious holiday unless named). A soft seasonal banner row and a gentle sign-off.`;
     case "event":
