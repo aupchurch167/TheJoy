@@ -5,6 +5,7 @@ import type { Audience, LeadSegment } from "./leads";
 
 export type BroadcastStatus = "draft" | "scheduled" | "sending" | "sent";
 export type BroadcastChannel = "email" | "sms";
+export type BroadcastBodyFormat = "markdown" | "html";
 
 export type Broadcast = {
   id: string;
@@ -22,6 +23,8 @@ export type Broadcast = {
   resend_of: string | null;
   /** The reusable Message this Send dispatches (the once-per-Message key). */
   message_id: string | null;
+  /** How `body` is authored: Markdown (letter templates) or designed HTML. */
+  body_format: BroadcastBodyFormat;
   created_at: string;
   updated_at: string;
 };
@@ -44,7 +47,11 @@ export async function createBroadcast(
   channel: BroadcastChannel = "email",
   filters: LeadSegment | null = null,
   resendOf: string | null = null,
-  opts?: { messageId?: string | null; createdBy?: string | null }
+  opts?: {
+    messageId?: string | null;
+    createdBy?: string | null;
+    format?: BroadcastBodyFormat;
+  }
 ): Promise<Broadcast> {
   // Every Send points at a Message. When no Message is supplied, this compose
   // gets a fresh one (its own once-per-Message scope). Reusing a messageId
@@ -57,8 +64,8 @@ export async function createBroadcast(
     ).id;
 
   const rows = await query<Broadcast>(
-    `INSERT INTO broadcasts (subject, body, audience, channel, filters, resend_of, message_id)
-     VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`,
+    `INSERT INTO broadcasts (subject, body, audience, channel, filters, resend_of, message_id, body_format)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *`,
     [
       subject,
       body,
@@ -67,6 +74,7 @@ export async function createBroadcast(
       filters ? JSON.stringify(filters) : null,
       resendOf,
       messageId,
+      opts?.format ?? "markdown",
     ]
   );
   return rows[0];
@@ -120,12 +128,14 @@ export async function updateBroadcast(
   id: string,
   subject: string,
   body: string,
-  filters: LeadSegment | null = null
+  filters: LeadSegment | null = null,
+  format: BroadcastBodyFormat = "markdown"
 ): Promise<Broadcast | null> {
   const rows = await query<Broadcast>(
-    `UPDATE broadcasts SET subject = $2, body = $3, filters = $4, updated_at = now()
+    `UPDATE broadcasts SET subject = $2, body = $3, filters = $4, body_format = $5,
+       updated_at = now()
      WHERE id = $1 AND status IN ('draft','scheduled') RETURNING *`,
-    [id, subject, body, filters ? JSON.stringify(filters) : null]
+    [id, subject, body, filters ? JSON.stringify(filters) : null, format]
   );
   return rows[0] ?? null;
 }

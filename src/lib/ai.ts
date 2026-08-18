@@ -479,6 +479,123 @@ COMPLIANCE (§4) - Georgia license (a legal boundary):
 Do not add an unsubscribe link, the letterhead, badges, or an address block; those are appended automatically.`;
 }
 
+/* ------------------------------------------------------------------ */
+/* DESIGNED HTML EMAIL (occasion-themed, email-safe)                    */
+/* ------------------------------------------------------------------ */
+
+export type EmailOccasion =
+  | "birthday"
+  | "holiday"
+  | "event"
+  | "celebration"
+  | "thank_you"
+  | "announcement";
+
+export type EmailHtmlDraft = { subject: string; html: string };
+
+const EMAIL_HTML_SCHEMA = {
+  type: "object",
+  properties: {
+    subject: {
+      type: "string",
+      description:
+        "Short, warm, specific subject line (~4-8 words). No banned words, no emoji clutter (one tasteful emoji is fine for a birthday).",
+    },
+    html: {
+      type: "string",
+      description:
+        "The INNER body HTML only (no <html>, <head>, <body>, or doctype). Email-safe: inline styles + tables only. See the rules.",
+    },
+  },
+  required: ["subject", "html"],
+  additionalProperties: false,
+} as const;
+
+function occasionBrief(occasion: EmailOccasion): string {
+  switch (occasion) {
+    case "birthday":
+      return `OCCASION: a BIRTHDAY. Celebratory and warm. Open with a bold banner row (a solid festive color band, rounded corners, white serif headline like "Happy Birthday, [Name]") and one tasteful emoji (🎂 or 🎈). Keep it heartfelt, about the person, not sales-y.`;
+    case "holiday":
+      return `OCCASION: a HOLIDAY / seasonal greeting. Warm, inclusive (do not assume a specific religious holiday unless named). A soft seasonal banner row and a gentle sign-off.`;
+    case "event":
+      return `OCCASION: an EVENT INVITATION. Lead with an inviting headline, then a clearly boxed "The details" block (date, time, place as [bracketed] placeholders if not given) and one bulletproof RSVP/Call button.`;
+    case "celebration":
+      return `OCCASION: a CELEBRATION or milestone (anniversary, welcome, good news). Joyful but tasteful, one accent banner.`;
+    case "thank_you":
+      return `OCCASION: a THANK YOU. Sincere and simple, a warm accent, no hard sell.`;
+    default:
+      return `OCCASION: a community ANNOUNCEMENT or update. Clean, warm, one clear headline and an optional button.`;
+  }
+}
+
+const EMAIL_HTML_SYSTEM = `You design a single marketing email for ${BUSINESS.name}, a 24-bed personal care home in Loganville, Georgia, led by ${BUSINESS.director.name}. You return the INNER body HTML that drops into Joy's existing letter template (which already provides the outer page, the letterhead logo, award badges, the address block, and the unsubscribe footer). Do NOT recreate any of those.
+
+OUTPUT: the body content only. NEVER include <!doctype>, <html>, <head>, <body>, <style>, <script>, an unsubscribe link, a footer, an address block, or the Joy logo. Those are added for you.
+
+EMAIL-SAFE HTML (hard rules, inboxes are strict):
+- INLINE styles only (style="..."). No <style> blocks, no classes, no external CSS, no JS, no <link>.
+- Layout with TABLES (role="presentation", cellpadding/cellspacing="0", border="0", width="100%"). No flexbox, grid, position, or float.
+- Fonts: Georgia, 'Times New Roman', serif for body and headlines (matches Joy). A system sans (-apple-system, Segoe UI, Roboto, sans-serif) is OK for a small label. Always give real fallbacks. Never use a web font or @font-face.
+- Colors (use these): text #17252b; soft text #4a5a52; muted #7c7a6f; page cream is already behind you (#fbf9f5). Accents: sage green #5a6b45, deep green #2f3b23, teal #01a7ce. For festive occasions you may add ONE warm band color (a muted gold #c98a2c, or a soft coral #d98b6a) but keep it tasteful, never neon.
+- Buttons: bulletproof only. A <table> with a single <td> that has the background color, padding (14px 28px), border-radius (8px), and an <a> inside styled white, bold, text-decoration:none. Never a CSS button.
+- Images: do NOT invent image URLs and do NOT use <img> unless a real URL is provided in the brief. Create warmth with color bands, rounded boxes, and at most one or two tasteful emoji instead.
+- Keep the whole thing within ~600px (use width:100% tables; the shell is 600px). Generous line-height (~1.6). Mobile-friendly by default (fluid tables, no fixed pixel widths on content).
+
+PERSONALIZE: you may use {{first_name}} anywhere (it is filled per recipient at send). If a specific detail is missing (a date, a time, a name), write a clear [bracketed placeholder] for the operator to fill. NEVER invent specifics (dates, prices, quotes, resident stories).
+
+VOICE (§2): NO em-dashes (use parentheses). BANNED words (never use any): "loved ones", "vibrant", "journey", "personalized care plans", "boutique", "intimate" (say "small"), "top-tier", "deserve more". Short, warm, plainspoken sentences. Name ${BUSINESS.director.name} where care or leadership is mentioned.
+
+COMPLIANCE (§4): Joy is a PERSONAL CARE HOME, never "assisted living" as its label. Allowed self-descriptions: "senior living", "personal care home", "memory care".`;
+
+/**
+ * Design a full, occasion-themed email as email-safe INNER HTML (birthday,
+ * holiday, event, etc.). The result is sent as-is inside Joy's letter shell,
+ * which still adds the letterhead, badges, and the required unsubscribe footer.
+ */
+export async function draftEmailHtml(input: {
+  context: string;
+  audience: EmailAudience;
+  occasion: EmailOccasion;
+}): Promise<EmailHtmlDraft> {
+  if (!aiEnabled()) {
+    throw new Error("AI is not configured (set ANTHROPIC_API_KEY).");
+  }
+  const audienceBrief =
+    input.audience === "families"
+      ? `This goes to the FAMILIES list (families of current residents). Community-wide and warm; never individual resident details, never anything urgent.`
+      : `This goes to the LEADS list (adult children researching senior living for a parent). Warm and low-pressure.`;
+
+  const userPrompt = [
+    occasionBrief(input.occasion),
+    audienceBrief,
+    ``,
+    `Here is what the email is about, in the operator's words:`,
+    input.context,
+    ``,
+    `Return the subject and the inner body HTML, following every rule. Use [placeholders] for any specific detail not given above.`,
+  ].join("\n");
+
+  const client = new Anthropic();
+  const response = await client.messages.create({
+    model: MODEL,
+    max_tokens: 6000,
+    thinking: { type: "adaptive" },
+    system: EMAIL_HTML_SYSTEM,
+    output_config: { format: { type: "json_schema", schema: EMAIL_HTML_SCHEMA } },
+    messages: [{ role: "user", content: userPrompt }],
+  });
+
+  const textBlock = response.content.find((b) => b.type === "text");
+  if (!textBlock || textBlock.type !== "text") {
+    throw new Error("The AI did not return an email design.");
+  }
+  try {
+    return JSON.parse(textBlock.text) as EmailHtmlDraft;
+  } catch {
+    throw new Error("The AI email design was not valid. Please try again.");
+  }
+}
+
 export async function draftEmail(
   context: string,
   audience: EmailAudience,

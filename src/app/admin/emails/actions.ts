@@ -45,9 +45,11 @@ function normalizeFilters(f: z.infer<typeof FiltersSchema>): LeadSegment | null 
 const BaseSchema = z.object({
   id: z.string().uuid().optional(),
   subject: z.string().trim().min(1, "A subject is required.").max(200),
-  body: z.string().max(50000).optional(),
+  // Designed HTML can run long, so allow more than the Markdown limit.
+  body: z.string().max(200000).optional(),
   audience: z.enum(["leads", "families"]).default("leads"),
   filters: FiltersSchema,
+  format: z.enum(["markdown", "html"]).default("markdown"),
 });
 
 async function upsert(
@@ -55,13 +57,16 @@ async function upsert(
   subject: string,
   body: string,
   audience: "leads" | "families",
-  filters: LeadSegment | null
+  filters: LeadSegment | null,
+  format: "markdown" | "html"
 ) {
   if (id) {
-    const updated = await updateBroadcast(id, subject, body, filters);
+    const updated = await updateBroadcast(id, subject, body, filters, format);
     if (updated) return updated.id;
   }
-  const created = await createBroadcast(subject, body, audience, "email", filters);
+  const created = await createBroadcast(subject, body, audience, "email", filters, null, {
+    format,
+  });
   return created.id;
 }
 
@@ -100,7 +105,8 @@ export async function saveDraft(input: unknown): Promise<ActionResult> {
       parsed.data.subject,
       parsed.data.body ?? "",
       parsed.data.audience,
-      normalizeFilters(parsed.data.filters)
+      normalizeFilters(parsed.data.filters),
+      parsed.data.format
     );
     revalidatePath("/admin/emails");
     return { ok: true, id, message: "Saved as draft." };
@@ -135,7 +141,8 @@ export async function sendOrSchedule(input: unknown): Promise<ActionResult> {
       parsed.data.subject,
       parsed.data.body ?? "",
       parsed.data.audience,
-      normalizeFilters(parsed.data.filters)
+      normalizeFilters(parsed.data.filters),
+      parsed.data.format
     );
 
     const now = new Date();
@@ -185,7 +192,8 @@ export async function sendOrSchedule(input: unknown): Promise<ActionResult> {
 
 const TestSchema = z.object({
   subject: z.string().trim().min(1, "Add a subject before testing.").max(200),
-  body: z.string().max(50000).optional(),
+  body: z.string().max(200000).optional(),
+  format: z.enum(["markdown", "html"]).default("markdown"),
   to: z
     .string()
     .trim()
@@ -229,7 +237,12 @@ export async function sendTest(input: unknown): Promise<TestResult> {
   }
 
   try {
-    const ok = await sendTestEmail(to, parsed.data.subject, parsed.data.body ?? "");
+    const ok = await sendTestEmail(
+      to,
+      parsed.data.subject,
+      parsed.data.body ?? "",
+      parsed.data.format
+    );
     if (!ok) return { ok: false, error: "Email is not configured." };
     return { ok: true, message: `Test sent to ${to}. Check your inbox.` };
   } catch (err) {
@@ -251,7 +264,9 @@ export async function duplicateBroadcast(
       b.body,
       b.audience,
       "email",
-      b.filters
+      b.filters,
+      null,
+      { format: b.body_format }
     );
     revalidatePath("/admin/emails");
     return { ok: true, id: copy.id };
@@ -282,7 +297,8 @@ export async function resendToNonOpeners(
       parent.audience,
       "email",
       null,
-      parentId
+      parentId,
+      { format: parent.body_format }
     );
     revalidatePath("/admin/emails");
     return { ok: true, id: draft.id };

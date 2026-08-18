@@ -95,7 +95,7 @@ async function sendBatch(
         lead,
         broadcast.subject,
         broadcast.body,
-        { broadcastId: broadcast.id }
+        { broadcastId: broadcast.id, format: broadcast.body_format }
       );
       if (!messageId) {
         // Email not configured mid-run: stop and let a later run retry.

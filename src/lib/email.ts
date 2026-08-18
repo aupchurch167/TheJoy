@@ -288,7 +288,7 @@ export async function sendMarketingEmail(
   lead: Lead,
   subject: string,
   markdownBody: string,
-  opts?: { broadcastId?: string }
+  opts?: { broadcastId?: string; format?: "markdown" | "html" }
 ): Promise<string | null> {
   if (!resend) {
     console.info("[email] RESEND_API_KEY not set; skipping send to", lead.email);
@@ -297,7 +297,11 @@ export async function sendMarketingEmail(
   // Phone-only family contacts have no email; nothing to send.
   if (!lead.email) return null;
   const subj = applyMergeFields(subject, lead);
-  const inner = renderBody(applyMergeFields(markdownBody, lead));
+  // Designed-HTML emails are already email-safe inner HTML (built by Claude),
+  // so they go straight in; Markdown emails are rendered first. Either way the
+  // letter shell adds the letterhead, badges, and the unsubscribe footer.
+  const merged = applyMergeFields(markdownBody, lead);
+  const inner = opts?.format === "html" ? merged : renderBody(merged);
 
   const { data } = await resend.emails.send({
     from: FROM,
@@ -322,7 +326,8 @@ export async function sendMarketingEmail(
 export async function sendTestEmail(
   to: string,
   subject: string,
-  markdownBody: string
+  markdownBody: string,
+  format: "markdown" | "html" = "markdown"
 ): Promise<boolean> {
   if (!resend) {
     console.info("[email] RESEND_API_KEY not set; test send skipped.");
@@ -330,7 +335,8 @@ export async function sendTestEmail(
   }
   const sample = { name: "Sarah" };
   const subj = applyMergeFields(subject, sample);
-  const inner = renderBody(applyMergeFields(markdownBody || "", sample));
+  const merged = applyMergeFields(markdownBody || "", sample);
+  const inner = format === "html" ? merged : renderBody(merged);
 
   await resend.emails.send({
     from: FROM,

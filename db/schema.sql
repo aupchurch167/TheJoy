@@ -462,3 +462,9 @@ CREATE TABLE IF NOT EXISTS suppressions (
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 CREATE INDEX IF NOT EXISTS suppressions_reason_idx ON suppressions (reason);
+
+-- Emails can be authored as Markdown (the letter templates) or as designed HTML
+-- (Claude-built, email-safe inner HTML for birthdays and other special sends).
+-- The Joy letter shell (letterhead, badges, unsubscribe footer) wraps either.
+ALTER TABLE broadcasts ADD COLUMN IF NOT EXISTS body_format TEXT NOT NULL DEFAULT 'markdown'
+  CHECK (body_format IN ('markdown', 'html'));

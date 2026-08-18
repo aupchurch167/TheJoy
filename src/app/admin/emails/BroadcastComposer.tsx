@@ -63,6 +63,11 @@ export default function BroadcastComposer({
   );
   const [subject, setSubject] = useState(broadcast?.subject ?? "");
   const [body, setBody] = useState(broadcast?.body ?? "");
+  // 'markdown' = the letter templates; 'html' = a Claude-designed HTML email.
+  const [format, setFormat] = useState<"markdown" | "html">(
+    broadcast?.body_format ?? "markdown"
+  );
+  const isHtml = format === "html";
   const [when, setWhen] = useState("");
 
   // Recipient segment (drill into the leads audience).
@@ -203,6 +208,9 @@ export default function BroadcastComposer({
   // "Create with AI" panel.
   const [aiContext, setAiContext] = useState("");
   const [aiStyle, setAiStyle] = useState("standard");
+  // Designed-HTML mode: Claude builds a richer, festive HTML email.
+  const [aiDesign, setAiDesign] = useState(false);
+  const [aiOccasion, setAiOccasion] = useState("birthday");
   const [aiBusy, setAiBusy] = useState(false);
   const [aiError, setAiError] = useState("");
 
@@ -216,7 +224,7 @@ export default function BroadcastComposer({
   function onSaveDraft() {
     setError("");
     start(async () => {
-      const res = await saveDraft({ id, subject, body, audience, filters: currentFilters });
+      const res = await saveDraft({ id, subject, body, format, audience, filters: currentFilters });
       if (!res.ok) {
         setError(res.error);
         toastError(res.error);
@@ -237,6 +245,7 @@ export default function BroadcastComposer({
           id,
           subject,
           body,
+          format,
           audience,
           filters: currentFilters,
           when: when || undefined,
@@ -279,6 +288,7 @@ export default function BroadcastComposer({
     }
     setSubject(t.subject);
     setBody(t.body);
+    setFormat("markdown");
     setTab("write");
     success(`Loaded template: ${t.label}`);
   }
@@ -292,7 +302,7 @@ export default function BroadcastComposer({
     setError("");
     setTestBusy(true);
     try {
-      const res = await sendTest({ subject, body, to: testTo });
+      const res = await sendTest({ subject, body, format, to: testTo });
       if (!res.ok) {
         setError(res.error);
         toastError(res.error);
@@ -320,6 +330,26 @@ export default function BroadcastComposer({
     setAiError("");
     setAiBusy(true);
     try {
+      if (aiDesign) {
+        // Designed HTML: Claude builds a festive, email-safe HTML email.
+        const res = await fetch("/api/admin/design-email", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ context: aiContext, audience, occasion: aiOccasion }),
+        });
+        const json = await res.json();
+        if (!res.ok || !json.ok) {
+          setAiError(json.error || "The AI design failed.");
+          toastError(json.error || "The AI design failed.");
+          return;
+        }
+        setSubject(json.draft.subject);
+        setBody(json.draft.html);
+        setFormat("html");
+        setTab("preview");
+        success("Designed email ready. Preview it, then Send test to see it live.");
+        return;
+      }
       const res = await fetch("/api/admin/draft-email", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -333,6 +363,7 @@ export default function BroadcastComposer({
       }
       setSubject(json.draft.subject);
       setBody(json.draft.body);
+      setFormat("markdown");
       setTab("write");
       success("AI draft ready. Review and edit before sending.");
     } catch {
@@ -479,7 +510,16 @@ export default function BroadcastComposer({
             ({AUDIENCE_LABEL[broadcast?.audience ?? "leads"]}).
           </p>
           <div className="mt-4 border-t border-line pt-4">
-            <Markdown>{broadcast?.body || ""}</Markdown>
+            {broadcast?.body_format === "html" ? (
+              <iframe
+                title="Sent email"
+                sandbox=""
+                className="h-[32rem] w-full overflow-hidden rounded-lg border border-line bg-[#fbf9f5]"
+                srcDoc={`<div style="background:#fbf9f5;padding:24px;font-family:Georgia,'Times New Roman',serif;">${broadcast?.body || ""}</div>`}
+              />
+            ) : (
+              <Markdown>{broadcast?.body || ""}</Markdown>
+            )}
           </div>
         </Card>
       </div>
@@ -740,21 +780,50 @@ export default function BroadcastComposer({
             buttons, and flair to match the occasion. It never sends, and it fills
             in [placeholders] for anything you did not specify.
           </p>
+          <label className="mt-2.5 flex items-start gap-2.5 text-sm text-ink-soft">
+            <input
+              type="checkbox"
+              checked={aiDesign}
+              onChange={(e) => setAiDesign(e.target.checked)}
+              className="mt-0.5 h-4 w-4 accent-clay"
+            />
+            <span>
+              <strong className="text-ink">Design it in HTML</strong> for a
+              richer, more special look (festive banners and color, great for
+              birthdays and celebrations). Off = a clean text letter.
+            </span>
+          </label>
+
           <div className="mt-2.5">
             <label className="text-xs font-medium text-ink">
-              Style / occasion
+              {aiDesign ? "Occasion" : "Style / occasion"}
             </label>
-            <select
-              value={aiStyle}
-              onChange={(e) => setAiStyle(e.target.value)}
-              className={`${INPUT} mt-1 h-10 sm:max-w-xs`}
-            >
-              <option value="standard">Standard note</option>
-              <option value="birthday">Birthday</option>
-              <option value="holiday">Holiday / seasonal</option>
-              <option value="event">Event invitation</option>
-              <option value="newsletter">Newsletter / update</option>
-            </select>
+            {aiDesign ? (
+              <select
+                value={aiOccasion}
+                onChange={(e) => setAiOccasion(e.target.value)}
+                className={`${INPUT} mt-1 h-10 sm:max-w-xs`}
+              >
+                <option value="birthday">Birthday</option>
+                <option value="celebration">Celebration / milestone</option>
+                <option value="event">Event invitation</option>
+                <option value="holiday">Holiday / seasonal</option>
+                <option value="thank_you">Thank you</option>
+                <option value="announcement">Announcement / update</option>
+              </select>
+            ) : (
+              <select
+                value={aiStyle}
+                onChange={(e) => setAiStyle(e.target.value)}
+                className={`${INPUT} mt-1 h-10 sm:max-w-xs`}
+              >
+                <option value="standard">Standard note</option>
+                <option value="birthday">Birthday</option>
+                <option value="holiday">Holiday / seasonal</option>
+                <option value="event">Event invitation</option>
+                <option value="newsletter">Newsletter / update</option>
+              </select>
+            )}
           </div>
           <textarea
             value={aiContext}
@@ -798,9 +867,30 @@ export default function BroadcastComposer({
 
         <div>
           <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
-            <label className="text-sm font-medium text-ink">Message</label>
             <div className="flex items-center gap-2">
-              {tab === "write" && (
+              <label className="text-sm font-medium text-ink">Message</label>
+              {isHtml && (
+                <>
+                  <Badge tone="info">Designed HTML</Badge>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (
+                        window.confirm(
+                          "Switch to the simple text editor? The designed HTML stays in the box, but new edits use plain text formatting."
+                        )
+                      )
+                        setFormat("markdown");
+                    }}
+                    className="text-xs font-medium text-ink-faint underline underline-offset-2 hover:text-clay"
+                  >
+                    Switch to text
+                  </button>
+                </>
+              )}
+            </div>
+            <div className="flex items-center gap-2">
+              {tab === "write" && !isHtml && (
                 <div className="flex items-center gap-1">
                   <ToolButton onClick={() => openInsert("link")}>Link</ToolButton>
                   <ToolButton onClick={() => openInsert("button")}>
@@ -830,7 +920,7 @@ export default function BroadcastComposer({
           </div>
 
           {/* Insert link / button popover */}
-          {insertKind && tab === "write" && (
+          {insertKind && tab === "write" && !isHtml && (
             <div className="mb-2 rounded-lg border border-clay/30 bg-clay/5 p-3">
               <div className="grid gap-2 sm:grid-cols-[1fr_1.4fr_auto] sm:items-end">
                 <label className="block">
@@ -880,28 +970,56 @@ export default function BroadcastComposer({
               onChange={(e) => setBody(e.target.value)}
               rows={14}
               className="w-full rounded-lg border border-line bg-white px-4 py-3 font-mono text-sm leading-relaxed text-ink transition-colors focus:border-clay focus:outline-none focus:ring-2 focus:ring-clay/30"
-              placeholder="Write in Markdown. Short sentences. No em-dashes. Add photos with the Photo button. Every email includes an unsubscribe link automatically."
+              placeholder={
+                isHtml
+                  ? "This is the designed HTML. Preview shows how it looks; you can hand-edit the HTML here if you like (it is wrapped in the Joy letterhead + footer on send)."
+                  : "Write in Markdown. Short sentences. No em-dashes. Add photos with the Photo button. Every email includes an unsubscribe link automatically."
+              }
             />
           ) : (
-            <div className="min-h-[14rem] rounded-lg border border-line bg-white px-6 py-6">
+            <div className="min-h-[14rem] overflow-hidden rounded-lg border border-line bg-white">
               {body.trim() ? (
-                <Markdown>{body}</Markdown>
+                isHtml ? (
+                  <iframe
+                    title="Email preview"
+                    sandbox=""
+                    className="h-[32rem] w-full border-0 bg-[#fbf9f5]"
+                    srcDoc={`<div style="background:#fbf9f5;padding:24px;font-family:Georgia,'Times New Roman',serif;">${body}</div>`}
+                  />
+                ) : (
+                  <div className="px-6 py-6">
+                    <Markdown>{body}</Markdown>
+                  </div>
+                )
               ) : (
-                <p className="text-ink-faint">Nothing to preview yet.</p>
+                <p className="px-6 py-6 text-ink-faint">Nothing to preview yet.</p>
               )}
             </div>
           )}
           <p className="mt-2 text-xs text-ink-faint">
-            Use the toolbar above to drop in a{" "}
-            <strong className="font-semibold">Link</strong>,{" "}
-            <strong className="font-semibold">Button</strong>,{" "}
-            <strong className="font-semibold">Divider</strong>, or{" "}
-            <strong className="font-semibold">Photo</strong> at your cursor. The
-            Joy letterhead, badges, and an unsubscribe link are added
-            automatically (opted-out recipients are always skipped). Personalize
-            with <code>{"{{first_name}}"}</code>. Use{" "}
-            <strong className="font-semibold">Send test</strong> to see the final
-            design.
+            {isHtml ? (
+              <>
+                This is a designed HTML email. The Joy letterhead, badges, and an
+                unsubscribe link are added automatically (opted-out recipients are
+                always skipped). Personalize with{" "}
+                <code>{"{{first_name}}"}</code>. Use{" "}
+                <strong className="font-semibold">Send test</strong> to see it in
+                a real inbox before you send.
+              </>
+            ) : (
+              <>
+                Use the toolbar above to drop in a{" "}
+                <strong className="font-semibold">Link</strong>,{" "}
+                <strong className="font-semibold">Button</strong>,{" "}
+                <strong className="font-semibold">Divider</strong>, or{" "}
+                <strong className="font-semibold">Photo</strong> at your cursor.
+                The Joy letterhead, badges, and an unsubscribe link are added
+                automatically (opted-out recipients are always skipped).
+                Personalize with <code>{"{{first_name}}"}</code>. Use{" "}
+                <strong className="font-semibold">Send test</strong> to see the
+                final design.
+              </>
+            )}
           </p>
         </div>
 
