@@ -25,6 +25,8 @@ export type Broadcast = {
   message_id: string | null;
   /** How `body` is authored: Markdown (letter templates) or designed HTML. */
   body_format: BroadcastBodyFormat;
+  /** Studio structured model (EmailModel JSON) when composed in the studio; null otherwise. */
+  model_json: unknown | null;
   created_at: string;
   updated_at: string;
 };
@@ -51,6 +53,7 @@ export async function createBroadcast(
     messageId?: string | null;
     createdBy?: string | null;
     format?: BroadcastBodyFormat;
+    modelJson?: unknown | null;
   }
 ): Promise<Broadcast> {
   // Every Send points at a Message. When no Message is supplied, this compose
@@ -64,8 +67,8 @@ export async function createBroadcast(
     ).id;
 
   const rows = await query<Broadcast>(
-    `INSERT INTO broadcasts (subject, body, audience, channel, filters, resend_of, message_id, body_format)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *`,
+    `INSERT INTO broadcasts (subject, body, audience, channel, filters, resend_of, message_id, body_format, model_json)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *`,
     [
       subject,
       body,
@@ -75,6 +78,7 @@ export async function createBroadcast(
       resendOf,
       messageId,
       opts?.format ?? "markdown",
+      opts?.modelJson != null ? JSON.stringify(opts.modelJson) : null,
     ]
   );
   return rows[0];
@@ -129,13 +133,22 @@ export async function updateBroadcast(
   subject: string,
   body: string,
   filters: LeadSegment | null = null,
-  format: BroadcastBodyFormat = "markdown"
+  format: BroadcastBodyFormat = "markdown",
+  modelJson?: unknown | null
 ): Promise<Broadcast | null> {
   const rows = await query<Broadcast>(
     `UPDATE broadcasts SET subject = $2, body = $3, filters = $4, body_format = $5,
+       model_json = COALESCE($6, model_json),
        updated_at = now()
      WHERE id = $1 AND status IN ('draft','scheduled') RETURNING *`,
-    [id, subject, body, filters ? JSON.stringify(filters) : null, format]
+    [
+      id,
+      subject,
+      body,
+      filters ? JSON.stringify(filters) : null,
+      format,
+      modelJson != null ? JSON.stringify(modelJson) : null,
+    ]
   );
   return rows[0] ?? null;
 }

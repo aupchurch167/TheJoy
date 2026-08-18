@@ -1,6 +1,7 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { BUSINESS } from "./site";
 import { BIRTHDAY_INVITE_HTML } from "./email-designs";
+import type { EmailPlan } from "./email-model";
 
 /**
  * AI blog drafting via the Anthropic API. The system prompt embeds Joy's
@@ -629,6 +630,182 @@ export async function draftEmailHtml(input: {
     return { ...parsed, standalone };
   } catch {
     throw new Error("The AI email design was not valid. Please try again.");
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* STRUCTURED EMAIL MODEL (studio composer)                            */
+/* ------------------------------------------------------------------ */
+
+/**
+ * The CONTENT fields of an EmailModel (everything the AI writes). The theme,
+ * RSVP link, and photo are chosen in the studio, NOT by the AI, so swapping the
+ * look never rewrites the words. `plan` is only for event/birthday occasions.
+ */
+export type EmailModelDraft = {
+  subject: string;
+  eyebrow?: string;
+  heroTitle: string;
+  heroSub?: string;
+  greeting: string;
+  intro: string;
+  plan?: EmailPlan | null;
+  closing: string;
+};
+
+const EMAIL_MODEL_SCHEMA = {
+  type: "object",
+  properties: {
+    subject: {
+      type: "string",
+      description:
+        "Short, warm, specific subject line (~4-8 words). No banned words. One tasteful emoji is fine for a party or holiday, otherwise none.",
+    },
+    eyebrow: {
+      type: "string",
+      description:
+        "A very short caps line shown above the headline (e.g. \"You're invited\" or \"A note from Joy\"). 2-4 words. Leave empty to let the look supply one.",
+    },
+    heroTitle: {
+      type: "string",
+      description:
+        "The big headline in the hero band. For a birthday, name the RESIDENT (\"Happy birthday, [resident's name]\"), never the recipient. Warm and specific, no banned words.",
+    },
+    heroSub: {
+      type: "string",
+      description:
+        "An optional one-line italic subtitle under the headline (e.g. \"Cake, cards, and good company\"). Empty if not needed.",
+    },
+    greeting: {
+      type: "string",
+      description:
+        "The salutation line. Greet the RECIPIENT with {{first_name}} (e.g. \"Hi {{first_name}},\"). One line only.",
+    },
+    intro: {
+      type: "string",
+      description:
+        "Two or three short, warm sentences (the body of the note). Use \\n for a line break between short paragraphs. Specific detail over reassurance. This is the ONLY place the main message goes.",
+    },
+    plan: {
+      type: ["object", "null"],
+      description:
+        "For an EVENT or BIRTHDAY only: the details card. Null for any other occasion. Never invent a date, time, or place: use a clear [bracketed placeholder] for anything the operator did not give.",
+      properties: {
+        when: {
+          type: "string",
+          description: "Date and time, e.g. \"Friday, September 26 at 3:00pm\" or \"[date and time]\" if not given.",
+        },
+        where: {
+          type: "string",
+          description: "The place, e.g. \"here at Joy\" or \"[location]\" if not given.",
+        },
+        treats: {
+          type: "string",
+          description: "An optional short line about food/activity, e.g. \"Cake and lemonade\". Empty string if none.",
+        },
+      },
+      required: ["when", "where", "treats"],
+      additionalProperties: false,
+    },
+    closing: {
+      type: "string",
+      description:
+        "The warm sign-off, e.g. \"Warmly,\\n" + BUSINESS.director.name + " and the Joy team\". Use \\n between the sign-off line and the name. Name " + BUSINESS.director.name + " here.",
+    },
+  },
+  required: ["subject", "eyebrow", "heroTitle", "heroSub", "greeting", "intro", "plan", "closing"],
+  additionalProperties: false,
+} as const;
+
+function emailModelSystemPrompt(
+  audience: EmailAudience,
+  occasion: EmailOccasion
+): string {
+  const audienceBrief =
+    audience === "families"
+      ? `This email goes to the FAMILIES list (families of people who currently live at Joy). Community-wide only: parties, a family night, a monthly note, event photos, seasonal greetings. NEVER include details about an individual resident's care, and NEVER anything urgent (urgent news is a phone call). Warm, brief, inclusive of every family.`
+      : `This email goes to the LEADS list (adult children researching senior living for a parent, usually a daughter in her 50s or 60s). A gentle, low-pressure, helpful note. It is fine to invite them to book a tour or call and ask for ${BUSINESS.director.name}, never pushy.`;
+
+  return `You write the WORDS of a single email for ${BUSINESS.name}, a 24-bed personal care home in Loganville, Georgia, led by Executive Director ${BUSINESS.director.name}. You fill a small set of STRUCTURED FIELDS (subject, an eyebrow, a hero headline and optional subtitle, a greeting, the body, an optional details card, and a sign-off). You do NOT choose colors, fonts, or layout: a separate "look" is applied to your words, so write words that read well under any look.
+
+${audienceBrief}
+
+${occasionBrief(occasion)}
+
+FIELD RULES:
+- greeting: greet the RECIPIENT with {{first_name}} ("Hi {{first_name}},"). It is filled per person at send.
+- intro: the whole message lives here, two or three short sentences (use \\n between short paragraphs). One concrete, specific detail beats general reassurance.
+- plan: ONLY for an event or birthday. For every other occasion, set plan to null. Never invent a date, time, or place; use a [bracketed placeholder] for anything not given.
+- heroTitle: for a birthday, name the RESIDENT (the celebrant), NEVER the recipient and NEVER {{first_name}}. Never invent, nickname, or shorten a name (no initials, no pet names); if no resident name is given, write "[resident's name]".
+- closing: a warm sign-off naming ${BUSINESS.director.name} and the team.
+- Do NOT write an unsubscribe line, a footer, or an address block; those are added automatically.
+
+TWO RULES GOVERN EVERY WORD. They never bend.
+VOICE (§2): NO em-dashes (use parentheses or commas). BANNED words (never use any): "loved ones", "vibrant", "journey", "personalized care plans", "boutique", "intimate" (say "small"), "top-tier", "deserve more", "embrace a life of". Short, warm, plainspoken sentences. Name ${BUSINESS.director.name} where care or leadership is discussed.
+COMPLIANCE (§4) - Georgia license: Joy is a PERSONAL CARE HOME, NEVER "assisted living". You may reference "assisted living" ONLY as the category families search for, immediately followed by what Joy actually is. Allowed self-descriptions: "senior living", "personal care home", "memory care". Invent no specifics (dates, prices, quotes, resident stories); use [bracketed placeholders] instead.`;
+}
+
+/**
+ * Draft (or revise) the structured content of a studio email. Returns only the
+ * WORDS: the theme, RSVP link, and photo are applied separately, so a look swap
+ * never rewrites copy. Pass `current` + `instruction` to make a targeted change
+ * (Shorter, Warmer, a new subject, etc.) that keeps everything else intact.
+ */
+export async function draftEmailModel(input: {
+  context: string;
+  audience: EmailAudience;
+  occasion: EmailOccasion;
+  current?: EmailModelDraft | null;
+  instruction?: string | null;
+}): Promise<EmailModelDraft> {
+  if (!aiEnabled()) {
+    throw new Error("AI drafting is not configured (set ANTHROPIC_API_KEY).");
+  }
+
+  const editing = !!(input.current && input.instruction);
+  const userPrompt = editing
+    ? [
+        `Here is the current email draft (as JSON fields):`,
+        JSON.stringify(input.current, null, 2),
+        ``,
+        `Make ONLY this change, keeping every other field intact and in Joy's voice:`,
+        input.instruction,
+        ``,
+        `Return all fields (changed and unchanged). Do not invent specifics; keep any [bracketed placeholders].`,
+      ].join("\n")
+    : [
+        `Write the email. Here is what it is about, in the operator's words:`,
+        input.context,
+        ``,
+        `Fill every field. Set plan to null unless this is an event or birthday. Use [bracketed placeholders] for any specific detail (a date, a time, a name) not given above.`,
+      ].join("\n");
+
+  const client = new Anthropic();
+  const response = await client.messages.create({
+    model: MODEL,
+    max_tokens: 3000,
+    thinking: { type: "adaptive" },
+    system: emailModelSystemPrompt(input.audience, input.occasion),
+    output_config: { format: { type: "json_schema", schema: EMAIL_MODEL_SCHEMA } },
+    messages: [{ role: "user", content: userPrompt }],
+  });
+
+  const textBlock = response.content.find((b) => b.type === "text");
+  if (!textBlock || textBlock.type !== "text") {
+    throw new Error("The AI did not return an email draft.");
+  }
+  try {
+    const parsed = JSON.parse(textBlock.text) as EmailModelDraft;
+    // Normalize: an empty-string plan or an all-empty plan means "no details card".
+    if (
+      !parsed.plan ||
+      (!parsed.plan.when?.trim() && !parsed.plan.where?.trim() && !parsed.plan.treats?.trim())
+    ) {
+      parsed.plan = null;
+    }
+    return parsed;
+  } catch {
+    throw new Error("The AI email draft was not valid. Please try again.");
   }
 }
 

@@ -520,3 +520,8 @@ CREATE INDEX IF NOT EXISTS event_rsvps_event_idx ON event_rsvps (event_id, creat
 -- Upsert key: one row per (event, email) when an email is given.
 CREATE UNIQUE INDEX IF NOT EXISTS event_rsvps_event_email_uidx
   ON event_rsvps (event_id, lower(email)) WHERE email IS NOT NULL;
+
+-- Studio email composer: keep the structured EmailModel alongside the rendered
+-- HTML so a draft can be reopened and re-themed (a look swap re-skins the same
+-- words). Null for broadcasts composed the old way (Markdown / pasted HTML).
+ALTER TABLE broadcasts ADD COLUMN IF NOT EXISTS model_json JSONB;

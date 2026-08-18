@@ -1,15 +1,22 @@
 import { requireAdmin } from "@/lib/require-admin";
 import { hasDatabase } from "@/lib/db";
-import { getAudienceSources } from "@/lib/leads";
-import { listSavedSegments } from "@/lib/broadcasts";
-import BroadcastComposer from "../BroadcastComposer";
+import EmailStudio from "../EmailStudio";
+import { loadStudioEvents, defaultTestAddress } from "../studio-data";
+import { aiEnabled } from "@/lib/ai";
+import { emailEnabled } from "@/lib/email";
 
 export const dynamic = "force-dynamic";
 
 export default async function NewEmailPage() {
   await requireAdmin();
   const db = hasDatabase();
-  const sources = db ? await getAudienceSources("leads") : [];
-  const segments = db ? await listSavedSegments() : [];
-  return <BroadcastComposer sources={sources} segments={segments} />;
+  const events = db ? await loadStudioEvents() : [];
+  return (
+    <EmailStudio
+      events={events}
+      defaultTestTo={defaultTestAddress()}
+      aiEnabled={aiEnabled()}
+      emailReady={emailEnabled()}
+    />
+  );
 }

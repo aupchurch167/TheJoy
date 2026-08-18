@@ -20,6 +20,12 @@ import {
 } from "@/lib/broadcast-runner";
 import { countSubscribers, type LeadSegment } from "@/lib/leads";
 import { emailEnabled, sendTestEmail } from "@/lib/email";
+import {
+  renderEmailModel,
+  EMAIL_THEMES,
+  type EmailModel,
+  type EmailTheme,
+} from "@/lib/email-model";
 
 // Recipient segment. Empty arrays / blanks are normalized to "no filter".
 const FiltersSchema = z
@@ -346,6 +352,205 @@ export async function removeSegment(id: string): Promise<{ ok: boolean }> {
   } catch (err) {
     console.error("[removeSegment]", err);
     return { ok: false };
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* STUDIO COMPOSER (structured model → themed standalone HTML)         */
+/* ------------------------------------------------------------------ */
+
+const THEME_IDS = EMAIL_THEMES.map((t) => t.id) as [EmailTheme, ...EmailTheme[]];
+
+const ModelSchema = z.object({
+  theme: z.enum(THEME_IDS),
+  eyebrow: z.string().max(120).optional(),
+  heroTitle: z.string().max(200).optional(),
+  heroSub: z.string().max(200).optional(),
+  greeting: z.string().max(200).default(""),
+  intro: z.string().max(8000).default(""),
+  plan: z
+    .object({
+      label: z.string().max(80).optional(),
+      when: z.string().max(300).optional(),
+      where: z.string().max(300).optional(),
+      treats: z.string().max(300).optional(),
+    })
+    .nullable()
+    .optional(),
+  rsvpUrl: z.string().trim().max(500).nullable().optional(),
+  photoUrl: z.string().trim().max(1000).nullable().optional(),
+  closing: z.string().max(2000).default(""),
+});
+
+const StudioSaveSchema = z.object({
+  id: z.string().uuid().optional(),
+  subject: z.string().trim().max(200).default(""),
+  audience: z.enum(["leads", "families"]).default("families"),
+  filters: FiltersSchema,
+  model: ModelSchema,
+});
+
+const StudioSendSchema = StudioSaveSchema.extend({
+  when: z.string().trim().optional(),
+});
+
+/** Render the studio model server-side (single source of truth for the HTML). */
+function renderModel(m: z.infer<typeof ModelSchema>): string {
+  return renderEmailModel(m as EmailModel);
+}
+
+/** Persist a studio email (create or update), storing both model and HTML. */
+async function upsertStudio(
+  id: string | undefined,
+  subject: string,
+  model: z.infer<typeof ModelSchema>,
+  audience: "leads" | "families",
+  filters: LeadSegment | null
+): Promise<string> {
+  const body = renderModel(model);
+  if (id) {
+    const updated = await updateBroadcast(
+      id,
+      subject,
+      body,
+      filters,
+      "html_standalone",
+      model
+    );
+    if (updated) return updated.id;
+  }
+  const created = await createBroadcast(subject, body, audience, "email", filters, null, {
+    format: "html_standalone",
+    modelJson: model,
+  });
+  return created.id;
+}
+
+export async function saveStudioDraft(input: unknown): Promise<ActionResult> {
+  await requireAdmin();
+  const parsed = StudioSaveSchema.safeParse(input);
+  if (!parsed.success)
+    return { ok: false, error: parsed.error.issues[0]?.message ?? "Invalid." };
+  try {
+    const id = await upsertStudio(
+      parsed.data.id,
+      parsed.data.subject || "(no subject yet)",
+      parsed.data.model,
+      parsed.data.audience,
+      normalizeFilters(parsed.data.filters)
+    );
+    revalidatePath("/admin/emails");
+    return { ok: true, id, message: "Draft saved." };
+  } catch (err) {
+    console.error("[saveStudioDraft]", err);
+    return { ok: false, error: "Could not save. Is the database connected?" };
+  }
+}
+
+export async function sendStudioOrSchedule(input: unknown): Promise<ActionResult> {
+  await requireAdmin();
+  const parsed = StudioSendSchema.safeParse(input);
+  if (!parsed.success)
+    return { ok: false, error: parsed.error.issues[0]?.message ?? "Invalid." };
+  if (!parsed.data.subject.trim())
+    return { ok: false, error: "Add a subject before sending." };
+  if (!emailEnabled()) {
+    return {
+      ok: false,
+      error:
+        "Email is not set up yet (RESEND_API_KEY). Add it before sending (see OPERATIONS.md).",
+    };
+  }
+
+  try {
+    const id = await upsertStudio(
+      parsed.data.id,
+      parsed.data.subject,
+      parsed.data.model,
+      parsed.data.audience,
+      normalizeFilters(parsed.data.filters)
+    );
+
+    const now = new Date();
+    const when = parsed.data.when ? new Date(parsed.data.when) : now;
+    const sendNow = !parsed.data.when || when <= now;
+    const scheduledAt = (sendNow ? now : when).toISOString();
+
+    await scheduleBroadcast(id, scheduledAt);
+
+    if (sendNow) {
+      const total = await countSubscribers(
+        parsed.data.audience,
+        normalizeFilters(parsed.data.filters) ?? undefined
+      );
+      const sent = await processDueBroadcasts();
+      revalidatePath("/admin/emails");
+      const remaining = Math.max(0, total - sent);
+      let message: string;
+      if (total === 0) {
+        message = "No recipients match. Nothing was sent.";
+      } else if (sent === 0) {
+        message = `Queued for ${total} recipient(s). Sending is metered (${throttleSummary()}) and picks up in the next send window.`;
+      } else if (remaining > 0) {
+        message = `Sending to ${total}. ${sent} went out now; the rest send gradually (${throttleSummary()}) to protect deliverability.`;
+      } else {
+        message = `Sent to ${sent} recipient(s).`;
+      }
+      return { ok: true, id, message };
+    }
+
+    revalidatePath("/admin/emails");
+    return {
+      ok: true,
+      id,
+      message: `Scheduled for ${when.toLocaleString()}. It sends on the next cron run after that.`,
+    };
+  } catch (err) {
+    console.error("[sendStudioOrSchedule]", err);
+    return { ok: false, error: "Could not send. Please try again." };
+  }
+}
+
+const StudioTestSchema = z.object({
+  subject: z.string().trim().max(200).default("Test from Joy"),
+  model: ModelSchema,
+  to: z.string().trim().email("Enter a valid test email address.").optional().or(z.literal("")),
+});
+
+export async function sendStudioTest(input: unknown): Promise<TestResult> {
+  await requireAdmin();
+  const parsed = StudioTestSchema.safeParse(input);
+  if (!parsed.success)
+    return { ok: false, error: parsed.error.issues[0]?.message ?? "Invalid." };
+  if (!emailEnabled()) {
+    return {
+      ok: false,
+      error:
+        "Email is not set up yet (RESEND_API_KEY). Add it before sending a test (see OPERATIONS.md).",
+    };
+  }
+  const to =
+    parsed.data.to ||
+    (process.env.LEAD_NOTIFY_TO || "").split(",")[0]?.trim() ||
+    "";
+  if (!to) {
+    return {
+      ok: false,
+      error: "Enter a test email address (or set LEAD_NOTIFY_TO for a default).",
+    };
+  }
+  try {
+    const ok = await sendTestEmail(
+      to,
+      parsed.data.subject || "Test from Joy",
+      renderModel(parsed.data.model),
+      "html_standalone"
+    );
+    if (!ok) return { ok: false, error: "Email is not configured." };
+    return { ok: true, message: `Test sent to ${to}. Check your inbox.` };
+  } catch (err) {
+    console.error("[sendStudioTest]", err);
+    return { ok: false, error: "Could not send the test. Please try again." };
   }
 }
 

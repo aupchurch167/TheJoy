@@ -9,6 +9,10 @@ import {
 } from "@/lib/broadcasts";
 import { getAudienceSources } from "@/lib/leads";
 import BroadcastComposer from "../BroadcastComposer";
+import EmailStudio from "../EmailStudio";
+import { loadStudioEvents, defaultTestAddress } from "../studio-data";
+import { aiEnabled } from "@/lib/ai";
+import { emailEnabled } from "@/lib/email";
 
 export const dynamic = "force-dynamic";
 
@@ -22,6 +26,26 @@ export default async function EditEmailPage({
   const broadcast = await getBroadcastById(id);
   if (!broadcast) notFound();
   const db = hasDatabase();
+
+  // Studio drafts (structured model + themed HTML) reopen in the studio, so the
+  // look and words stay editable. Sent ones fall through to the composer's
+  // results view.
+  if (
+    broadcast.model_json &&
+    (broadcast.status === "draft" || broadcast.status === "scheduled")
+  ) {
+    const events = db ? await loadStudioEvents() : [];
+    return (
+      <EmailStudio
+        broadcast={broadcast}
+        events={events}
+        defaultTestTo={defaultTestAddress()}
+        aiEnabled={aiEnabled()}
+        emailReady={emailEnabled()}
+      />
+    );
+  }
+
   const sources = db ? await getAudienceSources("leads") : [];
   const segments = db ? await listSavedSegments() : [];
   const results =
