@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { requireAdmin } from "@/lib/require-admin";
 import { hasDatabase } from "@/lib/db";
 import { getLeadById } from "@/lib/leads";
+import { getLeadEmailHistory, type LeadEmailRecord } from "@/lib/broadcasts";
 import { toMailHref, toTelHref } from "@/lib/settings";
 import { orDash, formatSource } from "@/lib/format";
 import StageSelect from "../StageSelect";
@@ -35,6 +36,31 @@ function dateTime(iso: string | null): string {
   });
 }
 
+function dateShort(iso: string | null): string {
+  if (!iso) return "—";
+  return new Date(iso).toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+}
+
+function daysAgoLabel(iso: string): string {
+  const days = Math.floor((Date.now() - new Date(iso).getTime()) / 86_400_000);
+  if (days <= 0) return "today";
+  if (days === 1) return "yesterday";
+  return `${days} days ago`;
+}
+
+/** Delivery/engagement badge for one sent email. */
+function emailStatus(r: LeadEmailRecord): { label: string; tone: BadgeTone } {
+  if (r.error) return { label: "Failed", tone: "danger" };
+  if (r.complained_at) return { label: "Marked spam", tone: "danger" };
+  if (r.bounced_at) return { label: "Bounced", tone: "danger" };
+  if (r.opened_at) return { label: "Opened", tone: "success" };
+  return { label: "Sent", tone: "neutral" };
+}
+
 function Row({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="flex flex-col gap-0.5 border-b border-line py-3 last:border-0 sm:flex-row sm:items-center sm:justify-between">
@@ -63,6 +89,9 @@ export default async function LeadDetailPage({
 
   const lead = await getLeadById(id);
   if (!lead || lead.audience !== "leads") notFound();
+
+  const emails = await getLeadEmailHistory(lead.id);
+  const lastSent = emails[0]?.sent_at ?? null;
 
   return (
     <div className="max-w-3xl">
@@ -156,7 +185,49 @@ export default async function LeadDetailPage({
               ? `Active (step ${lead.drip_step})`
               : lead.drip_status}
           </Row>
+          <Row label="Last emailed">
+            {lastSent ? `${dateShort(lastSent)} (${daysAgoLabel(lastSent)})` : "Never"}
+          </Row>
         </div>
+      </Card>
+
+      {/* Email history */}
+      <Card className="mt-6">
+        <div className="flex items-center justify-between">
+          <SectionLabel>Emails sent</SectionLabel>
+          {emails.length > 0 && (
+            <span className="text-xs text-ink-faint">
+              {emails.length} total
+            </span>
+          )}
+        </div>
+        {emails.length === 0 ? (
+          <p className="mt-3 text-sm text-ink-faint">
+            No emails have been sent to this contact yet.
+          </p>
+        ) : (
+          <ul className="mt-3 divide-y divide-line">
+            {emails.map((e) => {
+              const status = emailStatus(e);
+              return (
+                <li
+                  key={`${e.broadcast_id}-${e.sent_at}`}
+                  className="flex flex-col gap-1 py-3 sm:flex-row sm:items-center sm:justify-between"
+                >
+                  <div className="min-w-0">
+                    <div className="truncate text-sm font-medium text-ink">
+                      {e.subject}
+                    </div>
+                    <div className="text-xs text-ink-faint">
+                      {dateShort(e.sent_at)} · {daysAgoLabel(e.sent_at)}
+                    </div>
+                  </div>
+                  <Badge tone={status.tone}>{status.label}</Badge>
+                </li>
+              );
+            })}
+          </ul>
+        )}
       </Card>
     </div>
   );

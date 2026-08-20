@@ -34,6 +34,8 @@ const FiltersSchema = z
     stages: z.array(z.enum(["new", "toured", "moved_in", "lost"])).optional(),
     createdFrom: z.string().trim().optional(),
     createdTo: z.string().trim().optional(),
+    // Frequency cap: skip anyone emailed in the last N days (0 = no cap).
+    cooldownDays: z.coerce.number().int().min(0).max(365).optional(),
   })
   .optional();
 
@@ -45,6 +47,7 @@ function normalizeFilters(f: z.infer<typeof FiltersSchema>): LeadSegment | null 
   if (f.stages?.length) seg.stages = f.stages;
   if (f.createdFrom) seg.createdFrom = new Date(f.createdFrom).toISOString();
   if (f.createdTo) seg.createdTo = new Date(f.createdTo).toISOString();
+  if (f.cooldownDays && f.cooldownDays > 0) seg.cooldownDays = f.cooldownDays;
   return Object.keys(seg).length ? seg : null;
 }
 

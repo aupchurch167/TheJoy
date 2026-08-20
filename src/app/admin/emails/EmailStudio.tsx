@@ -156,6 +156,9 @@ export default function EmailStudio({
     (broadcast?.model_json as EmailModel | null) ?? emptyModel();
 
   const [id, setId] = useState<string | undefined>(broadcast?.id);
+  const [cooldownDays, setCooldownDays] = useState<number>(
+    broadcast?.filters?.cooldownDays ?? 0
+  );
   const [audience, setAudience] = useState<Audience>(
     (broadcast?.audience as Audience) ?? "families"
   );
@@ -192,13 +195,16 @@ export default function EmailStudio({
   /* --- live recipient count --- */
   useEffect(() => {
     let alive = true;
-    previewRecipients({ audience, filters: {} })
+    previewRecipients({
+      audience,
+      filters: cooldownDays > 0 ? { cooldownDays } : {},
+    })
       .then((n) => alive && setRecipients(n))
       .catch(() => alive && setRecipients(null));
     return () => {
       alive = false;
     };
-  }, [audience]);
+  }, [audience, cooldownDays]);
 
   /* --- preview HTML --- */
   const previewHtml = useMemo(() => renderEmailModel(model), [model]);
@@ -345,7 +351,7 @@ export default function EmailStudio({
       id,
       subject,
       audience,
-      filters: {},
+      filters: cooldownDays > 0 ? { cooldownDays } : {},
       model,
     };
   }
@@ -447,6 +453,38 @@ export default function EmailStudio({
                     : `${recipients} recipient${recipients === 1 ? "" : "s"}`}{" "}
                   · opted-out always skipped
                 </p>
+
+                <div className="mt-3">
+                  <div className="text-[11px] font-semibold text-ink-soft">
+                    Skip anyone emailed recently
+                  </div>
+                  <div className="mt-1.5 flex rounded-[9px] bg-surface p-[3px]">
+                    {[
+                      { d: 0, label: "Off" },
+                      { d: 7, label: "7 days" },
+                      { d: 14, label: "14 days" },
+                    ].map((o) => (
+                      <button
+                        key={o.d}
+                        type="button"
+                        onClick={() => setCooldownDays(o.d)}
+                        className={`flex-1 rounded-[7px] px-2 py-1.5 text-xs font-semibold transition-colors ${
+                          cooldownDays === o.d
+                            ? "bg-white text-ink shadow-[0_1px_2px_rgba(0,0,0,0.08)]"
+                            : "text-ink-soft"
+                        }`}
+                      >
+                        {o.label}
+                      </button>
+                    ))}
+                  </div>
+                  {cooldownDays > 0 && (
+                    <p className="mt-1.5 text-[11px] text-ink-faint">
+                      Anyone who got an email in the last {cooldownDays} days is left
+                      out of this send.
+                    </p>
+                  )}
+                </div>
                 {audience === "families" && (
                   <div className="mt-3 rounded-lg border border-gold/30 bg-gold/[0.07] px-3 py-2 text-[11.5px] leading-snug text-[#8a6217]">
                     <strong>Community-wide only.</strong> Never individual resident

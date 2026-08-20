@@ -321,6 +321,12 @@ export type LeadSegment = {
   stages?: LeadStage[];
   createdFrom?: string | null;
   createdTo?: string | null;
+  /**
+   * Frequency cap: exclude anyone who was sent an email in the last N days.
+   * Evaluated live (from broadcast_recipients.sent_at), so it reflects sends
+   * that happened after the broadcast was queued. 0 / undefined = no cap.
+   */
+  cooldownDays?: number | null;
 };
 
 /** Build the shared subscriber WHERE clause (base opt-in rules + segment). */
@@ -353,6 +359,17 @@ function segmentWhere(
   if (seg?.createdTo) {
     params.push(seg.createdTo);
     conds.push(`created_at <= $${params.length}`);
+  }
+  if (seg?.cooldownDays && seg.cooldownDays > 0) {
+    params.push(seg.cooldownDays);
+    conds.push(
+      `NOT EXISTS (
+         SELECT 1 FROM broadcast_recipients br
+          WHERE br.lead_id = leads.id
+            AND br.error IS NULL
+            AND br.sent_at >= now() - make_interval(days => $${params.length}::int)
+       )`
+    );
   }
   return { where: conds.join(" AND "), params };
 }

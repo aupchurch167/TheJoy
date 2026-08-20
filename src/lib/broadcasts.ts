@@ -259,6 +259,38 @@ export async function countAlreadyReceived(messageId: string): Promise<number> {
   return Number(rows[0]?.n ?? 0);
 }
 
+/** One email this contact was sent (for the lead detail history). */
+export type LeadEmailRecord = {
+  broadcast_id: string;
+  subject: string;
+  channel: string;
+  sent_at: string;
+  error: string | null;
+  opened_at: string | null;
+  clicked_at: string | null;
+  bounced_at: string | null;
+  complained_at: string | null;
+};
+
+/**
+ * Every email sent to one lead, newest first. Drives the "Emails sent" panel on
+ * the lead detail page and lets the operator see recent contact at a glance.
+ */
+export async function getLeadEmailHistory(
+  leadId: string
+): Promise<LeadEmailRecord[]> {
+  return query<LeadEmailRecord>(
+    `SELECT b.id AS broadcast_id, b.subject, b.channel,
+            br.sent_at, br.error, br.opened_at, br.clicked_at,
+            br.bounced_at, br.complained_at
+       FROM broadcast_recipients br
+       JOIN broadcasts b ON b.id = br.broadcast_id
+      WHERE br.lead_id = $1
+      ORDER BY br.sent_at DESC`,
+    [leadId]
+  );
+}
+
 /** A Resend engagement/delivery event mapped to a recipient timestamp column. */
 export type EngagementEvent =
   | "delivered"
