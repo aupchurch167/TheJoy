@@ -412,6 +412,49 @@ export async function sendSurveyInvitation(request: {
 }
 
 /**
+ * Invite one employee to a team pulse survey. Wording is staff-facing, and it
+ * notes when responses are anonymous so people answer candidly.
+ */
+export async function sendEmployeeSurveyInvitation(input: {
+  name: string;
+  email: string | null;
+  token: string;
+  surveyTitle: string;
+  anonymous: boolean;
+}): Promise<boolean> {
+  if (!resend) {
+    console.info("[email] RESEND_API_KEY not set; employee survey invite skipped.");
+    return false;
+  }
+  if (!input.email) return false;
+  const url = `${SITE_URL}/pulse/${input.token}`;
+  const firstName = input.name.trim().split(/\s+/)[0] || "there";
+  const privacy = input.anonymous
+    ? "Your answers are anonymous (we cannot see who said what), so please be candid."
+    : "Your answers come back with your name so we can follow up with you directly.";
+  const body = [
+    `Hi ${firstName},`,
+    ``,
+    `We want Joy to be a good place to work, and your read on it matters. Please take a couple of minutes for this quick check-in.`,
+    ``,
+    privacy,
+    ``,
+    `[[button:Share how it's going|${url}]]`,
+    ``,
+    `Thank you,`,
+    `Mellissa and the team at Joy Senior Living`,
+  ].join("\n");
+
+  await resend.emails.send({
+    from: FROM,
+    to: input.email,
+    subject: `[Joy team] ${input.surveyTitle}`,
+    html: wrapEmail(renderBody(body), undefined, false),
+  });
+  return true;
+}
+
+/**
  * Internal alert when a family flags a concern (rating 3 or below). Sent to the
  * feedback_alert_emails recipients. Respects anonymity: an anonymous response
  * shows as "Anonymous" and never reveals which family it came from. Fired on
