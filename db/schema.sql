@@ -540,3 +540,77 @@ ALTER TABLE broadcasts ADD COLUMN IF NOT EXISTS priority BOOLEAN NOT NULL DEFAUL
 CREATE INDEX IF NOT EXISTS broadcasts_due_priority_idx
   ON broadcasts (priority DESC, scheduled_at)
   WHERE status = 'scheduled' AND channel = 'email';
+
+-- ==========================================================================
+-- Phase 6: employee (team) feedback — internal pulse surveys
+-- ==========================================================================
+
+-- The staff roster. Kept separate from `leads` (families) so the two audiences
+-- never mix in a send. external_source / external_id let a later Connecteam or
+-- Gusto sync reconcile rows without creating duplicate people.
+CREATE TABLE IF NOT EXISTS employees (
+  id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name            TEXT NOT NULL,
+  email           TEXT,
+  phone           TEXT,
+  title           TEXT,
+  active          BOOLEAN NOT NULL DEFAULT TRUE,
+  sms_consent     BOOLEAN NOT NULL DEFAULT FALSE,
+  external_source TEXT,   -- 'manual' | 'csv' | 'connecteam' | 'gusto'
+  external_id     TEXT,   -- vendor user id, for sync reconciliation
+  created_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at      TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE UNIQUE INDEX IF NOT EXISTS employees_email_uidx
+  ON employees (lower(email)) WHERE email IS NOT NULL AND email <> '';
+CREATE UNIQUE INDEX IF NOT EXISTS employees_external_uidx
+  ON employees (external_source, external_id)
+  WHERE external_source IS NOT NULL AND external_id IS NOT NULL;
+
+-- A survey campaign: the questions plus whether responses are anonymous.
+-- `questions` is a JSON array of { key, label, type } where type is
+-- 'rating' (1..5) or 'text'. `anonymous` decides, at submit time, whether a
+-- response links back to the employee who sent it.
+CREATE TABLE IF NOT EXISTS employee_surveys (
+  id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  title         TEXT NOT NULL,
+  intro         TEXT NOT NULL DEFAULT '',
+  questions     JSONB NOT NULL DEFAULT '[]',
+  anonymous     BOOLEAN NOT NULL DEFAULT TRUE,
+  status        TEXT NOT NULL DEFAULT 'draft'
+                  CHECK (status IN ('draft', 'open', 'closed')),
+  created_by    TEXT,
+  created_at    TIMESTAMPTZ NOT NULL DEFAULT now(),
+  closed_at     TIMESTAMPTZ
+);
+CREATE INDEX IF NOT EXISTS employee_surveys_status_idx
+  ON employee_surveys (status, created_at DESC);
+
+-- One invite per employee per survey. The token is how they reach the form.
+-- On an anonymous survey these rows still track sent/completed (for response
+-- rate) but the employee_id is never copied into the response row.
+CREATE TABLE IF NOT EXISTS employee_survey_recipients (
+  id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  survey_id     UUID NOT NULL REFERENCES employee_surveys(id) ON DELETE CASCADE,
+  employee_id   UUID NOT NULL REFERENCES employees(id) ON DELETE CASCADE,
+  token         TEXT NOT NULL UNIQUE,
+  channel       TEXT NOT NULL DEFAULT 'email'
+                  CHECK (channel IN ('email', 'sms', 'both')),
+  sent_at       TIMESTAMPTZ,
+  completed_at  TIMESTAMPTZ,
+  UNIQUE (survey_id, employee_id)
+);
+
+-- A submitted response. employee_id is NULL for anonymous surveys; on a named
+-- survey it points at the employee. `answers` is { question_key: value }.
+CREATE TABLE IF NOT EXISTS employee_survey_responses (
+  id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  survey_id     UUID NOT NULL REFERENCES employee_surveys(id) ON DELETE CASCADE,
+  employee_id   UUID REFERENCES employees(id) ON DELETE SET NULL,
+  answers       JSONB NOT NULL DEFAULT '{}',
+  comment       TEXT,
+  sentiment     TEXT CHECK (sentiment IN ('positive', 'concern')),
+  submitted_at  TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS employee_survey_responses_survey_idx
+  ON employee_survey_responses (survey_id);
