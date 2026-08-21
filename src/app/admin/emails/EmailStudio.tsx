@@ -75,10 +75,20 @@ function emptyModel(): EmailModel {
     greeting: "Hi {{first_name}},",
     intro: "",
     plan: null,
+    cta: null,
     rsvpUrl: null,
     photoUrl: null,
+    bodyPhotoUrl: null,
     closing: "Warmly,\nMellissa and the Joy team",
   };
+}
+
+/** Older drafts stored an event RSVP as `rsvpUrl`; surface it as an editable CTA. */
+function normalizeModel(m: EmailModel): EmailModel {
+  if (m.rsvpUrl && !m.cta) {
+    return { ...m, cta: { label: "RSVP here", url: m.rsvpUrl }, rsvpUrl: null };
+  }
+  return m;
 }
 
 /** Any unfilled [bracketed placeholder] left in the words (blocks a confident send). */
@@ -152,8 +162,9 @@ export default function EmailStudio({
   const router = useRouter();
   const toast = useToast();
 
-  const initialModel: EmailModel =
-    (broadcast?.model_json as EmailModel | null) ?? emptyModel();
+  const initialModel: EmailModel = normalizeModel(
+    (broadcast?.model_json as EmailModel | null) ?? emptyModel()
+  );
 
   const [id, setId] = useState<string | undefined>(broadcast?.id);
   const [cooldownDays, setCooldownDays] = useState<number>(
@@ -212,6 +223,8 @@ export default function EmailStudio({
   const patch = (p: Partial<EmailModel>) => setModel((m) => ({ ...m, ...p }));
   const patchPlan = (p: Partial<NonNullable<EmailModel["plan"]>>) =>
     setModel((m) => ({ ...m, plan: { ...(m.plan ?? {}), ...p } }));
+  const patchCta = (p: Partial<NonNullable<EmailModel["cta"]>>) =>
+    setModel((m) => ({ ...m, cta: { ...(m.cta ?? {}), ...p } }));
 
   /* --- occasion change: pick a fitting look unless one was chosen --- */
   function chooseOccasion(o: Occasion) {
@@ -332,7 +345,8 @@ export default function EmailStudio({
     setLinkedEventId(ev.id);
     setModel((m) => ({
       ...m,
-      rsvpUrl: ev.rsvpUrl,
+      rsvpUrl: null,
+      cta: { label: "RSVP here", url: ev.rsvpUrl },
       plan: {
         ...(m.plan ?? {}),
         when: ev.whenText || m.plan?.when || "",
@@ -342,7 +356,7 @@ export default function EmailStudio({
   }
   function unlinkEvent() {
     setLinkedEventId(null);
-    patch({ rsvpUrl: null });
+    patch({ rsvpUrl: null, cta: null });
   }
 
   /* --- persistence --- */
@@ -758,13 +772,89 @@ export default function EmailStudio({
                           </div>
                         )}
 
-                        <FieldRow label="Sign-off">
-                          <textarea
-                            className={`${FIELD} min-h-[60px] resize-y`}
-                            value={model.closing}
-                            onChange={(e) => patch({ closing: e.target.value })}
-                          />
-                        </FieldRow>
+                        {/* Call-to-action button */}
+                        <div className="mb-3 rounded-lg border border-line bg-paper p-3">
+                          <div className="mb-2 flex items-center justify-between">
+                            <span className="text-xs font-semibold text-ink-soft">
+                              Button
+                            </span>
+                            {model.cta ? (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  unlinkEvent();
+                                  patch({ cta: null, rsvpUrl: null });
+                                }}
+                                className="text-[11px] font-semibold text-danger hover:underline"
+                              >
+                                Remove
+                              </button>
+                            ) : (
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  patch({ cta: { label: "Learn more", url: "" } })
+                                }
+                                className="text-[11px] font-semibold text-clay-dark hover:underline"
+                              >
+                                ＋ Add
+                              </button>
+                            )}
+                          </div>
+                          {model.cta ? (
+                            <>
+                              <FieldRow label="Button text">
+                                <input
+                                  className={FIELD}
+                                  value={model.cta.label ?? ""}
+                                  onChange={(e) => patchCta({ label: e.target.value })}
+                                  placeholder="Learn more"
+                                />
+                              </FieldRow>
+                              <FieldRow label="Button link (URL)">
+                                <input
+                                  className={FIELD}
+                                  type="url"
+                                  inputMode="url"
+                                  value={model.cta.url ?? ""}
+                                  onChange={(e) => {
+                                    patchCta({ url: e.target.value });
+                                    if (linkedEventId) setLinkedEventId(null);
+                                  }}
+                                  placeholder="https://joyseniorcare.com/tour"
+                                />
+                              </FieldRow>
+                              {linkedEventId && (
+                                <p className="text-[11px] text-ink-faint">
+                                  Linked to the event RSVP page. Editing the link here
+                                  unlinks the event.
+                                </p>
+                              )}
+                            </>
+                          ) : (
+                            <p className="text-[11px] text-ink-faint">
+                              No button. Add one to point families to a tour, an RSVP,
+                              or any page.
+                            </p>
+                          )}
+                        </div>
+
+                        {/* Photo in the message body */}
+                        <PhotoField
+                          label="Photo in the message"
+                          url={model.bodyPhotoUrl ?? null}
+                          onUrl={(u) => patch({ bodyPhotoUrl: u })}
+                        />
+
+                        <div className="mt-3">
+                          <FieldRow label="Sign-off">
+                            <textarea
+                              className={`${FIELD} min-h-[60px] resize-y`}
+                              value={model.closing}
+                              onChange={(e) => patch({ closing: e.target.value })}
+                            />
+                          </FieldRow>
+                        </div>
                       </div>
                     )}
                   </div>
@@ -1004,9 +1094,11 @@ function Check({ ok, label, warn }: { ok: boolean; label: string; warn?: boolean
 function PhotoField({
   url,
   onUrl,
+  label = "Photo at the top",
 }: {
   url: string | null;
   onUrl: (u: string | null) => void;
+  label?: string;
 }) {
   const [busy, setBusy] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -1031,7 +1123,7 @@ function PhotoField({
   return (
     <div className="mt-3 rounded-lg border border-line bg-paper p-2.5">
       <span className="mb-1.5 block text-[11px] font-semibold text-ink-soft">
-        Photo at the top
+        {label}
       </span>
       {url ? (
         // eslint-disable-next-line @next/next/no-img-element

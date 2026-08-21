@@ -41,6 +41,12 @@ export type EmailPlan = {
   treats?: string;
 };
 
+/** A call-to-action button under the body (label + link). */
+export type EmailCta = {
+  label?: string;
+  url?: string;
+};
+
 export type EmailModel = {
   theme: EmailTheme;
   /** Small caps line above the headline (theme supplies a default when blank). */
@@ -50,10 +56,17 @@ export type EmailModel = {
   greeting: string;
   intro: string;
   plan?: EmailPlan | null;
-  /** When set, an RSVP button linking here is shown under the body. */
+  /**
+   * Call-to-action button under the body. Linking an event fills this with an
+   * "RSVP here" button; otherwise the operator can add/edit/remove their own.
+   */
+  cta?: EmailCta | null;
+  /** Legacy event RSVP link; still rendered as a button when no `cta` is set. */
   rsvpUrl?: string | null;
   /** Photo-hero image URL (photo theme). */
   photoUrl?: string | null;
+  /** A photo shown inside the message body (any theme). */
+  bodyPhotoUrl?: string | null;
   /** Multi-line closing / sign-off (use \n for line breaks). */
   closing: string;
 };
@@ -186,8 +199,17 @@ ${model.plan.treats ? `🍦 <strong style="color:${p.a3}">Treats:</strong> ${esc
 </div></div>`
       : "";
 
-  const rsvp = model.rsvpUrl
-    ? `<div style="text-align:center;margin-top:20px"><table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 auto"><tbody><tr><td align="center" style="background:#01a7ce;border-radius:8px"><a href="${esc(model.rsvpUrl)}" style="display:inline-block;padding:13px 32px;font-family:Arial,Helvetica,sans-serif;font-size:15px;font-weight:bold;color:#ffffff;text-decoration:none">RSVP here</a></td></tr></tbody></table></div>`
+  // Call-to-action button: the explicit `cta` wins; a legacy `rsvpUrl` still
+  // renders as an "RSVP here" button so older drafts keep working.
+  const ctaUrl = (model.cta?.url ?? model.rsvpUrl ?? "").trim();
+  const ctaLabel = (model.cta?.label ?? "").trim() || "RSVP here";
+  const rsvp = ctaUrl
+    ? `<div style="text-align:center;margin-top:20px"><table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 auto"><tbody><tr><td align="center" style="background:${p.a1};border-radius:8px"><a href="${esc(ctaUrl)}" style="display:inline-block;padding:13px 32px;font-family:Arial,Helvetica,sans-serif;font-size:15px;font-weight:bold;color:#ffffff;text-decoration:none">${esc(ctaLabel)}</a></td></tr></tbody></table></div>`
+    : "";
+
+  // Optional in-body photo (any theme), shown between the message and the details.
+  const bodyPhoto = model.bodyPhotoUrl
+    ? `<tr><td style="padding:16px 26px 0"><img src="${esc(model.bodyPhotoUrl)}" alt="" style="display:block;width:100%;max-width:548px;height:auto;border:0;border-radius:10px"></td></tr>`
     : "";
 
   return `<!DOCTYPE html>
@@ -209,6 +231,7 @@ ${photo}
 <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background:#ffffff;border-radius:${bodyRadius}"><tbody>
 <tr><td style="padding:24px 26px 0;font-family:Georgia,'Times New Roman',serif;font-size:15px;line-height:1.6;color:#2b2b33">${escKeepTokens(model.greeting)}</td></tr>
 <tr><td style="padding:10px 26px 0;font-family:Georgia,'Times New Roman',serif;font-size:15px;line-height:1.6;color:#55555f">${nl2br(model.intro)}</td></tr>
+${bodyPhoto}
 <tr><td style="padding:0 26px">${plan}${rsvp}</td></tr>
 <tr><td style="padding:16px 26px 24px;font-family:Georgia,'Times New Roman',serif;font-size:15px;line-height:1.6;color:#2b2b33">${nl2br(model.closing)}</td></tr>
 </tbody></table>

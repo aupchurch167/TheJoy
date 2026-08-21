@@ -173,8 +173,9 @@ function eventEmailModel(
       where: ev.location || "Joy Senior Living, Loganville",
       treats: "",
     },
-    rsvpUrl: `${SITE_URL}/rsvp/${ev.rsvp_token}`,
+    cta: { label: "RSVP here", url: `${SITE_URL}/rsvp/${ev.rsvp_token}` },
     photoUrl: null,
+    bodyPhotoUrl: null,
     closing: "Warmly,\nMellissa Daniel and the team at Joy Senior Living",
   };
   return { subject, model };
