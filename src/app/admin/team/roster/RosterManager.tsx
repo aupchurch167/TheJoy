@@ -6,16 +6,35 @@ import { useToast } from "@/components/admin/Toast";
 import { Card, Button, Input, SectionLabel, Badge } from "@/components/admin/ui";
 import ConfirmButton from "@/components/admin/ConfirmButton";
 import type { Employee } from "@/lib/employees";
+import type { ConnecteamStatus } from "@/lib/connecteam-sync";
 import {
   addEmployee,
   toggleEmployeeActive,
   removeEmployee,
   importEmployeesCsv,
+  syncConnecteamNow,
 } from "../actions";
 
-export default function RosterManager({ employees }: { employees: Employee[] }) {
+function timeAgo(iso: string): string {
+  const mins = Math.floor((Date.now() - new Date(iso).getTime()) / 60000);
+  if (mins < 1) return "just now";
+  if (mins < 60) return `${mins} min ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs}h ago`;
+  const days = Math.floor(hrs / 24);
+  return `${days}d ago`;
+}
+
+export default function RosterManager({
+  employees,
+  connecteam,
+}: {
+  employees: Employee[];
+  connecteam: ConnecteamStatus;
+}) {
   const router = useRouter();
   const toast = useToast();
+  const [syncing, setSyncing] = useState(false);
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -58,6 +77,23 @@ export default function RosterManager({ employees }: { employees: Employee[] }) 
     }
   }
 
+  async function syncNow() {
+    setSyncing(true);
+    const res = await syncConnecteamNow();
+    setSyncing(false);
+    if (res.ok) {
+      const r = res.result;
+      toast.success(
+        `Synced: ${r.added} added, ${r.updated} updated${
+          r.deactivated ? `, ${r.deactivated} deactivated` : ""
+        }.`
+      );
+      router.refresh();
+    } else {
+      toast.error(res.error);
+    }
+  }
+
   async function runImport() {
     if (!csv.trim()) return;
     setImporting(true);
@@ -80,7 +116,14 @@ export default function RosterManager({ employees }: { employees: Employee[] }) 
         style={{ opacity: e.active ? 1 : 0.55 }}
       >
         <div className="min-w-0">
-          <div className="text-[14px] font-semibold text-ink">{e.name}</div>
+          <div className="flex items-center gap-1.5">
+            <span className="text-[14px] font-semibold text-ink">{e.name}</span>
+            {e.external_source === "connecteam" && (
+              <span className="rounded-full bg-clay/[0.12] px-1.5 py-0.5 text-[9.5px] font-bold uppercase tracking-wide text-clay-dark">
+                Connecteam
+              </span>
+            )}
+          </div>
           {e.title && <div className="text-[11.5px] text-ink-faint">{e.title}</div>}
         </div>
         <div className="min-w-0 text-[12.5px] text-ink-soft">
@@ -129,6 +172,33 @@ export default function RosterManager({ employees }: { employees: Employee[] }) 
 
   return (
     <div className="space-y-6">
+      {/* Connecteam sync */}
+      {connecteam.enabled && (
+        <Card className="border-clay/30 bg-clay/[0.04]">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-semibold text-ink">
+                  Connecteam
+                </span>
+                <Badge tone="success">source of truth</Badge>
+              </div>
+              <p className="mt-0.5 text-xs text-ink-faint">
+                {connecteam.lastSyncAt
+                  ? `Last synced ${timeAgo(connecteam.lastSyncAt)}. Refreshes automatically about twice a day.`
+                  : "Not synced yet. Runs automatically, or pull it now."}
+                {connecteam.last && !connecteam.last.ok && connecteam.last.error
+                  ? ` Last attempt failed: ${connecteam.last.error}`
+                  : ""}
+              </p>
+            </div>
+            <Button size="sm" onClick={syncNow} disabled={syncing}>
+              {syncing ? "Syncing…" : "Sync now"}
+            </Button>
+          </div>
+        </Card>
+      )}
+
       {/* Add */}
       <Card>
         <div className="flex items-center justify-between">

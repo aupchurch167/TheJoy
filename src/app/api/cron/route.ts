@@ -4,6 +4,7 @@ import { runDrip } from "@/lib/drip";
 import { processDueBroadcasts } from "@/lib/broadcast-runner";
 import { publishDueScheduledPosts } from "@/lib/posts";
 import { recordRanks } from "@/lib/ranks";
+import { syncConnecteamIfDue } from "@/lib/connecteam-sync";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -51,6 +52,9 @@ async function handle(request: Request) {
     processDueBroadcasts(),
   ]);
   const ranksLogged = await recordRanks();
+  // Refresh the staff roster from Connecteam at most every ~12h (no-op when
+  // the integration is off or a recent sync already ran).
+  const connecteamSync = await syncConnecteamIfDue(new Date());
 
   return NextResponse.json({
     ok: true,
@@ -58,6 +62,7 @@ async function handle(request: Request) {
     dripSent,
     broadcastSent,
     ranksLogged,
+    connecteamSync,
   });
 }
 

@@ -1,6 +1,7 @@
 import { requireAdmin } from "@/lib/require-admin";
 import { hasDatabase } from "@/lib/db";
 import { listEmployees } from "@/lib/employees";
+import { getConnecteamStatus } from "@/lib/connecteam-sync";
 import { PageHeader, BackLink, NotConnected } from "@/components/admin/ui";
 import RosterManager from "./RosterManager";
 
@@ -18,7 +19,10 @@ export default async function RosterPage() {
     );
   }
 
-  const employees = await listEmployees();
+  const [employees, connecteam] = await Promise.all([
+    listEmployees(),
+    getConnecteamStatus(),
+  ]);
 
   return (
     <div className="max-w-3xl">
@@ -27,9 +31,13 @@ export default async function RosterPage() {
       </div>
       <PageHeader
         title="Team roster"
-        description="The staff who receive pulse surveys. Add people by hand or paste a CSV."
+        description={
+          connecteam.enabled
+            ? "Synced from Connecteam. You can still add contractors by hand."
+            : "The staff who receive pulse surveys. Add people by hand or paste a CSV."
+        }
       />
-      <RosterManager employees={employees} />
+      <RosterManager employees={employees} connecteam={connecteam} />
     </div>
   );
 }

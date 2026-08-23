@@ -95,6 +95,8 @@ See `.env.example` for the full list with comments. The important ones:
 - `NEXT_PUBLIC_TALKFURTHER_URL` — the tour link.
 - `RESEND_API_KEY`, `EMAIL_FROM`, `LEAD_NOTIFY_TO` — email (optional; the site
   works without them, it just will not send emails yet).
+- `CONNECTEAM_API_KEY` — optional; syncs the staff roster for team feedback
+  from Connecteam (see section 12).
 
 If email keys are missing, leads are still saved and you get no email alert.
 If `DATABASE_URL` is missing, the form tells visitors to call instead of
@@ -755,3 +757,37 @@ Set them in Admin → **Site settings** → *Deposits (PayPal)*:
   overridable per request.
 - **Deposit invoice note (optional)** — a line shown to the family on every
   invoice. Leave blank for none.
+
+---
+
+## 12. Team feedback and the Connecteam roster
+
+`/admin > Team` runs short pulse surveys for your staff, separate from the
+family audience. Each survey can be **anonymous** or **named** (your choice per
+survey), and results show response rate, average ratings, and sentiment.
+
+### The roster
+
+`/admin > Team > Roster` is the list of employees who receive surveys. You can
+add people by hand, paste a CSV (`name,email,phone,title`), deactivate, or
+remove.
+
+### Connecteam as the source of truth (recommended)
+
+When `CONNECTEAM_API_KEY` is set, Connecteam owns the roster:
+
+- The scheduled worker (the same Railway cron in section 10) refreshes the
+  roster from Connecteam about **twice a day**, and you can press **Sync now**
+  on the Roster screen at any time.
+- People are matched by their Connecteam user id (and adopted by email if you
+  had already added them), so syncing never creates duplicates.
+- Someone **archived or removed** in Connecteam is **deactivated** here (not
+  deleted), so their past survey responses are preserved.
+- Names, emails, phones, and titles are pulled from Connecteam, so edit those
+  in Connecteam. You can still add non-Connecteam contractors by hand; they are
+  left untouched by the sync.
+
+**Setup (once):** in Connecteam go to **Settings → API keys → Add API key**
+(this requires the **Expert** plan on at least one hub). Put the key in Railway
+as `CONNECTEAM_API_KEY` and redeploy. The Roster screen then shows a Connecteam
+panel with the last sync time.

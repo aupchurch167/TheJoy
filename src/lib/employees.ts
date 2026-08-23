@@ -154,6 +154,94 @@ export async function updateEmployee(
   return rows[0];
 }
 
+/* ---------------- Connecteam sync ---------------- */
+
+export type ConnecteamUpsert = {
+  externalId: string;
+  name: string;
+  email: string | null;
+  phone: string | null;
+  title: string | null;
+  active: boolean;
+};
+
+/**
+ * Reconcile one Connecteam user into the roster. Matches first by external id
+ * (a prior sync), then adopts a matching email row (someone added by hand),
+ * otherwise inserts. Connecteam is the source of truth, so name/email/phone/
+ * title/active are overwritten from it. Returns 'added' or 'updated'.
+ */
+export async function upsertFromConnecteam(
+  u: ConnecteamUpsert
+): Promise<"added" | "updated"> {
+  const email = clean(u.email)?.toLowerCase() ?? null;
+  const phone = clean(u.phone);
+  const title = clean(u.title);
+
+  // 1. Already synced: update in place by external identity.
+  const byExternal = await query<{ id: string }>(
+    `SELECT id FROM employees WHERE external_source = 'connecteam' AND external_id = $1`,
+    [u.externalId]
+  );
+  if (byExternal[0]) {
+    await query(
+      `UPDATE employees SET
+          name = $2, email = $3, phone = $4, title = $5, active = $6,
+          updated_at = now()
+        WHERE id = $1`,
+      [byExternal[0].id, u.name.trim(), email, phone, title, u.active]
+    );
+    return "updated";
+  }
+
+  // 2. Adopt a hand-added row with the same email (claim it for Connecteam).
+  if (email) {
+    const byEmail = await query<{ id: string }>(
+      `SELECT id FROM employees WHERE lower(email) = $1`,
+      [email]
+    );
+    if (byEmail[0]) {
+      await query(
+        `UPDATE employees SET
+            name = $2, email = $3, phone = $4, title = $5, active = $6,
+            external_source = 'connecteam', external_id = $7, updated_at = now()
+          WHERE id = $1`,
+        [byEmail[0].id, u.name.trim(), email, phone, title, u.active, u.externalId]
+      );
+      return "updated";
+    }
+  }
+
+  // 3. New person.
+  await query(
+    `INSERT INTO employees
+       (name, email, phone, title, active, external_source, external_id)
+     VALUES ($1, $2, $3, $4, $5, 'connecteam', $6)`,
+    [u.name.trim(), email, phone, title, u.active, u.externalId]
+  );
+  return "added";
+}
+
+/**
+ * Deactivate Connecteam-sourced employees who were NOT in the latest sync (they
+ * were deleted in Connecteam). We deactivate rather than delete so their past
+ * survey responses are preserved. Hand-added people (no external id) are never
+ * touched. Returns how many were deactivated.
+ */
+export async function deactivateMissingConnecteam(
+  seenExternalIds: string[]
+): Promise<number> {
+  const rows = await query<{ id: string }>(
+    `UPDATE employees SET active = FALSE, updated_at = now()
+      WHERE external_source = 'connecteam'
+        AND active = TRUE
+        AND NOT (external_id = ANY($1::text[]))
+      RETURNING id`,
+    [seenExternalIds.length ? seenExternalIds : [""]]
+  );
+  return rows.length;
+}
+
 export async function setEmployeeActive(id: string, active: boolean): Promise<void> {
   await query(`UPDATE employees SET active = $2, updated_at = now() WHERE id = $1`, [
     id,

@@ -614,3 +614,11 @@ CREATE TABLE IF NOT EXISTS employee_survey_responses (
 );
 CREATE INDEX IF NOT EXISTS employee_survey_responses_survey_idx
   ON employee_survey_responses (survey_id);
+
+-- Small key/value store for integration bookkeeping (e.g. the last Connecteam
+-- roster sync: when it ran and what it changed). Keyed by a short string.
+CREATE TABLE IF NOT EXISTS integration_state (
+  key         TEXT PRIMARY KEY,
+  value       JSONB NOT NULL DEFAULT '{}',
+  updated_at  TIMESTAMPTZ NOT NULL DEFAULT now()
+);

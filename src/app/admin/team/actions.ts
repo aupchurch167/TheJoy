@@ -23,6 +23,11 @@ import {
 import { sendEmployeeSurveyInvitation, emailEnabled } from "@/lib/email";
 import { smsEnabled, sendSms, toE164 } from "@/lib/sms";
 import { SITE_URL } from "@/lib/site";
+import {
+  syncEmployeesFromConnecteam,
+  type SyncResult,
+} from "@/lib/connecteam-sync";
+import { connecteamEnabled } from "@/lib/connecteam";
 
 export type ActionResult =
   | { ok: true; message?: string; id?: string }
@@ -171,6 +176,27 @@ export async function importEmployeesCsv(text: string): Promise<ActionResult> {
       skipped ? `, skipped ${skipped}` : ""
     }.`,
   };
+}
+
+/**
+ * Pull the roster from Connecteam right now (manual, ignores the cron throttle).
+ * Connecteam is the source of truth, so this overwrites synced people and
+ * deactivates anyone who left.
+ */
+export async function syncConnecteamNow(): Promise<
+  { ok: true; result: SyncResult } | { ok: false; error: string }
+> {
+  await requireAdmin();
+  if (!connecteamEnabled())
+    return {
+      ok: false,
+      error: "Connecteam is not set up yet (CONNECTEAM_API_KEY).",
+    };
+  const result = await syncEmployeesFromConnecteam(new Date().toISOString());
+  revalidatePath("/admin/team/roster");
+  revalidatePath("/admin/team");
+  if (!result.ok) return { ok: false, error: result.error ?? "The sync failed." };
+  return { ok: true, result };
 }
 
 /* ---------------- surveys ---------------- */
