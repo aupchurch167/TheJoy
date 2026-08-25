@@ -199,6 +199,24 @@ export default function RosterManager({
         </Card>
       )}
 
+      {/* Connecteam not configured: explain how to turn it on. */}
+      {!connecteam.enabled && (
+        <Card className="border-line bg-surface/40">
+          <div className="text-sm font-semibold text-ink">
+            Sync from Connecteam
+          </div>
+          <p className="mt-1 text-xs leading-relaxed text-ink-faint">
+            Not connected yet, so there is no sync button. To turn it on, create
+            an API key in Connecteam (Settings, then API keys, which needs the
+            Expert plan), add it to Railway as{" "}
+            <code className="rounded bg-white px-1 py-0.5">CONNECTEAM_API_KEY</code>
+            , and redeploy. The roster then syncs itself about twice a day and a
+            &quot;Sync now&quot; button appears here. Until then, add people by
+            hand or a CSV below.
+          </p>
+        </Card>
+      )}
+
       {/* Add */}
       <Card>
         <div className="flex items-center justify-between">
