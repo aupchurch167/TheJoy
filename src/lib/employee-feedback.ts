@@ -7,6 +7,7 @@
 
 import { randomBytes } from "crypto";
 import { query } from "./db";
+import type { SurveyAudience } from "./employees";
 
 export type SurveyStatus = "draft" | "open" | "closed";
 export type SurveyChannel = "email" | "sms" | "both";
@@ -32,6 +33,7 @@ export type EmployeeSurvey = {
   system_key: string | null;
   send_offset_days: number | null;
   auto_enroll: boolean;
+  audience: SurveyAudience | null;
   created_by: string | null;
   created_at: string;
   closed_at: string | null;
@@ -95,17 +97,20 @@ export async function createSurvey(input: {
   intro?: string;
   questions: SurveyQuestion[];
   anonymous: boolean;
+  audience?: SurveyAudience | null;
   createdBy?: string | null;
 }): Promise<EmployeeSurvey> {
   const rows = await query<EmployeeSurvey>(
-    `INSERT INTO employee_surveys (title, intro, questions, anonymous, created_by)
-     VALUES ($1, $2, $3::jsonb, $4, $5)
+    `INSERT INTO employee_surveys
+       (title, intro, questions, anonymous, audience, created_by)
+     VALUES ($1, $2, $3::jsonb, $4, $5::jsonb, $6)
      RETURNING *`,
     [
       input.title.trim(),
       (input.intro ?? "").trim(),
       JSON.stringify(input.questions),
       input.anonymous,
+      input.audience ? JSON.stringify(input.audience) : null,
       input.createdBy ?? null,
     ]
   );

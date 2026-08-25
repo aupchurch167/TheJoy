@@ -815,3 +815,11 @@ birthdays** coming up in the next 14 days, so nobody is missed. It goes to
 from the roster: Connecteam custom fields for hire date and birthday when you
 keep them, otherwise you can type them on a person in the roster. No dates on
 file means no reminder for that person (and no email at all on a quiet week).
+
+### Targeting a pulse survey
+
+When you create a pulse survey you choose **Who gets it**: Everyone, By role
+(pick one or more job titles from the roster), or Pick people (check specific
+names). The survey then only goes to that group, and the response rate is
+measured against it. Onboarding and exit surveys always follow the roster
+automatically and have no target picker.

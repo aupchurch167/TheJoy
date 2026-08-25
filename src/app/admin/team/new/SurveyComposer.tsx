@@ -22,10 +22,17 @@ function keyFor(label: string, uid: number): string {
   return base || `q_${uid}`;
 }
 
+type Person = { id: string; name: string; title: string | null };
+type AudienceMode = "all" | "titles" | "ids";
+
 export default function SurveyComposer({
   defaultQuestions,
+  employees,
+  titles,
 }: {
   defaultQuestions: SurveyQuestion[];
+  employees: Person[];
+  titles: string[];
 }) {
   const router = useRouter();
   const toast = useToast();
@@ -35,6 +42,29 @@ export default function SurveyComposer({
   const [anonymous, setAnonymous] = useState(true);
   const [questions, setQuestions] = useState<Q[]>(defaultQuestions.map(withUid));
   const [busy, setBusy] = useState(false);
+
+  const [mode, setMode] = useState<AudienceMode>("all");
+  const [pickedTitles, setPickedTitles] = useState<Set<string>>(new Set());
+  const [pickedIds, setPickedIds] = useState<Set<string>>(new Set());
+
+  const toggleIn = (set: Set<string>, v: string): Set<string> => {
+    const next = new Set(set);
+    if (next.has(v)) next.delete(v);
+    else next.add(v);
+    return next;
+  };
+
+  const lowerPicked = new Set(
+    [...pickedTitles].map((t) => t.trim().toLowerCase())
+  );
+  const targetCount =
+    mode === "all"
+      ? employees.length
+      : mode === "titles"
+        ? employees.filter(
+            (e) => e.title && lowerPicked.has(e.title.trim().toLowerCase())
+          ).length
+        : pickedIds.size;
 
   const setQ = (uid: number, patch: Partial<Q>) =>
     setQuestions((qs) => qs.map((q) => (q.uid === uid ? { ...q, ...patch } : q)));
@@ -64,11 +94,31 @@ export default function SurveyComposer({
       return { key, label: q.label, type: q.type };
     });
 
+    // Build the audience spec (null/all = everyone).
+    let audience:
+      | { mode: "all" }
+      | { mode: "titles"; titles: string[] }
+      | { mode: "ids"; ids: string[] } = { mode: "all" };
+    if (mode === "titles") {
+      if (pickedTitles.size === 0) {
+        toast.error("Pick at least one role, or choose Everyone.");
+        return;
+      }
+      audience = { mode: "titles", titles: [...pickedTitles] };
+    } else if (mode === "ids") {
+      if (pickedIds.size === 0) {
+        toast.error("Pick at least one person, or choose Everyone.");
+        return;
+      }
+      audience = { mode: "ids", ids: [...pickedIds] };
+    }
+
     setBusy(true);
     const res = await createSurveyAction({
       title: title.trim(),
       intro: intro.trim(),
       anonymous,
+      audience,
       questions: payload,
     });
     setBusy(false);
@@ -137,6 +187,95 @@ export default function SurveyComposer({
             ? "Responses are not linked to a person. You'll see aggregate results and response rate, but not who said what."
             : "Responses come back with the employee's name, so you can follow up directly."}
         </p>
+      </Card>
+
+      <Card>
+        <div className="flex items-center justify-between">
+          <SectionLabel>Who gets it</SectionLabel>
+          <span className="text-xs font-medium text-ink-faint">
+            {targetCount} {targetCount === 1 ? "person" : "people"}
+          </span>
+        </div>
+        <div className="mt-3 flex rounded-[9px] bg-surface p-[3px]">
+          {[
+            { v: "all" as const, label: "Everyone" },
+            { v: "titles" as const, label: "By role" },
+            { v: "ids" as const, label: "Pick people" },
+          ].map((o) => (
+            <button
+              key={o.v}
+              type="button"
+              onClick={() => setMode(o.v)}
+              className={`flex-1 rounded-[7px] px-2 py-1.5 text-sm font-semibold transition-colors ${
+                mode === o.v
+                  ? "bg-white text-ink shadow-[0_1px_2px_rgba(0,0,0,0.08)]"
+                  : "text-ink-soft"
+              }`}
+            >
+              {o.label}
+            </button>
+          ))}
+        </div>
+
+        {mode === "titles" && (
+          <div className="mt-3 flex flex-wrap gap-1.5">
+            {titles.length === 0 ? (
+              <p className="text-xs text-ink-faint">
+                No roles on the roster yet. Add titles to your team, or choose
+                Everyone.
+              </p>
+            ) : (
+              titles.map((t) => {
+                const on = pickedTitles.has(t);
+                return (
+                  <button
+                    key={t}
+                    type="button"
+                    onClick={() => setPickedTitles((s) => toggleIn(s, t))}
+                    className={`rounded-full border px-3 py-1 text-xs font-semibold transition-colors ${
+                      on
+                        ? "border-clay bg-clay/[0.08] text-clay-dark"
+                        : "border-line bg-white text-ink-soft hover:bg-paper"
+                    }`}
+                  >
+                    {t}
+                  </button>
+                );
+              })
+            )}
+          </div>
+        )}
+
+        {mode === "ids" && (
+          <div className="mt-3 max-h-64 space-y-1 overflow-y-auto rounded-lg border border-line p-1.5">
+            {employees.length === 0 ? (
+              <p className="p-2 text-xs text-ink-faint">
+                No reachable employees yet.
+              </p>
+            ) : (
+              employees.map((e) => {
+                const on = pickedIds.has(e.id);
+                return (
+                  <label
+                    key={e.id}
+                    className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 hover:bg-paper"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={on}
+                      onChange={() => setPickedIds((s) => toggleIn(s, e.id))}
+                      className="h-4 w-4 rounded border-line"
+                    />
+                    <span className="text-sm text-ink">{e.name}</span>
+                    {e.title && (
+                      <span className="text-xs text-ink-faint">({e.title})</span>
+                    )}
+                  </label>
+                );
+              })
+            )}
+          </div>
+        )}
       </Card>
 
       <Card>

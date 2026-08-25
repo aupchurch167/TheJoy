@@ -655,3 +655,7 @@ ALTER TABLE employee_survey_recipients
 CREATE INDEX IF NOT EXISTS employee_survey_recipients_due_idx
   ON employee_survey_recipients (send_after)
   WHERE sent_at IS NULL AND send_after IS NOT NULL;
+
+-- Pulse surveys can target a subset of the roster. NULL = everyone. Otherwise a
+-- small spec: {"mode":"titles","titles":[...]} or {"mode":"ids","ids":[...]}.
+ALTER TABLE employee_surveys ADD COLUMN IF NOT EXISTS audience JSONB;

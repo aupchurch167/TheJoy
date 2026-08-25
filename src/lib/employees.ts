@@ -52,6 +52,36 @@ export async function listEmployees(): Promise<Employee[]> {
   );
 }
 
+/** Who a pulse survey targets. NULL/'all' = everyone reachable. */
+export type SurveyAudience =
+  | { mode: "all" }
+  | { mode: "titles"; titles: string[] }
+  | { mode: "ids"; ids: string[] };
+
+/** Does this employee fall inside a survey's audience spec? */
+export function employeeInAudience(
+  e: Employee,
+  audience: SurveyAudience | null | undefined
+): boolean {
+  if (!audience || audience.mode === "all") return true;
+  if (audience.mode === "titles") {
+    const set = new Set(audience.titles.map((t) => t.trim().toLowerCase()));
+    return !!e.title && set.has(e.title.trim().toLowerCase());
+  }
+  if (audience.mode === "ids") return audience.ids.includes(e.id);
+  return true;
+}
+
+/** Distinct, non-empty job titles present on the roster (for targeting). */
+export async function listEmployeeTitles(): Promise<string[]> {
+  const rows = await query<{ title: string }>(
+    `SELECT DISTINCT title FROM employees
+      WHERE active = TRUE AND title IS NOT NULL AND title <> ''
+      ORDER BY title`
+  );
+  return rows.map((r) => r.title);
+}
+
 /** Active employees who can actually be surveyed (have an email or a phone). */
 export async function listReachableEmployees(): Promise<Employee[]> {
   return query<Employee>(

@@ -9,6 +9,7 @@ import {
   setEmployeeActive,
   deleteEmployee,
   listReachableEmployees,
+  employeeInAudience,
 } from "@/lib/employees";
 import {
   createSurvey,
@@ -208,10 +209,25 @@ const QuestionSchema = z.object({
   type: z.enum(["rating", "text"]),
 });
 
+const AudienceSchema = z
+  .discriminatedUnion("mode", [
+    z.object({ mode: z.literal("all") }),
+    z.object({
+      mode: z.literal("titles"),
+      titles: z.array(z.string().trim().min(1).max(80)).min(1).max(50),
+    }),
+    z.object({
+      mode: z.literal("ids"),
+      ids: z.array(z.string().uuid()).min(1).max(500),
+    }),
+  ])
+  .optional();
+
 const SurveySchema = z.object({
   title: z.string().trim().min(1, "Give the survey a title.").max(160),
   intro: z.string().trim().max(2000).optional(),
   anonymous: z.boolean().default(true),
+  audience: AudienceSchema,
   questions: z.array(QuestionSchema).min(1, "Add at least one question.").max(20),
 });
 
@@ -225,11 +241,17 @@ export async function createSurveyAction(input: unknown): Promise<ActionResult> 
   if (keys.size !== parsed.data.questions.length)
     return { ok: false, error: "Question keys must be unique." };
   try {
+    // "all" (or nothing) stores as null so the whole roster is targeted.
+    const audience =
+      !parsed.data.audience || parsed.data.audience.mode === "all"
+        ? null
+        : parsed.data.audience;
     const survey = await createSurvey({
       title: parsed.data.title,
       intro: parsed.data.intro,
       questions: parsed.data.questions as SurveyQuestion[],
       anonymous: parsed.data.anonymous,
+      audience,
       createdBy: email,
     });
     revalidatePath("/admin/team");
@@ -261,9 +283,14 @@ export async function sendSurveyToTeam(surveyId: string): Promise<ActionResult> 
         error: "Neither email nor SMS is set up yet (see OPERATIONS.md).",
       };
 
-    const employees = await listReachableEmployees();
+    const employees = (await listReachableEmployees()).filter((e) =>
+      employeeInAudience(e, survey.audience)
+    );
     if (employees.length === 0)
-      return { ok: false, error: "No active employees with an email or phone yet." };
+      return {
+        ok: false,
+        error: "No active employees match this survey's audience yet.",
+      };
 
     // Move to open so the links work.
     if (survey.status !== "open") await setSurveyStatus(surveyId, "open");

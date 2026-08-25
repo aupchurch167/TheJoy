@@ -6,7 +6,7 @@ import {
   getSurveySummary,
   listResponses,
 } from "@/lib/employee-feedback";
-import { listReachableEmployees } from "@/lib/employees";
+import { listReachableEmployees, employeeInAudience } from "@/lib/employees";
 import {
   PageHeader,
   BackLink,
@@ -55,11 +55,14 @@ export default async function SurveyDetailPage({
   const survey = await getSurveyById(id);
   if (!survey) notFound();
 
-  const [summary, responses, reachable] = await Promise.all([
+  const [summary, responses, allReachable] = await Promise.all([
     getSurveySummary(id),
     listResponses(id),
     listReachableEmployees(),
   ]);
+  const reachable = allReachable.filter((e) =>
+    employeeInAudience(e, survey.audience)
+  );
 
   const ratingQs = survey.questions.filter((q) => q.type === "rating");
   const textQs = survey.questions.filter((q) => q.type === "text");
@@ -92,6 +95,13 @@ export default async function SurveyDetailPage({
         <Badge tone={survey.anonymous ? "info" : "neutral"}>
           {survey.anonymous ? "anonymous" : "named"}
         </Badge>
+        {survey.audience && (
+          <Badge tone="warning">
+            {survey.audience.mode === "titles"
+              ? `by role (${survey.audience.titles.length})`
+              : `${survey.audience.mode === "ids" ? survey.audience.ids.length : ""} chosen`}
+          </Badge>
+        )}
         <span className="text-sm text-ink-faint">
           Created {dateShort(survey.created_at)}
         </span>
