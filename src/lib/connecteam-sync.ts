@@ -5,13 +5,14 @@
  * screen can show when it last ran and the cron can throttle itself.
  */
 
-import { query } from "./db";
 import {
   connecteamEnabled,
   fetchConnecteamUsers,
   ConnecteamError,
 } from "./connecteam";
 import { upsertFromConnecteam, deactivateMissingConnecteam } from "./employees";
+import { getIntegrationState, setIntegrationState } from "./integration-state";
+import { enrollNewHire, enrollExit } from "./employee-lifecycle";
 
 const STATE_KEY = "connecteam_roster";
 
@@ -32,20 +33,11 @@ export type ConnecteamStatus = {
 };
 
 async function readState(): Promise<SyncResult | null> {
-  const rows = await query<{ value: SyncResult }>(
-    `SELECT value FROM integration_state WHERE key = $1`,
-    [STATE_KEY]
-  );
-  return rows[0]?.value ?? null;
+  return getIntegrationState<SyncResult>(STATE_KEY);
 }
 
 async function writeState(result: SyncResult): Promise<void> {
-  await query(
-    `INSERT INTO integration_state (key, value, updated_at)
-     VALUES ($1, $2::jsonb, now())
-     ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, updated_at = now()`,
-    [STATE_KEY, JSON.stringify(result)]
-  );
+  await setIntegrationState(STATE_KEY, result);
 }
 
 export async function getConnecteamStatus(): Promise<ConnecteamStatus> {
@@ -76,28 +68,57 @@ export async function syncEmployeesFromConnecteam(at: string): Promise<SyncResul
     const users = await fetchConnecteamUsers({ includeArchived: true });
     let added = 0;
     let updated = 0;
+    const newHireIds: string[] = [];
+    const departedIds: string[] = [];
+
     for (const u of users) {
-      const outcome = await upsertFromConnecteam({
+      const res = await upsertFromConnecteam({
         externalId: u.externalId,
         name: u.name,
         email: u.email,
         phone: u.phone,
         title: u.title,
         active: !u.archived,
+        hireDate: u.hireDate,
+        birthDate: u.birthDate,
       });
-      if (outcome === "added") added++;
-      else updated++;
+      if (res.outcome === "added") {
+        added++;
+        if (!u.archived) newHireIds.push(res.id);
+      } else {
+        updated++;
+      }
+      if (res.becameInactive) departedIds.push(res.id);
     }
+
     // Anyone gone from Connecteam entirely is deactivated (not deleted).
-    const deactivated = await deactivateMissingConnecteam(
+    const departedByRemoval = await deactivateMissingConnecteam(
       users.map((u) => u.externalId)
     );
+    departedIds.push(...departedByRemoval);
+
+    // Lifecycle: enroll genuinely-new hires in onboarding, and anyone who just
+    // left in the exit survey. Failures here never fail the sync itself.
+    for (const id of newHireIds) {
+      try {
+        await enrollNewHire(id);
+      } catch (e) {
+        console.error("[connecteam] onboarding enroll failed", id, e);
+      }
+    }
+    for (const id of departedIds) {
+      try {
+        await enrollExit(id);
+      } catch (e) {
+        console.error("[connecteam] exit enroll failed", id, e);
+      }
+    }
 
     const result: SyncResult = {
       ok: true,
       added,
       updated,
-      deactivated,
+      deactivated: departedByRemoval.length,
       total: users.length,
       at,
     };

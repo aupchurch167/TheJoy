@@ -19,6 +19,8 @@ export type SurveyQuestion = {
   type: QuestionType;
 };
 
+export type SurveyKind = "pulse" | "onboarding" | "exit";
+
 export type EmployeeSurvey = {
   id: string;
   title: string;
@@ -26,6 +28,10 @@ export type EmployeeSurvey = {
   questions: SurveyQuestion[];
   anonymous: boolean;
   status: SurveyStatus;
+  kind: SurveyKind;
+  system_key: string | null;
+  send_offset_days: number | null;
+  auto_enroll: boolean;
   created_by: string | null;
   created_at: string;
   closed_at: string | null;
@@ -145,6 +151,16 @@ export async function setSurveyStatus(
   );
 }
 
+export async function setSurveyAutoEnroll(
+  id: string,
+  autoEnroll: boolean
+): Promise<void> {
+  await query(`UPDATE employee_surveys SET auto_enroll = $2 WHERE id = $1`, [
+    id,
+    autoEnroll,
+  ]);
+}
+
 export async function deleteSurvey(id: string): Promise<void> {
   await query(`DELETE FROM employee_surveys WHERE id = $1`, [id]);
 }
@@ -169,6 +185,60 @@ export async function ensureRecipient(
     [surveyId, employeeId, newToken(), channel]
   );
   return rows[0];
+}
+
+/**
+ * Ensure a *scheduled* recipient (send_after set) exists for a lifecycle survey.
+ * Does nothing if the person already has a recipient on this survey (so we never
+ * re-schedule or duplicate). Returns the row when it created one, else null.
+ */
+export async function createScheduledRecipient(
+  surveyId: string,
+  employeeId: string,
+  channel: SurveyChannel,
+  sendAfter: string
+): Promise<EmployeeSurveyRecipient | null> {
+  const rows = await query<EmployeeSurveyRecipient>(
+    `INSERT INTO employee_survey_recipients
+       (survey_id, employee_id, token, channel, send_after)
+     VALUES ($1, $2, $3, $4, $5)
+     ON CONFLICT (survey_id, employee_id) DO NOTHING
+     RETURNING *`,
+    [surveyId, employeeId, newToken(), channel, sendAfter]
+  );
+  return rows[0] ?? null;
+}
+
+export type DueRecipient = {
+  recipient_id: string;
+  token: string;
+  channel: SurveyChannel;
+  survey_id: string;
+  survey_title: string;
+  anonymous: boolean;
+  employee_id: string;
+  name: string;
+  email: string | null;
+  phone: string | null;
+  sms_consent: boolean;
+};
+
+/** Scheduled recipients whose time has come (for the cron to send). */
+export async function listDueRecipients(nowIso: string): Promise<DueRecipient[]> {
+  return query<DueRecipient>(
+    `SELECT r.id AS recipient_id, r.token, r.channel,
+            s.id AS survey_id, s.title AS survey_title, s.anonymous,
+            e.id AS employee_id, e.name, e.email, e.phone, e.sms_consent
+       FROM employee_survey_recipients r
+       JOIN employee_surveys s ON s.id = r.survey_id
+       JOIN employees e ON e.id = r.employee_id
+      WHERE r.sent_at IS NULL
+        AND r.send_after IS NOT NULL
+        AND r.send_after <= $1
+        AND s.status = 'open'
+      ORDER BY r.send_after ASC`,
+    [nowIso]
+  );
 }
 
 export async function markRecipientSent(id: string): Promise<void> {

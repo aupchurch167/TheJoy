@@ -2,13 +2,16 @@ import Link from "next/link";
 import { requireAdmin } from "@/lib/require-admin";
 import { hasDatabase } from "@/lib/db";
 import { listSurveys } from "@/lib/employee-feedback";
+import { ensureLifecycleSurveys } from "@/lib/employee-lifecycle";
 import { countEmployees } from "@/lib/employees";
+import LifecycleCard from "./LifecycleCard";
 import {
   PageHeader,
   Card,
   Badge,
   ButtonLink,
   StatCard,
+  SectionLabel,
   EmptyState,
   NotConnected,
   type BadgeTone,
@@ -39,7 +42,11 @@ export default async function TeamPage() {
     );
   }
 
+  // Make sure the onboarding/exit templates exist so they always show.
+  await ensureLifecycleSurveys();
   const [surveys, counts] = await Promise.all([listSurveys(), countEmployees()]);
+  const lifecycle = surveys.filter((s) => s.kind !== "pulse");
+  const pulses = surveys.filter((s) => s.kind === "pulse");
 
   return (
     <>
@@ -70,14 +77,28 @@ export default async function TeamPage() {
         </Card>
       )}
 
-      {surveys.length === 0 ? (
+      <LifecycleCard
+        rows={lifecycle.map((s) => ({
+          id: s.id,
+          title: s.title,
+          kind: s.kind,
+          send_offset_days: s.send_offset_days,
+          auto_enroll: s.auto_enroll,
+          completed: Number(s.completed),
+        }))}
+      />
+
+      <div className="mb-2 mt-8">
+        <SectionLabel>Pulse surveys</SectionLabel>
+      </div>
+      {pulses.length === 0 ? (
         <EmptyState
-          title="No surveys yet"
+          title="No pulse surveys yet"
           description="Create a short pulse survey and send it to your team."
         />
       ) : (
         <div className="space-y-3">
-          {surveys.map((s) => {
+          {pulses.map((s) => {
             const sent = Number(s.sent);
             const completed = Number(s.completed);
             return (

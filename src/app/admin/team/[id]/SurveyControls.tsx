@@ -15,10 +15,15 @@ export default function SurveyControls({
   surveyId,
   status,
   reachable,
+  kind = "pulse",
+  system = false,
 }: {
   surveyId: string;
   status: "draft" | "open" | "closed";
   reachable: number;
+  kind?: "pulse" | "onboarding" | "exit";
+  /** A seeded system template (onboarding/exit): no manual send, no delete. */
+  system?: boolean;
 }) {
   const router = useRouter();
   const toast = useToast();
@@ -48,9 +53,11 @@ export default function SurveyControls({
     }
   }
 
+  const isPulse = kind === "pulse";
   return (
     <div className="flex flex-wrap items-center gap-2">
-      {status !== "closed" && (
+      {/* Manual send only for pulse surveys; lifecycle surveys send themselves. */}
+      {isPulse && status !== "closed" && (
         <Button onClick={send} disabled={busy || reachable === 0} size="sm">
           {status === "draft"
             ? `Send to team (${reachable})`
@@ -59,32 +66,34 @@ export default function SurveyControls({
       )}
       {status === "open" && (
         <Button variant="secondary" size="sm" onClick={() => setStatus("closed")} disabled={busy}>
-          Close survey
+          {isPulse ? "Close survey" : "Pause"}
         </Button>
       )}
       {status === "closed" && (
         <Button variant="secondary" size="sm" onClick={() => setStatus("open")} disabled={busy}>
-          Reopen
+          {isPulse ? "Reopen" : "Resume"}
         </Button>
       )}
-      <ConfirmButton
-        variant="ghost"
-        size="sm"
-        title="Delete this survey?"
-        message="This removes the survey and all its responses. This cannot be undone."
-        confirmLabel="Delete"
-        onConfirm={async () => {
-          const res = await deleteSurveyAction(surveyId);
-          if (res.ok) {
-            toast.success("Survey deleted.");
-            router.push("/admin/team");
-          } else {
-            toast.error(res.error);
-          }
-        }}
-      >
-        Delete
-      </ConfirmButton>
+      {!system && (
+        <ConfirmButton
+          variant="ghost"
+          size="sm"
+          title="Delete this survey?"
+          message="This removes the survey and all its responses. This cannot be undone."
+          confirmLabel="Delete"
+          onConfirm={async () => {
+            const res = await deleteSurveyAction(surveyId);
+            if (res.ok) {
+              toast.success("Survey deleted.");
+              router.push("/admin/team");
+            } else {
+              toast.error(res.error);
+            }
+          }}
+        >
+          Delete
+        </ConfirmButton>
+      )}
     </div>
   );
 }

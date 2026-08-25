@@ -5,6 +5,8 @@ import { processDueBroadcasts } from "@/lib/broadcast-runner";
 import { publishDueScheduledPosts } from "@/lib/posts";
 import { recordRanks } from "@/lib/ranks";
 import { syncConnecteamIfDue } from "@/lib/connecteam-sync";
+import { processScheduledCheckins } from "@/lib/employee-lifecycle";
+import { sendRecognitionDigestIfDue } from "@/lib/recognition";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -53,8 +55,13 @@ async function handle(request: Request) {
   ]);
   const ranksLogged = await recordRanks();
   // Refresh the staff roster from Connecteam at most every ~12h (no-op when
-  // the integration is off or a recent sync already ran).
+  // the integration is off or a recent sync already ran). This also enrolls new
+  // hires in onboarding and leavers in the exit survey.
   const connecteamSync = await syncConnecteamIfDue(new Date());
+  // Send any onboarding/exit check-ins whose scheduled time has come.
+  const checkinsSent = await processScheduledCheckins(new Date());
+  // Weekly reminder to the admin team of upcoming anniversaries + birthdays.
+  const recognition = await sendRecognitionDigestIfDue(new Date());
 
   return NextResponse.json({
     ok: true,
@@ -63,6 +70,8 @@ async function handle(request: Request) {
     broadcastSent,
     ranksLogged,
     connecteamSync,
+    checkinsSent,
+    recognition,
   });
 }
 

@@ -455,6 +455,71 @@ export async function sendEmployeeSurveyInvitation(input: {
 }
 
 /**
+ * Weekly internal reminder to the admin team of upcoming staff work
+ * anniversaries and birthdays. Not staff-facing; a nudge so Mellissa and the
+ * team can mark the occasion.
+ */
+export async function sendTeamRecognitionDigest(input: {
+  to: string[];
+  items: {
+    name: string;
+    title: string | null;
+    kind: "anniversary" | "birthday";
+    date: string;
+    years?: number;
+  }[];
+  rangeDays: number;
+}): Promise<boolean> {
+  if (!resend) {
+    console.info("[email] RESEND_API_KEY not set; recognition digest skipped.");
+    return false;
+  }
+  if (input.to.length === 0 || input.items.length === 0) return false;
+
+  const fmt = (iso: string) =>
+    new Date(`${iso}T00:00:00Z`).toLocaleDateString("en-US", {
+      weekday: "short",
+      month: "short",
+      day: "numeric",
+      timeZone: "UTC",
+    });
+  const anniversaries = input.items.filter((i) => i.kind === "anniversary");
+  const birthdays = input.items.filter((i) => i.kind === "birthday");
+
+  const lines: string[] = [
+    `Coming up in the next ${input.rangeDays} days:`,
+    "",
+  ];
+  if (anniversaries.length) {
+    lines.push("**Work anniversaries**");
+    for (const a of anniversaries) {
+      const who = a.title ? `${a.name} (${a.title})` : a.name;
+      lines.push(
+        `- ${who}: ${a.years} year${a.years === 1 ? "" : "s"} on ${fmt(a.date)}`
+      );
+    }
+    lines.push("");
+  }
+  if (birthdays.length) {
+    lines.push("**Birthdays**");
+    for (const b of birthdays) {
+      const who = b.title ? `${b.name} (${b.title})` : b.name;
+      lines.push(`- ${who}: ${fmt(b.date)}`);
+    }
+    lines.push("");
+  }
+  lines.push("A card or a quick word goes a long way.");
+
+  await resend.emails.send({
+    from: FROM,
+    to: input.to,
+    subject: "Team: upcoming anniversaries and birthdays",
+    html: wrapEmail(renderBody(lines.join("\n")), undefined, false),
+  });
+  return true;
+}
+
+/**
  * Internal alert when a family flags a concern (rating 3 or below). Sent to the
  * feedback_alert_emails recipients. Respects anonymity: an anonymous response
  * shows as "Anonymous" and never reveals which family it came from. Fired on

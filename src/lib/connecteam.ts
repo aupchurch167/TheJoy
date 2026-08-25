@@ -23,6 +23,10 @@ export type ConnecteamUser = {
   phone: string | null;
   title: string | null;
   archived: boolean;
+  /** YYYY-MM-DD, best-effort from a custom field (falls back to added date). */
+  hireDate: string | null;
+  /** YYYY-MM-DD from a birthday custom field, or null. */
+  birthDate: string | null;
 };
 
 type RawUser = {
@@ -33,8 +37,33 @@ type RawUser = {
   phoneNumber?: string | null;
   userType?: string | null;
   isArchived?: boolean;
+  createdAt?: number | string;
   customFields?: { name?: string; value?: unknown }[];
 };
+
+/** Parse a custom-field date value (epoch seconds/ms or a string) to YYYY-MM-DD. */
+function toIsoDate(value: unknown): string | null {
+  if (value == null || value === "") return null;
+  let d: Date;
+  if (typeof value === "number") {
+    // Heuristic: > 1e12 is ms, > 1e9 is seconds.
+    const ms = value > 1e12 ? value : value > 1e9 ? value * 1000 : NaN;
+    if (Number.isNaN(ms)) return null;
+    d = new Date(ms);
+  } else if (typeof value === "string") {
+    const t = Date.parse(value);
+    if (Number.isNaN(t)) return null;
+    d = new Date(t);
+  } else {
+    return null;
+  }
+  if (Number.isNaN(d.getTime())) return null;
+  return d.toISOString().slice(0, 10);
+}
+
+function fieldByName(u: RawUser, re: RegExp): unknown {
+  return (u.customFields ?? []).find((f) => re.test(f.name ?? ""))?.value;
+}
 
 type UsersResponse = {
   data?: { users?: RawUser[] };
@@ -54,6 +83,9 @@ function titleFromCustomFields(u: RawUser): string | null {
 
 function normalize(u: RawUser): ConnecteamUser {
   const name = `${u.firstName ?? ""} ${u.lastName ?? ""}`.trim();
+  const hireField = toIsoDate(
+    fieldByName(u, /hire|start\s*date|seniority|employment|tenure/i)
+  );
   return {
     externalId: String(u.userId),
     name: name || "(no name)",
@@ -61,6 +93,9 @@ function normalize(u: RawUser): ConnecteamUser {
     phone: u.phoneNumber?.trim() || null,
     title: titleFromCustomFields(u),
     archived: !!u.isArchived,
+    // Prefer an explicit hire/start field; fall back to when they were added.
+    hireDate: hireField ?? toIsoDate(u.createdAt),
+    birthDate: toIsoDate(fieldByName(u, /birth|b-?day|dob/i)),
   };
 }
 

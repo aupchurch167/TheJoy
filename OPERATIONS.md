@@ -791,3 +791,27 @@ When `CONNECTEAM_API_KEY` is set, Connecteam owns the roster:
 (this requires the **Expert** plan on at least one hub). Put the key in Railway
 as `CONNECTEAM_API_KEY` and redeploy. The Roster screen then shows a Connecteam
 panel with the last sync time.
+
+### Automatic check-ins (onboarding + exit)
+
+`/admin > Team` shows an **Automatic check-ins** panel. These run off the
+Connecteam roster with no manual step:
+
+- **Onboarding:** a new hire is enrolled in a 30-, 60-, and 90-day check-in,
+  each sent (from the date they were hired) when it comes due. People already
+  on staff are not back-enrolled.
+- **Exit interview:** when someone is archived or removed in Connecteam, they
+  get an **anonymous** exit survey on the next run.
+
+Each has an on/off switch. Tap a title to edit its questions or read the
+responses (same report as a pulse survey). The scheduled sends go out on the
+same Railway cron as everything else.
+
+### Weekly recognition reminder
+
+Once a week the admin team gets an email listing **work anniversaries and
+birthdays** coming up in the next 14 days, so nobody is missed. It goes to
+`hello@joyseniorcare.com` by default (change with `TEAM_NOTIFY_TO`). Dates come
+from the roster: Connecteam custom fields for hire date and birthday when you
+keep them, otherwise you can type them on a person in the roster. No dates on
+file means no reminder for that person (and no email at all on a quiet week).

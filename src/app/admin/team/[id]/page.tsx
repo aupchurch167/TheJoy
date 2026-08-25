@@ -81,6 +81,8 @@ export default async function SurveyDetailPage({
             surveyId={survey.id}
             status={survey.status}
             reachable={reachable.length}
+            kind={survey.kind}
+            system={!!survey.system_key}
           />
         }
       />

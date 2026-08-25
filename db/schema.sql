@@ -622,3 +622,36 @@ CREATE TABLE IF NOT EXISTS integration_state (
   value       JSONB NOT NULL DEFAULT '{}',
   updated_at  TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+
+-- ==========================================================================
+-- Phase 6b: employee lifecycle (onboarding + exit) and recognition dates
+-- ==========================================================================
+
+-- Hire date drives work anniversaries + onboarding check-in timing; birth date
+-- drives birthday reminders. Pulled from Connecteam custom fields when present
+-- (hire date falls back to when they were added); editable by hand otherwise.
+ALTER TABLE employees ADD COLUMN IF NOT EXISTS hire_date  DATE;
+ALTER TABLE employees ADD COLUMN IF NOT EXISTS birth_date DATE;
+
+-- Surveys gain a kind so onboarding/exit templates can be auto-enrolled and
+-- time-sent, while ordinary pulse surveys keep working exactly as before.
+--   kind            'pulse' (manual), 'onboarding' (timed after hire), 'exit'
+--   system_key      stable id for a seeded template (e.g. 'onboarding_30')
+--   send_offset_days for onboarding: days after hire to send this step
+--   auto_enroll     whether new hires / leavers are enrolled automatically
+ALTER TABLE employee_surveys ADD COLUMN IF NOT EXISTS kind TEXT NOT NULL DEFAULT 'pulse';
+ALTER TABLE employee_surveys ADD COLUMN IF NOT EXISTS system_key TEXT;
+ALTER TABLE employee_surveys ADD COLUMN IF NOT EXISTS send_offset_days INT;
+ALTER TABLE employee_surveys ADD COLUMN IF NOT EXISTS auto_enroll BOOLEAN NOT NULL DEFAULT FALSE;
+-- Plain (not partial) unique index so it can be an ON CONFLICT target. NULLs do
+-- not collide, so ordinary pulse surveys (system_key NULL) are unaffected.
+CREATE UNIQUE INDEX IF NOT EXISTS employee_surveys_system_key_uidx
+  ON employee_surveys (system_key);
+
+-- A recipient can be scheduled: send_after NULL means "send on manual trigger"
+-- (the original pulse behavior); a timestamp means the cron sends it once due.
+ALTER TABLE employee_survey_recipients
+  ADD COLUMN IF NOT EXISTS send_after TIMESTAMPTZ;
+CREATE INDEX IF NOT EXISTS employee_survey_recipients_due_idx
+  ON employee_survey_recipients (send_after)
+  WHERE sent_at IS NULL AND send_after IS NOT NULL;

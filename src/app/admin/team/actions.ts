@@ -14,6 +14,7 @@ import {
   createSurvey,
   getSurveyById,
   setSurveyStatus,
+  setSurveyAutoEnroll,
   deleteSurvey,
   ensureRecipient,
   markRecipientSent,
@@ -335,6 +336,20 @@ export async function setSurveyStatusAction(
     return { ok: true };
   } catch {
     return { ok: false, error: "Could not update the survey." };
+  }
+}
+
+export async function setAutoEnrollAction(
+  surveyId: string,
+  autoEnroll: boolean
+): Promise<ActionResult> {
+  await requireAdmin();
+  try {
+    await setSurveyAutoEnroll(surveyId, autoEnroll);
+    revalidatePath("/admin/team");
+    return { ok: true };
+  } catch {
+    return { ok: false, error: "Could not update automation." };
   }
 }
 
