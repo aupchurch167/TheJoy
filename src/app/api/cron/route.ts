@@ -7,6 +7,7 @@ import { recordRanks } from "@/lib/ranks";
 import { syncConnecteamIfDue } from "@/lib/connecteam-sync";
 import { processScheduledCheckins } from "@/lib/employee-lifecycle";
 import { sendRecognitionDigestIfDue } from "@/lib/recognition";
+import { setIntegrationState } from "@/lib/integration-state";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -47,21 +48,46 @@ async function handle(request: Request) {
     );
   }
 
-  // Publish scheduled posts first (cheap), then send email, then log ranks.
+  // Core jobs: publish scheduled posts (cheap), then send drip + broadcasts.
+  // These come first so a later integration error can never delay email.
   const postsPublished = await publishDueScheduledPosts();
   const [dripSent, broadcastSent] = await Promise.all([
     runDrip(),
     processDueBroadcasts(),
   ]);
-  const ranksLogged = await recordRanks();
-  // Refresh the staff roster from Connecteam at most every ~12h (no-op when
-  // the integration is off or a recent sync already ran). This also enrolls new
-  // hires in onboarding and leavers in the exit survey.
-  const connecteamSync = await syncConnecteamIfDue(new Date());
-  // Send any onboarding/exit check-ins whose scheduled time has come.
-  const checkinsSent = await processScheduledCheckins(new Date());
-  // Weekly reminder to the admin team of upcoming anniversaries + birthdays.
-  const recognition = await sendRecognitionDigestIfDue(new Date());
+
+  // Secondary jobs are isolated: a failure in any one is logged and skipped, so
+  // it never fails the whole run (and never blocks email, which already ran).
+  const safe = async <T,>(label: string, fn: () => Promise<T>): Promise<T | null> => {
+    try {
+      return await fn();
+    } catch (err) {
+      console.error(`[cron] ${label} failed`, err);
+      return null;
+    }
+  };
+  const ranksLogged = await safe("recordRanks", () => recordRanks());
+  const connecteamSync = await safe("connecteamSync", () =>
+    syncConnecteamIfDue(new Date())
+  );
+  const checkinsSent = await safe("checkins", () =>
+    processScheduledCheckins(new Date())
+  );
+  const recognition = await safe("recognition", () =>
+    sendRecognitionDigestIfDue(new Date())
+  );
+
+  // Heartbeat: record that the worker ran and what it sent, so the admin can see
+  // at a glance whether the sending pipeline is alive.
+  await safe("heartbeat", () =>
+    setIntegrationState("worker_last_run", {
+      at: new Date().toISOString(),
+      broadcastSent,
+      dripSent,
+      postsPublished,
+      checkinsSent,
+    })
+  );
 
   return NextResponse.json({
     ok: true,

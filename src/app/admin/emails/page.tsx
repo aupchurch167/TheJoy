@@ -9,6 +9,7 @@ import {
 import { countSubscribers } from "@/lib/leads";
 import { isWithinSendWindow, throttleSummary } from "@/lib/broadcast-runner";
 import { emailEnabled } from "@/lib/email";
+import { getIntegrationState } from "@/lib/integration-state";
 import { formatDateTime } from "@/lib/format";
 import {
   PageHeader,
@@ -26,6 +27,20 @@ export const dynamic = "force-dynamic";
 function isDueNow(iso: string | null): boolean {
   return !iso || new Date(iso).getTime() <= Date.now();
 }
+
+/** Minutes since an ISO time (module-level to keep Date.now out of render). */
+function minsSince(iso: string): number {
+  return Math.floor((Date.now() - new Date(iso).getTime()) / 60000);
+}
+function agoLabel(mins: number): string {
+  if (mins < 1) return "just now";
+  if (mins < 60) return `${mins} min ago`;
+  const h = Math.floor(mins / 60);
+  if (h < 24) return `${h}h ${mins % 60}m ago`;
+  return `${Math.floor(h / 24)}d ago`;
+}
+
+type WorkerRun = { at: string; broadcastSent?: number };
 
 export default async function EmailsPage() {
   await requireAdmin();
@@ -81,6 +96,11 @@ export default async function EmailsPage() {
 
   const empty = broadcasts.filter((b) => b.channel === "email").length === 0;
 
+  const worker = await getIntegrationState<WorkerRun>("worker_last_run");
+  const workerMins = worker?.at ? minsSince(worker.at) : null;
+  // The worker should run at least hourly; flag if it hasn't run in over 2h.
+  const workerStale = workerMins == null || workerMins > 120;
+
   return (
     <>
       <PageHeader
@@ -88,6 +108,32 @@ export default async function EmailsPage() {
         description="One-off notes to your leads or families. New leads also get an automatic nurture drip (welcome, what makes Joy different, a family story, a tour invitation)."
         actions={newAction}
       />
+
+      <div
+        className={`mb-6 flex items-start gap-3 rounded-xl border px-4 py-3 text-sm ${
+          workerStale
+            ? "border-danger/30 bg-danger/[0.06] text-ink"
+            : "border-line bg-white text-ink-soft"
+        }`}
+      >
+        <span aria-hidden>{workerStale ? "🔴" : "🟢"}</span>
+        {worker?.at ? (
+          <p>
+            <strong className="font-semibold text-ink">Sending worker</strong>{" "}
+            last ran {agoLabel(workerMins!)}.{" "}
+            {workerStale
+              ? "It should run at least hourly. If this stays red, scheduled and metered emails will not go out (check the Railway cron and CRON_SECRET, see OPERATIONS.md section 10)."
+              : "Scheduled and metered emails go out on its runs."}
+          </p>
+        ) : (
+          <p>
+            <strong className="font-semibold text-ink">Sending worker</strong> has
+            not run yet. Until the Railway cron hits <code>/api/cron</code> (with{" "}
+            <code>CRON_SECRET</code>), scheduled and metered emails will not go
+            out. See OPERATIONS.md section 10.
+          </p>
+        )}
+      </div>
 
       {!emailEnabled() && (
         <div className="mb-6 flex items-start gap-3 rounded-xl border border-gold/30 bg-gold/10 px-4 py-3 text-sm text-gold">
