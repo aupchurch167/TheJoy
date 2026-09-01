@@ -138,11 +138,13 @@ export async function updateBroadcast(
   body: string,
   filters: LeadSegment | null = null,
   format: BroadcastBodyFormat = "markdown",
-  modelJson?: unknown | null
+  modelJson?: unknown | null,
+  audience?: Audience | null
 ): Promise<Broadcast | null> {
   const rows = await query<Broadcast>(
     `UPDATE broadcasts SET subject = $2, body = $3, filters = $4, body_format = $5,
        model_json = COALESCE($6, model_json),
+       audience = COALESCE($7, audience),
        updated_at = now()
      WHERE id = $1 AND status IN ('draft','scheduled') RETURNING *`,
     [
@@ -152,6 +154,7 @@ export async function updateBroadcast(
       filters ? JSON.stringify(filters) : null,
       format,
       modelJson != null ? JSON.stringify(modelJson) : null,
+      audience ?? null,
     ]
   );
   return rows[0] ?? null;

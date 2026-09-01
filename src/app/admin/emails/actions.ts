@@ -76,7 +76,15 @@ async function upsert(
   format: "markdown" | "html" | "html_standalone"
 ) {
   if (id) {
-    const updated = await updateBroadcast(id, subject, body, filters, format);
+    const updated = await updateBroadcast(
+      id,
+      subject,
+      body,
+      filters,
+      format,
+      null,
+      audience
+    );
     if (updated) return updated.id;
   }
   const created = await createBroadcast(subject, body, audience, "email", filters, null, {
@@ -435,7 +443,8 @@ async function upsertStudio(
       body,
       filters,
       "html_standalone",
-      model
+      model,
+      audience
     );
     if (updated) return updated.id;
   }
