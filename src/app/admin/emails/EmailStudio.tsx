@@ -167,9 +167,20 @@ export default function EmailStudio({
   );
 
   const [id, setId] = useState<string | undefined>(broadcast?.id);
-  const [cooldownDays, setCooldownDays] = useState<number>(
-    broadcast?.filters?.cooldownDays ?? 0
+  // Recency cap: "off" | "7" | "14" | "30" (days) | "never" (never emailed).
+  const [emailCap, setEmailCap] = useState<string>(
+    broadcast?.filters?.neverEmailed
+      ? "never"
+      : broadcast?.filters?.cooldownDays
+        ? String(broadcast.filters.cooldownDays)
+        : "off"
   );
+  const capFilters =
+    emailCap === "never"
+      ? { neverEmailed: true }
+      : emailCap !== "off"
+        ? { cooldownDays: Number(emailCap) }
+        : {};
   const [audience, setAudience] = useState<Audience>(
     (broadcast?.audience as Audience) ?? "families"
   );
@@ -206,16 +217,15 @@ export default function EmailStudio({
   /* --- live recipient count --- */
   useEffect(() => {
     let alive = true;
-    previewRecipients({
-      audience,
-      filters: cooldownDays > 0 ? { cooldownDays } : {},
-    })
+    previewRecipients({ audience, filters: capFilters })
       .then((n) => alive && setRecipients(n))
       .catch(() => alive && setRecipients(null));
     return () => {
       alive = false;
     };
-  }, [audience, cooldownDays]);
+    // capFilters is derived from emailCap; depend on the primitive.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [audience, emailCap]);
 
   /* --- preview HTML --- */
   const previewHtml = useMemo(() => renderEmailModel(model), [model]);
@@ -365,7 +375,7 @@ export default function EmailStudio({
       id,
       subject,
       audience,
-      filters: cooldownDays > 0 ? { cooldownDays } : {},
+      filters: capFilters,
       model,
     };
   }
@@ -470,20 +480,22 @@ export default function EmailStudio({
 
                 <div className="mt-3">
                   <div className="text-[11px] font-semibold text-ink-soft">
-                    Skip anyone emailed recently
+                    Email frequency cap
                   </div>
                   <div className="mt-1.5 flex rounded-[9px] bg-surface p-[3px]">
                     {[
-                      { d: 0, label: "Off" },
-                      { d: 7, label: "7 days" },
-                      { d: 14, label: "14 days" },
+                      { v: "off", label: "Off" },
+                      { v: "7", label: "7d" },
+                      { v: "14", label: "14d" },
+                      { v: "30", label: "30d" },
+                      { v: "never", label: "Never" },
                     ].map((o) => (
                       <button
-                        key={o.d}
+                        key={o.v}
                         type="button"
-                        onClick={() => setCooldownDays(o.d)}
-                        className={`flex-1 rounded-[7px] px-2 py-1.5 text-xs font-semibold transition-colors ${
-                          cooldownDays === o.d
+                        onClick={() => setEmailCap(o.v)}
+                        className={`flex-1 rounded-[7px] px-1.5 py-1.5 text-xs font-semibold transition-colors ${
+                          emailCap === o.v
                             ? "bg-white text-ink shadow-[0_1px_2px_rgba(0,0,0,0.08)]"
                             : "text-ink-soft"
                         }`}
@@ -492,12 +504,17 @@ export default function EmailStudio({
                       </button>
                     ))}
                   </div>
-                  {cooldownDays > 0 && (
+                  {emailCap === "never" ? (
                     <p className="mt-1.5 text-[11px] text-ink-faint">
-                      Anyone who got an email in the last {cooldownDays} days is left
+                      Only people who have never been sent an email will get this
+                      one.
+                    </p>
+                  ) : emailCap !== "off" ? (
+                    <p className="mt-1.5 text-[11px] text-ink-faint">
+                      Anyone who got an email in the last {emailCap} days is left
                       out of this send.
                     </p>
-                  )}
+                  ) : null}
                 </div>
                 {audience === "families" && (
                   <div className="mt-3 rounded-lg border border-gold/30 bg-gold/[0.07] px-3 py-2 text-[11.5px] leading-snug text-[#8a6217]">

@@ -327,6 +327,11 @@ export type LeadSegment = {
    * that happened after the broadcast was queued. 0 / undefined = no cap.
    */
   cooldownDays?: number | null;
+  /**
+   * Only include people who have NEVER been sent a broadcast email. Takes
+   * precedence over cooldownDays (it is the strictest recency cap).
+   */
+  neverEmailed?: boolean;
 };
 
 /** Build the shared subscriber WHERE clause (base opt-in rules + segment). */
@@ -360,7 +365,16 @@ function segmentWhere(
     params.push(seg.createdTo);
     conds.push(`created_at <= $${params.length}`);
   }
-  if (seg?.cooldownDays && seg.cooldownDays > 0) {
+  if (seg?.neverEmailed) {
+    // Strictest cap: anyone with any successful send on record is excluded.
+    conds.push(
+      `NOT EXISTS (
+         SELECT 1 FROM broadcast_recipients br
+          WHERE br.lead_id = leads.id
+            AND br.error IS NULL
+       )`
+    );
+  } else if (seg?.cooldownDays && seg.cooldownDays > 0) {
     params.push(seg.cooldownDays);
     conds.push(
       `NOT EXISTS (

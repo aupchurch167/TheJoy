@@ -36,6 +36,8 @@ const FiltersSchema = z
     createdTo: z.string().trim().optional(),
     // Frequency cap: skip anyone emailed in the last N days (0 = no cap).
     cooldownDays: z.coerce.number().int().min(0).max(365).optional(),
+    // Only people who have never been sent a broadcast email.
+    neverEmailed: z.coerce.boolean().optional(),
   })
   .optional();
 
@@ -47,7 +49,9 @@ function normalizeFilters(f: z.infer<typeof FiltersSchema>): LeadSegment | null 
   if (f.stages?.length) seg.stages = f.stages;
   if (f.createdFrom) seg.createdFrom = new Date(f.createdFrom).toISOString();
   if (f.createdTo) seg.createdTo = new Date(f.createdTo).toISOString();
-  if (f.cooldownDays && f.cooldownDays > 0) seg.cooldownDays = f.cooldownDays;
+  // "Never emailed" is the strictest cap and supersedes a day-based cooldown.
+  if (f.neverEmailed) seg.neverEmailed = true;
+  else if (f.cooldownDays && f.cooldownDays > 0) seg.cooldownDays = f.cooldownDays;
   return Object.keys(seg).length ? seg : null;
 }
 
