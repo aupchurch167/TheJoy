@@ -27,12 +27,15 @@ export default function EmailQueue({
   withinWindow,
   throttle,
   nextOpen,
+  workerHealthy = true,
 }: {
   items: QueueItem[];
   withinWindow: boolean;
   throttle: string;
   /** "8am EDT" when the metered window is closed, else null. */
   nextOpen?: string | null;
+  /** False when the sending worker hasn't run recently (nothing will send). */
+  workerHealthy?: boolean;
 }) {
   const router = useRouter();
   const toast = useToast();
@@ -85,24 +88,34 @@ export default function EmailQueue({
           const pct =
             it.expected > 0 ? Math.min(100, Math.round((it.sentSoFar / it.expected) * 100)) : 0;
 
+          // A single, honest "when will this go" line. The worker overrides
+          // everything: if it isn't running, nothing sends regardless of window.
           let statusNote: string;
+          let warn = false;
           if (it.status === "sending") {
             statusNote =
               remaining > 0
                 ? `Sending · ${it.sentSoFar} of ${it.expected} · next batch within the hour`
                 : `Sending now · ${it.sentSoFar} of ${it.expected} sent`;
           } else if (it.expected === 0) {
-            statusNote = "No recipients match this audience yet";
+            statusNote = "Will not send: no recipients match this audience/filters";
+            warn = true;
           } else if (!it.dueNow) {
-            statusNote = `Scheduled for ${formatDateTime(it.scheduledAt)}`;
+            statusNote = `Scheduled for ${formatDateTime(it.scheduledAt)}${
+              workerHealthy ? "" : " (worker down, see above)"
+            }`;
+          } else if (!workerHealthy) {
+            statusNote =
+              "Waiting on the sending worker — it hasn't run recently, so nothing goes out until it's back (see the banner above)";
+            warn = true;
           } else if (it.priority || it.audience === "families") {
-            statusNote = "Sends right away (not metered)";
+            statusNote = "Expected: on the next worker run (within a few minutes)";
           } else if (!withinWindow) {
             statusNote = nextOpen
-              ? `Queued · first batch goes out at ${nextOpen}`
-              : "Queued · sends in the next morning send window";
+              ? `Expected: first batch at ${nextOpen} (quiet hours right now)`
+              : "Expected: the next morning send window";
           } else {
-            statusNote = `Starting now · up to ${throttle}`;
+            statusNote = `Expected: on the next worker run (within a few minutes), up to ${throttle}`;
           }
 
           return (
@@ -164,17 +177,21 @@ export default function EmailQueue({
                 </div>
               </div>
 
-              <div className="mt-2.5 flex items-center gap-3">
-                {it.expected > 0 && (
-                  <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-surface">
-                    <div
-                      className="h-full rounded-full bg-sage"
-                      style={{ width: `${pct}%` }}
-                    />
-                  </div>
-                )}
-                <span className="flex-none text-[11.5px] text-ink-faint">{statusNote}</span>
-              </div>
+              {it.expected > 0 && (
+                <div className="mt-2.5 h-1.5 overflow-hidden rounded-full bg-surface">
+                  <div
+                    className="h-full rounded-full bg-sage"
+                    style={{ width: `${pct}%` }}
+                  />
+                </div>
+              )}
+              <p
+                className={`mt-2 text-xs font-medium ${
+                  warn ? "text-danger" : "text-ink-soft"
+                }`}
+              >
+                {statusNote}
+              </p>
               {it.status === "sending" && remaining > 0 && (
                 <p className="mt-1 text-[11px] text-ink-faint">
                   {remaining} left · the rest send gradually to protect deliverability.

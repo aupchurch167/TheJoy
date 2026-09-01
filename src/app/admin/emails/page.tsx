@@ -175,6 +175,7 @@ export default async function EmailsPage() {
         withinWindow={isWithinSendWindow()}
         throttle={throttleSummary()}
         nextOpen={nextWindowOpenLabel()}
+        workerHealthy={!workerStale}
       />
 
       {empty ? (
