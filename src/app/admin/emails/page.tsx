@@ -14,6 +14,7 @@ import {
 } from "@/lib/broadcast-runner";
 import { emailEnabled } from "@/lib/email";
 import { getIntegrationState } from "@/lib/integration-state";
+import { dripOverview, isDripPaused } from "@/lib/drip";
 import { formatDateTime } from "@/lib/format";
 import {
   PageHeader,
@@ -100,6 +101,7 @@ export default async function EmailsPage() {
 
   const empty = broadcasts.filter((b) => b.channel === "email").length === 0;
 
+  const [drip, dripPaused] = await Promise.all([dripOverview(), isDripPaused()]);
   const worker = await getIntegrationState<WorkerRun>("worker_last_run");
   const workerMins = worker?.at ? minsSince(worker.at) : null;
   // The worker should run at least hourly; flag if it hasn't run in over 2h.
@@ -149,6 +151,24 @@ export default async function EmailsPage() {
           </p>
         </div>
       )}
+
+      <Link
+        href="/admin/emails/automatic"
+        className="mb-6 flex items-center justify-between gap-3 rounded-xl border border-line bg-white px-4 py-3 hover:border-clay/40"
+      >
+        <div className="text-sm">
+          <span className="font-semibold text-ink">Automatic nurture drip</span>{" "}
+          <span className="text-ink-soft">
+            {dripPaused
+              ? "is paused."
+              : `sends the welcome + follow-ups to new leads (${drip.active} in progress).`}
+          </span>
+        </div>
+        <span className="flex flex-none items-center gap-2 text-sm font-semibold text-clay-dark">
+          {dripPaused && <Badge tone="danger">paused</Badge>}
+          View →
+        </span>
+      </Link>
 
       <EmailQueue
         items={queueItems}

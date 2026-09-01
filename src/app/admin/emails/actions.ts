@@ -20,6 +20,7 @@ import {
   nextWindowOpenLabel,
 } from "@/lib/broadcast-runner";
 import { countSubscribers, type LeadSegment } from "@/lib/leads";
+import { setDripPaused } from "@/lib/drip";
 import { emailEnabled, sendTestEmail } from "@/lib/email";
 import {
   renderEmailModel,
@@ -573,6 +574,21 @@ export async function sendStudioTest(input: unknown): Promise<TestResult> {
   } catch (err) {
     console.error("[sendStudioTest]", err);
     return { ok: false, error: "Could not send the test. Please try again." };
+  }
+}
+
+/** Pause or resume the automatic nurture drip (global kill switch). */
+export async function setDripPausedAction(
+  paused: boolean
+): Promise<{ ok: boolean }> {
+  await requireAdmin();
+  try {
+    await setDripPaused(paused);
+    revalidatePath("/admin/emails/automatic");
+    revalidatePath("/admin/emails");
+    return { ok: true };
+  } catch {
+    return { ok: false };
   }
 }
 
