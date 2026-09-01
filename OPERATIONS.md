@@ -409,19 +409,25 @@ it reflects the latest opt-outs.
 
 ### Send throttling (deliverability)
 
-Broadcasts are metered so a big blast doesn't trip spam filters: at most a set
-number of emails per rolling hour, and only during a daytime window (nothing
-overnight). A large send trickles out over several hours and continues on the
-next cron run; nobody is emailed twice. Defaults are **30/hour, 8:00-21:00
-America/New_York**, overridable by env:
+Broadcasts to leads are metered so a big blast doesn't trip spam filters: at
+most a set number of emails per rolling hour, and only during a daytime window
+(nothing overnight). Family and event emails are never metered (they send right
+away, any hour). Defaults are **200/hour, 8:00-21:00 America/New_York**, so a
+normal-sized list finishes in the first batch (you see it go immediately); a
+larger send trickles out over later cron runs and nobody is emailed twice.
+Overridable by env:
 
-- `BROADCAST_HOURLY_CAP` — max sends per rolling hour (default `30`).
+- `BROADCAST_HOURLY_CAP` — max sends per rolling hour (default `200`). Lower it
+  for a very large list or a brand-new sending domain that needs slow warm-up.
 - `BROADCAST_SEND_START_HOUR` / `BROADCAST_SEND_END_HOUR` — daytime window,
-  0-23 (defaults `8` and `21`).
+  0-23 (defaults `8` and `21`). Set to `0` and `24` to send at any hour (no
+  quiet hours), so a night send starts immediately too.
 - `BROADCAST_TZ` — timezone for the window (default `America/New_York`).
 
-The metering runs on the cron worker, so keep the cron hitting `/api/cron`
-regularly (see the cron section) for queued sends to drain.
+The queue on the Emails page shows what each pending send is doing and, when a
+leads send is waiting for the daytime window, the exact time its first batch
+goes out. The metering runs on the cron worker, so keep the cron hitting
+`/api/cron` regularly (see the cron section) for queued sends to drain.
 
 ### Deliverability webhook (bounces, complaints, opens, clicks)
 

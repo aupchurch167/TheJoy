@@ -26,9 +26,12 @@ import {
  * All values are overridable by env for a given deployment.
  */
 const TZ = process.env.BROADCAST_TZ || "America/New_York";
+// Default cap is generous so a normal-sized list finishes in the first batch
+// (the operator sees it go immediately). Lower BROADCAST_HOURLY_CAP for a very
+// large list or a cold sending domain that needs slower warm-up.
 export const BROADCAST_HOURLY_CAP = Math.max(
   1,
-  Number(process.env.BROADCAST_HOURLY_CAP) || 30
+  Number(process.env.BROADCAST_HOURLY_CAP) || 200
 );
 const SEND_START_HOUR = hourEnv(process.env.BROADCAST_SEND_START_HOUR, 8);
 const SEND_END_HOUR = hourEnv(process.env.BROADCAST_SEND_END_HOUR, 21);
@@ -59,6 +62,33 @@ export function isWithinSendWindow(h: number = currentHour()): boolean {
 /** A short human summary of the current throttle (for admin messages). */
 export function throttleSummary(): string {
   return `about ${BROADCAST_HOURLY_CAP}/hour, ${SEND_START_HOUR}:00-${SEND_END_HOUR}:00 ${TZ.split("/").pop()?.replace("_", " ")}`;
+}
+
+/** Short timezone label for the send window, e.g. "EDT". */
+function tzAbbr(): string {
+  const part = new Intl.DateTimeFormat("en-US", {
+    timeZone: TZ,
+    timeZoneName: "short",
+  })
+    .formatToParts(new Date())
+    .find((p) => p.type === "timeZoneName");
+  return part?.value || TZ.split("/").pop()?.replace("_", " ") || "";
+}
+
+/** "8am EDT" style label for when the send window next opens. */
+function hourLabel(h: number): string {
+  const h12 = ((h + 11) % 12) + 1;
+  return `${h12}${h < 12 ? "am" : "pm"} ${tzAbbr()}`;
+}
+
+/**
+ * When the metered (leads) queue will resume, for the admin queue view. Returns
+ * null when sends are currently flowing (inside the window). A wrapped window
+ * (e.g. 21->8) is always "open now" at some point; we only label the closed case.
+ */
+export function nextWindowOpenLabel(): string | null {
+  if (isWithinSendWindow()) return null;
+  return hourLabel(SEND_START_HOUR);
 }
 
 /**

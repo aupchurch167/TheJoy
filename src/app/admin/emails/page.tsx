@@ -7,7 +7,11 @@ import {
   sentCountForBroadcast,
 } from "@/lib/broadcasts";
 import { countSubscribers } from "@/lib/leads";
-import { isWithinSendWindow, throttleSummary } from "@/lib/broadcast-runner";
+import {
+  isWithinSendWindow,
+  throttleSummary,
+  nextWindowOpenLabel,
+} from "@/lib/broadcast-runner";
 import { emailEnabled } from "@/lib/email";
 import { getIntegrationState } from "@/lib/integration-state";
 import { formatDateTime } from "@/lib/format";
@@ -150,6 +154,7 @@ export default async function EmailsPage() {
         items={queueItems}
         withinWindow={isWithinSendWindow()}
         throttle={throttleSummary()}
+        nextOpen={nextWindowOpenLabel()}
       />
 
       {empty ? (

@@ -26,10 +26,13 @@ export default function EmailQueue({
   items,
   withinWindow,
   throttle,
+  nextOpen,
 }: {
   items: QueueItem[];
   withinWindow: boolean;
   throttle: string;
+  /** "8am EDT" when the metered window is closed, else null. */
+  nextOpen?: string | null;
 }) {
   const router = useRouter();
   const toast = useToast();
@@ -84,7 +87,10 @@ export default function EmailQueue({
 
           let statusNote: string;
           if (it.status === "sending") {
-            statusNote = `Sending now · ${it.sentSoFar} of ${it.expected} sent`;
+            statusNote =
+              remaining > 0
+                ? `Sending · ${it.sentSoFar} of ${it.expected} · next batch within the hour`
+                : `Sending now · ${it.sentSoFar} of ${it.expected} sent`;
           } else if (it.expected === 0) {
             statusNote = "No recipients match this audience yet";
           } else if (!it.dueNow) {
@@ -92,9 +98,11 @@ export default function EmailQueue({
           } else if (it.priority || it.audience === "families") {
             statusNote = "Sends right away (not metered)";
           } else if (!withinWindow) {
-            statusNote = "Queued · sends in the next morning send window";
+            statusNote = nextOpen
+              ? `Queued · first batch goes out at ${nextOpen}`
+              : "Queued · sends in the next morning send window";
           } else {
-            statusNote = `Queued · sending is metered (${throttle})`;
+            statusNote = `Starting now · up to ${throttle}`;
           }
 
           return (

@@ -17,6 +17,7 @@ import {
 import {
   processDueBroadcasts,
   throttleSummary,
+  nextWindowOpenLabel,
 } from "@/lib/broadcast-runner";
 import { countSubscribers, type LeadSegment } from "@/lib/leads";
 import { emailEnabled, sendTestEmail } from "@/lib/email";
@@ -182,7 +183,10 @@ export async function sendOrSchedule(input: unknown): Promise<ActionResult> {
       if (total === 0) {
         message = "No recipients match. Nothing was sent.";
       } else if (sent === 0) {
-        message = `Queued for ${total} recipient(s). Sending is metered (${throttleSummary()}) and picks up in the next send window.`;
+        const resumeAt = nextWindowOpenLabel();
+        message = resumeAt
+          ? `Queued for ${total} recipient(s). The first batch goes out at ${resumeAt} (outside the daytime send window right now).`
+          : `Queued for ${total} recipient(s). Sending is metered (${throttleSummary()}) and picks up shortly.`;
       } else if (remaining > 0) {
         message = `Sending to ${total}. ${sent} went out now; the rest send gradually (${throttleSummary()}) to protect deliverability.`;
       } else {
@@ -505,7 +509,10 @@ export async function sendStudioOrSchedule(input: unknown): Promise<ActionResult
       if (total === 0) {
         message = "No recipients match. Nothing was sent.";
       } else if (sent === 0) {
-        message = `Queued for ${total} recipient(s). Sending is metered (${throttleSummary()}) and picks up in the next send window.`;
+        const resumeAt = nextWindowOpenLabel();
+        message = resumeAt
+          ? `Queued for ${total} recipient(s). The first batch goes out at ${resumeAt} (outside the daytime send window right now).`
+          : `Queued for ${total} recipient(s). Sending is metered (${throttleSummary()}) and picks up shortly.`;
       } else if (remaining > 0) {
         message = `Sending to ${total}. ${sent} went out now; the rest send gradually (${throttleSummary()}) to protect deliverability.`;
       } else {
