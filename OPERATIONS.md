@@ -374,22 +374,32 @@ they sent, email/phone (with one-click Email / Call), source, when it came in,
 and its stage (which you can change right there). A 💬 next to a name in the
 list means that lead left a message.
 
-### The scheduled worker (Railway cron) — required for Phase 3
+### The scheduled worker (runs itself)
 
-Drip emails and scheduled sends are driven by a small worker at `/api/cron`.
-Set it up once:
+Drip emails, scheduled/metered sends, scheduled posts, the Connecteam roster
+sync, lifecycle check-ins, and the recognition digest are all driven by a small
+worker. **It runs automatically inside the app** every few minutes, because the
+site is an always-on server. There is nothing to set up: after a deploy the
+worker starts on its own (give it a couple of minutes), and the **Emails page
+shows a green "Sending worker last ran ..." light** when it is alive.
 
-1. Set `CRON_SECRET` in Railway (generate: `openssl rand -hex 24`).
-2. Add a Railway **Cron** (Project > New > Cron, or a cron schedule on a
-   service) that runs, say, every 15 minutes and calls the endpoint:
+Tuning (optional, in Railway):
 
-       curl -fsS -H "Authorization: Bearer $CRON_SECRET" https://joyseniorcare.com/api/cron
+- `SCHEDULER_INTERVAL_MINUTES` — how often it runs (default `5`).
+- `INTERNAL_SCHEDULER=off` — turn the built-in timer off (only if you prefer to
+  drive it from an external cron instead).
 
-   (Every 15 minutes is plenty; the worker only sends what is actually due.)
+**Optional external trigger.** `/api/cron` runs the same work on demand (handy
+for a manual kick or a belt-and-suspenders external cron). It is guarded by
+`CRON_SECRET` (generate: `openssl rand -hex 24`), sent as a Bearer header or
+`?key=`:
 
-The endpoint refuses to run without the correct secret, so it can never be
-triggered by a stranger. It returns how many drip and broadcast emails it sent
-on each run.
+    curl -fsS -H "Authorization: Bearer $CRON_SECRET" https://joyseniorcare.com/api/cron
+
+If you rely on the built-in timer you can leave `CRON_SECRET` unset; `/api/cron`
+then simply refuses (that is fine). If the worker light stays red for more than
+a few minutes after a deploy, the server is likely down or restarting: check the
+Railway logs.
 
 ### Email delivery
 

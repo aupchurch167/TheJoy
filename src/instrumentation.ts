@@ -7,6 +7,10 @@
  * NOT EXISTS, seed with ON CONFLICT DO NOTHING), so applying it every boot is
  * safe. It is best-effort: failures are logged, never fatal, so the site still
  * starts and shows its graceful "database not connected" states.
+ *
+ * It also arms the in-process scheduler that drives the recurring jobs (drip,
+ * broadcasts, scheduled posts, roster sync, lifecycle check-ins, recognition),
+ * so email goes out on a persistent server without an external cron.
  */
 export async function register() {
   // Only the Node.js server runtime (not Edge) can talk to Postgres.
@@ -52,6 +56,17 @@ export async function register() {
   } catch (err) {
     console.error(
       "[migrate] Could not apply schema on boot (the site will still start):",
+      err instanceof Error ? err.message : err
+    );
+  }
+
+  // Arm the in-process scheduler (best-effort; never fatal to boot).
+  try {
+    const { startInternalScheduler } = await import("@/lib/scheduler");
+    startInternalScheduler();
+  } catch (err) {
+    console.error(
+      "[scheduler] Could not start the internal worker:",
       err instanceof Error ? err.message : err
     );
   }

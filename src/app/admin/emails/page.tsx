@@ -126,15 +126,15 @@ export default async function EmailsPage() {
             <strong className="font-semibold text-ink">Sending worker</strong>{" "}
             last ran {agoLabel(workerMins!)}.{" "}
             {workerStale
-              ? "It should run at least hourly. If this stays red, scheduled and metered emails will not go out (check the Railway cron and CRON_SECRET, see OPERATIONS.md section 10)."
+              ? "It runs on the server every few minutes, so if this stays red the server is likely down or restarting (check Railway logs). While it is down, scheduled and metered emails wait."
               : "Scheduled and metered emails go out on its runs."}
           </p>
         ) : (
           <p>
             <strong className="font-semibold text-ink">Sending worker</strong> has
-            not run yet. Until the Railway cron hits <code>/api/cron</code> (with{" "}
-            <code>CRON_SECRET</code>), scheduled and metered emails will not go
-            out. See OPERATIONS.md section 10.
+            not run yet. It starts automatically on the server a few minutes after
+            a deploy. If this stays red, the server may still be starting or is
+            down (check Railway logs). See OPERATIONS.md section 10.
           </p>
         )}
       </div>
