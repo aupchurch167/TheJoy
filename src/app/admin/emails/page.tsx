@@ -25,6 +25,7 @@ import {
   SectionLabel,
 } from "@/components/admin/ui";
 import EmailQueue, { type QueueItem } from "./EmailQueue";
+import DraftList from "./DraftList";
 
 export const dynamic = "force-dynamic";
 
@@ -194,26 +195,13 @@ export default async function EmailsPage() {
           {drafts.length > 0 && (
             <section className="mb-8">
               <SectionLabel>Drafts</SectionLabel>
-              <ul className="mt-2.5 divide-y divide-line overflow-hidden rounded-xl border border-line bg-white shadow-sm">
-                {drafts.map((b) => (
-                  <li key={b.id}>
-                    <Link
-                      href={`/admin/emails/${b.id}`}
-                      className="flex min-h-14 items-center justify-between gap-4 px-5 py-3.5 hover:bg-surface"
-                    >
-                      <span className="min-w-0">
-                        <span className="block truncate font-medium text-ink">
-                          {b.subject || "(no subject)"}
-                        </span>
-                        <span className="mt-0.5 block text-sm text-ink-faint">
-                          {b.audience === "families" ? "Families" : "Leads"} · Draft
-                        </span>
-                      </span>
-                      <Badge tone="neutral">draft</Badge>
-                    </Link>
-                  </li>
-                ))}
-              </ul>
+              <DraftList
+                drafts={drafts.map((b) => ({
+                  id: b.id,
+                  subject: b.subject,
+                  audience: b.audience as "leads" | "families",
+                }))}
+              />
             </section>
           )}
 

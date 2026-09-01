@@ -15,6 +15,7 @@ import {
   sendStudioOrSchedule,
   sendStudioTest,
   previewRecipients,
+  removeBroadcast,
 } from "./actions";
 import {
   renderEmailModel,
@@ -25,6 +26,7 @@ import {
 } from "@/lib/email-model";
 import type { Broadcast } from "@/lib/broadcasts";
 import { BackLink } from "@/components/admin/ui";
+import ConfirmButton from "@/components/admin/ConfirmButton";
 import { useToast } from "@/components/admin/Toast";
 
 /* ------------------------------------------------------------------ */
@@ -450,6 +452,32 @@ export default function EmailStudio({
                     ? "Draft · saved"
                     : "Draft · not saved yet"}
               </p>
+              {id && broadcast?.status !== "sent" && (
+                <div className="mt-3">
+                  <ConfirmButton
+                    variant="ghost"
+                    size="sm"
+                    title="Delete this email?"
+                    message={
+                      broadcast?.status === "scheduled" || broadcast?.status === "sending"
+                        ? "It's removed from the queue and will not go out. This cannot be undone."
+                        : "This draft is deleted permanently. This cannot be undone."
+                    }
+                    confirmLabel="Delete"
+                    onConfirm={async () => {
+                      const res = await removeBroadcast(id);
+                      if (res.ok) {
+                        toast.success("Email deleted.");
+                        router.push("/admin/emails");
+                      } else {
+                        toast.error("Could not delete it (already sent?).");
+                      }
+                    }}
+                  >
+                    🗑 Delete this email
+                  </ConfirmButton>
+                </div>
+              )}
             </div>
 
             <div className="mt-4">
