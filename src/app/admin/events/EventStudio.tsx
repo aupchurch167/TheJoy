@@ -418,7 +418,8 @@ export default function EventStudio({
                   <span className="mt-1 block text-[11px] text-ink-faint">
                     Fills the heading, description, and what-to-expect from the
                     details above (and anything you&apos;ve already typed).
-                    Markdown works here: **bold**, *italic*, [links](url), and
+                    Press Enter for a new line, twice for a new paragraph.
+                    Markdown works too: **bold**, *italic*, [links](url), and
                     bullet lists. (The heading stays plain text.)
                   </span>
                 </label>

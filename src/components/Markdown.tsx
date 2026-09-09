@@ -1,5 +1,6 @@
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import remarkBreaks from "remark-breaks";
 import type { Root, Element } from "hast";
 
 /**
@@ -44,9 +45,14 @@ export default function Markdown({
   children: string;
   variant?: keyof typeof VARIANTS;
 }) {
+  // In the compact (event) variant, a single Enter becomes a line break and a
+  // blank line starts a new paragraph, which is what non-technical authors
+  // expect. The blog keeps standard Markdown (single newlines collapse).
+  const remarkPlugins =
+    variant === "compact" ? [remarkGfm, remarkBreaks] : [remarkGfm];
   return (
     <div className={VARIANTS[variant]}>
-      <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeDemoteH1]}>
+      <ReactMarkdown remarkPlugins={remarkPlugins} rehypePlugins={[rehypeDemoteH1]}>
         {children}
       </ReactMarkdown>
     </div>
