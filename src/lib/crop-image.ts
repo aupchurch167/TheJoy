@@ -7,6 +7,33 @@
 
 export type CropPixels = { x: number; y: number; width: number; height: number };
 
+/** Light, non-destructive adjustments applied when the crop is baked. 1 = no change. */
+export type ImageAdjust = { brightness: number; contrast: number; saturate: number };
+
+export const NO_ADJUST: ImageAdjust = { brightness: 1, contrast: 1, saturate: 1 };
+
+function radians(deg: number): number {
+  return (deg * Math.PI) / 180;
+}
+
+/** Bounding box of an image rotated by `deg`. */
+function rotatedSize(w: number, h: number, deg: number): { width: number; height: number } {
+  const r = radians(deg);
+  return {
+    width: Math.abs(Math.cos(r) * w) + Math.abs(Math.sin(r) * h),
+    height: Math.abs(Math.sin(r) * w) + Math.abs(Math.cos(r) * h),
+  };
+}
+
+function filterString(a?: ImageAdjust): string {
+  if (!a) return "none";
+  const parts: string[] = [];
+  if (a.brightness !== 1) parts.push(`brightness(${a.brightness})`);
+  if (a.contrast !== 1) parts.push(`contrast(${a.contrast})`);
+  if (a.saturate !== 1) parts.push(`saturate(${a.saturate})`);
+  return parts.length ? parts.join(" ") : "none";
+}
+
 /** Turn a Tailwind aspect class ("aspect-[4/3]", "aspect-square") into a ratio. */
 export function aspectRatioFromClass(aspect: string): number {
   if (aspect.includes("square")) return 1;
@@ -40,11 +67,33 @@ export async function getCroppedFile(
   src: string,
   crop: CropPixels,
   filename = "crop",
-  opts: { maxWidth?: number; format?: "jpeg" | "png" } = {}
+  opts: {
+    maxWidth?: number;
+    format?: "jpeg" | "png";
+    /** Rotation in degrees (matches the value passed to react-easy-crop). */
+    rotation?: number;
+    /** Light adjustments baked into the export. */
+    adjust?: ImageAdjust;
+  } = {}
 ): Promise<File> {
-  const { maxWidth = 2000, format = "jpeg" } = opts;
+  const { maxWidth = 2000, format = "jpeg", rotation = 0, adjust } = opts;
   const image = await loadImage(src);
 
+  // Stage 1: draw the whole image, rotated and adjusted, onto a bounding-box
+  // canvas. react-easy-crop's crop pixels are relative to this rotated box.
+  const bbox = rotatedSize(image.width, image.height, rotation);
+  const stage = document.createElement("canvas");
+  stage.width = Math.max(1, Math.round(bbox.width));
+  stage.height = Math.max(1, Math.round(bbox.height));
+  const sctx = stage.getContext("2d");
+  if (!sctx) throw new Error("Your browser could not process the image.");
+  sctx.imageSmoothingQuality = "high";
+  sctx.filter = filterString(adjust);
+  sctx.translate(stage.width / 2, stage.height / 2);
+  sctx.rotate(radians(rotation));
+  sctx.drawImage(image, -image.width / 2, -image.height / 2);
+
+  // Stage 2: pull out the crop rectangle, downscaling very large crops.
   let outW = crop.width;
   let outH = crop.height;
   if (outW > maxWidth) {
@@ -52,7 +101,6 @@ export async function getCroppedFile(
     outW = Math.round(outW * scale);
     outH = Math.round(outH * scale);
   }
-
   const canvas = document.createElement("canvas");
   canvas.width = Math.max(1, Math.round(outW));
   canvas.height = Math.max(1, Math.round(outH));
@@ -60,7 +108,7 @@ export async function getCroppedFile(
   if (!ctx) throw new Error("Your browser could not process the image.");
   ctx.imageSmoothingQuality = "high";
   ctx.drawImage(
-    image,
+    stage,
     crop.x,
     crop.y,
     crop.width,

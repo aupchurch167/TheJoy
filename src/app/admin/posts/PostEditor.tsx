@@ -9,6 +9,7 @@ import { suggestHeroPrompt, defaultHeroAlt } from "@/lib/hero-prompt";
 import { btn, BackLink, Badge } from "@/components/admin/ui";
 import { SITE_URL } from "@/lib/site";
 import ConfirmButton from "@/components/admin/ConfirmButton";
+import ImageCropper from "@/components/admin/ImageCropper";
 import { useToast } from "@/components/admin/Toast";
 import { formatDateTime } from "@/lib/format";
 
@@ -71,6 +72,18 @@ export default function PostEditor({
   const [tab, setTab] = useState<"write" | "preview">("write");
   const [schedule, setSchedule] = useState("");
   const [error, setError] = useState<string>("");
+  // Photo editor (crop/rotate/adjust) before a hero or inline image uploads.
+  const [editorSrc, setEditorSrc] = useState<string | null>(null);
+  const [editorFor, setEditorFor] = useState<"hero" | "body">("hero");
+
+  function openEditor(src: string, forHero: boolean) {
+    setEditorFor(forHero ? "hero" : "body");
+    setEditorSrc(src);
+  }
+  function closeEditor() {
+    if (editorSrc?.startsWith("blob:")) URL.revokeObjectURL(editorSrc);
+    setEditorSrc(null);
+  }
   const [pending, startTransition] = useTransition();
   const bodyRef = useRef<HTMLTextAreaElement>(null);
 
@@ -347,7 +360,10 @@ export default function PostEditor({
               className={`${INPUT} min-w-0 flex-1`}
               placeholder="Paste an image URL or upload"
             />
-            <UploadButton label="Upload" onFile={(file) => uploadInline(file, true)} />
+            <UploadButton
+              label="Upload"
+              onFile={(file) => openEditor(URL.createObjectURL(file), true)}
+            />
           </div>
 
           <GenerateHeroPanel
@@ -381,6 +397,18 @@ export default function PostEditor({
                 alt=""
                 className="max-h-40 rounded-lg ring-1 ring-line"
               />
+              <button
+                type="button"
+                onClick={() =>
+                  openEditor(
+                    `/api/admin/image-proxy?url=${encodeURIComponent(f.hero_image)}`,
+                    true
+                  )
+                }
+                className="mt-2 block text-xs font-semibold text-clay-dark hover:underline"
+              >
+                ✎ Crop / edit this photo
+              </button>
               <input
                 value={f.hero_image_alt}
                 onChange={(e) => set("hero_image_alt", e.target.value)}
@@ -424,7 +452,7 @@ export default function PostEditor({
                 <UploadButton
                   label="Image"
                   small
-                  onFile={(file) => uploadInline(file, false)}
+                  onFile={(file) => openEditor(URL.createObjectURL(file), false)}
                 />
               </div>
               <textarea
@@ -486,6 +514,25 @@ export default function PostEditor({
           }}
         />
       </div>
+
+      {editorSrc && (
+        <ImageCropper
+          src={editorSrc}
+          aspect={16 / 9}
+          allowFree
+          aspectOptions={[
+            { label: "Wide", value: 16 / 9 },
+            { label: "Standard", value: 3 / 2 },
+            { label: "Square", value: 1 },
+          ]}
+          filename={editorFor === "hero" ? "hero" : "post-image"}
+          onCancel={closeEditor}
+          onCropped={async (file) => {
+            await uploadInline(file, editorFor === "hero");
+            closeEditor();
+          }}
+        />
+      )}
     </div>
   );
 }

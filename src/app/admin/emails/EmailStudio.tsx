@@ -3,13 +3,13 @@
 import {
   useEffect,
   useMemo,
-  useRef,
   useState,
   useTransition,
   type ReactNode,
 } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import PhotoInput from "@/components/admin/PhotoInput";
 import {
   saveStudioDraft,
   sendStudioOrSchedule,
@@ -885,10 +885,16 @@ export default function EmailStudio({
                         </div>
 
                         {/* Photo in the message body */}
-                        <PhotoField
+                        <PhotoInput
                           label="Photo in the message"
                           url={model.bodyPhotoUrl ?? null}
                           onUrl={(u) => patch({ bodyPhotoUrl: u })}
+                          allowFree
+                          aspectOptions={[
+                            { label: "Wide", value: 16 / 9 },
+                            { label: "Square", value: 1 },
+                          ]}
+                          filename="email-photo"
                         />
 
                         <div className="mt-3">
@@ -966,9 +972,18 @@ export default function EmailStudio({
                 </p>
               )}
               {model.theme === "photo" && (
-                <PhotoField
+                <PhotoInput
+                  label="Photo at the top"
                   url={model.photoUrl ?? null}
                   onUrl={(u) => patch({ photoUrl: u })}
+                  aspect={556 / 300}
+                  aspectOptions={[
+                    { label: "Banner", value: 556 / 300 },
+                    { label: "Wide", value: 16 / 9 },
+                    { label: "Square", value: 1 },
+                  ]}
+                  allowFree
+                  filename="email-hero"
                 />
               )}
             </RailSection>
@@ -1132,78 +1147,6 @@ function Check({ ok, label, warn }: { ok: boolean; label: string; warn?: boolean
     <div className="flex items-start gap-2 py-0.5 text-xs text-ink-soft">
       <span className={`font-bold ${color}`}>{mark}</span>
       <span>{label}</span>
-    </div>
-  );
-}
-
-function PhotoField({
-  url,
-  onUrl,
-  label = "Photo at the top",
-}: {
-  url: string | null;
-  onUrl: (u: string | null) => void;
-  label?: string;
-}) {
-  const [busy, setBusy] = useState(false);
-  const fileRef = useRef<HTMLInputElement>(null);
-  const toast = useToast();
-
-  async function upload(file: File) {
-    setBusy(true);
-    try {
-      const fd = new FormData();
-      fd.append("file", file);
-      const res = await fetch("/api/admin/upload", { method: "POST", body: fd });
-      const data = await res.json();
-      if (!res.ok || !data.ok) throw new Error(data.error || "Upload failed.");
-      onUrl(data.url);
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Upload failed.");
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  return (
-    <div className="mt-3 rounded-lg border border-line bg-paper p-2.5">
-      <span className="mb-1.5 block text-[11px] font-semibold text-ink-soft">
-        {label}
-      </span>
-      {url ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img src={url} alt="" className="mb-2 w-full rounded-md" />
-      ) : null}
-      <div className="flex gap-1.5">
-        <button
-          type="button"
-          onClick={() => fileRef.current?.click()}
-          disabled={busy}
-          className="flex-1 rounded-md bg-surface px-2 py-1.5 text-xs font-semibold text-ink-soft hover:bg-line disabled:opacity-50"
-        >
-          {busy ? "Uploading…" : url ? "Replace" : "Upload a photo"}
-        </button>
-        {url && (
-          <button
-            type="button"
-            onClick={() => onUrl(null)}
-            className="rounded-md px-2 py-1.5 text-xs font-semibold text-danger hover:bg-white"
-          >
-            Remove
-          </button>
-        )}
-      </div>
-      <input
-        ref={fileRef}
-        type="file"
-        accept="image/*"
-        hidden
-        onChange={(e) => {
-          const f = e.target.files?.[0];
-          if (f) upload(f);
-          e.target.value = "";
-        }}
-      />
     </div>
   );
 }

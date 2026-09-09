@@ -24,6 +24,7 @@ import { templatesForAudience } from "@/lib/email-templates";
 import { EMAIL_DESIGNS } from "@/lib/email-designs";
 import { btn, BackLink, Badge, Card } from "@/components/admin/ui";
 import ConfirmButton from "@/components/admin/ConfirmButton";
+import ImageCropper from "@/components/admin/ImageCropper";
 import { useToast } from "@/components/admin/Toast";
 import { formatDateTime, formatSource } from "@/lib/format";
 
@@ -64,6 +65,7 @@ export default function BroadcastComposer({
   );
   const [subject, setSubject] = useState(broadcast?.subject ?? "");
   const [body, setBody] = useState(broadcast?.body ?? "");
+  const [editorSrc, setEditorSrc] = useState<string | null>(null);
   // 'markdown' = letter templates; 'html' = designed inner HTML (wrapped in the
   // Joy shell); 'html_standalone' = a complete design with its own header/footer.
   const [format, setFormat] = useState<"markdown" | "html" | "html_standalone">(
@@ -949,7 +951,9 @@ export default function BroadcastComposer({
                   <ToolButton onClick={() => insertAtCursor("\n\n[[divider]]\n\n")}>
                     Divider
                   </ToolButton>
-                  <PhotoButton onFile={uploadImage} />
+                  <PhotoButton
+                    onFile={(file) => setEditorSrc(URL.createObjectURL(file))}
+                  />
                 </div>
               )}
               <div className="flex overflow-hidden rounded-lg border border-line text-sm">
@@ -1178,6 +1182,28 @@ export default function BroadcastComposer({
           </div>
         </div>
       </div>
+
+      {editorSrc && (
+        <ImageCropper
+          src={editorSrc}
+          aspect={16 / 9}
+          allowFree
+          aspectOptions={[
+            { label: "Wide", value: 16 / 9 },
+            { label: "Square", value: 1 },
+          ]}
+          filename="email-photo"
+          onCancel={() => {
+            if (editorSrc.startsWith("blob:")) URL.revokeObjectURL(editorSrc);
+            setEditorSrc(null);
+          }}
+          onCropped={async (file) => {
+            await uploadImage(file);
+            if (editorSrc.startsWith("blob:")) URL.revokeObjectURL(editorSrc);
+            setEditorSrc(null);
+          }}
+        />
+      )}
     </div>
   );
 }
@@ -1200,7 +1226,11 @@ function ToolButton({
   );
 }
 
-function PhotoButton({ onFile }: { onFile: (file: File) => Promise<void> }) {
+function PhotoButton({
+  onFile,
+}: {
+  onFile: (file: File) => void | Promise<void>;
+}) {
   const ref = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
   return (
