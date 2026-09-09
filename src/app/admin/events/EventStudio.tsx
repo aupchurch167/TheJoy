@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { BackLink } from "@/components/admin/ui";
 import ConfirmButton from "@/components/admin/ConfirmButton";
+import Markdown from "@/components/Markdown";
 import { useToast } from "@/components/admin/Toast";
 import { saveEvent, removeRsvp, createEventEmailDraft } from "./actions";
 import type { EventRow, EventRsvp, RsvpCounts } from "@/lib/events";
@@ -417,6 +418,8 @@ export default function EventStudio({
                   <span className="mt-1 block text-[11px] text-ink-faint">
                     Fills the heading, description, and what-to-expect from the
                     details above (and anything you&apos;ve already typed).
+                    Markdown works here: **bold**, *italic*, [links](url), and
+                    bullet lists. (The heading stays plain text.)
                   </span>
                 </label>
 
@@ -550,21 +553,22 @@ export default function EventStudio({
                       {bodyHeading}
                     </h3>
                   )}
-                  <p className="font-serif text-[15px] leading-relaxed text-ink-soft" style={{ fontFamily: "Georgia, serif" }}>
-                    {description ||
-                      "A few warm lines about what to expect go here. Write them on the left, or let the studio draft them for you."}
-                  </p>
+                  {description.trim() ? (
+                    <Markdown variant="compact">{description}</Markdown>
+                  ) : (
+                    <p className="text-[15px] leading-relaxed text-ink-faint">
+                      A few warm lines about what to expect go here. Write them on
+                      the left, or let the studio draft them for you.
+                    </p>
+                  )}
                   {whatToExpect.trim() && (
                     <div className="mt-3">
                       <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-ink-faint">
                         What to expect
                       </p>
-                      <p
-                        className="mt-1 whitespace-pre-wrap text-[15px] leading-relaxed text-ink-soft"
-                        style={{ fontFamily: "Georgia, serif" }}
-                      >
-                        {whatToExpect}
-                      </p>
+                      <div className="mt-1">
+                        <Markdown variant="compact">{whatToExpect}</Markdown>
+                      </div>
                     </div>
                   )}
                   {capNum > 0 && (
@@ -631,8 +635,8 @@ export default function EventStudio({
                 </div>
               </div>
               {closingNote.trim() && (
-                <div className="mx-auto mt-4 max-w-[480px] rounded-xl border border-line bg-white px-5 py-3 text-[13px] leading-relaxed text-ink-soft shadow-sm">
-                  <p className="whitespace-pre-wrap">{closingNote}</p>
+                <div className="mx-auto mt-4 max-w-[480px] rounded-xl border border-line bg-white px-5 py-3 shadow-sm">
+                  <Markdown variant="compact">{closingNote}</Markdown>
                 </div>
               )}
             </div>

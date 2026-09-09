@@ -24,14 +24,28 @@ function rehypeDemoteH1() {
   };
 }
 
+// Full-size prose for the blog; a tighter set for small cards (event pages).
+const VARIANTS = {
+  post: "prose-joy space-y-5 text-lg leading-relaxed text-ink-soft [&_a]:text-clay [&_a]:underline [&_blockquote]:border-l-2 [&_blockquote]:border-clay [&_blockquote]:pl-5 [&_blockquote]:italic [&_h2]:mt-10 [&_h2]:font-display [&_h2]:text-2xl [&_h2]:font-semibold [&_h2]:text-ink [&_h3]:mt-8 [&_h3]:font-display [&_h3]:text-xl [&_h3]:font-semibold [&_h3]:text-ink [&_img]:rounded-xl [&_li]:ml-5 [&_li]:list-disc [&_ol_li]:list-decimal [&_strong]:text-ink",
+  compact:
+    "space-y-2 text-[15px] leading-relaxed text-ink-soft [&_a]:text-clay [&_a]:underline [&_strong]:text-ink [&_em]:italic [&_ul]:space-y-1 [&_ol]:space-y-1 [&_li]:ml-5 [&_li]:list-disc [&_ol_li]:list-decimal [&_h2]:mt-3 [&_h2]:font-display [&_h2]:text-base [&_h2]:font-semibold [&_h2]:text-ink [&_h3]:mt-2 [&_h3]:font-semibold [&_h3]:text-ink [&_blockquote]:border-l-2 [&_blockquote]:border-clay [&_blockquote]:pl-4 [&_blockquote]:italic",
+} as const;
+
 /**
  * Renders Markdown to styled HTML. react-markdown does NOT render raw HTML by
- * default, so post bodies are safe to render even though authors type freely.
- * Used for both the admin live preview and the public post pages.
+ * default, so bodies are safe to render even though authors type freely.
+ * `variant="post"` (default) is the blog scale; `variant="compact"` fits the
+ * small cards on event / RSVP pages. Used for public pages and admin previews.
  */
-export default function Markdown({ children }: { children: string }) {
+export default function Markdown({
+  children,
+  variant = "post",
+}: {
+  children: string;
+  variant?: keyof typeof VARIANTS;
+}) {
   return (
-    <div className="prose-joy space-y-5 text-lg leading-relaxed text-ink-soft [&_a]:text-clay [&_a]:underline [&_blockquote]:border-l-2 [&_blockquote]:border-clay [&_blockquote]:pl-5 [&_blockquote]:italic [&_h2]:mt-10 [&_h2]:font-display [&_h2]:text-2xl [&_h2]:font-semibold [&_h2]:text-ink [&_h3]:mt-8 [&_h3]:font-display [&_h3]:text-xl [&_h3]:font-semibold [&_h3]:text-ink [&_img]:rounded-xl [&_li]:ml-5 [&_li]:list-disc [&_ol_li]:list-decimal [&_strong]:text-ink">
+    <div className={VARIANTS[variant]}>
       <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeDemoteH1]}>
         {children}
       </ReactMarkdown>

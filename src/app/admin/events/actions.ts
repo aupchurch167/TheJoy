@@ -18,6 +18,7 @@ import {
 } from "@/lib/email-model";
 import { etWallToInstant, formatEventWhenLong } from "@/lib/event-time";
 import { SITE_URL } from "@/lib/site";
+import { stripMarkdown } from "@/lib/markdown";
 import type { EventRow } from "@/lib/events";
 
 const EventSchema = z.object({
@@ -154,7 +155,9 @@ function eventEmailModel(
         : "We would love for you to join us.";
 
   const parts = [lead];
-  if (ev.description.trim()) parts.push(ev.description.trim());
+  // The page renders Markdown; the email intro is plain text, so flatten it.
+  if (ev.description.trim()) parts.push(stripMarkdown(ev.description));
+  if (ev.what_to_expect?.trim()) parts.push(stripMarkdown(ev.what_to_expect));
   if (ev.is_potluck) {
     parts.push(
       `This one is a potluck. ${ev.potluck_ask?.trim() || "Bring a dish to share if you'd like (there will be plenty either way)."}`

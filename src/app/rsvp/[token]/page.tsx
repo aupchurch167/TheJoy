@@ -5,6 +5,7 @@ import { getEventByToken } from "@/lib/events";
 import { formatEventWhenLong } from "@/lib/event-time";
 import { eventPalette } from "@/lib/event-theme";
 import { BUSINESS } from "@/lib/site";
+import Markdown from "@/components/Markdown";
 import RsvpForm from "./RsvpForm";
 
 export const dynamic = "force-dynamic";
@@ -68,18 +69,18 @@ export default async function RsvpPage({
               </h2>
             )}
             {event.description.trim() && (
-              <p className="mt-2 whitespace-pre-wrap text-[15px] leading-relaxed text-ink-soft">
-                {event.description}
-              </p>
+              <div className="mt-2">
+                <Markdown variant="compact">{event.description}</Markdown>
+              </div>
             )}
             {event.what_to_expect?.trim() && (
               <div className="mt-4">
                 <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-ink-faint">
                   What to expect
                 </p>
-                <p className="mt-1 whitespace-pre-wrap text-[15px] leading-relaxed text-ink-soft">
-                  {event.what_to_expect}
-                </p>
+                <div className="mt-1">
+                  <Markdown variant="compact">{event.what_to_expect}</Markdown>
+                </div>
               </div>
             )}
             {event.is_potluck && (
@@ -112,8 +113,8 @@ export default async function RsvpPage({
         </div>
 
         {event.closing_note?.trim() && (
-          <div className="mt-6 rounded-xl border border-line bg-white px-5 py-4 text-[14px] leading-relaxed text-ink-soft shadow-sm">
-            <p className="whitespace-pre-wrap">{event.closing_note}</p>
+          <div className="mt-6 rounded-xl border border-line bg-white px-5 py-4 shadow-sm">
+            <Markdown variant="compact">{event.closing_note}</Markdown>
           </div>
         )}
 
