@@ -943,6 +943,81 @@ export async function draftEventDescription(input: {
   return textBlock.text.trim();
 }
 
+export type EventBodyDraft = {
+  heading: string;
+  description: string;
+  whatToExpect: string;
+};
+
+const EVENT_BODY_SCHEMA = {
+  type: "object",
+  properties: {
+    heading: {
+      type: "string",
+      description:
+        "A short, warm heading for the body of the RSVP page (e.g. \"Join us on the porch\"). A few words. No banned words, no em-dashes.",
+    },
+    description: {
+      type: "string",
+      description:
+        "Two or three warm, plain sentences about the event (the main body). Specific over generic. No banned words, no em-dashes.",
+    },
+    whatToExpect: {
+      type: "string",
+      description:
+        "A short 'what to expect' block: 2-4 short lines (each on its own line) on what the afternoon holds (food, music, activities, parking). Plain and concrete. Empty string if the brief gives nothing to say.",
+    },
+  },
+  required: ["heading", "description", "whatToExpect"],
+  additionalProperties: false,
+} as const;
+
+/**
+ * Draft the fuller RSVP-page body: a heading, the description, and an optional
+ * "what to expect" block, from the event's known details.
+ */
+export async function draftEventBody(input: {
+  title: string;
+  whenText?: string;
+  where?: string;
+  isPotluck?: boolean;
+  potluckAsk?: string;
+  notes?: string;
+}): Promise<EventBodyDraft> {
+  if (!aiEnabled()) {
+    throw new Error("AI drafting is not configured (set ANTHROPIC_API_KEY).");
+  }
+  const userPrompt = [
+    `Write the body text for this event's RSVP page (heading, description, and a short "what to expect" block).`,
+    `Event: ${input.title}`,
+    input.whenText ? `When: ${input.whenText}` : "",
+    input.where ? `Where: ${input.where}` : "",
+    input.isPotluck ? `It is a potluck. What to bring: ${input.potluckAsk || "a dish to share"}` : "",
+    input.notes?.trim() ? `Notes from the organizer: ${input.notes.trim()}` : "",
+  ]
+    .filter(Boolean)
+    .join("\n");
+
+  const client = new Anthropic();
+  const response = await client.messages.create({
+    model: MODEL,
+    max_tokens: 1500,
+    thinking: { type: "adaptive" },
+    system: EVENT_SYSTEM_PROMPT,
+    output_config: { format: { type: "json_schema", schema: EVENT_BODY_SCHEMA } },
+    messages: [{ role: "user", content: userPrompt }],
+  });
+  const textBlock = response.content.find((b) => b.type === "text");
+  if (!textBlock || textBlock.type !== "text") {
+    throw new Error("The AI did not return event copy.");
+  }
+  try {
+    return JSON.parse(textBlock.text) as EventBodyDraft;
+  } catch {
+    throw new Error("The AI event copy was not valid. Please try again.");
+  }
+}
+
 export async function draftEmail(
   context: string,
   audience: EmailAudience,

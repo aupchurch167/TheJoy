@@ -26,6 +26,10 @@ export type EventRow = {
   theme: string;
   is_potluck: boolean;
   potluck_ask: string | null;
+  /** Optional richer page copy for the public RSVP page. */
+  body_heading: string | null;
+  what_to_expect: string | null;
+  closing_note: string | null;
   created_by: string | null;
   created_at: string;
   updated_at: string;
@@ -58,7 +62,16 @@ export type EventInput = {
   theme?: string | null;
   isPotluck?: boolean;
   potluckAsk?: string | null;
+  bodyHeading?: string | null;
+  whatToExpect?: string | null;
+  closingNote?: string | null;
 };
+
+/** Trim to a value or null (shared by create/update). */
+function orNull(s?: string | null): string | null {
+  const t = (s ?? "").trim();
+  return t ? t : null;
+}
 
 function newToken(): string {
   return randomBytes(16).toString("hex");
@@ -73,8 +86,9 @@ export async function createEvent(
   const rows = await query<EventRow>(
     `INSERT INTO events
        (title, description, location, starts_at, ends_at, capacity, status,
-        theme, is_potluck, potluck_ask, rsvp_token, created_by)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+        theme, is_potluck, potluck_ask, body_heading, what_to_expect, closing_note,
+        rsvp_token, created_by)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
      RETURNING *`,
     [
       input.title.trim(),
@@ -87,6 +101,9 @@ export async function createEvent(
       input.theme || "classic",
       input.isPotluck ?? false,
       input.potluckAsk?.trim() || null,
+      orNull(input.bodyHeading),
+      orNull(input.whatToExpect),
+      orNull(input.closingNote),
       newToken(),
       createdBy ?? null,
     ]
@@ -102,6 +119,7 @@ export async function updateEvent(
     `UPDATE events SET
        title = $2, description = $3, location = $4, starts_at = $5, ends_at = $6,
        capacity = $7, status = $8, theme = $9, is_potluck = $10, potluck_ask = $11,
+       body_heading = $12, what_to_expect = $13, closing_note = $14,
        updated_at = now()
      WHERE id = $1
      RETURNING *`,
@@ -117,6 +135,9 @@ export async function updateEvent(
       input.theme || "classic",
       input.isPotluck ?? false,
       input.potluckAsk?.trim() || null,
+      orNull(input.bodyHeading),
+      orNull(input.whatToExpect),
+      orNull(input.closingNote),
     ]
   );
   return rows[0] ?? null;

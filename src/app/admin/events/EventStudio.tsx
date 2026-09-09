@@ -100,6 +100,9 @@ export default function EventStudio({
     event?.capacity != null ? String(event.capacity) : ""
   );
   const [description, setDescription] = useState(event?.description ?? "");
+  const [bodyHeading, setBodyHeading] = useState(event?.body_heading ?? "");
+  const [whatToExpect, setWhatToExpect] = useState(event?.what_to_expect ?? "");
+  const [closingNote, setClosingNote] = useState(event?.closing_note ?? "");
   const [theme, setTheme] = useState<EventTheme>(
     (event?.theme as EventTheme) || "classic"
   );
@@ -129,6 +132,9 @@ export default function EventStudio({
       theme,
       isPotluck,
       potluckAsk,
+      bodyHeading,
+      whatToExpect,
+      closingNote,
     };
   }
 
@@ -188,7 +194,7 @@ export default function EventStudio({
     }
   }
 
-  /* --- AI write description --- */
+  /* --- AI write the page text (heading + description + what to expect) --- */
   async function writeDescription() {
     if (!aiEnabled) {
       toast.error("AI is not set up yet (ANTHROPIC_API_KEY).");
@@ -204,17 +210,23 @@ export default function EventStudio({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          mode: "description",
+          mode: "body",
           title,
           whenText: friendlyWhen(date, time),
           where: location,
           isPotluck,
           potluckAsk,
+          // Feed anything already typed as notes so the AI builds on it.
+          notes: [description, whatToExpect].filter(Boolean).join("\n\n"),
         }),
       });
       const data = await res.json();
       if (!res.ok || !data.ok) throw new Error(data.error || "Draft failed.");
-      if (data.description) setDescription(data.description);
+      if (data.body) {
+        if (data.body.heading) setBodyHeading(data.body.heading);
+        if (data.body.description) setDescription(data.body.description);
+        if (data.body.whatToExpect) setWhatToExpect(data.body.whatToExpect);
+      }
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Draft failed.");
     } finally {
@@ -377,12 +389,22 @@ export default function EventStudio({
                 )}
 
                 <label className="block">
-                  <span className={FIELD_LABEL}>What to expect</span>
+                  <span className={FIELD_LABEL}>Heading (optional)</span>
+                  <input
+                    className={FIELD}
+                    value={bodyHeading}
+                    onChange={(e) => setBodyHeading(e.target.value)}
+                    placeholder="e.g. Join us on the porch"
+                  />
+                </label>
+
+                <label className="block">
+                  <span className={FIELD_LABEL}>Description</span>
                   <textarea
                     className={`${FIELD} min-h-[72px] resize-y`}
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
-                    placeholder="Shown on the invite and RSVP page."
+                    placeholder="The main text on the invite and RSVP page."
                   />
                   <button
                     type="button"
@@ -390,8 +412,32 @@ export default function EventStudio({
                     disabled={descBusy}
                     className="mt-1 text-xs font-semibold text-clay-dark hover:underline disabled:opacity-50"
                   >
-                    {descBusy ? "Writing…" : "✦ Write this for me"}
+                    {descBusy ? "Writing…" : "✦ Write the page text for me"}
                   </button>
+                  <span className="mt-1 block text-[11px] text-ink-faint">
+                    Fills the heading, description, and what-to-expect from the
+                    details above (and anything you&apos;ve already typed).
+                  </span>
+                </label>
+
+                <label className="block">
+                  <span className={FIELD_LABEL}>What to expect (optional)</span>
+                  <textarea
+                    className={`${FIELD} min-h-[64px] resize-y`}
+                    value={whatToExpect}
+                    onChange={(e) => setWhatToExpect(e.target.value)}
+                    placeholder="A few short lines: food, music, parking. One per line."
+                  />
+                </label>
+
+                <label className="block">
+                  <span className={FIELD_LABEL}>Note under the RSVP form (optional)</span>
+                  <textarea
+                    className={`${FIELD} min-h-[56px] resize-y`}
+                    value={closingNote}
+                    onChange={(e) => setClosingNote(e.target.value)}
+                    placeholder="Parking, what to bring, who to call."
+                  />
                 </label>
               </RailSection>
 
@@ -499,10 +545,28 @@ export default function EventStudio({
                   </p>
                 </div>
                 <div className="px-6 py-6">
+                  {bodyHeading.trim() && (
+                    <h3 className="mb-1.5 font-display text-lg font-semibold text-ink">
+                      {bodyHeading}
+                    </h3>
+                  )}
                   <p className="font-serif text-[15px] leading-relaxed text-ink-soft" style={{ fontFamily: "Georgia, serif" }}>
                     {description ||
                       "A few warm lines about what to expect go here. Write them on the left, or let the studio draft them for you."}
                   </p>
+                  {whatToExpect.trim() && (
+                    <div className="mt-3">
+                      <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-ink-faint">
+                        What to expect
+                      </p>
+                      <p
+                        className="mt-1 whitespace-pre-wrap text-[15px] leading-relaxed text-ink-soft"
+                        style={{ fontFamily: "Georgia, serif" }}
+                      >
+                        {whatToExpect}
+                      </p>
+                    </div>
+                  )}
                   {capNum > 0 && (
                     <p className="mt-2 text-xs text-ink-faint">
                       Room for {capNum} (RSVPs close when it fills up).
@@ -566,6 +630,11 @@ export default function EventStudio({
                   💙 Joy Senior Living · Loganville, GA
                 </div>
               </div>
+              {closingNote.trim() && (
+                <div className="mx-auto mt-4 max-w-[480px] rounded-xl border border-line bg-white px-5 py-3 text-[13px] leading-relaxed text-ink-soft shadow-sm">
+                  <p className="whitespace-pre-wrap">{closingNote}</p>
+                </div>
+              )}
             </div>
           </main>
 

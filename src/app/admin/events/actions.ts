@@ -32,6 +32,9 @@ const EventSchema = z.object({
   theme: z.enum(["classic", "festive", "seasonal", "garden", "elegant"]).default("classic"),
   isPotluck: z.boolean().optional().default(false),
   potluckAsk: z.string().trim().max(300).optional().default(""),
+  bodyHeading: z.string().trim().max(160).optional().default(""),
+  whatToExpect: z.string().trim().max(4000).optional().default(""),
+  closingNote: z.string().trim().max(2000).optional().default(""),
 });
 
 export type EventSaveResult =
@@ -55,6 +58,9 @@ export async function saveEvent(input: unknown): Promise<EventSaveResult> {
     theme: d.theme,
     isPotluck: d.isPotluck,
     potluckAsk: d.isPotluck ? d.potluckAsk : null,
+    bodyHeading: d.bodyHeading || null,
+    whatToExpect: d.whatToExpect || null,
+    closingNote: d.closingNote || null,
   };
   try {
     const ev = d.id ? await updateEvent(d.id, payload) : await createEvent(payload, email);

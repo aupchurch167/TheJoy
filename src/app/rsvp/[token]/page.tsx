@@ -62,10 +62,25 @@ export default async function RsvpPage({
                 Room for {event.capacity} (RSVPs close when it fills up).
               </p>
             )}
+            {event.body_heading?.trim() && (
+              <h2 className="mt-4 font-display text-lg font-semibold text-ink">
+                {event.body_heading}
+              </h2>
+            )}
             {event.description.trim() && (
-              <p className="mt-3 whitespace-pre-wrap text-[15px] leading-relaxed text-ink-soft">
+              <p className="mt-2 whitespace-pre-wrap text-[15px] leading-relaxed text-ink-soft">
                 {event.description}
               </p>
+            )}
+            {event.what_to_expect?.trim() && (
+              <div className="mt-4">
+                <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-ink-faint">
+                  What to expect
+                </p>
+                <p className="mt-1 whitespace-pre-wrap text-[15px] leading-relaxed text-ink-soft">
+                  {event.what_to_expect}
+                </p>
+              </div>
             )}
             {event.is_potluck && (
               <div
@@ -95,6 +110,12 @@ export default async function RsvpPage({
             />
           )}
         </div>
+
+        {event.closing_note?.trim() && (
+          <div className="mt-6 rounded-xl border border-line bg-white px-5 py-4 text-[14px] leading-relaxed text-ink-soft shadow-sm">
+            <p className="whitespace-pre-wrap">{event.closing_note}</p>
+          </div>
+        )}
 
         <p className="mt-6 text-center text-xs text-ink-faint">
           {BUSINESS.name}, a personal care home in {BUSINESS.address.city},{" "}

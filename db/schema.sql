@@ -659,3 +659,10 @@ CREATE INDEX IF NOT EXISTS employee_survey_recipients_due_idx
 -- Pulse surveys can target a subset of the roster. NULL = everyone. Otherwise a
 -- small spec: {"mode":"titles","titles":[...]} or {"mode":"ids","ids":[...]}.
 ALTER TABLE employee_surveys ADD COLUMN IF NOT EXISTS audience JSONB;
+
+-- Event page copy: optional richer text for the public RSVP page. body_heading
+-- sits above the description; what_to_expect is a second labeled block; and
+-- closing_note shows under the RSVP form (parking, what to bring, who to call).
+ALTER TABLE events ADD COLUMN IF NOT EXISTS body_heading   TEXT;
+ALTER TABLE events ADD COLUMN IF NOT EXISTS what_to_expect TEXT;
+ALTER TABLE events ADD COLUMN IF NOT EXISTS closing_note   TEXT;

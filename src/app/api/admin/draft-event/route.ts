@@ -1,21 +1,27 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { isAdminRequest } from "@/lib/require-admin";
-import { aiEnabled, draftEventPlan, draftEventDescription } from "@/lib/ai";
+import {
+  aiEnabled,
+  draftEventPlan,
+  draftEventDescription,
+  draftEventBody,
+} from "@/lib/ai";
 
 export const runtime = "nodejs";
 export const maxDuration = 120;
 
 const Schema = z.object({
-  mode: z.enum(["plan", "description"]).default("plan"),
+  mode: z.enum(["plan", "description", "body"]).default("plan"),
   brief: z.string().trim().max(2000).default(""),
   today: z.string().trim().max(10).optional(),
-  // For description mode:
+  // For description / body modes:
   title: z.string().trim().max(200).optional(),
   whenText: z.string().trim().max(200).optional(),
   where: z.string().trim().max(200).optional(),
   isPotluck: z.boolean().optional(),
   potluckAsk: z.string().trim().max(300).optional(),
+  notes: z.string().trim().max(2000).optional(),
 });
 
 export async function POST(request: Request) {
@@ -64,6 +70,24 @@ export async function POST(request: Request) {
         potluckAsk: parsed.data.potluckAsk,
       });
       return NextResponse.json({ ok: true, description });
+    }
+
+    if (parsed.data.mode === "body") {
+      if (!parsed.data.title?.trim()) {
+        return NextResponse.json(
+          { ok: false, error: "Add a title first." },
+          { status: 400 }
+        );
+      }
+      const body = await draftEventBody({
+        title: parsed.data.title,
+        whenText: parsed.data.whenText,
+        where: parsed.data.where,
+        isPotluck: parsed.data.isPotluck,
+        potluckAsk: parsed.data.potluckAsk,
+        notes: parsed.data.notes,
+      });
+      return NextResponse.json({ ok: true, body });
     }
 
     if (!parsed.data.brief.trim()) {
