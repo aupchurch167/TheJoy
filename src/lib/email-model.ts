@@ -97,6 +97,7 @@ type Palette = {
   a3: string; // Treats accent
   confetti: boolean; // festive confetti + bunting strips
   hero_on: boolean; // false for plain letter (no hero band)
+  heroIcon?: string; // small decorative glyph at the top of the hero band
 };
 
 function palette(theme: EmailTheme): Palette {
@@ -125,16 +126,18 @@ function palette(theme: EmailTheme): Palette {
     case "employee":
       return {
         page: "#f1f6f8", hero: "#0f6e86", heroEyebrow: "#bfe3ee", heroSub: "#d3ebf2",
-        eyebrow: "⭐ Employee of the Month ⭐", planBg: "#eef6f8", planBorder: "1px solid #cfe4ea",
+        eyebrow: "Employee of the Month", planBg: "#eef6f8", planBorder: "1px solid #cfe4ea",
         planLabel: "About them", planLabelColor: "#0f6e86",
         a1: "#0f6e86", a2: "#0f6e86", a3: "#017391", confetti: false, hero_on: true,
+        heroIcon: "⭐",
       };
     case "resident":
       return {
         page: "#fbf6ec", hero: "#b7791f", heroEyebrow: "#f4e4c4", heroSub: "#f7ecd6",
-        eyebrow: "🌟 Resident of the Month 🌟", planBg: "#fbf4e6", planBorder: "1px solid #ecdcbd",
+        eyebrow: "Resident of the Month", planBg: "#fbf4e6", planBorder: "1px solid #ecdcbd",
         planLabel: "About them", planLabelColor: "#8a6217",
         a1: "#b7791f", a2: "#b7791f", a3: "#8a6217", confetti: false, hero_on: true,
+        heroIcon: "🌟",
       };
     case "plain":
       return {
@@ -189,10 +192,12 @@ export function renderEmailModel(model: EmailModel): string {
   const eyebrow = model.eyebrow || p.eyebrow;
   const bodyRadius = p.hero_on ? "0 0 16px 16px" : "16px";
 
+  const eyebrowTopPad = p.heroIcon ? 4 : 30;
   const hero = p.hero_on
     ? `<tr><td style="padding:0 22px">
 <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background:${p.hero};border-radius:16px 16px 0 0"><tbody>
-${eyebrow ? `<tr><td align="center" style="padding:30px 24px 4px"><div style="font-family:Arial,Helvetica,sans-serif;font-size:11px;letter-spacing:3px;text-transform:uppercase;color:${p.heroEyebrow};font-weight:bold;line-height:1.4">${esc(eyebrow)}</div></td></tr>` : ""}
+${p.heroIcon ? `<tr><td align="center" style="padding:26px 24px 0"><div style="font-size:30px;line-height:1">${p.heroIcon}</div></td></tr>` : ""}
+${eyebrow ? `<tr><td align="center" style="padding:${eyebrowTopPad}px 24px 4px"><div style="font-family:Arial,Helvetica,sans-serif;font-size:11px;letter-spacing:3px;text-transform:uppercase;color:${p.heroEyebrow};font-weight:bold;line-height:1.4">${esc(eyebrow)}</div></td></tr>` : ""}
 <tr><td align="center" style="padding:6px 24px 4px"><div style="font-family:Georgia,'Times New Roman',serif;font-size:32px;line-height:1.15;color:#ffffff;font-weight:bold">${esc(title)}</div></td></tr>
 ${model.heroSub ? `<tr><td align="center" style="padding:6px 24px 28px"><div style="font-family:Georgia,'Times New Roman',serif;font-style:italic;font-size:15px;color:${p.heroSub}">${esc(model.heroSub)}</div></td></tr>` : `<tr><td style="padding-bottom:24px"></td></tr>`}
 </tbody></table>
@@ -204,7 +209,7 @@ ${p.confetti ? BUNTING : ""}
     PHOTO_THEMES.includes(model.theme)
       ? `<tr><td style="padding:0 22px">${
           model.photoUrl
-            ? `<img src="${esc(model.photoUrl)}" width="556" alt="" style="display:block;width:100%;max-width:556px;height:auto;border:0">`
+            ? `<img src="${esc(model.photoUrl)}" width="100%" alt="" style="display:block;width:100%;max-width:100%;height:auto;border:0">`
             : `<div style="height:150px;background:repeating-linear-gradient(45deg,#eef2f3 0 10px,#e3e7e9 10px 20px);text-align:center;line-height:150px;font-family:Arial,Helvetica,sans-serif;font-size:12px;color:#626d70">Add a photo (of the person you're spotlighting)</div>`
         }</td></tr>`
       : "";
@@ -230,7 +235,7 @@ ${model.plan.treats ? `🍦 <strong style="color:${p.a3}">Treats:</strong> ${esc
 
   // Optional in-body photo (any theme), shown between the message and the details.
   const bodyPhoto = model.bodyPhotoUrl
-    ? `<tr><td style="padding:16px 26px 0"><img src="${esc(model.bodyPhotoUrl)}" alt="" style="display:block;width:100%;max-width:548px;height:auto;border:0;border-radius:10px"></td></tr>`
+    ? `<tr><td style="padding:16px 26px 0"><img src="${esc(model.bodyPhotoUrl)}" width="100%" alt="" style="display:block;width:100%;max-width:100%;height:auto;border:0;border-radius:10px"></td></tr>`
     : "";
 
   return `<!DOCTYPE html>
