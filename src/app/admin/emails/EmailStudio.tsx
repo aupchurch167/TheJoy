@@ -60,13 +60,18 @@ type Occasion = {
   theme: EmailTheme;
   /** Shows the details plan + event linking. */
   planned: boolean;
+  /** Only offered for the families audience (never leads). */
+  familiesOnly?: boolean;
 };
+
+/** Spotlight looks are family-only, so leads never see them. */
+const FAMILY_ONLY_THEMES: EmailTheme[] = ["employee", "resident"];
 
 const OCCASIONS: Occasion[] = [
   { key: "birthday", label: "Birthday 🎂", api: "birthday", theme: "festive", planned: true },
   { key: "event", label: "Event", api: "event", theme: "classic", planned: true },
-  { key: "employee", label: "Employee of the month ⭐", api: "employee_spotlight", theme: "employee", planned: false },
-  { key: "resident", label: "Resident of the month 🌟", api: "resident_spotlight", theme: "resident", planned: false },
+  { key: "employee", label: "Employee of the month ⭐", api: "employee_spotlight", theme: "employee", planned: false, familiesOnly: true },
+  { key: "resident", label: "Resident of the month 🌟", api: "resident_spotlight", theme: "resident", planned: false, familiesOnly: true },
   { key: "holiday", label: "Holiday", api: "holiday", theme: "seasonal", planned: false },
   { key: "monthly", label: "Monthly note", api: "announcement", theme: "classic", planned: false },
   { key: "thankyou", label: "Thank you", api: "thank_you", theme: "elegant", planned: false },
@@ -247,6 +252,19 @@ export default function EmailStudio({
     setOccasionKey(o.key);
     if (!themeTouched) patch({ theme: o.theme });
     if (!o.planned && model.plan) patch({ plan: null });
+  }
+
+  /**
+   * Switch audience. Employee/Resident-of-the-month are family-only, so moving
+   * to the leads list drops that occasion and its spotlight look.
+   */
+  function changeAudience(a: Audience) {
+    setAudience(a);
+    if (a === "leads") {
+      const current = OCCASIONS.find((o) => o.key === occasionKey);
+      if (current?.familiesOnly) setOccasionKey("monthly");
+      if (FAMILY_ONLY_THEMES.includes(model.theme)) patch({ theme: "classic" });
+    }
   }
 
   function chooseTheme(t: EmailTheme) {
@@ -491,7 +509,7 @@ export default function EmailStudio({
                     <button
                       key={a}
                       type="button"
-                      onClick={() => setAudience(a)}
+                      onClick={() => changeAudience(a)}
                       className={`flex-1 rounded-[7px] px-2 py-1.5 text-sm font-semibold capitalize transition-colors ${
                         audience === a
                           ? "bg-white text-ink shadow-[0_1px_2px_rgba(0,0,0,0.08)]"
@@ -564,7 +582,9 @@ export default function EmailStudio({
                   onChange={(e) => setBrief(e.target.value)}
                 />
                 <div className="mt-2 flex flex-wrap gap-1.5">
-                  {OCCASIONS.map((o) => (
+                  {OCCASIONS.filter(
+                    (o) => !o.familiesOnly || audience === "families"
+                  ).map((o) => (
                     <button
                       key={o.key}
                       type="button"
@@ -942,7 +962,10 @@ export default function EmailStudio({
           <aside className="border-t border-line bg-white lg:min-h-screen lg:border-l lg:border-t-0">
             <RailSection title="Look & feel">
               <div className="grid grid-cols-2 gap-2">
-                {EMAIL_THEMES.map((t) => {
+                {EMAIL_THEMES.filter(
+                  (t) =>
+                    !FAMILY_ONLY_THEMES.includes(t.id) || audience === "families"
+                ).map((t) => {
                   const on = model.theme === t.id;
                   return (
                     <button
