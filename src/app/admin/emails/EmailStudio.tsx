@@ -49,7 +49,9 @@ type ApiOccasion =
   | "event"
   | "celebration"
   | "thank_you"
-  | "announcement";
+  | "announcement"
+  | "employee_spotlight"
+  | "resident_spotlight";
 
 type Occasion = {
   key: string;
@@ -63,6 +65,8 @@ type Occasion = {
 const OCCASIONS: Occasion[] = [
   { key: "birthday", label: "Birthday 🎂", api: "birthday", theme: "festive", planned: true },
   { key: "event", label: "Event", api: "event", theme: "classic", planned: true },
+  { key: "employee", label: "Employee of the month ⭐", api: "employee_spotlight", theme: "employee", planned: false },
+  { key: "resident", label: "Resident of the month 🌟", api: "resident_spotlight", theme: "resident", planned: false },
   { key: "holiday", label: "Holiday", api: "holiday", theme: "seasonal", planned: false },
   { key: "monthly", label: "Monthly note", api: "announcement", theme: "classic", planned: false },
   { key: "thankyou", label: "Thank you", api: "thank_you", theme: "elegant", planned: false },
@@ -971,9 +975,17 @@ export default function EmailStudio({
                   {seasonalMonthName()}).
                 </p>
               )}
-              {model.theme === "photo" && (
+              {(model.theme === "photo" ||
+                model.theme === "employee" ||
+                model.theme === "resident") && (
                 <PhotoInput
-                  label="Photo at the top"
+                  label={
+                    model.theme === "employee"
+                      ? "Photo of the employee"
+                      : model.theme === "resident"
+                        ? "Photo of the resident"
+                        : "Photo at the top"
+                  }
                   url={model.photoUrl ?? null}
                   onUrl={(u) => patch({ photoUrl: u })}
                   aspect={556 / 300}
@@ -1137,6 +1149,8 @@ const THEME_SWATCH: Record<EmailTheme, string> = {
   garden: "#1c7f27",
   elegant: "linear-gradient(135deg,#123a44,#96731f)",
   photo: "repeating-linear-gradient(45deg,#eef2f3 0 8px,#d9e0e2 8px 16px)",
+  employee: "linear-gradient(135deg,#0f6e86,#01a7ce)",
+  resident: "linear-gradient(135deg,#b7791f,#d8a94a)",
   plain: "#fbf9f5",
 };
 

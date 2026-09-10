@@ -37,6 +37,8 @@ const Schema = z.object({
       "celebration",
       "thank_you",
       "announcement",
+      "employee_spotlight",
+      "resident_spotlight",
     ])
     .default("announcement"),
   // For a targeted tweak ("Shorter", "Warmer", "New subject", free text):

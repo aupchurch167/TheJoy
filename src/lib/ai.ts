@@ -494,7 +494,9 @@ export type EmailOccasion =
   | "event"
   | "celebration"
   | "thank_you"
-  | "announcement";
+  | "announcement"
+  | "employee_spotlight"
+  | "resident_spotlight";
 
 export type EmailHtmlDraft = {
   subject: string;
@@ -533,6 +535,10 @@ function occasionBrief(occasion: EmailOccasion): string {
       return `OCCASION: a CELEBRATION or milestone (anniversary, welcome, good news). Joyful but tasteful, one accent banner.`;
     case "thank_you":
       return `OCCASION: a THANK YOU. Sincere and simple, a warm accent, no hard sell.`;
+    case "employee_spotlight":
+      return `OCCASION: EMPLOYEE OF THE MONTH, spotlighting a Joy team member for families. The email carries a photo of the person, so write words that sit alongside it. heroTitle: the employee's name exactly as given (or "[employee's name]" if none), NEVER {{first_name}}. eyebrow: their role if given (e.g. "Caregiver, 3 years with us") or leave it for the look to fill. intro: two or three warm, specific sentences on who they are and why residents and families love them (one concrete detail beats general praise); use [bracketed placeholders] for anything not given (how long they've been here, a favorite moment). Name ${BUSINESS.director.name} where it fits. Warm and genuine, never corporate. No button unless the operator asked for one.`;
+    case "resident_spotlight":
+      return `OCCASION: RESIDENT OF THE MONTH, a warm spotlight of one resident, shared with the Joy community. The email carries a photo of the resident (shared with their permission), so write words that sit alongside it. heroTitle: the resident's name exactly as given (or "[resident's name]" if none), NEVER {{first_name}} and NEVER a nickname or initials. intro: two or three warm sentences telling a small, specific story about them (a hobby, a saying, something they're known for around the house); use [bracketed placeholders] for anything not given. Respectful and affectionate, about the person, never clinical and never about their care. Name ${BUSINESS.director.name} or the team where it fits. No button unless the operator asked for one.`;
     default:
       return `OCCASION: a community ANNOUNCEMENT or update. Clean, warm, one clear headline and an optional button.`;
   }

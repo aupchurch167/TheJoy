@@ -22,6 +22,8 @@ export type EmailTheme =
   | "garden"
   | "elegant"
   | "photo"
+  | "employee"
+  | "resident"
   | "plain";
 
 export const EMAIL_THEMES: { id: EmailTheme; label: string }[] = [
@@ -31,8 +33,13 @@ export const EMAIL_THEMES: { id: EmailTheme; label: string }[] = [
   { id: "garden", label: "Garden party" },
   { id: "elegant", label: "Elegant" },
   { id: "photo", label: "Photo hero" },
+  { id: "employee", label: "Employee of the month" },
+  { id: "resident", label: "Resident of the month" },
   { id: "plain", label: "Plain letter" },
 ];
+
+/** The spotlight themes (employee/resident of the month) show a hero photo. */
+const PHOTO_THEMES: EmailTheme[] = ["photo", "employee", "resident"];
 
 export type EmailPlan = {
   label?: string;
@@ -115,6 +122,20 @@ function palette(theme: EmailTheme): Palette {
         planLabel: "The particulars", planLabelColor: "#96731f",
         a1: "#123a44", a2: "#123a44", a3: "#96731f", confetti: false, hero_on: true,
       };
+    case "employee":
+      return {
+        page: "#f1f6f8", hero: "#0f6e86", heroEyebrow: "#bfe3ee", heroSub: "#d3ebf2",
+        eyebrow: "⭐ Employee of the Month ⭐", planBg: "#eef6f8", planBorder: "1px solid #cfe4ea",
+        planLabel: "About them", planLabelColor: "#0f6e86",
+        a1: "#0f6e86", a2: "#0f6e86", a3: "#017391", confetti: false, hero_on: true,
+      };
+    case "resident":
+      return {
+        page: "#fbf6ec", hero: "#b7791f", heroEyebrow: "#f4e4c4", heroSub: "#f7ecd6",
+        eyebrow: "🌟 Resident of the Month 🌟", planBg: "#fbf4e6", planBorder: "1px solid #ecdcbd",
+        planLabel: "About them", planLabelColor: "#8a6217",
+        a1: "#b7791f", a2: "#b7791f", a3: "#8a6217", confetti: false, hero_on: true,
+      };
     case "plain":
       return {
         page: "#fbf9f5", hero: "#017391", heroEyebrow: "#bfe3ee", heroSub: "#cfe9f2",
@@ -180,11 +201,11 @@ ${p.confetti ? BUNTING : ""}
     : "";
 
   const photo =
-    model.theme === "photo"
+    PHOTO_THEMES.includes(model.theme)
       ? `<tr><td style="padding:0 22px">${
           model.photoUrl
             ? `<img src="${esc(model.photoUrl)}" width="556" alt="" style="display:block;width:100%;max-width:556px;height:auto;border:0">`
-            : `<div style="height:150px;background:repeating-linear-gradient(45deg,#eef2f3 0 10px,#e3e7e9 10px 20px);text-align:center;line-height:150px;font-family:Arial,Helvetica,sans-serif;font-size:12px;color:#626d70">Add a photo from the house</div>`
+            : `<div style="height:150px;background:repeating-linear-gradient(45deg,#eef2f3 0 10px,#e3e7e9 10px 20px);text-align:center;line-height:150px;font-family:Arial,Helvetica,sans-serif;font-size:12px;color:#626d70">Add a photo (of the person you're spotlighting)</div>`
         }</td></tr>`
       : "";
 
