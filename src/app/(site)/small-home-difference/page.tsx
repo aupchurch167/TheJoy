@@ -14,9 +14,11 @@ import ProofPulse from "@/components/landing/ProofPulse";
 import FamilyQuote from "@/components/landing/FamilyQuote";
 
 export const metadata: Metadata = {
-  title: "The small-home difference",
+  title: {
+    absolute: "Small Assisted Living Homes vs. Large Facilities in Georgia | Joy",
+  },
   description:
-    "Twenty-four residents, not a hundred and twenty. What a small personal care home in Loganville, GA does that a big building can't, told plainly.",
+    "24 beds vs. 120. What a small personal care home notices that a big building can't. How to compare, and what to ask both.",
   alternates: { canonical: "/small-home-difference" },
   openGraph: {
     title: `The small-home difference | ${BUSINESS.name}`,

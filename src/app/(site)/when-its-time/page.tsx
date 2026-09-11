@@ -15,9 +15,11 @@ import FamilyQuote from "@/components/landing/FamilyQuote";
 import EssayRows from "@/components/landing/EssayRows";
 
 export const metadata: Metadata = {
-  title: "Is it time? The signs families notice",
+  title: {
+    absolute: "Signs It's Time for Assisted Living: What Families Notice | Joy",
+  },
   description:
-    "The quiet signs that a parent may need more help, what they mean, and why noticing is not betrayal. Joy is a small personal care home in Loganville, GA.",
+    "The signs are rarely loud (unopened mail, the same story twice, a new grip on the stairs). How families know it's time, from a Loganville personal care home.",
   alternates: { canonical: "/when-its-time" },
   openGraph: {
     title: `Is it time? | ${BUSINESS.name}`,

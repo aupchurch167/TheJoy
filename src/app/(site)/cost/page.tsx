@@ -16,9 +16,11 @@ import FamilyQuote from "@/components/landing/FamilyQuote";
 import CostCalculator from "@/components/landing/CostCalculator";
 
 export const metadata: Metadata = {
-  title: "What it costs",
+  title: {
+    absolute: "Cost of Assisted Living & Personal Care in Loganville, GA | Joy",
+  },
   description:
-    "Joy Senior Living's rates in Loganville, GA. Senior living from $5,500 a month, respite from $300 a day. The number, and what it replaces.",
+    "Real prices, published: personal care from $4,500/mo, memory care from $5,500/mo. See what the number covers and what it replaces. Loganville, GA.",
   alternates: { canonical: "/cost" },
   openGraph: {
     title: `What it costs | ${BUSINESS.name}`,

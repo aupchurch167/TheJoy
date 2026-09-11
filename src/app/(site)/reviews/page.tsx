@@ -6,9 +6,11 @@ import ProofPulse from "@/components/landing/ProofPulse";
 import FamilyQuote from "@/components/landing/FamilyQuote";
 
 export const metadata: Metadata = {
-  title: "Reviews from families",
+  title: {
+    absolute: "Reviews: What Families Say About The Joy | Loganville, GA",
+  },
   description:
-    "What families say about Joy Senior Living, a small personal care home in Loganville, GA. Real reviews, in full, nothing trimmed.",
+    "Real reviews from families of The Joy Senior Living of Loganville, plus our A Place for Mom Best of Senior Living awards (2025, 2026) and links to every profile.",
   alternates: { canonical: "/reviews" },
   openGraph: {
     title: `Reviews from families | ${BUSINESS.name}`,

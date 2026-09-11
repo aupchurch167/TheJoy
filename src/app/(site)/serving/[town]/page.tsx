@@ -20,7 +20,9 @@ export async function generateMetadata({
   const t = TOWNS[town];
   if (!t) return {};
   return {
-    title: `Senior living near ${t.name}, GA`,
+    title: {
+      absolute: `Senior Living & Memory Care Near ${t.name}, GA | The Joy`,
+    },
     description: `Joy is a small personal care home about ${t.driveMinutes} minutes from ${t.name}, GA. Close enough to visit after work. Book a tour.`,
     alternates: { canonical: `/serving/${t.slug}` },
     openGraph: {

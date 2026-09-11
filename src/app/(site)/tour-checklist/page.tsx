@@ -7,9 +7,11 @@ import FamilyQuote from "@/components/landing/FamilyQuote";
 import TourChecklist from "@/components/landing/TourChecklist";
 
 export const metadata: Metadata = {
-  title: "The senior living tour checklist (25 questions)",
+  title: {
+    absolute: "Assisted Living Tour Checklist: 25 Questions to Ask | Joy",
+  },
   description:
-    "25 questions to ask on any senior living tour, free to read and print. From Joy, a small personal care home in Loganville, GA.",
+    "25 questions to bring to any senior living tour: care, staffing, safety, money, gut checks. Free to read and print. Bring all 25 to Joy; we like the hard ones.",
   alternates: { canonical: "/tour-checklist" },
   openGraph: {
     title: `The tour checklist | ${BUSINESS.name}`,
