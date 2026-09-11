@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
-import { BUSINESS, OG_IMAGE } from "@/lib/site";
+import { BUSINESS, OG_IMAGE, SITE_URL } from "@/lib/site";
+import { breadcrumbJsonLd, faqPageJsonLdFrom } from "@/lib/schema";
+import JsonLd from "@/components/JsonLd";
 import {
   WHEN_TUESDAY,
   WHEN_SIGNS_LEDE,
@@ -33,6 +35,15 @@ export const metadata: Metadata = {
 export default function WhenItsTimePage() {
   return (
     <>
+      <JsonLd
+        data={breadcrumbJsonLd([
+          { name: "Home", path: "/" },
+          { name: "When it's time", path: "/when-its-time" },
+        ])}
+      />
+      <JsonLd
+        data={faqPageJsonLdFrom(WHEN_FAQ, `${SITE_URL}/when-its-time#faq`)}
+      />
       {/* Hero: headline alone, with air */}
       <section className="mx-auto max-w-2xl px-5 pt-16 pb-10 sm:pt-24">
         <h1 className="max-w-[20ch] font-display text-3xl font-medium leading-tight text-ink text-balance sm:text-5xl">

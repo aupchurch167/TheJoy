@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
-import { BUSINESS, OG_IMAGE } from "@/lib/site";
+import { BUSINESS, OG_IMAGE, SITE_URL } from "@/lib/site";
+import { breadcrumbJsonLd, faqPageJsonLdFrom } from "@/lib/schema";
+import JsonLd from "@/components/JsonLd";
 import {
   RATES,
   RATES_NOTE,
@@ -36,6 +38,13 @@ export default async function CostPage() {
 
   return (
     <>
+      <JsonLd
+        data={breadcrumbJsonLd([
+          { name: "Home", path: "/" },
+          { name: "What it costs", path: "/cost" },
+        ])}
+      />
+      <JsonLd data={faqPageJsonLdFrom(COST_FAQ, `${SITE_URL}/cost#faq`)} />
       {/* Hero */}
       <section className="mx-auto max-w-2xl px-5 pt-14 pb-8 sm:pt-20">
         <p className="text-sm font-semibold uppercase tracking-[0.14em] text-ink-faint">

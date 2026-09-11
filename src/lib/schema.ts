@@ -108,6 +108,53 @@ export function faqPageJsonLd() {
 }
 
 /**
+ * schema.org FAQPage built from any {title, body} FAQ list (the funnel and
+ * serving pages store their FAQs this way and render them through <Accordion>).
+ * Built from the SAME array the visible accordion renders, so the structured
+ * data never states more than the page shows. `id` anchors the block per page.
+ */
+export function faqPageJsonLdFrom(
+  items: { title: string; body: string }[],
+  id: string
+) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "@id": id,
+    mainEntity: items.map((item) => ({
+      "@type": "Question",
+      name: item.title,
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: item.body,
+      },
+    })),
+  };
+}
+
+/**
+ * schema.org Service for a town serving page, tied to the business, with
+ * areaServed set to the town. §4: serviceType stays "personal care home".
+ */
+export function servingServiceJsonLd(town: { name: string; slug: string }) {
+  const url = `${SITE_URL}/serving/${town.slug}`;
+  return {
+    "@context": "https://schema.org",
+    "@type": "Service",
+    "@id": `${url}#service`,
+    name: `Senior living and personal care near ${town.name}, GA`,
+    serviceType: "Personal care home",
+    url,
+    provider: {
+      "@type": ["LocalBusiness", "SeniorCare"],
+      "@id": `${SITE_URL}/#business`,
+      name: BUSINESS.name,
+    },
+    areaServed: `${town.name}, GA`,
+  };
+}
+
+/**
  * schema.org Service markup for a service page, tied to the business. `opts.url`
  * overrides the default /services/<slug> URL (memory care lives at /memory-care).
  */

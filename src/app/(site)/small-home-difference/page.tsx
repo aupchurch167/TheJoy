@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
-import { BUSINESS, OG_IMAGE } from "@/lib/site";
+import { BUSINESS, OG_IMAGE, SITE_URL } from "@/lib/site";
+import { breadcrumbJsonLd, faqPageJsonLdFrom } from "@/lib/schema";
+import JsonLd from "@/components/JsonLd";
 import {
   SMALL_TUESDAY,
   SMALL_INTRO,
@@ -32,6 +34,18 @@ export const metadata: Metadata = {
 export default function SmallHomeDifferencePage() {
   return (
     <>
+      <JsonLd
+        data={breadcrumbJsonLd([
+          { name: "Home", path: "/" },
+          { name: "The small-home difference", path: "/small-home-difference" },
+        ])}
+      />
+      <JsonLd
+        data={faqPageJsonLdFrom(
+          SMALL_FAQ,
+          `${SITE_URL}/small-home-difference#faq`
+        )}
+      />
       {/* Hero */}
       <section className="mx-auto max-w-2xl px-5 pt-16 pb-8 sm:pt-20">
         <p className="text-sm font-semibold uppercase tracking-[0.14em] text-ink-faint">

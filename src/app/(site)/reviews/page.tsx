@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { BUSINESS, OG_IMAGE } from "@/lib/site";
+import { breadcrumbJsonLd } from "@/lib/schema";
+import JsonLd from "@/components/JsonLd";
 import { reviewQuotes, REVIEW_BADGES, REVIEW_LINKS } from "@/lib/landing";
 import CtaBand from "@/components/landing/CtaBand";
 import ProofPulse from "@/components/landing/ProofPulse";
@@ -26,6 +28,12 @@ export default function ReviewsPage() {
 
   return (
     <>
+      <JsonLd
+        data={breadcrumbJsonLd([
+          { name: "Home", path: "/" },
+          { name: "Reviews", path: "/reviews" },
+        ])}
+      />
       {/* Hero */}
       <section className="mx-auto max-w-3xl px-5 pt-14 pb-10 sm:pt-20">
         <h1 className="max-w-[20ch] font-display text-4xl font-semibold text-ink text-balance sm:text-5xl">

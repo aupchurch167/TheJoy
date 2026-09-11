@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { BUSINESS, OG_IMAGE } from "@/lib/site";
+import { breadcrumbJsonLd } from "@/lib/schema";
+import JsonLd from "@/components/JsonLd";
 import { CHECKLIST_STATEMENT, CHECKLIST_QUOTE } from "@/lib/landing";
 import CtaBand from "@/components/landing/CtaBand";
 import ProofPulse from "@/components/landing/ProofPulse";
@@ -25,6 +27,12 @@ export const metadata: Metadata = {
 export default function TourChecklistPage() {
   return (
     <>
+      <JsonLd
+        data={breadcrumbJsonLd([
+          { name: "Home", path: "/" },
+          { name: "Tour checklist", path: "/tour-checklist" },
+        ])}
+      />
       {/* Print: show only the checklist block. */}
       <style>{`@media print{body *{visibility:hidden!important}#tour-checklist,#tour-checklist *{visibility:visible!important}#tour-checklist{position:absolute;left:0;top:0;width:100%;padding:0}}`}</style>
 

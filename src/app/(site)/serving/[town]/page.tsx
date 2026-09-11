@@ -1,6 +1,12 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { BUSINESS, OG_IMAGE } from "@/lib/site";
+import { BUSINESS, OG_IMAGE, SITE_URL } from "@/lib/site";
+import {
+  breadcrumbJsonLd,
+  faqPageJsonLdFrom,
+  servingServiceJsonLd,
+} from "@/lib/schema";
+import JsonLd from "@/components/JsonLd";
 import { TOWNS } from "@/lib/landing";
 import Accordion from "@/components/Accordion";
 import CtaBand from "@/components/landing/CtaBand";
@@ -46,6 +52,16 @@ export default async function ServingTownPage({
 
   return (
     <>
+      <JsonLd
+        data={breadcrumbJsonLd([
+          { name: "Home", path: "/" },
+          { name: `Serving ${t.name}`, path: `/serving/${t.slug}` },
+        ])}
+      />
+      <JsonLd data={servingServiceJsonLd(t)} />
+      <JsonLd
+        data={faqPageJsonLdFrom(t.faqs, `${SITE_URL}/serving/${t.slug}#faq`)}
+      />
       {/* Hero */}
       <section className="mx-auto max-w-2xl px-5 pt-14 pb-8 sm:pt-20">
         <p className="text-sm font-semibold uppercase tracking-[0.14em] text-ink-faint">
