@@ -205,6 +205,13 @@ export default function PartnerDetailClient({
             }}
             onError={toastError}
           />
+          <NotesCard
+            partnerId={partner.id}
+            notes={partner.notes}
+            onDone={() => router.refresh()}
+            onError={toastError}
+            onSuccess={success}
+          />
           <RemindersCard
             partnerId={partner.id}
             reminders={reminders}
@@ -428,6 +435,56 @@ function LogActivityCard({
         </span>
       </div>
     </div>
+  );
+}
+
+/* ---------------- Notes ---------------- */
+
+function NotesCard({
+  partnerId,
+  notes,
+  onDone,
+  onError,
+  onSuccess,
+}: {
+  partnerId: string;
+  notes: string | null;
+  onDone: () => void;
+  onError: (m: string) => void;
+  onSuccess: (m: string) => void;
+}) {
+  const [value, setValue] = useState(notes ?? "");
+  const [pending, start] = useTransition();
+  const dirty = value !== (notes ?? "");
+
+  function save() {
+    start(async () => {
+      const res = await patchPartnerField({ id: partnerId, notes: value });
+      if (!res.ok) {
+        onError(res.error);
+        return;
+      }
+      onSuccess("Notes saved.");
+      onDone();
+    });
+  }
+
+  return (
+    <Card>
+      <div className="flex items-center justify-between">
+        <SectionLabel>Notes</SectionLabel>
+        <Button size="sm" onClick={save} disabled={pending || !dirty}>
+          {pending ? "Saving…" : "Save notes"}
+        </Button>
+      </div>
+      <Textarea
+        rows={6}
+        className="mt-3"
+        value={value}
+        onChange={(e) => setValue(e.target.value)}
+        placeholder="Context worth keeping: who to ask for, what they care about, how past conversations went."
+      />
+    </Card>
   );
 }
 
@@ -778,8 +835,6 @@ function DetailSidebar({
   const [nextDate, setNextDate] = useState(
     partner.next_date ? partner.next_date.slice(0, 10) : ""
   );
-  const [editingNotes, setEditingNotes] = useState(false);
-  const [notes, setNotes] = useState(partner.notes ?? "");
 
   function patch(fields: Record<string, unknown>, msg: string, after?: () => void) {
     start(async () => {
@@ -903,41 +958,6 @@ function DetailSidebar({
             )}
           </div>
 
-          {/* Notes */}
-          <div className="border-t border-line pt-3">
-            <div className="flex items-center justify-between">
-              <p className="text-xs text-ink-faint">Notes</p>
-              <button
-                type="button"
-                onClick={() => setEditingNotes((v) => !v)}
-                className="text-xs font-semibold text-clay hover:text-clay-dark"
-              >
-                {editingNotes ? "Cancel" : "Edit"}
-              </button>
-            </div>
-            {editingNotes ? (
-              <div className="mt-2 space-y-2">
-                <Textarea
-                  rows={4}
-                  value={notes}
-                  onChange={(e) => setNotes(e.target.value)}
-                />
-                <Button
-                  size="sm"
-                  disabled={pending}
-                  onClick={() =>
-                    patch({ notes }, "Notes saved.", () => setEditingNotes(false))
-                  }
-                >
-                  Save
-                </Button>
-              </div>
-            ) : (
-              <p className="mt-1 whitespace-pre-wrap text-ink-soft">
-                {orDash(partner.notes)}
-              </p>
-            )}
-          </div>
         </div>
       </Card>
 
