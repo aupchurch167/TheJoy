@@ -638,6 +638,36 @@ export async function sendDepositEmail(input: {
   return true;
 }
 
+/**
+ * One-off transactional email to a referral partner (from the Partners CRM
+ * composer). B2B, not marketing: no unsubscribe footer, reply-to goes to the
+ * Joy inbox. `attachments` carry base64 content (Resend's shape). Returns true
+ * when handed to Resend (false when email is not configured).
+ */
+export async function sendPartnerEmail(input: {
+  to: string;
+  subject: string;
+  bodyMarkdown: string;
+  attachments?: { filename: string; content: string }[];
+}): Promise<boolean> {
+  if (!resend) {
+    console.info("[email] RESEND_API_KEY not set; partner email skipped.");
+    return false;
+  }
+  await resend.emails.send({
+    from: FROM,
+    to: input.to,
+    replyTo: BUSINESS.email,
+    subject: input.subject,
+    // Transactional shell (no marketing footer / badges).
+    html: wrapEmail(renderBody(input.bodyMarkdown), undefined, false),
+    ...(input.attachments && input.attachments.length
+      ? { attachments: input.attachments }
+      : {}),
+  });
+  return true;
+}
+
 /** Internal alert so Adam/Mellissa see a new lead right away. */
 export async function notifyNewLead(lead: Lead): Promise<void> {
   const to = process.env.LEAD_NOTIFY_TO;

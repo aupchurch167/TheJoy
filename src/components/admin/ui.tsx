@@ -193,7 +193,14 @@ export function SectionLabel({ children }: { children: ReactNode }) {
 /* Badges / pills                                                      */
 /* ------------------------------------------------------------------ */
 
-export type BadgeTone = "neutral" | "success" | "warning" | "danger" | "info";
+export type BadgeTone =
+  | "neutral"
+  | "success"
+  | "warning"
+  | "danger"
+  | "info"
+  | "violet"
+  | "slate";
 
 const BADGE_TONE: Record<BadgeTone, string> = {
   neutral: "bg-line/70 text-ink-soft",
@@ -201,6 +208,10 @@ const BADGE_TONE: Record<BadgeTone, string> = {
   warning: "bg-gold/15 text-gold",
   danger: "bg-danger/10 text-danger",
   info: "bg-clay/10 text-clay",
+  // Two extra pipeline tones (Partners CRM). Arbitrary OKLCH so they read the
+  // same in the pill set without adding base tokens.
+  violet: "bg-[oklch(0.94_0.035_300)] text-[oklch(0.42_0.13_300)]",
+  slate: "bg-[oklch(0.94_0.03_250)] text-[oklch(0.42_0.09_250)]",
 };
 
 export function Badge({
@@ -402,6 +413,8 @@ export function StatCard({
     warning: "text-gold",
     danger: "text-danger",
     info: "text-clay",
+    violet: "text-[oklch(0.42_0.13_300)]",
+    slate: "text-[oklch(0.42_0.09_250)]",
   };
   return (
     <div className="rounded-xl border border-line bg-white p-5 shadow-sm">

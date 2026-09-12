@@ -123,6 +123,17 @@ body {
 .admin-fade {
   animation: admin-fade 0.15s ease-out;
 }
+@keyframes admin-slide-in {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+.admin-slide-in {
+  animation: admin-slide-in 0.2s ease-out;
+}
 
 /* Horizontal filter-pill rows on mobile: swipe, no visible scrollbar. */
 .admin-scroll-x {

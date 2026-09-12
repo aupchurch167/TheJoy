@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import "react-easy-crop/react-easy-crop.css";
 import { auth } from "@/auth";
 import { isAllowedAdmin } from "@/lib/access";
+import { hasDatabase } from "@/lib/db";
+import { countDueThisWeek } from "@/lib/partners";
 import AdminNav from "./AdminNav";
 import { ToastProvider } from "@/components/admin/Toast";
 
@@ -23,12 +25,22 @@ export default async function AdminLayout({
     return <div className="min-h-full bg-paper">{children}</div>;
   }
 
+  // Partners "due this week" count for the nav badge (best-effort; 0 if no DB).
+  let partnersDue = 0;
+  if (hasDatabase()) {
+    try {
+      partnersDue = await countDueThisWeek();
+    } catch {
+      partnersDue = 0;
+    }
+  }
+
   return (
     <ToastProvider>
       <div className="min-h-full bg-paper">
         {/* Nav is hidden when printing so report pages export clean. */}
         <div className="print:hidden">
-          <AdminNav email={session?.user?.email} />
+          <AdminNav email={session?.user?.email} partnersDue={partnersDue} />
         </div>
         {/* Sidebar is 15rem (w-60) on desktop; offset the content to match. */}
         <div className="lg:pl-60 print:pl-0">

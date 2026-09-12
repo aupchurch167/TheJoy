@@ -666,3 +666,94 @@ ALTER TABLE employee_surveys ADD COLUMN IF NOT EXISTS audience JSONB;
 ALTER TABLE events ADD COLUMN IF NOT EXISTS body_heading   TEXT;
 ALTER TABLE events ADD COLUMN IF NOT EXISTS what_to_expect TEXT;
 ALTER TABLE events ADD COLUMN IF NOT EXISTS closing_note   TEXT;
+
+-- ============================================================================
+-- Partners CRM (referral-source outreach). Separate from leads (family
+-- inquiries) and families (current residents). Adam + Mellissa track hospitals,
+-- hospice, home health, SNFs, placement agencies, faith communities, and PCPs
+-- they stay in touch with for referrals, and log a "touch" in under 30 seconds.
+-- ============================================================================
+
+-- One referral source. `status` drives the pipeline pill; `tier` (A/B/C) ranks
+-- effort; `owner` is who calls (adam | mellissa | both). A single next_action /
+-- next_date is the "what's next" nudge shown in the list (reminders are extra,
+-- personal nudges kept in partner_reminders and do NOT touch these fields).
+CREATE TABLE IF NOT EXISTS partners (
+  id             UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  organization   TEXT NOT NULL,
+  category       TEXT NOT NULL DEFAULT 'other',
+  tier           TEXT,                         -- 'A' | 'B' | 'C' | NULL
+  status         TEXT NOT NULL DEFAULT 'not_contacted',
+  contact_name   TEXT,
+  contact_role   TEXT,
+  phone          TEXT,
+  email          TEXT,
+  website        TEXT,
+  service_area   TEXT,
+  owner          TEXT NOT NULL DEFAULT 'both', -- 'adam' | 'mellissa' | 'both'
+  next_action    TEXT,
+  next_date      DATE,
+  notes          TEXT,
+  source         TEXT,                         -- how we found them / import batch
+  last_touch_at  TIMESTAMPTZ,                  -- set by the activity log
+  created_at     TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at     TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS partners_status_idx    ON partners (status);
+CREATE INDEX IF NOT EXISTS partners_owner_idx     ON partners (owner);
+CREATE INDEX IF NOT EXISTS partners_tier_idx      ON partners (tier);
+CREATE INDEX IF NOT EXISTS partners_category_idx  ON partners (category);
+CREATE INDEX IF NOT EXISTS partners_next_date_idx ON partners (next_date);
+-- Case-insensitive org lookup for import dedupe (by organization name).
+CREATE INDEX IF NOT EXISTS partners_org_idx       ON partners (lower(organization));
+
+-- Timeline of touches. Each row is one logged interaction. call_* are only set
+-- for calls; status_change records the status this touch moved the partner to
+-- (NULL when the touch left status alone), for an auditable history.
+CREATE TABLE IF NOT EXISTS partner_activities (
+  id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  partner_id    UUID NOT NULL REFERENCES partners (id) ON DELETE CASCADE,
+  type          TEXT NOT NULL DEFAULT 'call', -- call|email|text|visit|tour|materials|other
+  note          TEXT,
+  call_outcome  TEXT,                         -- connected|voicemail|no_answer|busy
+  call_duration TEXT,                         -- free text, e.g. "4 min"
+  status_change TEXT,                         -- new status if this touch changed it
+  logged_by     TEXT,                         -- admin email/name who logged it
+  logged_at     TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS partner_activities_partner_idx
+  ON partner_activities (partner_id, logged_at DESC);
+
+-- Personal reminders (nudges) on a partner. Distinct from next_action/next_date:
+-- a partner can have many open reminders. Checking one marks it done (kept, not
+-- deleted) so the history stays.
+CREATE TABLE IF NOT EXISTS partner_reminders (
+  id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  partner_id  UUID NOT NULL REFERENCES partners (id) ON DELETE CASCADE,
+  label       TEXT NOT NULL,
+  due_date    DATE,
+  done        BOOLEAN NOT NULL DEFAULT FALSE,
+  done_at     TIMESTAMPTZ,
+  created_by  TEXT,
+  created_at  TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS partner_reminders_partner_idx
+  ON partner_reminders (partner_id, done, due_date);
+
+-- Referrals a partner has actually sent us (outcomes tracked at the family level
+-- by an initials/label only, never a full name here).
+CREATE TABLE IF NOT EXISTS partner_referrals (
+  id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  partner_id   UUID NOT NULL REFERENCES partners (id) ON DELETE CASCADE,
+  occurred_on  DATE NOT NULL DEFAULT current_date,
+  family_label TEXT,
+  outcome      TEXT NOT NULL DEFAULT 'inquiry', -- inquiry|tour|admitted|not_a_fit
+  notes        TEXT,
+  created_at   TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS partner_referrals_partner_idx
+  ON partner_referrals (partner_id, occurred_on DESC);

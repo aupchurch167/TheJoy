@@ -76,6 +76,16 @@ const GROUPS: { label: string; items: NavItem[] }[] = [
         ),
       },
       {
+        href: "/admin/partners",
+        label: "Partners",
+        icon: icon(
+          <>
+            <rect x="4" y="3" width="16" height="18" rx="1.5" />
+            <path d="M9 7h2M13 7h2M9 11h2M13 11h2M9 15h2M13 15h2M10 21v-3h4v3" />
+          </>
+        ),
+      },
+      {
         href: "/admin/families",
         label: "Families",
         icon: icon(
@@ -214,12 +224,19 @@ function isActive(pathname: string, item: NavItem): boolean {
   );
 }
 
-export default function AdminNav({ email }: { email?: string | null }) {
+export default function AdminNav({
+  email,
+  partnersDue = 0,
+}: {
+  email?: string | null;
+  partnersDue?: number;
+}) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
 
   const renderItem = (item: NavItem) => {
     const active = isActive(pathname, item);
+    const showDue = item.href === "/admin/partners" && partnersDue > 0;
     return (
       <Link
         key={item.href}
@@ -234,7 +251,15 @@ export default function AdminNav({ email }: { email?: string | null }) {
         <span className={active ? "text-clay" : "text-ink-faint"}>
           {item.icon}
         </span>
-        {item.label}
+        <span className={showDue ? "flex-1" : undefined}>{item.label}</span>
+        {showDue && (
+          <span
+            className="inline-flex min-w-[22px] items-center justify-center rounded-full bg-gold/15 px-1.5 py-0.5 text-[11px] font-bold text-[#8a6217]"
+            title={`${partnersDue} due this week`}
+          >
+            {partnersDue}
+          </span>
+        )}
       </Link>
     );
   };
