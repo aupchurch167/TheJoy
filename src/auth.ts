@@ -1,17 +1,23 @@
 import NextAuth from "next-auth";
 import Google from "next-auth/providers/google";
+import Credentials from "next-auth/providers/credentials";
 import { isAllowedAdmin } from "@/lib/access";
+import { findAdminAccount, passwordLoginEnabled } from "@/lib/admin-credentials";
 
 /**
- * Auth.js (NextAuth v5). Admin sign-in is GOOGLE ONLY, restricted to verified
- * @joyseniorcare.com accounts (§1a), enforced server-side in the `signIn`
- * callback (never trust the Google `hd` hint). There is no password login.
+ * Auth.js (NextAuth v5). Admin sign-in accepts two methods, both restricted to
+ * verified @joyseniorcare.com admins (§1a), enforced server-side:
+ *   1. Google OAuth (never trust the Google `hd` hint), and
+ *   2. Username + password (Credentials), configured via ADMIN_LOGIN_USERS.
+ * Password accounts still resolve to an @joyseniorcare.com email that must pass
+ * isAllowedAdmin(), so password login never grants access OAuth would not.
  *
  * Env vars (set in Railway):
  *   AUTH_SECRET         random string (generate: `openssl rand -base64 32`)
  *   AUTH_URL            the live site URL (so redirects use the real domain)
- *   AUTH_GOOGLE_ID      Google OAuth client ID
- *   AUTH_GOOGLE_SECRET  Google OAuth client secret
+ *   AUTH_GOOGLE_ID      Google OAuth client ID       (optional; enables Google)
+ *   AUTH_GOOGLE_SECRET  Google OAuth client secret   (optional; enables Google)
+ *   ADMIN_LOGIN_USERS   username|password|email lines (optional; enables login)
  *   ADMIN_ALLOWLIST     (optional) comma-separated emails for tighter control
  *
  * The Google OAuth client's Authorized redirect URI must be
@@ -22,15 +28,39 @@ export function googleLoginEnabled(): boolean {
   return !!(process.env.AUTH_GOOGLE_ID && process.env.AUTH_GOOGLE_SECRET);
 }
 
-// Register Google only when its credentials are present: a half-configured
-// OAuth provider makes Auth.js throw a "server configuration" error on every
-// auth request. The login page checks googleLoginEnabled() before offering it.
+// Re-exported so the login page can decide whether to show the password form.
+export { passwordLoginEnabled };
+
+// Register each provider only when configured: a half-configured OAuth provider
+// makes Auth.js throw a "server configuration" error on every auth request.
 const providers = [];
 if (googleLoginEnabled()) {
   providers.push(
     Google({
       // Ask Google for a fresh account chooser each time.
       authorization: { params: { prompt: "select_account" } },
+    })
+  );
+}
+if (passwordLoginEnabled()) {
+  providers.push(
+    Credentials({
+      name: "Password",
+      credentials: {
+        username: { label: "Username", type: "text" },
+        password: { label: "Password", type: "password" },
+      },
+      // Returns a user only for a valid username+password whose email is an
+      // allowed admin. Returning null makes Auth.js reject the sign-in.
+      authorize: async (creds) => {
+        const account = await findAdminAccount(
+          typeof creds?.username === "string" ? creds.username : "",
+          typeof creds?.password === "string" ? creds.password : ""
+        );
+        if (!account) return null;
+        if (!isAllowedAdmin(account.email, true)) return null;
+        return { id: account.email, email: account.email, name: account.username };
+      },
     })
   );
 }
@@ -48,7 +78,12 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
      * The gate. Independently verify email_verified AND the joyseniorcare.com
      * domain (never the Google `hd` hint), plus the optional ADMIN_ALLOWLIST.
      */
-    async signIn({ profile }) {
+    async signIn({ profile, user, account }) {
+      // Password sign-in: authorize() already validated the credentials and the
+      // account's email. Re-assert the admin gate here as defense in depth.
+      if (account?.provider === "credentials") {
+        return isAllowedAdmin(user?.email, true);
+      }
       const email = profile?.email;
       // Google sends email_verified as a boolean, but coerce a string "true"
       // just in case, so a real verified account is never wrongly rejected.

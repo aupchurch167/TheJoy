@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
-import { auth, googleLoginEnabled } from "@/auth";
+import { auth, googleLoginEnabled, passwordLoginEnabled } from "@/auth";
 import { ALLOWED_DOMAIN, isAllowedAdmin } from "@/lib/access";
 import AdminSignInButton from "./AdminSignInButton";
+import CredentialsSignInForm from "./CredentialsSignInForm";
 
 export const dynamic = "force-dynamic";
 
@@ -23,6 +24,8 @@ export default async function AdminLoginPage({
 
   const { error } = await searchParams;
   const googleEnabled = googleLoginEnabled();
+  const passwordEnabled = passwordLoginEnabled();
+  const anyEnabled = googleEnabled || passwordEnabled;
 
   return (
     <div className="flex min-h-screen items-center justify-center px-5 py-16">
@@ -32,16 +35,15 @@ export default async function AdminLoginPage({
             <h1 className="font-display text-2xl font-semibold text-ink">
               Joy Admin
             </h1>
-            {googleEnabled ? (
+            {anyEnabled ? (
               <p className="mt-2 text-sm text-ink-soft">
-                Sign in with your <strong>@{ALLOWED_DOMAIN}</strong> Google
-                account.
+                Sign in to manage the site.
               </p>
             ) : (
               <p className="mt-2 text-sm text-ink-soft">
                 Sign-in is not set up yet. Set the Google OAuth env vars
-                (<code>AUTH_GOOGLE_ID</code>, <code>AUTH_GOOGLE_SECRET</code>) and
-                redeploy.
+                (<code>AUTH_GOOGLE_ID</code>, <code>AUTH_GOOGLE_SECRET</code>) or
+                a password account (<code>ADMIN_LOGIN_USERS</code>) and redeploy.
               </p>
             )}
           </div>
@@ -51,14 +53,28 @@ export default async function AdminLoginPage({
               role="alert"
               className="mt-6 rounded-lg border border-danger/30 bg-danger/10 px-4 py-3 text-sm text-danger"
             >
-              That account is not allowed. Only verified @{ALLOWED_DOMAIN}{" "}
-              Google accounts can sign in.
+              That sign-in did not work. Only verified @{ALLOWED_DOMAIN} admins
+              can sign in.
             </p>
           )}
 
           {googleEnabled && (
             <div className="mt-6 flex justify-center">
               <AdminSignInButton />
+            </div>
+          )}
+
+          {googleEnabled && passwordEnabled && (
+            <div className="my-6 flex items-center gap-3 text-xs text-ink-faint">
+              <span className="h-px flex-1 bg-line" />
+              or
+              <span className="h-px flex-1 bg-line" />
+            </div>
+          )}
+
+          {passwordEnabled && (
+            <div className={googleEnabled ? "" : "mt-6"}>
+              <CredentialsSignInForm />
             </div>
           )}
         </div>
