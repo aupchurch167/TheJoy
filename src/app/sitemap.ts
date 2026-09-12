@@ -24,6 +24,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     })),
     { url: `${SITE_URL}/blog`, changeFrequency: "weekly", priority: 0.6 },
     { url: `${SITE_URL}/gallery`, changeFrequency: "monthly", priority: 0.4 },
+    { url: `${SITE_URL}/partners`, changeFrequency: "monthly", priority: 0.5 },
   ];
 
   // Memory care landing page (gated on the license, §4).

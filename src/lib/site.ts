@@ -24,6 +24,9 @@ export const BUSINESS = {
   descriptor: "Senior living and memory care (personal care home) in Loganville, GA.",
   phone: "(470) 684-3569",
   phoneHref: "tel:+14706843569",
+  // Secure fax for clinical referrals (hospital case managers, home health).
+  fax: "(404) 393-6689",
+  faxHref: "tel:+14043936689",
   email: "hello@joyseniorcare.com",
   emailHref: "mailto:hello@joyseniorcare.com",
   // VERIFY against the Google listing before launch (see OPERATIONS.md checklist).

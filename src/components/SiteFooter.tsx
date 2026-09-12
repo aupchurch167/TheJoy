@@ -101,6 +101,11 @@ export default async function SiteFooter() {
                 Photos
               </Link>
             </li>
+            <li>
+              <Link href="/partners" className="hover:text-clay">
+                For professionals
+              </Link>
+            </li>
             {settings.careers_url && (
               <li>
                 <a
