@@ -134,6 +134,12 @@ body {
 .admin-slide-in {
   animation: admin-slide-in 0.2s ease-out;
 }
+/* Placeholder for the empty rich-text notes editor (contentEditable). */
+.rte-content:empty:before {
+  content: attr(data-placeholder);
+  color: var(--ink-faint);
+  pointer-events: none;
+}
 
 /* Horizontal filter-pill rows on mobile: swipe, no visible scrollbar. */
 .admin-scroll-x {

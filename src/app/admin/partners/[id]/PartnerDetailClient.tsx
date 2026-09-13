@@ -8,11 +8,11 @@ import {
   Card,
   SectionLabel,
   Input,
-  Textarea,
   Select,
   Badge,
 } from "@/components/admin/ui";
 import ConfirmButton from "@/components/admin/ConfirmButton";
+import RichTextEditor from "@/components/admin/RichTextEditor";
 import { useToast } from "@/components/admin/Toast";
 import {
   StatusPill,
@@ -477,13 +477,13 @@ function NotesCard({
           {pending ? "Saving…" : "Save notes"}
         </Button>
       </div>
-      <Textarea
-        rows={6}
-        className="mt-3"
-        value={value}
-        onChange={(e) => setValue(e.target.value)}
-        placeholder="Context worth keeping: who to ask for, what they care about, how past conversations went."
-      />
+      <div className="mt-3">
+        <RichTextEditor
+          value={value}
+          onChange={setValue}
+          placeholder="Context worth keeping: who to ask for, what they care about, how past conversations went. Use the toolbar to add headings, bold, or a list."
+        />
+      </div>
     </Card>
   );
 }

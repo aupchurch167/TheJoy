@@ -26,6 +26,13 @@ import {
   formatWeekdayShort,
 } from "@/lib/partners-vocab";
 import { parsePartnersCsv } from "@/lib/partners-import";
+import { sanitizeNotesHtml, isEmptyHtml } from "@/lib/sanitize-html";
+
+/** Sanitize rich-text notes to safe HTML; empty content becomes null. */
+function cleanNotes(v: string | null | undefined): string | null {
+  const s = sanitizeNotesHtml(v);
+  return isEmptyHtml(s) ? null : s;
+}
 
 // Literal-preserving enums (keeps PartnerStatus/Tier/Owner unions downstream).
 const statusEnum = z.enum(PARTNER_STATUSES);
@@ -52,7 +59,7 @@ const PartnerSchema = z.object({
   owner: ownerEnum.default("both"),
   next_action: z.preprocess(emptyToNull, z.string().trim().max(300).nullable().default(null)),
   next_date: z.preprocess(emptyToNull, z.string().trim().max(30).nullable().default(null)),
-  notes: z.preprocess(emptyToNull, z.string().trim().max(4000).nullable().default(null)),
+  notes: z.preprocess(emptyToNull, z.string().trim().max(20000).nullable().default(null)),
 });
 
 export type PartnerActionResult =
@@ -67,7 +74,10 @@ export async function createPartner(input: unknown): Promise<PartnerActionResult
   try {
     if (await partnerOrgExists(parsed.data.organization))
       return { ok: false, error: "A partner with that organization already exists." };
-    const p = await insertPartner(parsed.data);
+    const p = await insertPartner({
+      ...parsed.data,
+      notes: cleanNotes(parsed.data.notes),
+    });
     revalidatePath("/admin/partners");
     return { ok: true, id: p.id };
   } catch (err) {
@@ -83,7 +93,7 @@ export async function updatePartnerAction(input: unknown): Promise<PartnerAction
     return { ok: false, error: parsed.error.issues[0]?.message ?? "Invalid." };
   const { id, ...fields } = parsed.data;
   try {
-    await updatePartner(id, fields);
+    await updatePartner(id, { ...fields, notes: cleanNotes(fields.notes) });
     revalidatePath("/admin/partners");
     revalidatePath(`/admin/partners/${id}`);
     return { ok: true, id };
@@ -157,7 +167,7 @@ const PatchSchema = z.object({
   status: statusEnum.optional(),
   next_action: z.preprocess(emptyToNull, z.string().trim().max(300).nullable()).optional(),
   next_date: z.preprocess(emptyToNull, z.string().trim().max(30).nullable()).optional(),
-  notes: z.preprocess(emptyToNull, z.string().trim().max(4000).nullable()).optional(),
+  notes: z.preprocess(emptyToNull, z.string().trim().max(20000).nullable()).optional(),
 });
 
 export async function patchPartnerField(input: unknown): Promise<PartnerActionResult> {
@@ -166,6 +176,7 @@ export async function patchPartnerField(input: unknown): Promise<PartnerActionRe
   if (!parsed.success)
     return { ok: false, error: parsed.error.issues[0]?.message ?? "Invalid." };
   const { id, ...fields } = parsed.data;
+  if ("notes" in fields) fields.notes = cleanNotes(fields.notes);
   try {
     await patchPartner(id, fields);
     revalidatePath("/admin/partners");
