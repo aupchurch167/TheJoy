@@ -3,9 +3,27 @@ import { BUSINESS, OG_IMAGE } from "@/lib/site";
 import { breadcrumbJsonLd } from "@/lib/schema";
 import JsonLd from "@/components/JsonLd";
 import { reviewQuotes, REVIEW_BADGES, REVIEW_LINKS } from "@/lib/landing";
+import { hasDatabase } from "@/lib/db";
+import {
+  listPublishedReviews,
+  listReviewSources,
+  REVIEW_SOURCE_LABEL,
+  type Review,
+} from "@/lib/reviews";
 import CtaBand from "@/components/landing/CtaBand";
 import ProofPulse from "@/components/landing/ProofPulse";
 import FamilyQuote from "@/components/landing/FamilyQuote";
+
+export const dynamic = "force-dynamic";
+
+/** "Karen, Google" / "A family, A Place for Mom" from a published review. */
+function reviewWho(r: Review): string {
+  const src = REVIEW_SOURCE_LABEL[r.source];
+  const name = r.author?.trim();
+  if (name && src) return `${name}, ${src}`;
+  if (name) return name;
+  return src ? `A family, ${src}` : "A family";
+}
 
 export const metadata: Metadata = {
   title: {
@@ -23,8 +41,44 @@ export const metadata: Metadata = {
   },
 };
 
-export default function ReviewsPage() {
-  const quotes = reviewQuotes();
+export default async function ReviewsPage() {
+  // Start from the curated code content, then prefer live DB data where present.
+  let badges: { label: string; value: string }[] = REVIEW_BADGES;
+  let links: { label: string; href: string }[] = REVIEW_LINKS;
+  let quotes: { quote: string; who: string; align: "start" | "end" }[] =
+    reviewQuotes();
+
+  if (hasDatabase()) {
+    try {
+      const [published, sources] = await Promise.all([
+        listPublishedReviews(),
+        listReviewSources(true),
+      ]);
+
+      const dbBadges = sources
+        .filter((s) => s.rating_value || s.badge_label)
+        .map((s) => ({ label: s.label, value: (s.rating_value || s.badge_label)! }));
+      if (dbBadges.length) badges = dbBadges;
+
+      const dbLinks = sources
+        .filter((s) => s.profile_url)
+        .map((s) => ({ label: `${s.label} profile`, href: s.profile_url! }));
+      if (dbLinks.length) links = dbLinks;
+
+      if (published.length) {
+        const merged = [
+          ...reviewQuotes().map((q) => ({ quote: q.quote, who: q.who })),
+          ...published.map((r) => ({ quote: r.body, who: reviewWho(r) })),
+        ];
+        quotes = merged.map((q, i) => ({
+          ...q,
+          align: (i % 2 ? "end" : "start") as "start" | "end",
+        }));
+      }
+    } catch {
+      // Fall back to the curated code content if the DB is briefly unavailable.
+    }
+  }
 
   return (
     <>
@@ -40,7 +94,7 @@ export default function ReviewsPage() {
           What families say when we&rsquo;re not in the room.
         </h1>
         <div className="mt-8 flex flex-wrap gap-2.5">
-          {REVIEW_BADGES.map((b) => (
+          {badges.map((b) => (
             <span
               key={b.label}
               className="inline-flex items-center gap-2 rounded-full border border-line bg-surface px-3.5 py-1.5 text-sm"
@@ -70,7 +124,7 @@ export default function ReviewsPage() {
           them where they were posted:
         </p>
         <div className="mt-5 divide-y divide-line border-y border-line">
-          {REVIEW_LINKS.map((l) => (
+          {links.map((l) => (
             <a
               key={l.label}
               href={l.href}

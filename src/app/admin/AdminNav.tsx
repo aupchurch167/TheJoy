@@ -210,6 +210,13 @@ const GROUPS: { label: string; items: NavItem[] }[] = [
           </>
         ),
       },
+      {
+        href: "/admin/reviews",
+        label: "Reviews",
+        icon: icon(
+          <path d="M12 17.3 6.2 20l1.1-6.4-4.7-4.5 6.5-.9L12 2.5l2.9 5.7 6.5.9-4.7 4.5 1.1 6.4z" />
+        ),
+      },
     ],
   },
 ];

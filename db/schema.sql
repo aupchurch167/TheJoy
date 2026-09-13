@@ -757,3 +757,48 @@ CREATE TABLE IF NOT EXISTS partner_referrals (
 
 CREATE INDEX IF NOT EXISTS partner_referrals_partner_idx
   ON partner_referrals (partner_id, occurred_on DESC);
+
+-- ============================================================================
+-- Reviews ingest (Partners/integrations). An external agent (e.g. GrokBot) can
+-- POST reviews and profile data via /api/integrations/reviews using a scoped
+-- API key. Everything lands as 'pending' and is only shown publicly once an
+-- admin approves it (never auto-publish; §4 no-fabrication safeguard).
+-- ============================================================================
+
+-- One review from an external platform (Google, A Place for Mom, Caring.com...).
+CREATE TABLE IF NOT EXISTS reviews (
+  id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  source       TEXT NOT NULL DEFAULT 'other',   -- google|apfm|caring|other
+  external_id  TEXT,                             -- platform review id (dedupe)
+  author       TEXT,                             -- reviewer display name
+  rating       NUMERIC(2,1),                     -- 0.0 - 5.0 (nullable)
+  body         TEXT NOT NULL,
+  review_date  DATE,
+  url          TEXT,                             -- link to the review
+  status       TEXT NOT NULL DEFAULT 'pending',  -- pending|published|hidden
+  featured     BOOLEAN NOT NULL DEFAULT FALSE,   -- surface on the homepage wall
+  submitted_by TEXT,                             -- api key label, or 'admin'
+  created_at   TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at   TIMESTAMPTZ NOT NULL DEFAULT now(),
+  published_at TIMESTAMPTZ
+);
+
+-- Dedupe re-submissions of the same platform review (only when an id is given).
+CREATE UNIQUE INDEX IF NOT EXISTS reviews_source_extid_uidx
+  ON reviews (source, external_id)
+  WHERE external_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS reviews_status_idx ON reviews (status);
+CREATE INDEX IF NOT EXISTS reviews_pub_idx
+  ON reviews (status, review_date DESC) WHERE status = 'published';
+
+-- Per-platform profile: the "read them in full" link plus the badge/rating chip
+-- shown on /reviews. Editable by admins; can be populated via the same ingest.
+CREATE TABLE IF NOT EXISTS review_sources (
+  source       TEXT PRIMARY KEY,                 -- google|apfm|caring|...
+  label        TEXT NOT NULL,                    -- display label
+  profile_url  TEXT,
+  rating_value TEXT,                             -- display string, e.g. "4.9"
+  badge_label  TEXT,                             -- e.g. "Best of Senior Living"
+  enabled      BOOLEAN NOT NULL DEFAULT TRUE,
+  updated_at   TIMESTAMPTZ NOT NULL DEFAULT now()
+);
