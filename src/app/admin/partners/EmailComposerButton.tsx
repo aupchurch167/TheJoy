@@ -8,6 +8,10 @@ import SlideOver from "./SlideOver";
 import { sendPartnerEmailAction } from "./actions";
 import type { Partner } from "@/lib/partners";
 import { BUSINESS } from "@/lib/site";
+import {
+  PARTNER_EMAIL_TEMPLATES,
+  applyTemplateTokens,
+} from "@/lib/partner-email-templates";
 
 type Attachment = { filename: string; content: string; size: number };
 
@@ -59,8 +63,29 @@ export default function EmailComposerButton({ partner }: { partner: Partner }) {
     ].join("\n")
   );
   const [attachments, setAttachments] = useState<Attachment[]>([]);
+  const [templateId, setTemplateId] = useState("");
 
   const disabledTrigger = !partner.email;
+
+  // Group templates by category for the picker's optgroups.
+  const templateGroups = PARTNER_EMAIL_TEMPLATES.reduce<
+    Record<string, typeof PARTNER_EMAIL_TEMPLATES>
+  >((acc, t) => {
+    (acc[t.category] ??= []).push(t);
+    return acc;
+  }, {});
+
+  function loadTemplate(id: string) {
+    setTemplateId(id);
+    const t = PARTNER_EMAIL_TEMPLATES.find((x) => x.id === id);
+    if (!t) return;
+    const ctx = {
+      contactName: partner.contact_name,
+      organization: partner.organization,
+    };
+    setSubject(applyTemplateTokens(t.subject, ctx));
+    setBody(applyTemplateTokens(t.body, ctx));
+  }
 
   async function onPickFiles(e: React.ChangeEvent<HTMLInputElement>) {
     const files = Array.from(e.target.files ?? []);
@@ -146,6 +171,28 @@ export default function EmailComposerButton({ partner }: { partner: Partner }) {
         }
       >
         <div className="space-y-5">
+          <Field
+            label="Start from a template"
+            hint="Fills the subject and message. Complete any [BRACKETS] before sending."
+          >
+            <select
+              value={templateId}
+              onChange={(e) => loadTemplate(e.target.value)}
+              className="h-11 w-full rounded-lg border border-line bg-white px-3 pr-8 text-sm text-ink focus:border-clay focus:outline-none focus:ring-2 focus:ring-clay/30"
+            >
+              <option value="">Blank / keep current draft</option>
+              {Object.entries(templateGroups).map(([category, list]) => (
+                <optgroup key={category} label={category}>
+                  {list.map((t) => (
+                    <option key={t.id} value={t.id}>
+                      {t.name}
+                    </option>
+                  ))}
+                </optgroup>
+              ))}
+            </select>
+          </Field>
+
           <Field label="To">
             <div className="flex items-center gap-2 rounded-lg border border-line bg-surface px-3 py-2 text-sm text-ink">
               <span className="font-medium">
