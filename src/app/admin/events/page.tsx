@@ -56,6 +56,7 @@ export default async function EventsPage() {
       when: formatEventWhen(ev.starts_at),
       where: ev.location ?? "",
       isPotluck: ev.is_potluck,
+      eventType: ev.event_type,
       headcount: c.headcount,
       yes: c.yes,
       capacity: ev.capacity ?? 0,

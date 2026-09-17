@@ -30,6 +30,9 @@ const EventSchema = z.object({
   endsAt: z.string().trim().optional().default(""),
   capacity: z.coerce.number().int().min(0).max(100000).optional(),
   status: z.enum(["draft", "published", "cancelled"]).default("draft"),
+  eventType: z
+    .enum(["friends_family", "community", "public", "staff", "other"])
+    .default("friends_family"),
   theme: z.enum(["classic", "festive", "seasonal", "garden", "elegant"]).default("classic"),
   isPotluck: z.boolean().optional().default(false),
   potluckAsk: z.string().trim().max(300).optional().default(""),
@@ -56,6 +59,7 @@ export async function saveEvent(input: unknown): Promise<EventSaveResult> {
     endsAt: etWallToInstant(d.endsAt),
     capacity: d.capacity ?? null,
     status: d.status,
+    eventType: d.eventType,
     theme: d.theme,
     isPotluck: d.isPotluck,
     potluckAsk: d.isPotluck ? d.potluckAsk : null,

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { eventTypeLabel } from "@/lib/event-types";
 
 export type EventListItem = {
   id: string;
@@ -13,6 +14,7 @@ export type EventListItem = {
   when: string;
   where: string;
   isPotluck: boolean;
+  eventType: string;
   headcount: number;
   yes: number;
   capacity: number;
@@ -198,7 +200,10 @@ function UpcomingCard({ e }: { e: EventListItem }) {
             )}
           </div>
           <div className="mt-0.5 truncate text-xs text-ink-faint">
-            {e.when}
+            <span className="font-medium text-ink-soft">
+              {eventTypeLabel(e.eventType)}
+            </span>
+            {` · ${e.when}`}
             {e.where ? ` · ${e.where}` : ""}
           </div>
           {isDraft && (

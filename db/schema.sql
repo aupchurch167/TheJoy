@@ -667,6 +667,10 @@ ALTER TABLE events ADD COLUMN IF NOT EXISTS body_heading   TEXT;
 ALTER TABLE events ADD COLUMN IF NOT EXISTS what_to_expect TEXT;
 ALTER TABLE events ADD COLUMN IF NOT EXISTS closing_note   TEXT;
 
+-- Event category (who it's for): friends_family | community | public | staff | other.
+ALTER TABLE events
+  ADD COLUMN IF NOT EXISTS event_type TEXT NOT NULL DEFAULT 'friends_family';
+
 -- ============================================================================
 -- Partners CRM (referral-source outreach). Separate from leads (family
 -- inquiries) and families (current residents). Adam + Mellissa track hospitals,

@@ -9,6 +9,11 @@ import Markdown from "@/components/Markdown";
 import { useToast } from "@/components/admin/Toast";
 import { saveEvent, removeRsvp, createEventEmailDraft } from "./actions";
 import type { EventRow, EventRsvp, RsvpCounts } from "@/lib/events";
+import {
+  EVENT_TYPES,
+  DEFAULT_EVENT_TYPE,
+  type EventType,
+} from "@/lib/event-types";
 import { toEtLocalInput } from "@/lib/event-time";
 import {
   EVENT_THEMES,
@@ -109,6 +114,9 @@ export default function EventStudio({
   );
   const [isPotluck, setIsPotluck] = useState(event?.is_potluck ?? false);
   const [potluckAsk, setPotluckAsk] = useState(event?.potluck_ask ?? "");
+  const [eventType, setEventType] = useState<EventType>(
+    (event?.event_type as EventType) || DEFAULT_EVENT_TYPE
+  );
 
   const [copied, setCopied] = useState(false);
   const [saving, start] = useTransition();
@@ -130,6 +138,7 @@ export default function EventStudio({
       endsAt: endsLocal,
       capacity: capacity === "" ? undefined : Number(capacity),
       status,
+      eventType,
       theme,
       isPotluck,
       potluckAsk,
@@ -330,6 +339,20 @@ export default function EventStudio({
                     value={location}
                     onChange={(e) => setLocation(e.target.value)}
                   />
+                </label>
+                <label className="mb-3 block">
+                  <span className={FIELD_LABEL}>Who it&rsquo;s for</span>
+                  <select
+                    className={FIELD}
+                    value={eventType}
+                    onChange={(e) => setEventType(e.target.value as EventType)}
+                  >
+                    {EVENT_TYPES.map((t) => (
+                      <option key={t.value} value={t.value}>
+                        {t.label}
+                      </option>
+                    ))}
+                  </select>
                 </label>
                 <label className="mb-3 block">
                   <span className={FIELD_LABEL}>Room for (optional)</span>
