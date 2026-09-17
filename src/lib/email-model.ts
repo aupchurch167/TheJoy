@@ -72,8 +72,13 @@ export type EmailModel = {
   rsvpUrl?: string | null;
   /** Photo-hero image URL (photo theme). */
   photoUrl?: string | null;
-  /** A photo shown inside the message body (any theme). */
+  /**
+   * A single photo shown inside the message body (any theme). Legacy: kept so
+   * older drafts render. New drafts use `bodyPhotoUrls` (one or many).
+   */
   bodyPhotoUrl?: string | null;
+  /** One or more photos shown inside the message body (any theme). */
+  bodyPhotoUrls?: (string | null)[] | null;
   /** Multi-line closing / sign-off (use \n for line breaks). */
   closing: string;
 };
@@ -185,6 +190,30 @@ function nl2br(s: string): string {
 const CONFETTI = `<div style="text-align:center;padding:14px 0 8px;letter-spacing:6px;font-size:15px;line-height:1"><span style="color:#e85d75">●</span><span style="color:#f7b32b">◆</span><span style="color:#4ea5a2">●</span><span style="color:#9b6bc9">▲</span><span style="color:#e85d75">◆</span><span style="color:#f7b32b">●</span><span style="color:#4ea5a2">▲</span></div>`;
 const BUNTING = `<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin-top:0"><tbody><tr><td height="7" width="20%" style="background:#f7b32b;font-size:1px;line-height:1px">&nbsp;</td><td height="7" width="20%" style="background:#4ea5a2;font-size:1px;line-height:1px">&nbsp;</td><td height="7" width="20%" style="background:#9b6bc9;font-size:1px;line-height:1px">&nbsp;</td><td height="7" width="20%" style="background:#f7b32b;font-size:1px;line-height:1px">&nbsp;</td><td height="7" width="20%" style="background:#4ea5a2;font-size:1px;line-height:1px">&nbsp;</td></tr></tbody></table>`;
 
+/**
+ * Render in-body photos as an email-safe block: one photo full width, two or
+ * more in a 2-per-row table (each cell 50%). Returns "" when there are none.
+ */
+function renderGallery(photos: string[]): string {
+  if (photos.length === 0) return "";
+  if (photos.length === 1) {
+    return `<tr><td style="padding:16px 26px 0"><img src="${esc(
+      photos[0]
+    )}" width="100%" alt="" style="display:block;width:100%;max-width:100%;height:auto;border:0;border-radius:10px"></td></tr>`;
+  }
+  const cell = (u: string | undefined, side: "l" | "r") =>
+    u
+      ? `<td width="50%" valign="top" style="padding:0 ${side === "l" ? "4px" : "0"} 8px ${side === "l" ? "0" : "4px"}"><img src="${esc(
+          u
+        )}" width="100%" alt="" style="display:block;width:100%;max-width:100%;height:auto;border:0;border-radius:10px"></td>`
+      : `<td width="50%" style="padding:0 0 8px"></td>`;
+  let rows = "";
+  for (let i = 0; i < photos.length; i += 2) {
+    rows += `<tr>${cell(photos[i], "l")}${cell(photos[i + 1], "r")}</tr>`;
+  }
+  return `<tr><td style="padding:16px 26px 0"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tbody>${rows}</tbody></table></td></tr>`;
+}
+
 /** Render the structured model to a complete standalone HTML email. */
 export function renderEmailModel(model: EmailModel): string {
   const p = palette(model.theme);
@@ -233,10 +262,16 @@ ${model.plan.treats ? `🍦 <strong style="color:${p.a3}">Treats:</strong> ${esc
     ? `<div style="text-align:center;margin-top:20px"><table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 auto"><tbody><tr><td align="center" style="background:${p.a1};border-radius:8px"><a href="${esc(ctaUrl)}" style="display:inline-block;padding:13px 32px;font-family:Arial,Helvetica,sans-serif;font-size:15px;font-weight:bold;color:#ffffff;text-decoration:none">${esc(ctaLabel)}</a></td></tr></tbody></table></div>`
     : "";
 
-  // Optional in-body photo (any theme), shown between the message and the details.
-  const bodyPhoto = model.bodyPhotoUrl
-    ? `<tr><td style="padding:16px 26px 0"><img src="${esc(model.bodyPhotoUrl)}" width="100%" alt="" style="display:block;width:100%;max-width:100%;height:auto;border:0;border-radius:10px"></td></tr>`
-    : "";
+  // Optional in-body photos (any theme), shown between the message and details.
+  // Prefer the new list; fall back to the single legacy field.
+  const galleryPhotos = (
+    model.bodyPhotoUrls && model.bodyPhotoUrls.length
+      ? model.bodyPhotoUrls
+      : [model.bodyPhotoUrl]
+  )
+    .map((u) => (u ?? "").trim())
+    .filter(Boolean);
+  const bodyPhoto = renderGallery(galleryPhotos);
 
   return `<!DOCTYPE html>
 <html lang="en"><head>

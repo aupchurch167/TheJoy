@@ -10,6 +10,7 @@ import {
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import PhotoInput from "@/components/admin/PhotoInput";
+import MessagePhotos from "./MessagePhotos";
 import {
   saveStudioDraft,
   sendStudioOrSchedule,
@@ -242,6 +243,15 @@ export default function EmailStudio({
   const previewHtml = useMemo(() => renderEmailModel(model), [model]);
 
   const patch = (p: Partial<EmailModel>) => setModel((m) => ({ ...m, ...p }));
+
+  // In-body photos: prefer the new list, fall back to the legacy single field.
+  const bodyPhotos = (
+    model.bodyPhotoUrls && model.bodyPhotoUrls.length
+      ? model.bodyPhotoUrls
+      : model.bodyPhotoUrl
+        ? [model.bodyPhotoUrl]
+        : []
+  ).filter((u): u is string => !!u);
   const patchPlan = (p: Partial<NonNullable<EmailModel["plan"]>>) =>
     setModel((m) => ({ ...m, plan: { ...(m.plan ?? {}), ...p } }));
   const patchCta = (p: Partial<NonNullable<EmailModel["cta"]>>) =>
@@ -908,17 +918,12 @@ export default function EmailStudio({
                           )}
                         </div>
 
-                        {/* Photo in the message body */}
-                        <PhotoInput
-                          label="Photo in the message"
-                          url={model.bodyPhotoUrl ?? null}
-                          onUrl={(u) => patch({ bodyPhotoUrl: u })}
-                          allowFree
-                          aspectOptions={[
-                            { label: "Wide", value: 16 / 9 },
-                            { label: "Square", value: 1 },
-                          ]}
-                          filename="email-photo"
+                        {/* Photos in the message body (one or many) */}
+                        <MessagePhotos
+                          urls={bodyPhotos}
+                          onChange={(next) =>
+                            patch({ bodyPhotoUrls: next, bodyPhotoUrl: null })
+                          }
                         />
 
                         <div className="mt-3">

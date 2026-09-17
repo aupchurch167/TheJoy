@@ -407,6 +407,11 @@ const ModelSchema = z.object({
   rsvpUrl: z.string().trim().max(500).nullable().optional(),
   photoUrl: z.string().trim().max(1000).nullable().optional(),
   bodyPhotoUrl: z.string().trim().max(1000).nullable().optional(),
+  bodyPhotoUrls: z
+    .array(z.string().trim().max(1000).nullable())
+    .max(12)
+    .nullable()
+    .optional(),
   closing: z.string().max(2000).default(""),
 });
 
