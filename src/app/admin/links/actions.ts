@@ -3,32 +3,44 @@
 import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/require-admin";
 import {
-  saveLinkInBio,
+  saveLinkInBioV2,
   resetLinkInBio,
-  validateLinkInBio,
-  linkInBioDefaults,
-  type LinkInBioContent,
+  validateLinkInBioV2,
+  linkInBioV2Defaults,
+  LINKINBIO_TOUR_HREF,
+  type LinkInBioContentV2,
 } from "@/lib/linkinbio";
 
 export type LinkInBioResult =
-  | { ok: true; message: string; content: LinkInBioContent }
+  | { ok: true; message: string; content: LinkInBioContentV2 }
   | { ok: false; error: string };
 
+/** Coerce the tour-pinned link back to /tour before saving (defense in depth). */
+function pinTour(content: LinkInBioContentV2): LinkInBioContentV2 {
+  return {
+    ...content,
+    blocks: content.blocks.map((b) =>
+      b.type === "link" && b.pinned === "tour"
+        ? { ...b, url: LINKINBIO_TOUR_HREF }
+        : b
+    ),
+  };
+}
+
 export async function saveLinkInBioContent(
-  content: LinkInBioContent
+  content: LinkInBioContentV2
 ): Promise<LinkInBioResult> {
   await requireAdmin();
-
-  const err = validateLinkInBio(content);
+  const pinned = pinTour(content);
+  const err = validateLinkInBioV2(pinned);
   if (err) return { ok: false, error: err };
-
   try {
-    await saveLinkInBio(content);
+    await saveLinkInBioV2(pinned);
     revalidatePath("/links");
     return {
       ok: true,
       message: "Saved. The links page updates within a moment.",
-      content,
+      content: pinned,
     };
   } catch (e) {
     console.error("[saveLinkInBioContent]", e);
@@ -44,7 +56,7 @@ export async function resetLinkInBioContent(): Promise<LinkInBioResult> {
     return {
       ok: true,
       message: "Reset to the shipped defaults.",
-      content: linkInBioDefaults(),
+      content: linkInBioV2Defaults(),
     };
   } catch (e) {
     console.error("[resetLinkInBioContent]", e);

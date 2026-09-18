@@ -1,6 +1,6 @@
 import { requireAdmin } from "@/lib/require-admin";
 import { hasDatabase } from "@/lib/db";
-import { getLinkInBio } from "@/lib/linkinbio";
+import { getLinkInBio, getClickCounts } from "@/lib/linkinbio";
 import LinkInBioForm from "./LinkInBioForm";
 import { PageHeader, ButtonLink, NotConnected } from "@/components/admin/ui";
 
@@ -18,13 +18,13 @@ export default async function AdminLinksPage() {
     );
   }
 
-  const content = await getLinkInBio();
+  const [content, clicks] = await Promise.all([getLinkInBio(), getClickCounts()]);
 
   return (
-    <div className="max-w-2xl">
+    <div className="max-w-5xl">
       <PageHeader
         title="Link in bio"
-        description="The page your Instagram and Facebook bio links point to (joyseniorcare.com/links). Edit the links and one-line notes here. Changes show on the page within a moment."
+        description="The page your Instagram and Facebook bio links point to (joyseniorcare.com/links). Reorder, style and schedule blocks below. The preview updates as you go."
         actions={
           <ButtonLink
             href="/links"
@@ -36,7 +36,7 @@ export default async function AdminLinksPage() {
           </ButtonLink>
         }
       />
-      <LinkInBioForm initial={content} />
+      <LinkInBioForm initial={content} clicks={clicks} />
     </div>
   );
 }

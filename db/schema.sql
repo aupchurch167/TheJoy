@@ -806,3 +806,11 @@ CREATE TABLE IF NOT EXISTS review_sources (
   enabled      BOOLEAN NOT NULL DEFAULT TRUE,
   updated_at   TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+
+-- Link-in-bio click-through counts (per block id). Incremented server-side by
+-- the /l/[id] redirect so counts can't be spoofed from the client.
+CREATE TABLE IF NOT EXISTS link_clicks (
+  block_id   TEXT PRIMARY KEY,
+  clicks     INTEGER NOT NULL DEFAULT 0,
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);

@@ -1,261 +1,226 @@
 import { cache } from "react";
 import { hasDatabase, query } from "./db";
-import { BUSINESS, BUSINESS_ADDRESS_ONE_LINE } from "./site";
-import { toTelHref } from "./settings";
+import {
+  linkInBioV2Defaults,
+  newLinkBlock,
+  type Block,
+  type LinkBlock,
+  type LinkInBioContentV2,
+} from "./linkinbio-shared";
 
 /**
- * Link-in-bio page content (the Instagram/Facebook bio landing page at /links,
- * edited from /admin/links). Stored as one JSON blob in site_settings under a
- * single key, so staff can edit links and one-line notes without a developer.
- *
- * Two project rules override the design handoff and are enforced here:
- *  - ONE tour path (AGENTS.md): the "Book a tour" button always routes to the
- *    canonical /tour page (which houses the single TalkFurther button). The
- *    tour destination is NOT an editable field, so a second tour link can't
- *    drift in. The button label stays editable.
- *  - Voice + compliance (§2/§4): every editable string is linted on save (no
- *    "assisted living", no em-dashes, no banned words). The license line in the
- *    footer is fixed and never editable.
+ * Server half of the link-in-bio v2 feature. Reads/saves the block list from
+ * site_settings and counts click-throughs. The pure types/factories/validation
+ * live in linkinbio-shared.ts (re-exported here); v1->v2 migration is below.
  */
 
-export const LINKINBIO_KEY = "linkinbio_content";
-
-export type LinkRow = { label: string; note: string; href: string };
-
-export type LinkInBioContent = {
-  siteLabel: string;
-  siteHref: string;
-  tourLabel: string;
-  callLabel: string;
-  callHref: string;
-  dirLabel: string;
-  dirHref: string;
-  /** Optional candid photo. Empty ships the page WITHOUT a photo (never stock). */
-  photoUrl: string;
-  photoCaption: string;
-  trust: LinkRow[]; // capped at 3
-  community: LinkRow[]; // capped at 2
-  /** Latest-post preview card. */
-  showBlog: boolean;
-  blogHeading: string;
-  /** Quick lead form at the bottom. */
-  showForm: boolean;
-  formHeading: string;
-  formBlurb: string;
-  footAddress: string;
-  footPhone: string;
-};
-
-/** The canonical, non-editable tour destination (the site's one tour path). */
-export const LINKINBIO_TOUR_HREF = "/tour";
-
-/** The fixed regulatory line in the footer (never editable). */
-export const LINKINBIO_LICENSE_LINE =
-  "Licensed personal care home, State of Georgia.";
-
-const mapsHref = `https://maps.google.com/?q=${encodeURIComponent(
-  BUSINESS_ADDRESS_ONE_LINE
-)}`;
-
-export function linkInBioDefaults(): LinkInBioContent {
-  return {
-    siteLabel: "Learn more about Joy",
-    siteHref: "https://www.joyseniorcare.com",
-    tourLabel: "Book a tour",
-    callLabel: `Call us: ${BUSINESS.phone}`,
-    callHref: toTelHref(BUSINESS.phone),
-    dirLabel: "Get directions",
-    dirHref: mapsHref,
-    photoUrl: "",
-    photoCaption: "late light on the front porch",
-    trust: [
-      {
-        label: "Meet Mellissa and our team",
-        note: "2026 Best of Senior Living Award",
-        href: "/about",
-      },
-      {
-        label: "Read our latest post",
-        note: "Stories from the house",
-        href: "/blog",
-      },
-      {
-        label: "Read our Google reviews",
-        note: "See what families say",
-        href: "/reviews",
-      },
-    ],
-    community: [
-      // Caregiver support group: no page yet, so its link is blank by default
-      // and the row is hidden until a real destination is added (no fake links).
-      {
-        label: "Caregiver support group",
-        note: "Free. Monthly. Open to the community.",
-        href: "",
-      },
-      { label: "Careers at Joy", note: "", href: "" },
-    ],
-    showBlog: true,
-    blogHeading: "From the blog",
-    showForm: true,
-    formHeading: "Have a question?",
-    formBlurb:
-      "Send a short note and Mellissa will get back to you. Or call anytime.",
-    footAddress: BUSINESS_ADDRESS_ONE_LINE,
-    footPhone: BUSINESS.phone,
-  };
+/** Build a link block from partial fields. */
+function newLinkFrom(over: Partial<LinkBlock>): LinkBlock {
+  return { ...newLinkBlock(), ...over };
 }
 
-/** Domain chip: the URL's hostname with a leading www. stripped. */
-export function deriveDomain(href: string): string {
+export * from "./linkinbio-shared";
+
+/** New storage key for the v2 block model. */
+export const LINKINBIO_V2_KEY = "linkinbio_blocks_v2";
+/** Legacy key (v1 fixed-shape content), migrated on read. */
+export const LINKINBIO_V1_KEY = "linkinbio_content";
+
+async function readSetting(key: string): Promise<unknown | null> {
+  const rows = await query<{ value: string }>(
+    `SELECT value FROM site_settings WHERE key = $1`,
+    [key]
+  );
+  if (!rows.length || !rows[0].value) return null;
   try {
-    return new URL(href).hostname.replace(/^www\./, "");
+    return JSON.parse(rows[0].value);
   } catch {
-    return href;
+    return null;
   }
 }
 
-/** Merge a stored (possibly partial) blob over the defaults. */
-function coerce(stored: Partial<LinkInBioContent> | null): LinkInBioContent {
-  const d = linkInBioDefaults();
-  if (!stored || typeof stored !== "object") return d;
-  const rows = (
-    incoming: unknown,
-    fallback: LinkRow[],
-    cap: number
-  ): LinkRow[] => {
-    if (!Array.isArray(incoming)) return fallback;
-    return incoming.slice(0, cap).map((r) => ({
-      label: typeof r?.label === "string" ? r.label : "",
-      note: typeof r?.note === "string" ? r.note : "",
-      href: typeof r?.href === "string" ? r.href : "",
-    }));
-  };
-  return {
-    siteLabel: stored.siteLabel ?? d.siteLabel,
-    siteHref: stored.siteHref ?? d.siteHref,
-    tourLabel: stored.tourLabel ?? d.tourLabel,
-    callLabel: stored.callLabel ?? d.callLabel,
-    callHref: stored.callHref ?? d.callHref,
-    dirLabel: stored.dirLabel ?? d.dirLabel,
-    dirHref: stored.dirHref ?? d.dirHref,
-    photoUrl: stored.photoUrl ?? d.photoUrl,
-    photoCaption: stored.photoCaption ?? d.photoCaption,
-    trust: rows(stored.trust, d.trust, 3),
-    community: rows(stored.community, d.community, 2),
-    showBlog: typeof stored.showBlog === "boolean" ? stored.showBlog : d.showBlog,
-    blogHeading: stored.blogHeading ?? d.blogHeading,
-    showForm: typeof stored.showForm === "boolean" ? stored.showForm : d.showForm,
-    formHeading: stored.formHeading ?? d.formHeading,
-    formBlurb: stored.formBlurb ?? d.formBlurb,
-    footAddress: stored.footAddress ?? d.footAddress,
-    footPhone: stored.footPhone ?? d.footPhone,
-  };
+/** Light shape guard for a stored v2 blob. */
+function isV2(v: unknown): v is LinkInBioContentV2 {
+  return (
+    !!v &&
+    typeof v === "object" &&
+    Array.isArray((v as LinkInBioContentV2).blocks) &&
+    typeof (v as LinkInBioContentV2).profile === "object"
+  );
 }
 
-/** Read the link-in-bio content, merged over defaults. Cached per request. */
-export const getLinkInBio = cache(async (): Promise<LinkInBioContent> => {
-  if (!hasDatabase()) return linkInBioDefaults();
+/**
+ * Read the link-in-bio content as v2 blocks, cached per request:
+ *   1. the v2 blob if present,
+ *   2. else migrate the v1 blob if present,
+ *   3. else the shipped defaults.
+ */
+export const getLinkInBio = cache(async (): Promise<LinkInBioContentV2> => {
+  if (!hasDatabase()) return linkInBioV2Defaults();
   try {
-    const rows = await query<{ value: string }>(
-      `SELECT value FROM site_settings WHERE key = $1`,
-      [LINKINBIO_KEY]
-    );
-    if (!rows.length || !rows[0].value) return linkInBioDefaults();
-    return coerce(JSON.parse(rows[0].value));
+    const v2 = await readSetting(LINKINBIO_V2_KEY);
+    if (isV2(v2)) return v2;
+    const v1 = await readSetting(LINKINBIO_V1_KEY);
+    if (v1 && typeof v1 === "object") return migrateFromV1(v1 as Record<string, unknown>);
+    return linkInBioV2Defaults();
   } catch {
-    return linkInBioDefaults();
+    return linkInBioV2Defaults();
   }
 });
 
-/** Persist the whole content blob under the single key. */
-export async function saveLinkInBio(content: LinkInBioContent): Promise<void> {
+/** Persist the v2 block content under the new key. */
+export async function saveLinkInBioV2(content: LinkInBioContentV2): Promise<void> {
   await query(
     `INSERT INTO site_settings (key, value, updated_at)
      VALUES ($1, $2, now())
      ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, updated_at = now()`,
-    [LINKINBIO_KEY, JSON.stringify(content)]
+    [LINKINBIO_V2_KEY, JSON.stringify(content)]
   );
 }
 
-/** Delete the stored blob so the page falls back to the shipped defaults. */
+/** Delete stored content so the page falls back to shipped defaults. */
 export async function resetLinkInBio(): Promise<void> {
-  await query(`DELETE FROM site_settings WHERE key = $1`, [LINKINBIO_KEY]);
+  await query(`DELETE FROM site_settings WHERE key = ANY($1)`, [
+    [LINKINBIO_V2_KEY, LINKINBIO_V1_KEY],
+  ]);
 }
 
-/* ------------------------- validation + voice lint ------------------------ */
+/* ------------------------------ clicks --------------------------------- */
 
-const BANNED = [
-  "loved ones",
-  "vibrant",
-  "journey",
-  "boutique",
-  "intimate",
-  "personalized care plans",
-];
-
-/** A link is valid when empty, http(s), tel:, mailto:, or site-relative (/…). */
-function badLink(value: string): boolean {
-  const v = value.trim();
-  if (v === "") return false; // empty is allowed (row hidden)
-  if (v.startsWith("/")) return false;
+/** Click-through counts keyed by block id. */
+export async function getClickCounts(): Promise<Record<string, number>> {
+  if (!hasDatabase()) return {};
   try {
-    const proto = new URL(v).protocol;
-    return !["http:", "https:", "tel:", "mailto:"].includes(proto);
+    const rows = await query<{ block_id: string; clicks: number }>(
+      `SELECT block_id, clicks FROM link_clicks`
+    );
+    const out: Record<string, number> = {};
+    for (const r of rows) out[r.block_id] = Number(r.clicks);
+    return out;
   } catch {
-    return true;
+    return {};
   }
+}
+
+/** Record one click on a block id (server-side, so it can't be spoofed). */
+export async function incrementClick(blockId: string): Promise<void> {
+  await query(
+    `INSERT INTO link_clicks (block_id, clicks, updated_at)
+     VALUES ($1, 1, now())
+     ON CONFLICT (block_id) DO UPDATE SET clicks = link_clicks.clicks + 1, updated_at = now()`,
+    [blockId]
+  );
 }
 
 /**
- * Enforce voice/compliance (§2/§4) on the editable copy and validate links.
- * Returns an error string, or null when everything passes.
+ * Resolve a link block id to its destination URL for the /l/[id] redirect.
+ * Returns null when the id is unknown or the URL is not a safe link shape.
  */
-export function validateLinkInBio(content: LinkInBioContent): string | null {
-  const copy: string[] = [
-    content.siteLabel,
-    content.tourLabel,
-    content.callLabel,
-    content.dirLabel,
-    content.photoCaption,
-    content.blogHeading,
-    content.formHeading,
-    content.formBlurb,
-    ...content.trust.flatMap((r) => [r.label, r.note]),
-    ...content.community.flatMap((r) => [r.label, r.note]),
-    content.footAddress,
-    content.footPhone,
-  ];
-
-  for (const s of copy) {
-    const lower = s.toLowerCase();
-    if (lower.includes("assisted living")) {
-      return 'Please remove "assisted living". Joy is a personal care home.';
-    }
-    if (s.includes("—")) {
-      return "Please remove the em-dash (use parentheses or a period instead).";
-    }
-    const hit = BANNED.find((b) => lower.includes(b));
-    if (hit) return `Please remove the word "${hit}" (house voice rule).`;
+export async function resolveClickTarget(blockId: string): Promise<string | null> {
+  const content = await getLinkInBio();
+  const block = content.blocks.find((b) => b.id === blockId);
+  if (!block || block.type !== "link") return null;
+  const url = (block.url || "").trim();
+  if (!url) return null;
+  if (url.startsWith("/")) return url;
+  try {
+    const proto = new URL(url).protocol;
+    if (["http:", "https:", "tel:", "mailto:"].includes(proto)) return url;
+  } catch {
+    return null;
   }
-
-  const links: [string, string][] = [
-    ["Website link", content.siteHref],
-    ["Call link", content.callHref],
-    ["Directions link", content.dirHref],
-    ["Photo URL", content.photoUrl],
-    ...content.trust.map(
-      (r, i) => [`Trust link ${i + 1}`, r.href] as [string, string]
-    ),
-    ...content.community.map(
-      (r, i) => [`Community link ${i + 1}`, r.href] as [string, string]
-    ),
-  ];
-  for (const [name, href] of links) {
-    if (badLink(href)) {
-      return `${name} must be a link (https://…, /page, tel:…, or mailto:…).`;
-    }
-  }
-
   return null;
+}
+
+/* ---------------------------- v1 migration ----------------------------- */
+
+/** Build v2 blocks from the old fixed-shape content (best effort). */
+function migrateFromV1(old: Record<string, unknown>): LinkInBioContentV2 {
+  const str = (k: string, fallback = ""): string =>
+    typeof old[k] === "string" ? (old[k] as string) : fallback;
+  const bool = (k: string, fallback: boolean): boolean =>
+    typeof old[k] === "boolean" ? (old[k] as boolean) : fallback;
+  const rows = (k: string): { label: string; note: string; href: string }[] =>
+    Array.isArray(old[k])
+      ? (old[k] as unknown[]).map((r) => {
+          const o = (r ?? {}) as Record<string, unknown>;
+          return {
+            label: typeof o.label === "string" ? o.label : "",
+            note: typeof o.note === "string" ? o.note : "",
+            href: typeof o.href === "string" ? o.href : "",
+          };
+        })
+      : [];
+
+  const d = linkInBioV2Defaults();
+  const blocks: Block[] = [];
+
+  if (str("siteLabel")) {
+    blocks.push(
+      newLinkFrom({
+        title: str("siteLabel"),
+        url: str("siteHref"),
+        domain: str("siteHref") ? undefined : "",
+        style: "plain",
+      })
+    );
+  }
+  blocks.push(
+    newLinkFrom({ title: str("tourLabel", "Book a tour"), url: "/tour", style: "filled", pinned: "tour" })
+  );
+  if (str("callLabel")) {
+    blocks.push(newLinkFrom({ title: str("callLabel"), url: str("callHref"), style: "filled" }));
+  }
+  if (str("dirLabel")) {
+    blocks.push(newLinkFrom({ title: str("dirLabel"), url: str("dirHref"), style: "filled" }));
+  }
+
+  const trust = rows("trust");
+  const community = rows("community");
+  if (trust.length || community.length)
+    blocks.push({ id: cryptoId(), type: "header", text: "Trust & community", active: true });
+  for (const r of [...trust, ...community]) {
+    if (!r.label && !r.href) continue;
+    blocks.push(
+      newLinkFrom({ title: r.label, url: r.href, subtitle: r.note, color: "green", style: "plain" })
+    );
+  }
+
+  if (bool("showBlog", true)) {
+    blocks.push({ id: cryptoId(), type: "blog", active: true, heading: str("blogHeading", "From the blog") });
+  }
+  // Keep a social block from defaults so the migrated page still has icons.
+  const social = d.blocks.find((b) => b.type === "social");
+  if (social) blocks.push(social);
+  if (bool("showForm", true)) {
+    blocks.push({
+      id: cryptoId(),
+      type: "form",
+      active: true,
+      heading: str("formHeading", "Have a question?"),
+      blurb: str("formBlurb", d.profile.bio),
+    });
+  }
+
+  const finalBlocks = blocks.length ? blocks : d.blocks;
+  return {
+    profile: {
+      name: d.profile.name,
+      bio: d.profile.bio,
+      photoUrl: str("photoUrl"),
+      photoCaption: str("photoCaption", d.profile.photoCaption),
+    },
+    // Deterministic ids so migrated-on-read content keeps stable ids across
+    // requests (click counts + /l/<id> stay consistent until the editor saves).
+    blocks: finalBlocks.map((b, i) => ({ ...b, id: `v1-${i}` })),
+  };
+}
+
+function cryptoId(): string {
+  try {
+    if (typeof crypto !== "undefined" && crypto.randomUUID) return crypto.randomUUID();
+  } catch {
+    /* ignore */
+  }
+  return `b${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
 }
