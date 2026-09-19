@@ -2,6 +2,8 @@ import { notFound } from "next/navigation";
 import { requireAdmin } from "@/lib/require-admin";
 import { hasDatabase } from "@/lib/db";
 import { getEventById, listRsvps, getRsvpCounts } from "@/lib/events";
+import { getEventEmailStats } from "@/lib/broadcasts";
+import { formatDate } from "@/lib/format";
 import { SITE_URL } from "@/lib/site";
 import { aiEnabled } from "@/lib/ai";
 import { PageHeader, NotConnected } from "@/components/admin/ui";
@@ -29,7 +31,11 @@ export default async function EventDetailPage({
   const event = await getEventById(id);
   if (!event) notFound();
 
-  const [rsvps, counts] = await Promise.all([listRsvps(id), getRsvpCounts(id)]);
+  const [rsvps, counts, emails] = await Promise.all([
+    listRsvps(id),
+    getRsvpCounts(id),
+    getEventEmailStats(id),
+  ]);
   const rsvpUrl = `${SITE_URL}/rsvp/${event.rsvp_token}`;
 
   return (
@@ -39,6 +45,8 @@ export default async function EventDetailPage({
       counts={counts}
       rsvpUrl={rsvpUrl}
       aiEnabled={aiEnabled()}
+      emails={emails}
+      invitedOn={emails.lastInviteAt ? formatDate(emails.lastInviteAt) : ""}
     />
   );
 }

@@ -18,14 +18,66 @@ export type EventListItem = {
   headcount: number;
   yes: number;
   capacity: number;
+  /** People an invite email actually reached (0 = nothing has gone out). */
+  invitesSent: number;
+  /** An invite is composed but still sitting in the email studio. */
+  invitePending: boolean;
+  /** Display date of the last invite send ("" when none). */
+  invitedOn: string;
+  /** Reminders and updates sent for this event. */
+  followUpsSent: number;
 };
 
-const BADGE: Record<string, { label: string; bg: string; col: string }> = {
-  published: { label: "Invites out", bg: "rgba(36,163,50,.12)", col: "#1c7f27" },
-  draft: { label: "Draft", bg: "#eef2f3", col: "#626d70" },
-  cancelled: { label: "Cancelled", bg: "rgba(207,70,54,.1)", col: "#cf4636" },
-  done: { label: "Happened", bg: "#eef2f3", col: "#97a0a3" },
-};
+type Badge = { label: string; bg: string; col: string };
+
+const GREEN = { bg: "rgba(36,163,50,.12)", col: "#1c7f27" };
+const AMBER = { bg: "rgba(201,138,44,.14)", col: "#8a6217" };
+const GREY = { bg: "#eef2f3", col: "#626d70" };
+
+/**
+ * What the badge says has to be a fact about the emails, not about the event
+ * being published. Publishing only makes the RSVP page public, so a published
+ * event with no invite send says so plainly instead of claiming invites are
+ * out. "Invites sent" appears only once a send has finished.
+ */
+function badgeFor(e: EventListItem): Badge {
+  if (e.status === "cancelled")
+    return { label: "Cancelled", bg: "rgba(207,70,54,.1)", col: "#cf4636" };
+  if (e.status === "draft") return { label: "Draft", ...GREY };
+  if (e.status === "done")
+    return { label: "Happened", bg: "#eef2f3", col: "#97a0a3" };
+  if (e.invitesSent > 0) return { label: "Invites sent", ...GREEN };
+  if (e.invitePending) return { label: "Invite not sent", ...AMBER };
+  return { label: "No invites yet", ...AMBER };
+}
+
+/** The one-line nudge under an upcoming event: what is left to do, or what went out. */
+function statusNote(e: EventListItem): { text: string; amber: boolean } | null {
+  if (e.status === "draft")
+    return {
+      text: "→ Not public yet. Finish the details and send the invite.",
+      amber: true,
+    };
+  if (e.status !== "published") return null;
+  if (e.invitesSent > 0) {
+    const people = e.invitesSent === 1 ? "1 person" : `${e.invitesSent} people`;
+    const when = e.invitedOn ? ` on ${e.invitedOn}` : "";
+    const follow =
+      e.followUpsSent > 0
+        ? `, plus ${e.followUpsSent === 1 ? "1 follow-up" : `${e.followUpsSent} follow-ups`}`
+        : "";
+    return { text: `Invite sent to ${people}${when}${follow}.`, amber: false };
+  }
+  if (e.invitePending)
+    return {
+      text: "→ The invite is written but not sent. Finish it in the email studio.",
+      amber: true,
+    };
+  return {
+    text: "→ The RSVP page is live, but no invite has gone out yet.",
+    amber: true,
+  };
+}
 
 const FILTERS = [
   { id: "all", label: "All" },
@@ -122,7 +174,7 @@ export default function EventsList({ events }: { events: EventListItem[] }) {
           </div>
           <div className="overflow-hidden rounded-2xl border border-line bg-white shadow-[0_1px_3px_rgba(7,20,23,0.04)]">
             {past.map((e) => {
-              const b = BADGE[e.status];
+              const b = badgeFor(e);
               return (
                 <Link
                   key={e.id}
@@ -163,7 +215,8 @@ export default function EventsList({ events }: { events: EventListItem[] }) {
 }
 
 function UpcomingCard({ e }: { e: EventListItem }) {
-  const b = BADGE[e.status];
+  const b = badgeFor(e);
+  const note = statusNote(e);
   const isDraft = e.status === "draft";
   const pct = e.capacity > 0 ? Math.min(100, Math.round((e.headcount / e.capacity) * 100)) : 0;
   return (
@@ -206,9 +259,11 @@ function UpcomingCard({ e }: { e: EventListItem }) {
             {` · ${e.when}`}
             {e.where ? ` · ${e.where}` : ""}
           </div>
-          {isDraft && (
-            <div className="mt-1 text-xs text-[#8a6217]">
-              → Not public yet. Finish the details and send the invite.
+          {note && (
+            <div
+              className={`mt-1 text-xs ${note.amber ? "text-[#8a6217]" : "text-ink-faint"}`}
+            >
+              {note.text}
             </div>
           )}
         </div>

@@ -814,3 +814,46 @@ CREATE TABLE IF NOT EXISTS link_clicks (
   clicks     INTEGER NOT NULL DEFAULT 0,
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+
+-- ============================================================================
+-- Event emails: link a Send back to the event it was written for.
+-- ============================================================================
+-- Without this link nothing recorded whether an invite actually went out, so
+-- the events list could only report "published" (the RSVP page is public) and
+-- labelled it "Invites out", which was not the same thing. event_kind keeps
+-- invites apart from reminders and updates for the same event.
+ALTER TABLE broadcasts ADD COLUMN IF NOT EXISTS event_id UUID
+  REFERENCES events(id) ON DELETE SET NULL;
+ALTER TABLE broadcasts ADD COLUMN IF NOT EXISTS event_kind TEXT;
+ALTER TABLE broadcasts DROP CONSTRAINT IF EXISTS broadcasts_event_kind_check;
+ALTER TABLE broadcasts ADD CONSTRAINT broadcasts_event_kind_check
+  CHECK (event_kind IS NULL OR event_kind IN ('invite', 'reminder', 'update'));
+CREATE INDEX IF NOT EXISTS broadcasts_event_idx
+  ON broadcasts (event_id, event_kind) WHERE event_id IS NOT NULL;
+
+-- One-time back-link for event emails composed before the column existed: the
+-- studio writes subjects as "You're invited: <title>" (and "Reminder: ",
+-- "Update: "), so an unedited subject identifies its event. Deliberately
+-- conservative, because a wrong link would report invites that never went out:
+-- the title must match exactly, exactly one event may match, and the email must
+-- post-date the event. Anything edited or ambiguous stays unlinked and reads as
+-- "no invites yet". Re-running is a no-op (only unlinked rows are considered).
+WITH kinds (kind, prefix) AS (
+  VALUES ('invite', 'You''re invited: '),
+         ('reminder', 'Reminder: '),
+         ('update', 'Update: ')
+), matches AS (
+  SELECT b.id AS broadcast_id, e.id AS event_id, k.kind,
+         COUNT(*) OVER (PARTITION BY b.id) AS n
+    FROM broadcasts b
+    JOIN kinds k ON b.subject LIKE k.prefix || '%'
+    JOIN events e
+      ON e.title = substr(b.subject, length(k.prefix) + 1)
+     AND b.created_at >= e.created_at
+   WHERE b.event_id IS NULL
+     AND b.channel = 'email'
+)
+UPDATE broadcasts b
+   SET event_id = m.event_id, event_kind = m.kind
+  FROM matches m
+ WHERE b.id = m.broadcast_id AND m.n = 1;

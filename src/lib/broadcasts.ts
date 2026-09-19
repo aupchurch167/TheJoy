@@ -6,6 +6,7 @@ import type { Audience, LeadSegment } from "./leads";
 export type BroadcastStatus = "draft" | "scheduled" | "sending" | "sent";
 export type BroadcastChannel = "email" | "sms";
 export type BroadcastBodyFormat = "markdown" | "html" | "html_standalone";
+export type EventEmailKind = "invite" | "reminder" | "update";
 
 export type Broadcast = {
   id: string;
@@ -29,6 +30,10 @@ export type Broadcast = {
   model_json: unknown | null;
   /** Event emails jump ahead of throttled marketing (sent in full, immediately). */
   priority: boolean;
+  /** The event this Send was written for, when it came from the Event Studio. */
+  event_id: string | null;
+  /** Which event email this is: invite | reminder | update (null otherwise). */
+  event_kind: EventEmailKind | null;
   created_at: string;
   updated_at: string;
 };
@@ -57,6 +62,8 @@ export async function createBroadcast(
     format?: BroadcastBodyFormat;
     modelJson?: unknown | null;
     priority?: boolean;
+    eventId?: string | null;
+    eventKind?: EventEmailKind | null;
   }
 ): Promise<Broadcast> {
   // Every Send points at a Message. When no Message is supplied, this compose
@@ -70,8 +77,8 @@ export async function createBroadcast(
     ).id;
 
   const rows = await query<Broadcast>(
-    `INSERT INTO broadcasts (subject, body, audience, channel, filters, resend_of, message_id, body_format, model_json, priority)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING *`,
+    `INSERT INTO broadcasts (subject, body, audience, channel, filters, resend_of, message_id, body_format, model_json, priority, event_id, event_kind)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) RETURNING *`,
     [
       subject,
       body,
@@ -83,9 +90,96 @@ export async function createBroadcast(
       opts?.format ?? "markdown",
       opts?.modelJson != null ? JSON.stringify(opts.modelJson) : null,
       opts?.priority ?? false,
+      opts?.eventId ?? null,
+      opts?.eventKind ?? null,
     ]
   );
   return rows[0];
+}
+
+/**
+ * What actually went out for an event: the answer to "did invites go out?",
+ * which the event's own status cannot give (publishing only makes the RSVP
+ * page public). `invitePending` is an invite composed but not yet sent, so
+ * "written" reads differently from "gone out".
+ */
+export type EventEmailStats = {
+  /** People the invite reached, summed across every invite Send. */
+  invitesSent: number;
+  /** When the most recent invite finished sending. */
+  lastInviteAt: string | null;
+  /** An invite sitting in the studio (draft/scheduled/sending), not yet out. */
+  invitePending: boolean;
+  /** Reminders and updates that have gone out for this event. */
+  followUpsSent: number;
+};
+
+const NO_EVENT_EMAILS: EventEmailStats = {
+  invitesSent: 0,
+  lastInviteAt: null,
+  invitePending: false,
+  followUpsSent: 0,
+};
+
+type EventEmailStatsRow = {
+  event_id: string;
+  invites_sent: string;
+  last_invite_at: string | null;
+  invites_pending: string;
+  follow_ups_sent: string;
+};
+
+// Counted from the per-recipient rows rather than broadcasts.sent_count: those
+// rows are written as each email goes out, so a send still working through its
+// list (or a resend to non-openers) reports the people actually reached, each
+// counted once. Follow-ups are counted as emails, not people.
+const EVENT_EMAIL_STATS_SQL = `
+  SELECT b.event_id,
+         COUNT(DISTINCT br.lead_id) FILTER (
+           WHERE b.event_kind = 'invite' AND br.error IS NULL)   AS invites_sent,
+         MAX(br.sent_at) FILTER (
+           WHERE b.event_kind = 'invite' AND br.error IS NULL)   AS last_invite_at,
+         COUNT(DISTINCT b.id) FILTER (
+           WHERE b.event_kind = 'invite'
+             AND b.status IN ('draft', 'scheduled', 'sending'))  AS invites_pending,
+         COUNT(DISTINCT b.id) FILTER (
+           WHERE b.event_kind IN ('reminder', 'update')
+             AND b.status = 'sent')                              AS follow_ups_sent
+    FROM broadcasts b
+    LEFT JOIN broadcast_recipients br ON br.broadcast_id = b.id
+   WHERE b.event_id IS NOT NULL`;
+
+function toStats(row: EventEmailStatsRow | undefined): EventEmailStats {
+  if (!row) return NO_EVENT_EMAILS;
+  return {
+    invitesSent: Number(row.invites_sent),
+    lastInviteAt: row.last_invite_at,
+    invitePending: Number(row.invites_pending) > 0,
+    followUpsSent: Number(row.follow_ups_sent),
+  };
+}
+
+/** Email stats for every event at once (the events list). */
+export async function getEventEmailStatsByEvent(): Promise<
+  Record<string, EventEmailStats>
+> {
+  const rows = await query<EventEmailStatsRow>(
+    `${EVENT_EMAIL_STATS_SQL} GROUP BY b.event_id`
+  );
+  const out: Record<string, EventEmailStats> = {};
+  for (const r of rows) out[r.event_id] = toStats(r);
+  return out;
+}
+
+/** Email stats for one event (the Event Studio rail). */
+export async function getEventEmailStats(
+  eventId: string
+): Promise<EventEmailStats> {
+  const rows = await query<EventEmailStatsRow>(
+    `${EVENT_EMAIL_STATS_SQL} AND b.event_id = $1 GROUP BY b.event_id`,
+    [eventId]
+  );
+  return toStats(rows[0]);
 }
 
 /**

@@ -125,7 +125,16 @@ export async function createEventEmailDraft(input: {
       "email",
       null,
       null,
-      { format: "html_standalone", createdBy: email, modelJson: model, priority: true }
+      {
+        format: "html_standalone",
+        createdBy: email,
+        modelJson: model,
+        priority: true,
+        // The link that lets the events list say whether invites really went
+        // out, rather than inferring it from the event being published.
+        eventId: ev.id,
+        eventKind: input.kind,
+      }
     );
     return { ok: true, id: b.id };
   } catch (err) {

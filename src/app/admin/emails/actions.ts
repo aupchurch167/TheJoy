@@ -292,7 +292,14 @@ export async function duplicateBroadcast(
       "email",
       b.filters,
       null,
-      { format: b.body_format, modelJson: b.model_json, priority: b.priority }
+      {
+        format: b.body_format,
+        modelJson: b.model_json,
+        priority: b.priority,
+        // A copy of an event email is still that event's email.
+        eventId: b.event_id,
+        eventKind: b.event_kind,
+      }
     );
     revalidatePath("/admin/emails");
     return { ok: true, id: copy.id };
@@ -324,7 +331,13 @@ export async function resendToNonOpeners(
       "email",
       null,
       parentId,
-      { format: parent.body_format, modelJson: parent.model_json, priority: parent.priority }
+      {
+        format: parent.body_format,
+        modelJson: parent.model_json,
+        priority: parent.priority,
+        eventId: parent.event_id,
+        eventKind: parent.event_kind,
+      }
     );
     revalidatePath("/admin/emails");
     return { ok: true, id: draft.id };
