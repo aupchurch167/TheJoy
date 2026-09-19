@@ -1,7 +1,9 @@
 import { requireAdmin } from "@/lib/require-admin";
 import { hasDatabase } from "@/lib/db";
 import { listEvents, getRsvpCountsByEvent } from "@/lib/events";
+import { getEventEmailStatsByEvent } from "@/lib/broadcasts";
 import { formatEventWhen, eventDateTile, eventIsPast } from "@/lib/event-time";
+import { formatDate } from "@/lib/format";
 import { PageHeader, NotConnected } from "@/components/admin/ui";
 import EventsList, { type EventListItem } from "./EventsList";
 
@@ -19,9 +21,10 @@ export default async function EventsPage() {
     );
   }
 
-  const [allEvents, counts] = await Promise.all([
+  const [allEvents, counts, emails] = await Promise.all([
     listEvents(),
     getRsvpCountsByEvent(),
+    getEventEmailStatsByEvent(),
   ]);
 
   // Upcoming (draft or published) soonest-first; past/cancelled most-recent-first.
@@ -40,6 +43,14 @@ export default async function EventsPage() {
 
   const items: EventListItem[] = events.map((ev) => {
     const c = counts[ev.id] ?? { yes: 0, headcount: 0 };
+    // Whether invites went out is a fact about the emails, not about the event
+    // being published (publishing only makes the RSVP page public).
+    const mail = emails[ev.id] ?? {
+      invitesSent: 0,
+      lastInviteAt: null,
+      invitePending: false,
+      followUpsSent: 0,
+    };
     const status: EventListItem["status"] =
       ev.status === "cancelled"
         ? "cancelled"
@@ -60,6 +71,10 @@ export default async function EventsPage() {
       headcount: c.headcount,
       yes: c.yes,
       capacity: ev.capacity ?? 0,
+      invitesSent: mail.invitesSent,
+      invitePending: mail.invitePending,
+      invitedOn: mail.lastInviteAt ? formatDate(mail.lastInviteAt) : "",
+      followUpsSent: mail.followUpsSent,
     };
   });
 

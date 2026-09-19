@@ -9,6 +9,7 @@ import Markdown from "@/components/Markdown";
 import { useToast } from "@/components/admin/Toast";
 import { saveEvent, removeRsvp, createEventEmailDraft } from "./actions";
 import type { EventRow, EventRsvp, RsvpCounts } from "@/lib/events";
+import type { EventEmailStats } from "@/lib/broadcasts";
 import {
   EVENT_TYPES,
   DEFAULT_EVENT_TYPE,
@@ -77,12 +78,18 @@ export default function EventStudio({
   counts,
   rsvpUrl,
   aiEnabled,
+  emails,
+  invitedOn = "",
 }: {
   event?: EventRow | null;
   rsvps: EventRsvp[];
   counts: RsvpCounts;
   rsvpUrl: string;
   aiEnabled: boolean;
+  /** What has actually been emailed for this event (null on a new event). */
+  emails?: EventEmailStats | null;
+  /** Display date of the last invite send ("" when none). */
+  invitedOn?: string;
 }) {
   const router = useRouter();
   const toast = useToast();
@@ -256,6 +263,8 @@ export default function EventStudio({
     });
   }
 
+  const invitesSent = emails?.invitesSent ?? 0;
+  const followUpsSent = emails?.followUpsSent ?? 0;
   const previewWhen = friendlyWhen(date, time);
   const capNum = capacity === "" ? 0 : Number(capacity);
 
@@ -793,6 +802,39 @@ export default function EventStudio({
                 </RailSection>
 
                 <RailSection title="Emails for this event">
+                  {/* The honest state of the invite: publishing the event only
+                      makes the RSVP page public, it sends nothing. */}
+                  <div
+                    className={`mb-2.5 rounded-[9px] px-3 py-2 text-[11.5px] leading-snug ${
+                      invitesSent > 0
+                        ? "bg-[rgba(36,163,50,.1)] text-[#1c7f27]"
+                        : "bg-[rgba(201,138,44,.12)] text-[#8a6217]"
+                    }`}
+                  >
+                    {invitesSent > 0 ? (
+                      <>
+                        <span className="font-bold">
+                          Invite sent to {invitesSent}{" "}
+                          {invitesSent === 1 ? "person" : "people"}
+                        </span>
+                        {invitedOn ? ` on ${invitedOn}` : ""}.
+                        {followUpsSent > 0
+                          ? ` ${followUpsSent === 1 ? "1 follow-up has" : `${followUpsSent} follow-ups have`} gone out since.`
+                          : ""}
+                      </>
+                    ) : emails?.invitePending ? (
+                      <>
+                        <span className="font-bold">The invite is not sent.</span>{" "}
+                        It is written and waiting in the email studio.
+                      </>
+                    ) : (
+                      <>
+                        <span className="font-bold">No invite has gone out.</span>{" "}
+                        The RSVP page is live, so the link works if you share it
+                        yourself.
+                      </>
+                    )}
+                  </div>
                   <div className="space-y-2">
                     <button
                       type="button"
