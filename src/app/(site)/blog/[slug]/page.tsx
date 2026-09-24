@@ -6,6 +6,8 @@ import { getPublishedPostBySlug, getPublishedPosts } from "@/lib/posts";
 import { MEMORY_CARE } from "@/lib/site";
 import { articleJsonLd, breadcrumbJsonLd, authorByline } from "@/lib/schema";
 import { BUSINESS, OG_IMAGE } from "@/lib/site";
+import { pageTwitter } from "@/lib/metadata";
+import { isoDateTime, publicDescription } from "@/lib/post-description";
 import { getSettings, tourHref } from "@/lib/settings";
 import Markdown from "@/components/Markdown";
 import Photo from "@/components/Photo";
@@ -20,10 +22,12 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { slug } = await params;
   const post = hasDatabase() ? await getPublishedPostBySlug(slug) : null;
-  if (!post) return { title: "Not found", robots: { index: false } };
+  if (!post) return pageTwitter({ title: "Not found", robots: { index: false } });
 
-  const description = post.meta_description || post.excerpt || undefined;
-  return {
+  const description = publicDescription(post);
+  // published_at comes back from pg as a Date. Passing that object through
+  // makes article:published_time render as "[object Object]".
+  return pageTwitter({
     title: post.meta_title || post.title,
     description,
     alternates: { canonical: `/blog/${post.slug}` },
@@ -33,9 +37,9 @@ export async function generateMetadata({
       type: "article",
       url: `/blog/${post.slug}`,
       images: post.hero_image ? [post.hero_image] : [OG_IMAGE],
-      publishedTime: post.published_at || undefined,
+      publishedTime: isoDateTime(post.published_at),
     },
-  };
+  });
 }
 
 export default async function PostPage({

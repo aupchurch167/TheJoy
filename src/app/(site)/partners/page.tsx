@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { pageTwitter } from "@/lib/metadata";
 import { existsSync } from "fs";
 import { join } from "path";
 import {
@@ -15,7 +16,7 @@ const SERVICES_LINE = MEMORY_CARE.enabled
   ? "personal care, memory care, and respite"
   : "personal care and respite";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageTwitter({
   title: { absolute: "For Professionals | The Joy Senior Living of Loganville" },
   description: `Partner materials for case managers and placement agencies: ${SERVICES_LINE} at The Joy in Loganville, GA.`,
   alternates: { canonical: "/partners" },
@@ -26,7 +27,7 @@ export const metadata: Metadata = {
     type: "website",
     images: [OG_IMAGE],
   },
-};
+});
 
 /**
  * Resolve the first filename that actually exists in public/partners, so a

@@ -1,13 +1,14 @@
 import type { Metadata } from "next";
+import { pageTwitter } from "@/lib/metadata";
 import { hasDatabase } from "@/lib/db";
 import { unsubscribeByToken } from "@/lib/leads";
 import { BUSINESS } from "@/lib/site";
 
 export const dynamic = "force-dynamic";
-export const metadata: Metadata = {
+export const metadata: Metadata = pageTwitter({
   title: "Unsubscribe",
   robots: { index: false, follow: false },
-};
+});
 
 export default async function UnsubscribePage({
   searchParams,

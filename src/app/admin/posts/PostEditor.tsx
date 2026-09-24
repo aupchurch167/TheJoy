@@ -12,6 +12,7 @@ import ConfirmButton from "@/components/admin/ConfirmButton";
 import ImageCropper from "@/components/admin/ImageCropper";
 import { useToast } from "@/components/admin/Toast";
 import { formatDateTime } from "@/lib/format";
+import { shortSummaryWarning } from "@/lib/post-description";
 
 // Shared input styling so every field in the editor matches the UI kit.
 const INPUT =
@@ -349,6 +350,7 @@ export default function PostEditor({
             rows={2}
             className={INPUT}
           />
+          <SummaryWarning text={f.excerpt} />
         </Field>
 
         {/* Hero image */}
@@ -495,6 +497,9 @@ export default function PostEditor({
                 rows={2}
                 className={INPUT}
               />
+              {f.meta_description.trim() ? (
+                <SummaryWarning text={f.meta_description} />
+              ) : null}
             </Field>
           </div>
         </details>
@@ -538,6 +543,19 @@ export default function PostEditor({
 }
 
 /* ---------- small helpers ---------- */
+
+function SummaryWarning({ text }: { text: string }) {
+  const message = shortSummaryWarning(text);
+  if (!message) return null;
+  return (
+    <p
+      className="mt-2 rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-xs leading-relaxed text-amber-950"
+      role="status"
+    >
+      {message}
+    </p>
+  );
+}
 
 function Field({
   label,

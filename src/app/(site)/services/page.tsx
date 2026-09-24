@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { pageTwitter } from "@/lib/metadata";
 import Link from "next/link";
 import { BUSINESS, OG_IMAGE, SERVICES, visibleServiceDetails } from "@/lib/site";
 import { servicesCollectionJsonLd, breadcrumbJsonLd } from "@/lib/schema";
@@ -9,7 +10,7 @@ import Photo from "@/components/Photo";
 import TourButton from "@/components/TourButton";
 import LeadForm from "@/components/LeadForm";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageTwitter({
   title: "Memory Care & Personal Care Home in Loganville, GA",
   description:
     "Personal care, memory care, respite, activities, and home-cooked meals at Joy Senior Living, a small personal care home in Loganville, GA.",
@@ -21,7 +22,7 @@ export const metadata: Metadata = {
     type: "website",
     images: [OG_IMAGE],
   },
-};
+});
 
 export default async function ServicesPage() {
   const [settings, servicePhotos] = await Promise.all([

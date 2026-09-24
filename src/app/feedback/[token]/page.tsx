@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { pageTwitter } from "@/lib/metadata";
 import { hasDatabase } from "@/lib/db";
 import { getRequestByToken } from "@/lib/feedback";
 import { getSettings } from "@/lib/settings";
@@ -28,10 +29,10 @@ function Wordmark({ logo }: { logo: { src: string; set: boolean } }) {
 
 // Tokenized + private: never index, always fresh.
 export const dynamic = "force-dynamic";
-export const metadata: Metadata = {
+export const metadata: Metadata = pageTwitter({
   title: "Share how it is going",
   robots: { index: false, follow: false },
-};
+});
 
 /** Plain, detail-free screen for an invalid or already-used link. */
 function Closed({

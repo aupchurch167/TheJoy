@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { pageTwitter } from "@/lib/metadata";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import {
@@ -18,7 +19,7 @@ import Accordion from "@/components/Accordion";
 
 export const dynamic = "force-dynamic";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageTwitter({
   // No brand here: the root layout's title template appends "| Joy Senior
   // Living" automatically, so including it would double-brand the tab title.
   title: "Memory Care in Loganville, GA",
@@ -32,7 +33,7 @@ export const metadata: Metadata = {
     type: "website",
     images: [OG_IMAGE],
   },
-};
+});
 
 export default async function MemoryCarePage() {
   // §4: the page only exists while memory care is confirmed within the license.

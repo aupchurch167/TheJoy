@@ -16,6 +16,10 @@ if (!url) {
 }
 
 const sql = readFileSync(join(__dirname, "..", "db", "schema.sql"), "utf8");
+const contentSql = readFileSync(
+  join(__dirname, "..", "db", "content-updates.sql"),
+  "utf8"
+);
 
 const sslDisabled =
   process.env.PGSSL === "false" || /\bsslmode=disable\b/.test(url);
@@ -33,6 +37,7 @@ const client = new pg.Client({
 try {
   await client.connect();
   await client.query(sql);
+  await client.query(contentSql);
   console.log("Migration complete. Tables are ready.");
 } catch (err) {
   console.error("Migration failed:", err.message);

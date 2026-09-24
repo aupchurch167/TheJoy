@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { pageTwitter } from "@/lib/metadata";
 import { ABOUT, BUSINESS, MELLISSA, OG_IMAGE } from "@/lib/site";
 import { aboutPageJsonLd } from "@/lib/schema";
 import { getSettings, tourHref } from "@/lib/settings";
@@ -7,7 +8,7 @@ import JsonLd from "@/components/JsonLd";
 import Photo from "@/components/Photo";
 import TourButton from "@/components/TourButton";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageTwitter({
   title: "About The Joy Senior Living of Loganville",
   description:
     "The story of Joy Senior Living, a small personal care home in Loganville, GA led by Mellissa Daniel, and why small scale changes everything.",
@@ -19,7 +20,7 @@ export const metadata: Metadata = {
     type: "website",
     images: [OG_IMAGE],
   },
-};
+});
 
 export default async function AboutPage() {
   const settings = await getSettings();
