@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { pageTwitter } from "@/lib/metadata";
 import Link from "next/link";
 import { BUSINESS, OG_IMAGE } from "@/lib/site";
 import {
@@ -19,7 +20,7 @@ import LeadForm from "@/components/LeadForm";
 // Live: staff edits in /admin/links show on the next render.
 export const dynamic = "force-dynamic";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageTwitter({
   title: "Joy Senior Living",
   description: BUSINESS.descriptor,
   robots: { index: false, follow: true },
@@ -30,7 +31,7 @@ export const metadata: Metadata = {
     type: "website",
     images: [OG_IMAGE],
   },
-};
+});
 
 const COLOR_HEX: Record<string, string> = { blue: "#01a7ce", green: "#24a332" };
 const glyphFor = (key: string) =>

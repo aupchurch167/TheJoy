@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { pageTwitter } from "@/lib/metadata";
 import {
   BUSINESS,
   BUSINESS_ADDRESS_ONE_LINE,
@@ -13,7 +14,7 @@ import LeadForm from "@/components/LeadForm";
 // A real page (not a fragment) so the old tour/contact URLs 301 here cleanly.
 export const dynamic = "force-dynamic";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageTwitter({
   // Brand is appended by the root layout title template; do not repeat it here.
   title: "Book a Tour",
   description:
@@ -26,7 +27,7 @@ export const metadata: Metadata = {
     type: "website",
     images: [OG_IMAGE],
   },
-};
+});
 
 export default async function TourPage() {
   const settings = await getSettings();

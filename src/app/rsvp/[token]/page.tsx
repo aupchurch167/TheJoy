@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { pageTwitter } from "@/lib/metadata";
 import { notFound } from "next/navigation";
 import { hasDatabase } from "@/lib/db";
 import { getEventByToken } from "@/lib/events";
@@ -10,10 +11,10 @@ import RsvpForm from "./RsvpForm";
 
 export const dynamic = "force-dynamic";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageTwitter({
   title: "RSVP",
   robots: { index: false, follow: false },
-};
+});
 
 export default async function RsvpPage({
   params,

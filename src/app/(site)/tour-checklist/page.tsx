@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { pageTwitter } from "@/lib/metadata";
 import { BUSINESS, OG_IMAGE } from "@/lib/site";
 import { breadcrumbJsonLd } from "@/lib/schema";
 import JsonLd from "@/components/JsonLd";
@@ -8,7 +9,7 @@ import ProofPulse from "@/components/landing/ProofPulse";
 import FamilyQuote from "@/components/landing/FamilyQuote";
 import TourChecklist from "@/components/landing/TourChecklist";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageTwitter({
   title: {
     absolute: "Assisted Living Tour Checklist: 25 Questions to Ask | Joy",
   },
@@ -22,7 +23,7 @@ export const metadata: Metadata = {
     type: "website",
     images: [OG_IMAGE],
   },
-};
+});
 
 export default function TourChecklistPage() {
   return (

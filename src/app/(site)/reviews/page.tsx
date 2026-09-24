@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { pageTwitter } from "@/lib/metadata";
 import { BUSINESS, OG_IMAGE } from "@/lib/site";
 import { breadcrumbJsonLd } from "@/lib/schema";
 import JsonLd from "@/components/JsonLd";
@@ -25,7 +26,7 @@ function reviewWho(r: Review): string {
   return src ? `A family, ${src}` : "A family";
 }
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageTwitter({
   title: {
     absolute: "Reviews: What Families Say About The Joy | Loganville, GA",
   },
@@ -39,7 +40,7 @@ export const metadata: Metadata = {
     type: "website",
     images: [OG_IMAGE],
   },
-};
+});
 
 export default async function ReviewsPage() {
   // Start from the curated code content, then prefer live DB data where present.

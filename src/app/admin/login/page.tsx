@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { pageTwitter } from "@/lib/metadata";
 import { redirect } from "next/navigation";
 import { auth, googleLoginEnabled, passwordLoginEnabled } from "@/auth";
 import { ALLOWED_DOMAIN, isAllowedAdmin } from "@/lib/access";
@@ -7,10 +8,10 @@ import CredentialsSignInForm from "./CredentialsSignInForm";
 
 export const dynamic = "force-dynamic";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageTwitter({
   title: "Admin sign in",
   robots: { index: false, follow: false },
-};
+});
 
 export default async function AdminLoginPage({
   searchParams,

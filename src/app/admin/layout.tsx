@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { pageTwitter } from "@/lib/metadata";
 import "react-easy-crop/react-easy-crop.css";
 import { auth } from "@/auth";
 import { isAllowedAdmin } from "@/lib/access";
@@ -7,10 +8,10 @@ import { countDueThisWeek } from "@/lib/partners";
 import AdminNav from "./AdminNav";
 import { ToastProvider } from "@/components/admin/Toast";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageTwitter({
   title: "Admin",
   robots: { index: false, follow: false },
-};
+});
 
 export default async function AdminLayout({
   children,

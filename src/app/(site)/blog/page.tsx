@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { pageTwitter } from "@/lib/metadata";
 import Link from "next/link";
 import { BUSINESS } from "@/lib/site";
 import { getSettings } from "@/lib/settings";
@@ -11,12 +12,12 @@ import LeadForm from "@/components/LeadForm";
 
 export const dynamic = "force-dynamic";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageTwitter({
   title: "Stories from Joy",
   description:
     "Honest, plainspoken writing for families thinking about senior living and memory care near Loganville, Georgia.",
   alternates: { canonical: "/blog" },
-};
+});
 
 export default async function BlogIndex() {
   const [posts, settings] = await Promise.all([

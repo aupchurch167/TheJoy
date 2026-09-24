@@ -1,17 +1,31 @@
 import type { Metadata } from "next";
-import { BUSINESS } from "@/lib/site";
+import { BUSINESS, OG_IMAGE } from "@/lib/site";
+import { pageTwitter } from "@/lib/metadata";
 import { hasDatabase } from "@/lib/db";
 import { getPhotos } from "@/lib/photos";
 import Photo from "@/components/Photo";
 
 export const dynamic = "force-dynamic";
 
-export const metadata: Metadata = {
+// Title stays "Photos" so the tab title (template appends the brand) does not
+// change. Open Graph was inheriting the homepage title, description, and URL.
+const GALLERY_DESCRIPTION =
+  "See real photos of The Joy Senior Living, a small personal care home with memory care in Loganville, GA. The home, the porch, our people. No stock, no staging.";
+
+export const metadata: Metadata = pageTwitter({
   title: "Photos",
-  description:
-    "Real photos from Joy Senior Living, a small personal care home in Loganville, Georgia.",
+  description: GALLERY_DESCRIPTION,
   alternates: { canonical: "/gallery" },
-};
+  openGraph: {
+    title: `Photos | ${BUSINESS.name}`,
+    description: GALLERY_DESCRIPTION,
+    url: "/gallery",
+    type: "website",
+    siteName: BUSINESS.name,
+    locale: "en_US",
+    images: [OG_IMAGE],
+  },
+});
 
 export default async function PublicGalleryPage() {
   const photos = hasDatabase() ? await getPhotos() : [];

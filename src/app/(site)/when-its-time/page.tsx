@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { pageTwitter } from "@/lib/metadata";
 import { BUSINESS, OG_IMAGE, SITE_URL } from "@/lib/site";
 import { breadcrumbJsonLd, faqPageJsonLdFrom } from "@/lib/schema";
 import JsonLd from "@/components/JsonLd";
@@ -16,7 +17,7 @@ import ProofPulse from "@/components/landing/ProofPulse";
 import FamilyQuote from "@/components/landing/FamilyQuote";
 import EssayRows from "@/components/landing/EssayRows";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageTwitter({
   title: {
     absolute: "Signs It's Time for Assisted Living: What Families Notice | Joy",
   },
@@ -30,7 +31,7 @@ export const metadata: Metadata = {
     type: "website",
     images: [OG_IMAGE],
   },
-};
+});
 
 export default function WhenItsTimePage() {
   return (

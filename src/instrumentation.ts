@@ -4,9 +4,11 @@
  * We use it to auto-apply the database schema on boot, so deploying is simply
  * "set DATABASE_URL and redeploy" (no separate migrate step for a non-developer
  * operator). The schema is idempotent (CREATE ... IF NOT EXISTS, ADD COLUMN IF
- * NOT EXISTS, seed with ON CONFLICT DO NOTHING), so applying it every boot is
- * safe. It is best-effort: failures are logged, never fatal, so the site still
- * starts and shows its graceful "database not connected" states.
+ * NOT EXISTS, seed with ON CONFLICT DO NOTHING), and db/content-updates.sql
+ * only rewrites a row while its description is still the short text it shipped
+ * with, so applying both every boot is safe. It is best-effort: failures are
+ * logged, never fatal, so the site still starts and shows its graceful
+ * "database not connected" states.
  *
  * It also arms the in-process scheduler that drives the recurring jobs (drip,
  * broadcasts, scheduled posts, roster sync, lifecycle check-ins, recognition),
@@ -32,7 +34,9 @@ export async function register() {
     const { join } = await import("node:path");
     const pg = (await import("pg")).default;
 
-    const sql = readFileSync(join(process.cwd(), "db", "schema.sql"), "utf8");
+    const root = process.cwd();
+    const sql = readFileSync(join(root, "db", "schema.sql"), "utf8");
+    const contentSql = readFileSync(join(root, "db", "content-updates.sql"), "utf8");
 
     const sslDisabled =
       process.env.PGSSL === "false" || /\bsslmode=disable\b/.test(url);
@@ -49,6 +53,7 @@ export async function register() {
     await client.connect();
     try {
       await client.query(sql);
+      await client.query(contentSql);
       console.info("[migrate] Schema applied (tables ready).");
     } finally {
       await client.end();

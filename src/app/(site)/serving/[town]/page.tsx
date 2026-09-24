@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { pageTwitter } from "@/lib/metadata";
 import { notFound } from "next/navigation";
 import { BUSINESS, OG_IMAGE, SITE_URL } from "@/lib/site";
 import {
@@ -25,7 +26,7 @@ export async function generateMetadata({
   const { town } = await params;
   const t = TOWNS[town];
   if (!t) return {};
-  return {
+  return pageTwitter({
     title: {
       absolute: `Senior Living & Memory Care Near ${t.name}, GA | The Joy`,
     },
@@ -38,7 +39,7 @@ export async function generateMetadata({
       type: "website",
       images: [OG_IMAGE],
     },
-  };
+  });
 }
 
 export default async function ServingTownPage({

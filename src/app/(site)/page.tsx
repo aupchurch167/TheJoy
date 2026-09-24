@@ -14,6 +14,7 @@ import LatestPosts from "@/components/sections/LatestPosts";
 import FinalCta from "@/components/sections/FinalCta";
 import { localBusinessJsonLd, faqPageJsonLd } from "@/lib/schema";
 import type { Metadata } from "next";
+import { pageTwitter } from "@/lib/metadata";
 import { BUSINESS, OG_IMAGE } from "@/lib/site";
 import { hasDatabase } from "@/lib/db";
 import { getPublishedPosts } from "@/lib/posts";
@@ -24,7 +25,7 @@ export const dynamic = "force-dynamic";
 // Homepage SEO. Description carries the §5 homepage keyword cluster in Joy
 // voice and §4 compliance: senior living / personal care home / memory care,
 // with "assisted living" only as the search category, never Joy's label.
-export const metadata: Metadata = {
+export const metadata: Metadata = pageTwitter({
   // `absolute` bypasses the root layout's "%s | Joy Senior Living" template, so
   // the brand-first homepage title is not double-branded. (The `keywords` meta
   // tag was removed: Google ignores it and it only advertised our targets.)
@@ -42,7 +43,7 @@ export const metadata: Metadata = {
     type: "website",
     images: [OG_IMAGE],
   },
-};
+});
 
 export default async function Home() {
   // Pull the 3 latest published posts for the Stories section (falls back to

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { pageTwitter } from "@/lib/metadata";
 import { hasDatabase } from "@/lib/db";
 import { getByToken } from "@/lib/employee-feedback";
 import { getSitePhotos } from "@/lib/site-photos";
@@ -26,10 +27,10 @@ function Wordmark({ logo }: { logo: { src: string; set: boolean } }) {
 
 // Tokenized + private: never index, always fresh.
 export const dynamic = "force-dynamic";
-export const metadata: Metadata = {
+export const metadata: Metadata = pageTwitter({
   title: "Team check-in",
   robots: { index: false, follow: false },
-};
+});
 
 function Closed({ logo }: { logo: { src: string; set: boolean } }) {
   return (

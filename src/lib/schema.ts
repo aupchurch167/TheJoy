@@ -8,6 +8,7 @@ import {
   visibleServiceDetails,
 } from "./site";
 import type { Post } from "./posts";
+import { isoDateTime, publicDescription } from "./post-description";
 import type { ServiceDetail } from "./site";
 
 /**
@@ -386,10 +387,10 @@ export function articleJsonLd(post: Post) {
     "@type": "Article",
     "@id": `${url}#article`,
     headline: post.title,
-    description: post.meta_description || post.excerpt || undefined,
+    description: publicDescription(post),
     image: post.hero_image || undefined,
-    datePublished: post.published_at || undefined,
-    dateModified: post.updated_at || post.published_at || undefined,
+    datePublished: isoDateTime(post.published_at),
+    dateModified: isoDateTime(post.updated_at || post.published_at),
     // Person only for a real person (E-E-A-T on a YMYL senior-care site);
     // the company name and stray bylines are the Organization, not a Person.
     author: authorEntity(post.author),

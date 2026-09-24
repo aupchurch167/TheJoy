@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { pageTwitter } from "@/lib/metadata";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import {
@@ -34,9 +35,9 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { slug } = await params;
   const service = getServiceDetail(slug);
-  if (!service) return { title: "Not found", robots: { index: false } };
+  if (!service) return pageTwitter({ title: "Not found", robots: { index: false } });
 
-  return {
+  return pageTwitter({
     title: service.metaTitle,
     description: service.metaDescription,
     alternates: { canonical: `/services/${service.slug}` },
@@ -47,7 +48,7 @@ export async function generateMetadata({
       type: "website",
       images: [OG_IMAGE],
     },
-  };
+  });
 }
 
 export default async function ServiceDetailPage({

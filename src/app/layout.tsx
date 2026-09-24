@@ -37,8 +37,14 @@ export const metadata: Metadata = {
   robots: { index: true, follow: true },
   // Default social card. The 1200x630 image is generated at /og and shared via
   // OG_IMAGE. Pages that set their own `openGraph` overwrite this whole object,
-  // so each includes OG_IMAGE too; `twitter` is not overridden by any page, so
-  // this twitter image is inherited everywhere.
+  // so each includes OG_IMAGE too.
+  //
+  // twitter:title and twitter:description are intentionally unset here. Next
+  // fills a missing twitter title/description from the page's own openGraph or
+  // title/description, but an explicit value on this layout is inherited by
+  // every page and blocks that. Pages call pageTwitter() so the tags match
+  // that page. This object only keeps the card type and the shared image for
+  // any route that does not set twitter itself.
   openGraph: {
     type: "website",
     siteName: BUSINESS.name,
@@ -50,8 +56,6 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: DEFAULT_TITLE,
-    description: BUSINESS.descriptor,
     images: [OG_IMAGE.url],
   },
 };
