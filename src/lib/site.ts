@@ -18,7 +18,11 @@
 
 /** Business facts. Keep these identical to the Google Business Profile (NAP). */
 export const BUSINESS = {
+  // Short brand for prose, the header wordmark, and page titles.
   name: "Joy Senior Living",
+  // Canonical listing name (Enjoy and the Google profile). Use on NAP lines
+  // (footer, contact, schema). Do not swap this into body copy.
+  listingName: "The Joy Senior Living of Loganville",
   legalDescriptor: "personal care home",
   // Descriptor line used in meta + hero. Do not reword without checking §4.
   descriptor: "Senior living and memory care (personal care home) in Loganville, GA.",
@@ -29,6 +33,8 @@ export const BUSINESS = {
   faxHref: "tel:+14043936689",
   email: "hello@joyseniorcare.com",
   emailHref: "mailto:hello@joyseniorcare.com",
+  // Public website as families should see it (canonical host is www).
+  website: "joyseniorcare.com",
   // VERIFY against the Google listing before launch (see OPERATIONS.md checklist).
   address: {
     street: "434 Conyers Rd",
@@ -131,6 +137,25 @@ export const SOCIAL: { label: string; href: string }[] = [
 ];
 
 /**
+ * The one Joy to Enjoy referral handoff. Rendered once, in the footer.
+ * Do not repeat these links on other pages, and do not drop the UTMs.
+ */
+export const ENJOY_HANDOFF = {
+  heading: "Comparing senior living options?",
+  before: "Explore",
+  careCheck: {
+    label: "Care Check",
+    href: "https://enjoysrliving.com/care-check?utm_source=joy&utm_medium=referral&utm_campaign=compare-options",
+  },
+  between: "and",
+  listing: {
+    label: "our listing",
+    href: "https://enjoysrliving.com/directory/the-joy-senior-living-of-loganville?utm_source=joy&utm_medium=referral&utm_campaign=compare-options",
+  },
+  after: "on Enjoy Senior Living.",
+} as const;
+
+/**
  * Entity/SEO profile for the schema.org LocalBusiness markup (owner-supplied
  * data plus external listings). §4 note: the schema NEVER declares Joy an
  * assisted living facility. The `@type` stays LocalBusiness/SeniorCare and the
@@ -142,10 +167,7 @@ export const SOCIAL: { label: string; href: string }[] = [
  * instead. VERIFY the executive-director credential line stays accurate.
  */
 export const ORG_PROFILE = {
-  alternateName: [
-    "The Joy Senior Living of Loganville",
-    "The Joy of Loganville",
-  ],
+  alternateName: [BUSINESS.name, "The Joy of Loganville"],
   image:
     "https://cdn.prod.website-files.com/6655063219502b9f80b43360/66550793cb73b19370860b32_Copy%20of%20Joy%20Logo%20(1200%20x%20500%20px)%20(1)-p-500.png",
   geo: { latitude: 33.836512, longitude: -83.904572 },
@@ -166,6 +188,7 @@ export const ORG_PROFILE = {
     "https://www.caring.com/senior-living/georgia/loganville/joy-senior-living",
     "https://health.usnews.com/best-senior-living/the-joy-senior-living-of-loganville-35811",
     "https://www.yelp.com/biz/the-joy-senior-living-loganville",
+    "https://enjoysrliving.com/directory/the-joy-senior-living-of-loganville",
   ],
   // §4-compliant: "assisted living" appears only as the search category.
   description: `The Joy Senior Living of Loganville is a ${BUSINESS.beds}-suite personal care home in ${BUSINESS.address.city}, ${BUSINESS.address.state} offering senior living, memory care, and respite care. Families searching for assisted living near ${BUSINESS.address.city} find a personal care home small enough to know every resident by name. Led by an executive director with more than 20 years of experience as a registered nurse, The Joy provides staff on-site around the clock, home-cooked meals, and daily activities.`,

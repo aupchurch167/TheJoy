@@ -80,7 +80,7 @@ export default async function TourPage() {
         </div>
 
         <p className="mt-6 text-base text-ink-soft">
-          {BUSINESS.name} ({BUSINESS.legalDescriptor}) is at{" "}
+          {BUSINESS.listingName} ({BUSINESS.legalDescriptor}) is at{" "}
           {BUSINESS_ADDRESS_ONE_LINE}.
         </p>
       </section>

@@ -1,4 +1,4 @@
-import { BUSINESS } from "@/lib/site";
+import { BUSINESS, SITE_URL } from "@/lib/site";
 import { getSettings, toTelHref, toMailHref, tourHref } from "@/lib/settings";
 import { getSitePhotos } from "@/lib/site-photos";
 import Photo from "@/components/Photo";
@@ -52,13 +52,24 @@ export default async function FinalCta() {
               <dd className="mt-1 text-lg">
                 <a
                   href={`https://maps.google.com/?q=${encodeURIComponent(
-                    BUSINESS.name + " " + settings.address
+                    BUSINESS.listingName + " " + settings.address
                   )}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="hover:text-white"
                 >
+                  <span className="block">{BUSINESS.listingName}</span>
                   {settings.address}
+                </a>
+              </dd>
+            </div>
+            <div>
+              <dt className="text-sm uppercase tracking-wide text-white/50">
+                Website
+              </dt>
+              <dd className="mt-1 text-lg">
+                <a href={SITE_URL} className="hover:text-white">
+                  {BUSINESS.website}
                 </a>
               </dd>
             </div>
