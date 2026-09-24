@@ -171,8 +171,17 @@ export default async function SiteFooter() {
               className="font-semibold text-clay hover:underline"
             >
               {ENJOY_HANDOFF.careCheck.label}
-            </a>{" "}
-            {ENJOY_HANDOFF.between}{" "}
+            </a>
+            {ENJOY_HANDOFF.afterCareCheck}{" "}
+            <a
+              href={ENJOY_HANDOFF.walton.href}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-semibold text-clay hover:underline"
+            >
+              {ENJOY_HANDOFF.walton.label}
+            </a>
+            {ENJOY_HANDOFF.afterWalton}{" "}
             <a
               href={ENJOY_HANDOFF.listing.href}
               target="_blank"
