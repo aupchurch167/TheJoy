@@ -83,16 +83,33 @@ WHERE slug = $md$you-dont-have-to-be-falling-apart-to-take-a-break$md$
 -- how-families-stay-connected-at-the-joy (72 -> 157)
 UPDATE posts SET
   excerpt = CASE
-    WHEN excerpt IS NULL OR btrim(excerpt) = '' OR btrim(excerpt) = $md$At The Joy Senior Living, we make it easy for families to stay connected$md$ THEN $md$How families stay close to loved ones at The Joy in Loganville, GA: flexible visiting hours, shared meals, birthday parties, holiday events, and game nights.$md$
+    WHEN excerpt IS NULL OR btrim(excerpt) = '' OR btrim(excerpt) = $md$At The Joy Senior Living, we make it easy for families to stay connected$md$ THEN $md$How families stay close to Mom or Dad at The Joy in Loganville, GA: flexible visiting hours, shared meals, birthday parties, holiday events, and game nights.$md$
     ELSE excerpt
   END,
   meta_description = CASE
-    WHEN nullif(btrim(meta_description), '') IS NOT NULL THEN $md$How families stay close to loved ones at The Joy in Loganville, GA: flexible visiting hours, shared meals, birthday parties, holiday events, and game nights.$md$
+    WHEN nullif(btrim(meta_description), '') IS NOT NULL THEN $md$How families stay close to Mom or Dad at The Joy in Loganville, GA: flexible visiting hours, shared meals, birthday parties, holiday events, and game nights.$md$
     ELSE meta_description
   END,
   updated_at = now()
 WHERE slug = $md$how-families-stay-connected-at-the-joy$md$
   AND btrim(coalesce(nullif(btrim(meta_description), ''), excerpt, '')) = $md$At The Joy Senior Living, we make it easy for families to stay connected$md$;
+
+-- how-families-stay-connected-at-the-joy, voice-guide follow-up (157 -> 157)
+-- Databases that already ran the statement above hold the first rewrite
+-- ("...close to loved ones..."). Move that exact text to the voice-guide
+-- wording. A row whose public description was edited in Admin is left alone.
+UPDATE posts SET
+  excerpt = CASE
+    WHEN excerpt IS NULL OR btrim(excerpt) = '' OR btrim(excerpt) = $md$How families stay close to loved ones at The Joy in Loganville, GA: flexible visiting hours, shared meals, birthday parties, holiday events, and game nights.$md$ THEN $md$How families stay close to Mom or Dad at The Joy in Loganville, GA: flexible visiting hours, shared meals, birthday parties, holiday events, and game nights.$md$
+    ELSE excerpt
+  END,
+  meta_description = CASE
+    WHEN btrim(meta_description) = $md$How families stay close to loved ones at The Joy in Loganville, GA: flexible visiting hours, shared meals, birthday parties, holiday events, and game nights.$md$ THEN $md$How families stay close to Mom or Dad at The Joy in Loganville, GA: flexible visiting hours, shared meals, birthday parties, holiday events, and game nights.$md$
+    ELSE meta_description
+  END,
+  updated_at = now()
+WHERE slug = $md$how-families-stay-connected-at-the-joy$md$
+  AND btrim(coalesce(nullif(btrim(meta_description), ''), excerpt, '')) = $md$How families stay close to loved ones at The Joy in Loganville, GA: flexible visiting hours, shared meals, birthday parties, holiday events, and game nights.$md$;
 
 -- nourishing-the-golden-years-the-vital-role-of-nutrition-in-senior-living (33 -> 158)
 UPDATE posts SET
