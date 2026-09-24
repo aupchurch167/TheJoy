@@ -30,7 +30,7 @@ export function localBusinessJsonLd(opts?: { image?: string }) {
     "@context": "https://schema.org",
     "@type": ["LocalBusiness", "SeniorCare"],
     "@id": `${SITE_URL}/#business`,
-    name: BUSINESS.name,
+    name: BUSINESS.listingName,
     alternateName: ORG_PROFILE.alternateName,
     description: ORG_PROFILE.description,
     url: SITE_URL,
@@ -148,7 +148,7 @@ export function servingServiceJsonLd(town: { name: string; slug: string }) {
     provider: {
       "@type": ["LocalBusiness", "SeniorCare"],
       "@id": `${SITE_URL}/#business`,
-      name: BUSINESS.name,
+      name: BUSINESS.listingName,
     },
     areaServed: `${town.name}, GA`,
   };
@@ -174,7 +174,7 @@ export function serviceJsonLd(
     provider: {
       "@type": ["LocalBusiness", "SeniorCare"],
       "@id": `${SITE_URL}/#business`,
-      name: BUSINESS.name,
+      name: BUSINESS.listingName,
     },
     areaServed: ["Loganville, GA", "Walton County, GA", "Gwinnett County, GA"],
   };
@@ -221,7 +221,7 @@ export function mellissaPersonJsonLd() {
     worksFor: {
       "@type": ["LocalBusiness", "SeniorCare"],
       "@id": `${SITE_URL}/#business`,
-      name: BUSINESS.name,
+      name: BUSINESS.listingName,
     },
   };
 }
@@ -236,7 +236,7 @@ export function aboutPageJsonLd() {
         "@type": "AboutPage",
         "@id": `${url}#about`,
         url,
-        name: `About ${BUSINESS.name}`,
+        name: `About ${BUSINESS.listingName}`,
         about: { "@id": `${SITE_URL}/#business` },
         mainEntity: { "@id": `${SITE_URL}/#mellissa` },
       },
@@ -272,7 +272,7 @@ export function blogCollectionJsonLd(
     publisher: {
       "@type": "Organization",
       "@id": `${SITE_URL}/#business`,
-      name: BUSINESS.name,
+      name: BUSINESS.listingName,
     },
     blogPost: posts.map((p) => ({
       "@type": "BlogPosting",
@@ -363,7 +363,7 @@ function authorEntity(author: string) {
   return {
     "@type": "Organization",
     "@id": `${SITE_URL}/#business`,
-    name: BUSINESS.name,
+    name: BUSINESS.listingName,
     url: SITE_URL,
   };
 }
@@ -395,7 +395,7 @@ export function articleJsonLd(post: Post) {
     author: authorEntity(post.author),
     publisher: {
       "@type": "Organization",
-      name: BUSINESS.name,
+      name: BUSINESS.listingName,
       url: SITE_URL,
     },
     mainEntityOfPage: { "@type": "WebPage", "@id": url },

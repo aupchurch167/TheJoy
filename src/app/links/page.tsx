@@ -252,8 +252,10 @@ export default async function LinksPage() {
 
         {/* Footer */}
         <footer className="flex flex-col gap-1 border-t border-ink/[0.12] pt-5 text-[0.78rem] leading-relaxed text-ink-faint">
+          <span>{BUSINESS.listingName}</span>
           <span>{BUSINESS.address.street}, {BUSINESS.address.city}, {BUSINESS.address.state} {BUSINESS.address.zip}</span>
           <span>{BUSINESS.phone}</span>
+          <span>{BUSINESS.website}</span>
           <span>{LINKINBIO_LICENSE_LINE}</span>
         </footer>
       </div>

@@ -16,11 +16,11 @@ const SERVICES_LINE = MEMORY_CARE.enabled
   : "personal care and respite";
 
 export const metadata: Metadata = {
-  title: { absolute: "For Professionals | Joy Senior Living of Loganville" },
+  title: { absolute: "For Professionals | The Joy Senior Living of Loganville" },
   description: `Partner materials for case managers and placement agencies: ${SERVICES_LINE} at The Joy in Loganville, GA.`,
   alternates: { canonical: "/partners" },
   openGraph: {
-    title: "For Professionals | Joy Senior Living of Loganville",
+    title: "For Professionals | The Joy Senior Living of Loganville",
     description: `Partner materials for case managers and placement agencies: ${SERVICES_LINE} at The Joy in Loganville, GA.`,
     url: "/partners",
     type: "website",
