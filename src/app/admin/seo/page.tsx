@@ -1,6 +1,8 @@
 import { requireAdmin } from "@/lib/require-admin";
 import { hasDatabase } from "@/lib/db";
 import { getKeywordTrends, rankLoggingEnabled } from "@/lib/ranks";
+import { indexNowKey } from "@/lib/indexnow";
+import { IndexNowButton } from "./IndexNowButton";
 import {
   PageHeader,
   Badge,
@@ -48,7 +50,18 @@ export default async function SeoPage() {
       <PageHeader
         title="SEO ranks"
         description="Google position for the keywords Joy chases, logged nightly by the cron worker. Lower is better; a dash means we were not in the top 100 that day."
+        actions={indexNowKey() ? <IndexNowButton /> : undefined}
       />
+
+      {!indexNowKey() && (
+        <div className="mb-6 flex items-start gap-3 rounded-xl border border-gold/30 bg-gold/10 px-4 py-3 text-sm text-gold">
+          <span aria-hidden>⚠️</span>
+          <p>
+            Bing is not being told about new pages until an{" "}
+            <code>INDEXNOW_KEY</code> is set (see OPERATIONS.md).
+          </p>
+        </div>
+      )}
 
       {!rankLoggingEnabled() && (
         <div className="mb-6 flex items-start gap-3 rounded-xl border border-gold/30 bg-gold/10 px-4 py-3 text-sm text-gold">

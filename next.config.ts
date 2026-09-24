@@ -93,6 +93,17 @@ const nextConfig: NextConfig = {
   async headers() {
     return loadNoindexHeaders();
   },
+  async rewrites() {
+    // IndexNow key file: /<INDEXNOW_KEY>.txt is served by a route handler that
+    // only answers for the real key (see src/lib/indexnow.ts). Runs after
+    // files and pages, so robots.txt and anything in public/ win.
+    return [
+      {
+        source: "/:key([a-zA-Z0-9-]{8,128})\\.txt",
+        destination: "/api/indexnow/:key",
+      },
+    ];
+  },
 };
 
 export default nextConfig;

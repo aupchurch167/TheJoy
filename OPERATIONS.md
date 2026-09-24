@@ -648,6 +648,26 @@ nightly. It needs a `SERPAPI_KEY` (from serpapi.com); without it the page stays
 empty and nothing is charged. The tracked keywords live in `src/lib/site.ts`
 (`TRACKED_KEYWORDS`) if you want to change them.
 
+### Bing (IndexNow)
+
+IndexNow tells Bing the moment a page is new or changed, so it gets crawled in
+minutes instead of days. (Yandex, Seznam and Naver share the same feed. Google
+does not use it; Search Console covers Google.)
+
+Setup, once:
+
+1. Make up a key: 8 to 128 letters, digits or dashes. Bing's page at
+   bing.com/indexnow/getstarted will generate one for you.
+2. In Railway, set `INDEXNOW_KEY` to that key and redeploy.
+3. Check `https://www.joyseniorcare.com/<your key>.txt` shows the key. That is
+   how Bing confirms the site is ours. (Nothing to upload; the site serves it.)
+4. `/admin > SEO > Send all pages to Bing` once, to submit every page in the
+   sitemap.
+
+After that it runs itself: publishing or editing a blog post pings Bing, and so
+does a scheduled post going live. Pings only go out from the real www domain,
+never the Railway preview URL. Without the key, nothing is sent.
+
 ### Analytics (optional)
 
 Set `NEXT_PUBLIC_PLAUSIBLE_DOMAIN` to `joyseniorcare.com` to turn on Plausible

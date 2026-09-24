@@ -1,4 +1,5 @@
 import { query } from "./db";
+import { submitToIndexNow, postUrls } from "./indexnow";
 
 export type PostStatus = "draft" | "scheduled" | "published";
 
@@ -188,13 +189,16 @@ export async function deletePost(id: string): Promise<void> {
  * Returns how many posts went live.
  */
 export async function publishDueScheduledPosts(): Promise<number> {
-  const rows = await query<{ id: string }>(
+  const rows = await query<{ id: string; slug: string }>(
     `UPDATE posts
        SET status = 'published', updated_at = now()
      WHERE status = 'scheduled'
        AND published_at IS NOT NULL
        AND published_at <= now()
-     RETURNING id`
+     RETURNING id, slug`
   );
+  if (rows.length > 0) {
+    await submitToIndexNow(rows.flatMap((r) => postUrls(r.slug)));
+  }
   return rows.length;
 }
