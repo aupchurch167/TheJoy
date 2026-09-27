@@ -11,6 +11,17 @@ import JsonLd from "@/components/JsonLd";
 import TourButton from "@/components/TourButton";
 import LeadForm from "@/components/LeadForm";
 
+/**
+ * One contextual Enjoy guide link (COO approved). Host is always
+ * https://enjoysrliving.com. Do not drop the UTMs.
+ */
+const ENJOY_TOUR_GUIDE = {
+  before: "Bring a checklist to your visit. Here are the",
+  label: "questions worth asking on any senior living tour",
+  after: ".",
+  href: "https://enjoysrliving.com/guides/questions-to-ask-on-a-senior-living-tour?utm_source=joy&utm_medium=referral&utm_campaign=compare-options",
+} as const;
+
 // A real page (not a fragment) so the old tour/contact URLs 301 here cleanly.
 export const dynamic = "force-dynamic";
 
@@ -62,6 +73,18 @@ export default async function TourPage() {
             home, answers your questions, and tells you honestly whether Joy is
             the right fit for your parent. There is no pressure and nothing to
             sign.
+          </p>
+          <p>
+            {ENJOY_TOUR_GUIDE.before}{" "}
+            <a
+              href={ENJOY_TOUR_GUIDE.href}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-semibold text-clay hover:underline"
+            >
+              {ENJOY_TOUR_GUIDE.label}
+            </a>
+            {ENJOY_TOUR_GUIDE.after}
           </p>
           <p>
             Prefer to talk first? Call us any time. If a tour is hard to arrange
