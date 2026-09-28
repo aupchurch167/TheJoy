@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { pageTwitter } from "@/lib/metadata";
-import { ABOUT, BUSINESS, MELLISSA, OG_IMAGE } from "@/lib/site";
+import { ABOUT, BUSINESS, CONTEXTUAL_READING, MELLISSA, OG_IMAGE } from "@/lib/site";
 import { aboutPageJsonLd } from "@/lib/schema";
 import { getSettings, tourHref } from "@/lib/settings";
 import { getSitePhotos } from "@/lib/site-photos";
@@ -86,6 +86,14 @@ export default async function AboutPage() {
               {ABOUT.mellissa.map((p, i) => (
                 <p key={i}>{p}</p>
               ))}
+              <p>
+                <a
+                  href={CONTEXTUAL_READING.about.href}
+                  className="font-semibold text-clay underline"
+                >
+                  {CONTEXTUAL_READING.about.title}
+                </a>
+              </p>
             </div>
             {MELLISSA.quote.trim() !== "" && (
               <blockquote className="mt-6 border-l-2 border-clay pl-5">

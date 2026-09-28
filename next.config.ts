@@ -1,24 +1,15 @@
 import type { NextConfig } from "next";
-import { readFileSync } from "node:fs";
-import { join } from "node:path";
 
 /**
- * 301 redirects for migrated Webflow URLs. Sourced from db/redirects.json so
- * old links (and their SEO) survive the move. The import script
- * (scripts/import-webflow.mjs) writes that file; edit it by hand for one-offs.
- * Applied at build time, so redeploy after changing it.
+ * Legacy Webflow paths live in db/redirects.json and are applied in
+ * src/proxy.ts (see src/lib/canonical-request.ts), not here.
+ *
+ * next.config redirects run before the proxy, and `permanent: true` is a 308.
+ * Keeping them here would 308 the path and then 301 the host. The proxy issues
+ * one 301 that includes host, protocol, trailing slash, and the legacy path.
+ * `skipTrailingSlashRedirect` stops Next from 308-ing a trailing slash before
+ * that proxy decision.
  */
-function loadRedirects() {
-  try {
-    const raw = readFileSync(join(process.cwd(), "db", "redirects.json"), "utf8");
-    const entries = JSON.parse(raw) as { from: string; to: string }[];
-    return entries
-      .filter((e) => e && e.from && e.to && e.from !== e.to)
-      .map((e) => ({ source: e.from, destination: e.to, permanent: true }));
-  } catch {
-    return [];
-  }
-}
 
 /**
  * Keep pre-launch / staging hosts out of Google. Two triggers, both belt and
@@ -83,12 +74,15 @@ function imageRemotePatterns() {
 }
 
 const nextConfig: NextConfig = {
+  // Trailing-slash 308s are Next's, and they run before the proxy. Turning
+  // them off lets the proxy fold the slash into the same 301 as host and
+  // protocol. Repeated slashes (`//`, `//about//`) are a separate hardcoded
+  // 308 in Next's router (resolve-routes) that no config flag disables,
+  // including skipProxyUrlNormalize. That hop stays a 308.
+  skipTrailingSlashRedirect: true,
   images: {
     formats: ["image/avif", "image/webp"],
     remotePatterns: imageRemotePatterns(),
-  },
-  async redirects() {
-    return loadRedirects();
   },
   async headers() {
     return loadNoindexHeaders();

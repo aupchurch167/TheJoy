@@ -12,6 +12,7 @@ import CommunityPhotos from "@/components/sections/CommunityPhotos";
 import Awards from "@/components/sections/Awards";
 import Faq from "@/components/sections/Faq";
 import LatestPosts from "@/components/sections/LatestPosts";
+import HomeGuides from "@/components/sections/HomeGuides";
 import FinalCta from "@/components/sections/FinalCta";
 import { localBusinessJsonLd, faqPageJsonLd } from "@/lib/schema";
 import type { Metadata } from "next";
@@ -85,6 +86,7 @@ export default async function Home() {
       <TrustStrip />
       <LicensedInspected />
       <Difference />
+      <HomeGuides />
       <ATuesday />
       <CommunityPhotos />
       <MeetMellissa />

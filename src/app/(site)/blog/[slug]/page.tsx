@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { hasDatabase } from "@/lib/db";
 import { getPublishedPostBySlug, getPublishedPosts } from "@/lib/posts";
+import { pickRelatedPosts } from "@/lib/related-posts";
 import { MEMORY_CARE } from "@/lib/site";
 import { articleJsonLd, breadcrumbJsonLd, authorByline } from "@/lib/schema";
 import { BUSINESS, OG_IMAGE } from "@/lib/site";
@@ -52,12 +53,13 @@ export default async function PostPage({
   if (!post) notFound();
   const settings = await getSettings();
 
-  // Internal-linking mesh: a few other published posts to keep reading, plus a
-  // contextual link into the right care page (descriptive anchor). All targets
-  // are guaranteed to exist (published posts / canonical pages), so no 404s.
-  const related = (hasDatabase() ? await getPublishedPosts(7) : [])
-    .filter((p) => p.slug !== post.slug)
-    .slice(0, 3);
+  // Related reading: 4 other published posts (same category or shared
+  // words in the title), as plain <a href> links. Targets are published posts.
+  const related = pickRelatedPosts(
+    post,
+    hasDatabase() ? await getPublishedPosts() : [],
+    4
+  );
   const isMemoryTopic = /memory|dementia|alzheimer/i.test(
     `${post.category ?? ""} ${post.title} ${post.slug}`
   );
@@ -126,26 +128,20 @@ export default async function PostPage({
         , a personal care home in {BUSINESS.address.city}, {BUSINESS.address.state}.
       </p>
 
-      {/* Keep reading: internal mesh to other published posts. */}
       {related.length > 0 && (
         <section className="mt-12">
           <h2 className="font-display text-2xl font-semibold text-ink">
-            Keep reading
+            Related reading
           </h2>
-          <ul className="mt-5 space-y-4">
+          <ul className="mt-5 space-y-3">
             {related.map((p) => (
               <li key={p.id}>
-                <Link
+                <a
                   href={`/blog/${p.slug}`}
-                  className="font-display text-lg font-semibold text-ink hover:text-clay"
+                  className="font-display text-lg font-semibold text-ink underline decoration-clay/40 underline-offset-2 hover:text-clay"
                 >
                   {p.title}
-                </Link>
-                {p.excerpt && (
-                  <p className="mt-1 text-base leading-relaxed text-ink-soft">
-                    {p.excerpt}
-                  </p>
-                )}
+                </a>
               </li>
             ))}
           </ul>
