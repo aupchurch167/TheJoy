@@ -7,9 +7,8 @@
 //      manager from another company) to the organization, "Joy Senior Living".
 //   2. Normalizes bare first names from the old import ("Mellissa" -> "Mellissa
 //      Daniel", "Adam" -> "Adam Upchurch") so they match the real Person.
-//   3. With --mellissa-care, credits Mellissa Daniel (RN) on care and
-//      memory-care posts (matched by category/slug/title), because an RN byline
-//      on the dementia cluster is worth more than any backlink.
+//   3. With --mellissa-care, credits Mellissa Daniel, Executive Director, on
+//      care and memory-care posts (matched by category/slug/title).
 //
 // The schema @type itself is fixed in code (src/lib/schema.ts): any author that
 // is not a known real person renders as Organization. This script fixes the
@@ -131,7 +130,7 @@ try {
       CARE_TOPIC.test(`${p.category || ""} ${p.slug || ""} ${p.title || ""}`)
     );
     if (care.length) {
-      console.log(`\nCare-topic posts (candidates for a Mellissa RN byline, use --mellissa-care):`);
+      console.log(`\nCare-topic posts (candidates for a Mellissa Daniel byline, use --mellissa-care):`);
       for (const p of care) console.log(`  ${p.slug}  (author: ${p.author})`);
     }
   }

@@ -630,3 +630,11 @@ $tourpost$,
 WHERE NOT EXISTS (
   SELECT 1 FROM posts WHERE slug = $tourpost$questions-to-ask-personal-care-home-tour$tourpost$
 );
+
+-- Typo: "She's an caregiver at heart." -> "She's a caregiver at heart."
+-- Guarded to this slug, and only while the typo is still in the body.
+UPDATE posts SET
+  body = replace(body, $md$an caregiver at heart$md$, $md$a caregiver at heart$md$),
+  updated_at = now()
+WHERE slug = $md$what-mellissa-notices-in-the-first-10-minutes-of-a-tour$md$
+  AND body LIKE $md$%an caregiver at heart%$md$;
