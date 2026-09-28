@@ -1,5 +1,3 @@
-import { TESTIMONIALS } from "./site";
-
 /**
  * Content for the conversion landing pages (/cost, /reviews, and the rest as
  * they are built). Kept here (not in components) so the copy and the numbers
@@ -118,27 +116,179 @@ export const COST_VALUE_QUOTE = {
 
 /* ---------------------------- /reviews --------------------------- */
 
-/** The resident's own line opens the wall; no marketing sentence beats it. */
-const REVIEW_OPENING = {
-  quote: "I like my new home.",
-  who: "What Mike's father said, unprompted, over coffee in his room.",
-};
-
 /**
- * The quote wall = the resident's line, then the real family reviews from the
- * homepage (single source: TESTIMONIALS in site.ts). `align` alternates for
- * rhythm on the page.
+ * Quote wall for /reviews, in the owner-approved order. Quote text and the
+ * odd attributions ("Brison.", "Misty. and Sidney.") are copied from the
+ * family reviews. Cuts stay marked with "...". Do not paraphrase.
+ * The three quotes after Jacquie were held back by the copy draft; the owner
+ * asked for them on the page (Rayna P., Tammy's mom, and the tour line).
  */
-export function reviewQuotes(): { quote: string; who: string; align: "start" | "end" }[] {
-  const rest = TESTIMONIALS.map((t) => ({
-    quote: t.quote,
-    who: t.context ? `${t.name}, ${t.context.toLowerCase()}` : t.name,
-  }));
-  return [REVIEW_OPENING, ...rest].map((q, i) => ({
-    ...q,
-    align: i % 2 ? "end" : "start",
-  }));
-}
+export const REVIEW_WALL: { quote: string; who: string }[] = [
+  {
+    quote: "I like my new home.",
+    who: "What Mike's father said, unprompted, over coffee in his room.",
+  },
+  {
+    quote:
+      "Walking into The Joy with my dad was like walking into a sanctuary of caring and calm... So grateful for everyone at The Joy!",
+    who: "Mike S., resident's son",
+  },
+  {
+    quote: "The staff is friendly... They love the residents like they are family.",
+    who: "Misty, whose mom has called The Joy home for nearly 18 months.",
+  },
+  {
+    quote:
+      "The caring staff have made my mother feel like she is in her home and loved. They have fostered a family environment and hosted family gatherings. It is truly a 'joy' to have found this facility.",
+    who: "Theresa, resident's daughter",
+  },
+  {
+    quote:
+      "They have fostered a family environment and hosted family gatherings... Medication is provided as scheduled and they don’t mind you asking about it.",
+    who: "Theresa S. and Mark J.",
+  },
+  {
+    quote:
+      "We felt welcomed and confident... The staff are warm, attentive, and engaged every time we visit.",
+    who: "Kevin McCloskey",
+  },
+  {
+    quote:
+      "I have seen a lot of communities and this one by far was the absolute BEST!!! We immediately felt welcomed... we are so happy we moved our mom in here.",
+    who: "Sidney, resident's family",
+  },
+  {
+    quote:
+      "The delicious aroma of lunch being prepared (which everything is homemade from scratch) instantly made me hungry... That was the icing on the cake.",
+    who: "Sidney B.",
+  },
+  {
+    quote:
+      "The meals are appetizing and the chef is accommodating to dietary needs... The food is absolutely amazing... great cooks!",
+    who: "Misty G. and Rayna P.",
+  },
+  {
+    quote:
+      "She enjoys 80% of the food and eats well... They will give her food later if she misses a meal.",
+    who: "Shirley P.",
+  },
+  {
+    quote:
+      "We found The Joy through Caring.com. What a blessing!! The staff is fabulous and since all the rooms are only steps away from the central \"nurse's station\" they are easily able to keep a vigilant eye on my independent Dad.",
+    who: "Cathy, resident's daughter",
+  },
+  {
+    quote:
+      "Dad's room is VERY spacious, light, bright, brand new & shining clean! The staff... keep a vigilant eye on my independent Dad.",
+    who: "Cathy K.",
+  },
+  {
+    quote:
+      "She was in a big community for two years. Lovely lobby. I called three times about her cough before anyone called back. Here, they called me first.",
+    who: "Theresa, daughter of a resident",
+  },
+  {
+    quote:
+      "They have been available and eager to answer any and all of our questions... We also like that it's a smaller facility. It's not this massive place where my mom might be overlooked.",
+    who: "Bethany M.",
+  },
+  {
+    quote:
+      "She was beaming, thriving. She evidently has new friends that seem to be right at home too.",
+    who: "Brison.",
+  },
+  {
+    quote:
+      "We were paying more than this for aides who kept changing. The first month here I slept through the night.",
+    who: "Karen, daughter of a resident",
+  },
+  {
+    quote:
+      "I had a list on my phone and I asked all of it. Mellissa sat down and went through every one. Nobody else did that.",
+    who: "Karen, daughter of a resident",
+  },
+  {
+    quote:
+      "We waited eleven months after the first fall. I thought waiting was loyalty. He settled in here in a week, and I got that year back with him (I just wish it had been twelve months longer).",
+    who: "Denise, daughter of a resident",
+  },
+  {
+    quote:
+      "At the end of the day, their staff was the most engaging and caring. On top of that, it's a brand new building so everything was clean and smelled nice.",
+    who: "Nicole, resident's daughter",
+  },
+  {
+    quote:
+      "The community is clean, friendly, and always welcoming!... Everything is brand new, and bright, it all gives a positive feeling.",
+    who: "Misty. and Sidney.",
+  },
+  {
+    quote:
+      "The community plans fun and entertaining activities for the residents and their families.",
+    who: "Misty G.",
+  },
+  {
+    quote:
+      "The compassion and attention from the entire care staff exceeded our expectations!",
+    who: "Diana",
+  },
+  {
+    quote:
+      "I have a wonderful friend here and I love going to see her. The staff is amazing! If you're looking for a special place this is it!",
+    who: "Jacquie, friend of a resident",
+  },
+  {
+    quote:
+      "I love how the staff is extremely engaging with the residents... [The director] is the absolute best. Every time I call her, she is there to assist. The residents love her and I see why!!",
+    who: "Rayna P.",
+  },
+  {
+    quote:
+      "The Manager... offered her model unit, at no cost... A very peaceful atmosphere is felt right when you walk in.",
+    who: "Tammy's mom",
+  },
+  {
+    quote: "I knew right away this was different.",
+    who: "People on a tour",
+  },
+];
+
+/** Family survey answers. The source shows no names. */
+export const REVIEW_SURVEY: { quote: string; who: string }[] = [
+  {
+    quote:
+      "My mother is treated very well by the staff at Joy. The staff all know her by name except for new employees.",
+    who: "Family survey answer",
+  },
+  {
+    quote: "Mom is happy and feels like she is at home.",
+    who: "Family survey answer",
+  },
+  {
+    quote:
+      "The level of care and the attention that my Mom receives. When I have visited her, she seems loved and safe.",
+    who: "Family survey answer",
+  },
+  {
+    quote: "Things that are going well are the attentiveness to the residents.",
+    who: "Family survey answer",
+  },
+  {
+    quote:
+      "This is a blessing for my mother. The staff truly cares and is so passionate about what they do. Thank you!",
+    who: "Family survey answer",
+  },
+];
+
+export const REVIEW_INTRO =
+  "These are families' own words. Some reviews were long, so we shortened them, and three dots mark each spot where we cut. You can read the full reviews where they were posted:";
+
+export const REVIEW_SURVEY_HEADING = "From our family survey";
+
+/** Portrait on /reviews, matching the approved caption. */
+export const REVIEW_MELLISSA_ALT =
+  "Mellissa Daniel, Executive Director of The Joy Senior Living";
+export const REVIEW_MELLISSA_CAPTION = "She gives every tour herself.";
 
 /**
  * Third-party figures shown as chips on /reviews (September 2026):
@@ -373,228 +523,336 @@ export const CHECKLIST_QUOTE = {
 
 /* -------------------------- /serving/* --------------------------- */
 
+export type TownSection = {
+  heading: string;
+  paragraphs: string[];
+  pull?: string;
+};
+
+export type TownCta = {
+  headline: string;
+  /** Line under the tour button. Empty omits it. */
+  note?: string;
+  phoneLead?: string;
+};
+
 export type Town = {
   slug: string;
   name: string;
+  title: string;
+  description: string;
+  eyebrow: string;
+  h1: string;
+  lede: string;
   driveMinutes: number;
+  /**
+   * Road name in the route graphic. Empty string means the graphic shows the
+   * drive time and no road (Dacula).
+   */
   highway: string;
-  heroLede: string;
-  distanceHeading: string;
-  distanceProse: string[];
-  distancePull: string;
-  anchorHeading: string;
-  anchorParas: string[];
-  quote?: { quote: string; who: string } | null;
+  openingCta: TownCta;
+  closingCta: TownCta;
+  /** Sits beside the route graphic. */
+  lead: TownSection;
+  sections: TownSection[];
+  faqsHeading: string;
   faqs: { title: string; body: string }[];
+  mellissaCaption: string;
+};
+
+export const TOWN_MELLISSA = {
+  src: "https://pub-6e43e90472054fe3880f53e8c0ca3b60.r2.dev/blog/mellissa-541839.jpg",
+  alt: "Mellissa Daniel, Executive Director of The Joy Senior Living",
 };
 
 /**
- * Per-town pages. ANTI-DOORWAY (README): rewrite the sentences per town, not
- * just the nouns. Only towns with real, rewritten copy live here; the rest
- * (grayson, monroe, lawrenceville, gwinnett-county, walton-county) are added
- * once their local-anchor copy is written (hospital / churches / neighborhoods
- * / drive time / highway, and any real local quote).
+ * Town pages. Copy is owner-approved and unique per town. Snellville's road is
+ * US 78 (not Highway 20). Dacula's route graphic names no road.
  */
 export const TOWNS: Record<string, Town> = {
   snellville: {
     slug: "snellville",
     name: "Snellville",
+    title: "Personal Care Home Near Snellville, GA | The Joy",
+    description:
+      "The Joy is a 24-suite personal care home with memory care, about 12 minutes from Snellville. Visit any time. Call Mellissa at (470) 684-3569.",
+    eyebrow: "For Snellville families",
+    h1: "Twelve minutes from Snellville, close enough to stop by after work.",
+    lede: "The Joy is a 24-suite personal care home with memory care in Loganville. From Snellville it's about 12 minutes east on US 78.",
     driveMinutes: 12,
-    highway: "Highway 20",
-    heroLede:
-      "Joy is about 12 minutes from downtown Snellville (down Highway 20 toward Loganville).",
-    distanceHeading: "What twelve minutes is really worth",
-    distanceProse: [
-      "It means you can come after work without making a day of it. It means Sunday lunch at the shared table, and being home by two.",
-      "And if something changes at nine at night, you are not on an interstate for an hour deciding what you'll find. You are there before the story is over.",
+    highway: "US 78",
+    openingCta: {
+      headline: "Come see the house. There's nothing to sign.",
+      note: "",
+      phoneLead: "Or call Mellissa at",
+    },
+    closingCta: {
+      headline: "Twelve minutes from Snellville. Come look around.",
+      note: "A tour is just a walk through the house and your questions answered.",
+      phoneLead: "Call Mellissa:",
+    },
+    lead: {
+      heading: "What 12 minutes buys you",
+      paragraphs: [
+        "Twelve minutes is short enough to stop on the way home from work. You don't have to change clothes or plan around it. You can sit with your dad for half an hour and still make your own dinner.",
+        "A lot of the guilt in this decision comes from picturing him alone. Being close won't erase that. It does mean that when the worry starts, you can get in the car and go see for yourself.",
+      ],
+      pull: "The visit you can make on the way home is the one that actually happens.",
+    },
+    sections: [
+      {
+        heading: "What the monthly rate covers",
+        paragraphs: [
+          "The monthly rate includes all of his care, his meals and help with daily living. Rates change, so call us for the current number. We'd rather give you a real figure for your dad than a range that doesn't fit him.",
+        ],
+      },
     ],
-    distancePull:
-      "Distance is the thing families underestimate most, and regret first.",
-    anchorHeading: "Families come to us from Snellville for plain reasons.",
-    anchorParas: [
-      "Most of the calls start the same way: a discharge planner at Piedmont Eastside says he can't go home alone, and there are two days to decide. We take those calls.",
-      "Others find us through their church (the congregations along Highway 78), or from a neighbor whose mother lived here and drove in to see her after work.",
-    ],
-    quote: null,
+    faqsHeading: "What Snellville families ask us",
     faqs: [
       {
         title: "Can I visit whenever I want?",
-        body: "Yes. There are no visiting hours, it's her home. Come at breakfast, come at eight at night. If you want to eat with her, tell the kitchen and there's a plate.",
+        body: "Yes. There are no visiting hours. It's his home now. If you'd like to eat with him, tell the kitchen ahead of time and they'll set a plate for you.",
       },
       {
-        title: "How do I move a parent out of the house she's lived in for forty years?",
-        body: "Slowly, and with her things. Most families bring the chair, the quilt, the photos, and the room stops feeling like a facility by the second week. Mellissa can tell you what to bring first.",
+        title: "How do I move him out of a house he's lived in for forty years?",
+        body: "Slowly, and with his own things. Bring his recliner and the photos off his dresser. Familiar things help a new room feel like his. Mellissa can tell you what to bring first and what can wait.",
       },
       {
-        title: "Do you have an opening right now?",
-        body: "With 24 rooms that changes fast. Call (470) 684-3569 and we'll tell you what's open today, and if we're full, what the wait has actually looked like.",
-      },
-      {
-        title: "Do you take residents from outside Loganville?",
-        body: "Most of our families live in the surrounding towns and drive in. Being nearby matters more than being in the same zip code.",
+        title: "Do you only take people from Loganville?",
+        body: "No. Most of our families live in the towns around Loganville and drive in. What matters is that you can get here easily, and from Snellville you can.",
       },
     ],
+    mellissaCaption: "She'll be the one who shows you around.",
   },
 
-  // VERIFY LOCAL FACTS before publishing: drive minutes, the named highway, and
-  // the hospital reference in each town are best-guess and should be confirmed.
   grayson: {
     slug: "grayson",
     name: "Grayson",
+    title: "10 Minutes from Grayson: Personal & Memory Care | The Joy",
+    description:
+      "A 24-suite personal care home with memory care, 10 minutes down Highway 20 from Grayson. Small enough that the staff know your mom by name.",
+    eyebrow: "Grayson, Georgia",
+    h1: "Ten minutes down Highway 20 from Grayson.",
+    lede: "The Joy is on Conyers Road in Loganville, about ten minutes from Grayson by Highway 20. It's a licensed personal care home with memory care and 24 suites.",
     driveMinutes: 10,
     highway: "Highway 20",
-    heroLede:
-      "Joy is about 10 minutes from Grayson, straight down Highway 20 toward Loganville. Close enough that visiting is a habit, not a trip.",
-    distanceHeading: "Ten minutes changes what visiting means",
-    distanceProse: [
-      "When it's ten minutes, you stop planning visits and start just showing up. Wednesday after work. Saturday with the grandkids and a bag of peaches.",
-      "The families who regret a place an hour away all say a version of the same thing: they meant to go more, and the drive kept winning. Grayson is close enough that the drive never wins.",
+    openingCta: {
+      headline: "Walk through the house with Mellissa. Ask her anything.",
+      note: "",
+      phoneLead: "Or call",
+    },
+    closingCta: {
+      headline: "Ten minutes from Grayson. Come see it.",
+      note: "Bring your questions. We'll answer every one.",
+      phoneLead: "Or phone us at",
+    },
+    lead: {
+      heading: "Close enough to stop planning visits",
+      paragraphs: [
+        "When your mom is ten minutes away, you stop putting visits on the calendar. You swing by on a Wednesday because you were out anyway. You bring the grandkids on Saturday with a bag of peaches.",
+        "Families who chose a place an hour away tell us the same thing. They meant to go more, and the drive kept winning. From Grayson, the drive doesn't get much of a say.",
+      ],
+      pull: "Ten minutes is a visit. An hour is a trip you keep putting off.",
+    },
+    sections: [
+      {
+        heading: "How small is small?",
+        paragraphs: [
+          "Twenty-four suites in one house. That's the whole place. Everyone eats at the same table, and the same team sees your mom every day.",
+          "Small matters most when something changes. The people who see her every day notice when she skips breakfast or seems off in the afternoon. They tell Mellissa that day.",
+        ],
+      },
     ],
-    distancePull:
-      "The right home an hour away turns into the home you keep meaning to visit.",
-    anchorHeading: "Grayson families usually find us the same two ways.",
-    anchorParas: [
-      "A lot of them are already driving past us. Grayson sits right up Highway 20, so the mother who needs more help is often only a few minutes from the table she'll eat at.",
-      "The rest come by word of mouth: a neighbor off Rosebud Road whose father lived here, a nurse who knows the house is small and that Mellissa runs it herself. Small is the whole point. Twenty-four people, not two hundred.",
-    ],
-    quote: null,
+    faqsHeading: "Grayson families usually want to know",
     faqs: [
       {
-        title: "How small is small?",
-        body: "Twenty-four residents, one house. That is the size on purpose. Mellissa and the team know each person's name, their coffee, and which grandchild is coming Sunday. A big building can't do that.",
+        title: "Do you have a room open right now?",
+        body: "Maybe. With 24 suites, that can change from one week to the next. Call (470) 684-3569 and we'll tell you what's open today. If we're full, we'll tell you how long the wait has really been.",
       },
       {
-        title: "Is this assisted living?",
-        body: "Families searching for assisted living near Grayson usually find that a personal care home like Joy is a closer fit: the same daily help (bathing, dressing, medications, meals), in a real house instead of a wing off a lobby.",
+        title: "Will she eat well?",
+        body: "Meals are cooked here in the house, and families bring up the food more than almost anything else. If she has a diet she needs to follow, tell us on your tour.",
       },
       {
-        title: "Can I come by after work on a weeknight?",
-        body: "Yes, there are no visiting hours. It's her home. Come at six, eat with her if you tell the kitchen, and still be back in Grayson before the night's over.",
-      },
-      {
-        title: "Do you have a room open now?",
-        body: "With 24 rooms it changes week to week. Call (470) 684-3569 and we'll tell you what's actually open, and if we're full, what the wait has really been.",
+        title: "I'm not ready to decide. Can I still come look?",
+        body: "Yes. A tour doesn't commit you to anything. Come see the house, then go home and think about it.",
       },
     ],
+    mellissaCaption: "She runs the house herself.",
   },
 
   monroe: {
     slug: "monroe",
     name: "Monroe",
+    title: "Walton County Personal Care Home Near Monroe | The Joy",
+    description:
+      "The Joy is a licensed personal care home with memory care in Loganville, about 15 minutes from Monroe on Highway 78. Call (470) 684-3569.",
+    eyebrow: "Walton County",
+    h1: "A personal care home in Walton County, 15 minutes from Monroe.",
+    lede: "Monroe is the Walton County seat. The Joy is in Loganville, on the west side of the same county, about 15 minutes away on Highway 78.",
     driveMinutes: 15,
     highway: "Highway 78",
-    heroLede:
-      "Joy is about 15 minutes from Monroe, down Highway 78 into Loganville. Far enough to be its own town, close enough to visit on a Tuesday.",
-    distanceHeading: "Fifteen minutes, and the same county",
-    distanceProse: [
-      "Monroe and Loganville share Walton County, and most of what that means is practical: the same roads, the same hospital, the same church names come up at our table.",
-      "It means a daughter in Monroe can come after supper and still be home before it's dark in the winter. And if there's a hard night, she is fifteen minutes away, not on the far side of Atlanta.",
+    openingCta: {
+      headline: "See it in person. Mellissa will likely be the one who greets you.",
+      note: "",
+      phoneLead: "Or call",
+    },
+    closingCta: {
+      headline: "Fifteen minutes from Monroe, in the same county. Visit when you can.",
+      note: "Come for a tour. You won't be asked to sign anything.",
+      phoneLead: "Questions first? Call",
+    },
+    lead: {
+      heading: "Staying in the county she knows",
+      paragraphs: [
+        "Your mother has probably driven Highway 78 more times than anyone could count. Needing more help doesn't have to mean leaving the county. Her church friends and her neighbors can still come see her.",
+        "It keeps you close, too. If she has a hard night, you're about fifteen minutes away.",
+      ],
+    },
+    sections: [
+      {
+        heading: "If she's at Piedmont Walton right now",
+        paragraphs: [
+          "A lot of hard decisions start in a hospital room. Someone tells you your mom can't go back home alone, and suddenly you have a weekend to figure out what comes next.",
+          "If that's where you are, call us from the hospital. Someone here at the house will pick up. We'll tell you what's open and what a move would look like.",
+        ],
+      },
+      {
+        heading: "What the license means",
+        paragraphs: [
+          "The State of Georgia licenses The Joy as a personal care home. That license shapes what we do: help with daily living, medications and meals, in a home small enough to stay personal. There are also things a personal care home isn't set up for. Ask us where that line is for your mom, and we'll tell you straight.",
+          "The Joy has been in compliance at every state inspection.",
+        ],
+      },
     ],
-    distancePull:
-      "Being in the same county sounds small until it's nine at night and you need to be there.",
-    anchorHeading: "Monroe families come to us for reasons close to home.",
-    anchorParas: [
-      "Some start with a discharge planner at Piedmont Walton saying Mom can't go back to the house alone, and a weekend to figure it out. We take those calls and we answer the phone ourselves.",
-      "Others have driven Highway 78 their whole lives and want their mother somewhere on it, near the county they know, cared for by people they can look in the eye. Mellissa is here, not at a corporate office three states away.",
-    ],
-    quote: null,
+    faqsHeading: "Questions from Monroe families",
     faqs: [
       {
-        title: "How far is Joy from Piedmont Walton?",
-        body: "About fifteen minutes down Highway 78. Close enough that a hospital discharge to Joy is an easy same-day move, and close enough for the follow-up visits after.",
+        title: "How far is The Joy from downtown Monroe?",
+        body: "Roughly fifteen minutes. Head west on Highway 78 into Loganville, then a short way down Conyers Road.",
       },
       {
-        title: "Is a personal care home different from assisted living?",
-        body: "In Georgia, yes. Joy is licensed as a personal care home, not an assisted living community. The day-to-day help looks similar (meals, bathing, dressing, medications on time), but it happens in a small house of 24, led by Mellissa.",
+        title: "Who gives her medications?",
+        body: "A certified medication aide is on staff 24 hours a day, overnight included. Every shift ends and starts with a count of her medications, so there's a check at every handoff.",
       },
       {
-        title: "My mother has known these roads her whole life. Will she feel far from home?",
-        body: "That's exactly why families in the same county choose close. Bring her chair, her quilt, her photos. By the second week the room stops feeling like a facility and starts feeling like hers.",
-      },
-      {
-        title: "Do you have an opening?",
-        body: "With 24 rooms it moves fast. Call (470) 684-3569 and we'll tell you what's open today, honestly, and what the wait has looked like if it's full.",
+        title: "Can our family still get together with her there?",
+        body: "Yes. The home has hosted family gatherings, and families visit all the time. Tell Mellissa what you have in mind.",
       },
     ],
+    mellissaCaption: "She leads the home here in Loganville.",
   },
 
   lawrenceville: {
     slug: "lawrenceville",
     name: "Lawrenceville",
+    title: "Small Personal Care Home Near Lawrenceville, GA | The Joy",
+    description:
+      "Twenty minutes down Highway 20 from Lawrenceville, The Joy is a 24-suite personal care home with memory care. Worth the drive if you want small.",
+    eyebrow: "From Lawrenceville",
+    h1: "Twenty minutes from Lawrenceville, and small on purpose.",
+    lede: "You can find big senior buildings closer to Lawrenceville. The Joy is 24 suites in one house in Loganville, about twenty minutes south on Highway 20 through Grayson.",
     driveMinutes: 20,
-    highway: "Highway 20",
-    heroLede:
-      "Joy is about 20 minutes from Lawrenceville, down Highway 20 through Grayson into Loganville. A small house, not a big campus.",
-    distanceHeading: "Twenty minutes to something smaller",
-    distanceProse: [
-      "Lawrenceville has the big buildings, the marketing, the long hallways. Twenty minutes south there's a house with 24 people in it and a kitchen you can smell from the porch.",
-      "Some families want the campus. Others drive the twenty minutes on purpose, because they've walked the big lobbies and want their mother somewhere she'll be known by name instead of by room number.",
+    highway: "Highway 20 through Grayson",
+    openingCta: {
+      headline: "Make the drive once and decide if it's worth it.",
+      note: "",
+      phoneLead: "Or call Mellissa at",
+    },
+    closingCta: {
+      headline: "Twenty minutes from Lawrenceville. See if small is right for her.",
+      note: "No sales pitch. Just a walk through the house.",
+      phoneLead: "Or call",
+    },
+    lead: {
+      heading: "Why some families drive past the big places",
+      paragraphs: [
+        "Large buildings have long hallways and a lot of residents. Some families like that. Others walk through and come away worried that Mom will be one more door on a long hall.",
+        "Those families tend to keep looking for something smaller. With 24 suites, the people who help your mom every day can learn her whole story. One person runs the house, and her name is Mellissa.",
+      ],
+      pull: "Big is easy to find. Small enough to know her by name is worth a short drive.",
+    },
+    sections: [
+      {
+        heading: "Who's here, and when",
+        paragraphs: [
+          "A certified medication aide is on staff 24 hours a day, including overnight. A nurse is on site 24 hours a week, spread across three days. A nurse isn't here overnight. We'd rather you read that here than find out later.",
+          "Medications are counted at the end of every shift and again at the start of the next one. It's a double check at every shift change.",
+        ],
+      },
     ],
-    distancePull:
-      "Bigger is easy to find. Small enough to know your parent by name is worth a short drive.",
-    anchorHeading: "Lawrenceville families make the drive on purpose.",
-    anchorParas: [
-      "A discharge planner at Northside Gwinnett often hands out a list of the largest places first. The families who keep looking, who want small, tend to find their way down Highway 20 to us.",
-      "What they're after is usually the same: one person who knows the whole story, not a shift that turns over. Mellissa runs this house herself, and 24 rooms is a number a person can actually hold in their head.",
-    ],
-    quote: null,
+    faqsHeading: "Before you make the drive",
     faqs: [
       {
-        title: "Why drive twenty minutes when there are places right in Lawrenceville?",
-        body: "Because most of those are large. Joy is 24 rooms in a real house, led by Mellissa, where the staff know your parent's name and habits. Families who want small, not big, make the drive gladly.",
+        title: "Why drive twenty minutes when there are places in Lawrenceville?",
+        body: "Because you want small. If a large building suits your mom, you'll find good options closer to home. If you want her somewhere everyone knows her, the drive is worth it. Plenty of our Gwinnett families visit on weeknights and are home before bed.",
       },
       {
-        title: "Is this assisted living?",
-        body: "Families searching assisted living in Lawrenceville often find that a smaller personal care home like Joy fits better: the same daily care, in a house of 24 instead of a campus of hundreds.",
-      },
-      {
-        title: "Can I still visit often from Lawrenceville?",
-        body: "Yes. Twenty minutes down Highway 20, no visiting hours, come whenever. Plenty of our Gwinnett families visit on weeknights and are home before bed.",
-      },
-      {
-        title: "Do you have a room right now?",
-        body: "It changes with 24 rooms. Call (470) 684-3569 for what's open today, and if we're full, we'll tell you honestly what the wait has been.",
+        title: "What should I ask when I tour?",
+        body: "Ask who's awake overnight and who gives medications. Ask how long the staff have been here. Ask Mellissa what happens when a resident's needs change. Then ask every other home you visit the same questions and compare.",
       },
     ],
+    mellissaCaption: "You'll meet her on your tour.",
   },
 
   dacula: {
     slug: "dacula",
     name: "Dacula",
+    title: "Personal Care & Memory Care Near Dacula, GA | The Joy",
+    description:
+      "Caring for a parent at home near Dacula? The Joy is a small personal care home with memory care 15 minutes away, with a free caregiver support group.",
+    eyebrow: "Near Dacula",
+    h1: "For Dacula families still caring for a parent at home.",
+    lede: "Maybe your mom lives with you now. Maybe you drive over every morning before work to check on her. The Joy is about fifteen minutes from Dacula, and you don't have to be ready to move her to call us.",
     driveMinutes: 15,
-    highway: "Highway 316 and Highway 20",
-    heroLede:
-      "Joy is about 15 minutes from Dacula, down through Grayson into Loganville. Close enough to visit after work, small enough to feel like home.",
-    distanceHeading: "Fifteen minutes, and a house instead of a campus",
-    distanceProse: [
-      "From Dacula it's a short run south, not a highway ordeal. You can come after work, eat at the shared table, and be home the same evening without it eating the whole night.",
-      "That closeness is the thing families underestimate. When something changes late, being fifteen minutes away means you are there before the worry has time to grow.",
+    highway: "",
+    openingCta: {
+      headline: "Call and talk it through. You don't have to be ready.",
+      note: "",
+      phoneLead: "Mellissa's number is",
+    },
+    closingCta: {
+      headline: "Fifteen minutes from Dacula. Come when you're ready.",
+      note: "A tour or the support group. Either one is a good first step.",
+      phoneLead: "Or call",
+    },
+    lead: {
+      heading: "A support group, before you need anything else",
+      paragraphs: [
+        "A caregiver support group meets here at The Joy on the third Thursday of every month at 2pm. It's free. Call (470) 684-3569 or email hello@joyseniorcare.com for details, then come once and see if it helps.",
+      ],
+    },
+    sections: [
+      {
+        heading: "When home stops feeling safe",
+        paragraphs: [
+          "Most families know before they say it out loud. Something happens, a fall or a bad night, and the worry doesn't go away afterward.",
+          "When you get there, call us. We answer the phone ourselves. We'll talk through where your mom is and whether The Joy is a good fit for her. If it isn't, we'll say so.",
+        ],
+        pull: "The distance you pick now is the one you'll drive on the hard nights.",
+      },
+      {
+        heading: "One house, fifteen minutes away",
+        paragraphs: [
+          "The Joy is one house with 24 suites and memory care, led by Mellissa Daniel. Once your mom moves in, you can come by after dinner and still be home at a decent hour.",
+        ],
+      },
     ],
-    distancePull:
-      "The distance you pick now is the distance you'll live with on the hard nights.",
-    anchorHeading: "Dacula families choose Joy for the size, and the nearness.",
-    anchorParas: [
-      "A lot of the calls start after a hospital stay, when a planner says home alone isn't safe and there are a couple of days to decide. We answer the phone ourselves and we take those calls.",
-      "The rest come from families who have toured the big places off Highway 316 and wanted something smaller: 24 rooms, one house, led by Mellissa, where a parent is a person and not a room number.",
-    ],
-    quote: null,
+    faqsHeading: "Questions from Dacula",
     faqs: [
       {
         title: "How long is the drive from Dacula, really?",
-        body: "About fifteen minutes, heading south through Grayson into Loganville. Close enough that weeknight visits stay easy and you're never far when it counts.",
+        body: "About fifteen minutes. It depends on traffic and which side of Dacula you're starting from.",
       },
       {
-        title: "What makes Joy different from the larger communities near Dacula?",
-        body: "Size. Joy is a personal care home of 24 rooms in a real house, led by Mellissa, not a campus of hundreds. The staff know your parent's name, their coffee, and which grandchild visits.",
+        title: "What makes The Joy different from the larger places near Dacula?",
+        body: "Size. The Joy has 24 suites in one house. The same staff see the same residents every day and learn their habits. Nobody gets lost in a crowd, because there isn't one.",
       },
       {
-        title: "Is a personal care home the same as assisted living?",
-        body: "Families searching for assisted living near Dacula often find a personal care home like Joy is a better fit: the same everyday help (meals, bathing, dressing, medications), in a small house instead of a large facility.",
-      },
-      {
-        title: "Do you have an opening?",
-        body: "With only 24 rooms it changes fast. Call (470) 684-3569 and we'll tell you what's open today, and if we're full, what the wait has actually been.",
+        title: "Can we just talk before we tour?",
+        body: "Yes. Call (470) 684-3569 or email hello@joyseniorcare.com. A first call can be nothing but questions.",
       },
     ],
+    mellissaCaption: "Families call her when they aren't sure it's time.",
   },
 };

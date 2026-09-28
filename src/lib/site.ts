@@ -607,26 +607,47 @@ export const LATEST_POSTS: {
 /* ------------------------------------------------------------------ */
 
 export const ABOUT = {
-  heading: "About Joy",
-  lede: `Joy started with a simple idea: a person does not stop being themselves because they need help.`,
+  heading: "About The Joy",
+  title: "About The Joy: A Small Personal Care Home in Loganville",
+  description:
+    "The Joy is a licensed 24-suite personal care home with memory care in Loganville, GA, led by Executive Director Mellissa Daniel. How it started.",
+  lede: "The Joy started with a simple idea. A person doesn't stop being themselves because they need help.",
   story: [
-    `Later life still holds mornings worth getting up for. A favorite chair by the window. A joke told the same way for forty years. A good home protects those things, and builds the day around them.`,
-    `Joy has ${BUSINESS.beds} beds. We chose that number and we guard it. Small is not a limitation here, it is the whole design. It is what lets ${BUSINESS.director.name} and her team learn your mother in a week, not a season: how she takes her coffee, which songs she hums, when she gets tired.`,
+    "Later life still holds mornings worth getting up for. A favorite chair by the window. A joke told the same way for forty years. A good home protects those things and builds the day around them.",
+    "The Joy has 24 suites. We chose that number, and we guard it. Small is the design. It's what lets Mellissa Daniel and her team learn your mother in a week instead of a season: how she takes her coffee and when she gets tired.",
   ],
   dayHeading: "What a day here feels like",
   day: [
-    `A day at Joy is quiet in the way a home is quiet. Coffee in the morning. The smell of lunch from a real kitchen. Someone sitting with your father while he tells a story you have heard before and they have not.`,
-    `Because the same people are here every day, they notice the small things: a harder night, a lost appetite, a word that would not come. At a larger place those signs get missed. Here they get caught, and ${BUSINESS.director.name} hears about them that day.`,
+    "A day at The Joy is quiet the way a home is quiet. Coffee in the morning. The smell of lunch from a real kitchen. Someone sitting with your father while he tells a story you've heard before and they haven't.",
+    "Some afternoons there's music or an art project. Once a month, pet therapy comes to visit.",
+    "Because the same people are here every day, they notice the small things, like a harder night or a word that wouldn't come. In a bigger building those signs can get missed. Here they get caught, and Mellissa hears about them that day.",
+  ],
+  openedHeading: "How we opened",
+  opened: [
+    "The Joy opened its doors with a ribbon cutting here in Loganville. People from across Walton County helped put the day together and brought out the press. The Loganville Police Department handled traffic, and it's a good thing they did. Our parking lot filled up, and cars spilled over into our neighbors' lots.",
+    "Our friends and family pitched in behind the scenes. Jennifer and Jessica made the tacos everyone had been looking forward to.",
+    "The residents shared their home with a crowd that day, and they did it graciously. We haven't forgotten that. Thank you, Loganville.",
   ],
   mellissaHeading: "The person who sets the tone",
   mellissa: [
-    `${BUSINESS.director.name} leads Joy as ${BUSINESS.director.title}. She is usually the first person a family meets, and often the last one they call at night with a question. She sets the standard everyone here follows: treat each resident like a parent, because to someone they are.`,
+    "Mellissa Daniel leads The Joy as Executive Director. She's usually the first person a family meets, and often the one they call at night with a question. She sets the standard everyone here follows: treat each resident like a parent, because to someone, they are.",
   ],
-  licenseNote: `Joy is licensed by the State of Georgia as a personal care home. That license shapes what we do: help with the daily tasks of living, medications, meals, and steady human company, in a setting small enough to stay personal.`,
+  licenseNote:
+    "The Joy is licensed by the State of Georgia as a personal care home. That license shapes what we do: help with the daily tasks of living, medications, meals and steady human company, in a home small enough to stay personal. We've been in compliance at every state inspection.",
+  cta: "Come see the house. Call (470) 684-3569.",
   photos: [
-    { src: "/images/community-1.jpg", alt: "The front porch at Joy Senior Living in Loganville" },
-    { src: "/images/community-4.jpg", alt: "The common living room at Joy Senior Living" },
+    {
+      src: "https://pub-6e43e90472054fe3880f53e8c0ca3b60.r2.dev/blog/about-1-387296.jpg",
+      alt: "The front porch at The Joy Senior Living in Loganville",
+    },
+    {
+      src: "https://pub-6e43e90472054fe3880f53e8c0ca3b60.r2.dev/blog/about-2-307062.jpg",
+      alt: "The common living room at The Joy Senior Living",
+    },
   ],
+  mellissaAlt: "Mellissa Daniel, Executive Director of The Joy Senior Living",
+  mellissaSrc:
+    "https://pub-6e43e90472054fe3880f53e8c0ca3b60.r2.dev/blog/about-mellissa-541839.jpg",
 } as const;
 
 /* ------------------------------------------------------------------ */

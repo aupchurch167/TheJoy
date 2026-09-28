@@ -836,3 +836,796 @@ WHERE slug = $talk$the-talk$talk$
     btrim(excerpt) = $talk$he families who start early, listen more than they talk, and let it take time almost always get somewhere everyone can live with. Here's what that looks like.$talk$
     OR btrim(meta_description) = $talk$he families who start early, listen more than they talk, and let it take time almost always get somewhere everyone can live with. Here's what that looks like.$talk$
   );
+
+-- Approved copy pass (2026-09-28). One marker per change so a later boot
+-- does not overwrite an edit made in Admin. Exact strings only.
+
+-- Community wording. Each statement replaces one stored sentence. Rows whose
+-- new text equals the old text, and rows marked SKIP, are not here.
+-- The Dacula FAQ is updated in code (src/lib/landing.ts).
+DO $community_pass$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM applied_content_updates WHERE id = 'community-replacements-2026-09-28'
+  ) THEN
+
+UPDATE posts SET
+  title = replace(title, $c1$The Heart of Our Community: How Resident Council Meetings Bring Joy to Life at The Joy Senior Living$c1$, $c1$The Heart of Our Home: How Resident Council Meetings Bring Joy to Life at The Joy Senior Living$c1$),
+  excerpt = CASE WHEN excerpt IS NULL THEN excerpt ELSE replace(excerpt, $c1$The Heart of Our Community: How Resident Council Meetings Bring Joy to Life at The Joy Senior Living$c1$, $c1$The Heart of Our Home: How Resident Council Meetings Bring Joy to Life at The Joy Senior Living$c1$) END,
+  meta_title = CASE WHEN meta_title IS NULL THEN meta_title ELSE replace(meta_title, $c1$The Heart of Our Community: How Resident Council Meetings Bring Joy to Life at The Joy Senior Living$c1$, $c1$The Heart of Our Home: How Resident Council Meetings Bring Joy to Life at The Joy Senior Living$c1$) END,
+  meta_description = CASE WHEN meta_description IS NULL THEN meta_description ELSE replace(meta_description, $c1$The Heart of Our Community: How Resident Council Meetings Bring Joy to Life at The Joy Senior Living$c1$, $c1$The Heart of Our Home: How Resident Council Meetings Bring Joy to Life at The Joy Senior Living$c1$) END,
+  hero_image_alt = CASE WHEN hero_image_alt IS NULL THEN hero_image_alt ELSE replace(hero_image_alt, $c1$The Heart of Our Community: How Resident Council Meetings Bring Joy to Life at The Joy Senior Living$c1$, $c1$The Heart of Our Home: How Resident Council Meetings Bring Joy to Life at The Joy Senior Living$c1$) END,
+  body = replace(body, $c1$The Heart of Our Community: How Resident Council Meetings Bring Joy to Life at The Joy Senior Living$c1$, $c1$The Heart of Our Home: How Resident Council Meetings Bring Joy to Life at The Joy Senior Living$c1$),
+  updated_at = now()
+WHERE strpos(coalesce(title,'') || E'\n' || coalesce(excerpt,'') || E'\n' || coalesce(meta_title,'') || E'\n' || coalesce(meta_description,'') || E'\n' || coalesce(hero_image_alt,'') || E'\n' || coalesce(body,''), $c1$The Heart of Our Community: How Resident Council Meetings Bring Joy to Life at The Joy Senior Living$c1$) > 0;
+
+UPDATE posts SET
+  title = replace(title, $c2$The Heart of Our Community: How Resident Council Meetings Bring Joy to Life at The Joy Senior Living of Loganville$c2$, $c2$The Heart of Our Home: How Resident Council Meetings Bring Joy to Life at The Joy Senior Living of Loganville$c2$),
+  excerpt = CASE WHEN excerpt IS NULL THEN excerpt ELSE replace(excerpt, $c2$The Heart of Our Community: How Resident Council Meetings Bring Joy to Life at The Joy Senior Living of Loganville$c2$, $c2$The Heart of Our Home: How Resident Council Meetings Bring Joy to Life at The Joy Senior Living of Loganville$c2$) END,
+  meta_title = CASE WHEN meta_title IS NULL THEN meta_title ELSE replace(meta_title, $c2$The Heart of Our Community: How Resident Council Meetings Bring Joy to Life at The Joy Senior Living of Loganville$c2$, $c2$The Heart of Our Home: How Resident Council Meetings Bring Joy to Life at The Joy Senior Living of Loganville$c2$) END,
+  meta_description = CASE WHEN meta_description IS NULL THEN meta_description ELSE replace(meta_description, $c2$The Heart of Our Community: How Resident Council Meetings Bring Joy to Life at The Joy Senior Living of Loganville$c2$, $c2$The Heart of Our Home: How Resident Council Meetings Bring Joy to Life at The Joy Senior Living of Loganville$c2$) END,
+  hero_image_alt = CASE WHEN hero_image_alt IS NULL THEN hero_image_alt ELSE replace(hero_image_alt, $c2$The Heart of Our Community: How Resident Council Meetings Bring Joy to Life at The Joy Senior Living of Loganville$c2$, $c2$The Heart of Our Home: How Resident Council Meetings Bring Joy to Life at The Joy Senior Living of Loganville$c2$) END,
+  body = replace(body, $c2$The Heart of Our Community: How Resident Council Meetings Bring Joy to Life at The Joy Senior Living of Loganville$c2$, $c2$The Heart of Our Home: How Resident Council Meetings Bring Joy to Life at The Joy Senior Living of Loganville$c2$),
+  updated_at = now()
+WHERE strpos(coalesce(title,'') || E'\n' || coalesce(excerpt,'') || E'\n' || coalesce(meta_title,'') || E'\n' || coalesce(meta_description,'') || E'\n' || coalesce(hero_image_alt,'') || E'\n' || coalesce(body,''), $c2$The Heart of Our Community: How Resident Council Meetings Bring Joy to Life at The Joy Senior Living of Loganville$c2$) > 0;
+
+UPDATE posts SET
+  title = replace(title, $c3$Learn to identify the signs that your loved one might benefit from the supportive, community-based care offered at The Joy Senior Living.$c3$, $c3$Learn to identify the signs that your parent might benefit from the supportive, small-home personal care offered at The Joy Senior Living.$c3$),
+  excerpt = CASE WHEN excerpt IS NULL THEN excerpt ELSE replace(excerpt, $c3$Learn to identify the signs that your loved one might benefit from the supportive, community-based care offered at The Joy Senior Living.$c3$, $c3$Learn to identify the signs that your parent might benefit from the supportive, small-home personal care offered at The Joy Senior Living.$c3$) END,
+  meta_title = CASE WHEN meta_title IS NULL THEN meta_title ELSE replace(meta_title, $c3$Learn to identify the signs that your loved one might benefit from the supportive, community-based care offered at The Joy Senior Living.$c3$, $c3$Learn to identify the signs that your parent might benefit from the supportive, small-home personal care offered at The Joy Senior Living.$c3$) END,
+  meta_description = CASE WHEN meta_description IS NULL THEN meta_description ELSE replace(meta_description, $c3$Learn to identify the signs that your loved one might benefit from the supportive, community-based care offered at The Joy Senior Living.$c3$, $c3$Learn to identify the signs that your parent might benefit from the supportive, small-home personal care offered at The Joy Senior Living.$c3$) END,
+  hero_image_alt = CASE WHEN hero_image_alt IS NULL THEN hero_image_alt ELSE replace(hero_image_alt, $c3$Learn to identify the signs that your loved one might benefit from the supportive, community-based care offered at The Joy Senior Living.$c3$, $c3$Learn to identify the signs that your parent might benefit from the supportive, small-home personal care offered at The Joy Senior Living.$c3$) END,
+  body = replace(body, $c3$Learn to identify the signs that your loved one might benefit from the supportive, community-based care offered at The Joy Senior Living.$c3$, $c3$Learn to identify the signs that your parent might benefit from the supportive, small-home personal care offered at The Joy Senior Living.$c3$),
+  updated_at = now()
+WHERE strpos(coalesce(title,'') || E'\n' || coalesce(excerpt,'') || E'\n' || coalesce(meta_title,'') || E'\n' || coalesce(meta_description,'') || E'\n' || coalesce(hero_image_alt,'') || E'\n' || coalesce(body,''), $c3$Learn to identify the signs that your loved one might benefit from the supportive, community-based care offered at The Joy Senior Living.$c3$) > 0;
+
+UPDATE posts SET
+  title = replace(title, $c4$Personalized attention, vibrant community activities, and serene surroundings await!$c4$, $c4$Personalized attention, engaging activities, and serene surroundings await!$c4$),
+  excerpt = CASE WHEN excerpt IS NULL THEN excerpt ELSE replace(excerpt, $c4$Personalized attention, vibrant community activities, and serene surroundings await!$c4$, $c4$Personalized attention, engaging activities, and serene surroundings await!$c4$) END,
+  meta_title = CASE WHEN meta_title IS NULL THEN meta_title ELSE replace(meta_title, $c4$Personalized attention, vibrant community activities, and serene surroundings await!$c4$, $c4$Personalized attention, engaging activities, and serene surroundings await!$c4$) END,
+  meta_description = CASE WHEN meta_description IS NULL THEN meta_description ELSE replace(meta_description, $c4$Personalized attention, vibrant community activities, and serene surroundings await!$c4$, $c4$Personalized attention, engaging activities, and serene surroundings await!$c4$) END,
+  hero_image_alt = CASE WHEN hero_image_alt IS NULL THEN hero_image_alt ELSE replace(hero_image_alt, $c4$Personalized attention, vibrant community activities, and serene surroundings await!$c4$, $c4$Personalized attention, engaging activities, and serene surroundings await!$c4$) END,
+  body = replace(body, $c4$Personalized attention, vibrant community activities, and serene surroundings await!$c4$, $c4$Personalized attention, engaging activities, and serene surroundings await!$c4$),
+  updated_at = now()
+WHERE strpos(coalesce(title,'') || E'\n' || coalesce(excerpt,'') || E'\n' || coalesce(meta_title,'') || E'\n' || coalesce(meta_description,'') || E'\n' || coalesce(hero_image_alt,'') || E'\n' || coalesce(body,''), $c4$Personalized attention, vibrant community activities, and serene surroundings await!$c4$) > 0;
+
+UPDATE posts SET
+  title = replace(title, $c5$Joy is a 24-bed personal care home in Loganville, GA. Here is the honest case for choosing a small senior living community over a large campus.$c5$, $c5$Joy is a 24-bed personal care home in Loganville, GA. Here is the honest case for choosing a small home over a large campus.$c5$),
+  excerpt = CASE WHEN excerpt IS NULL THEN excerpt ELSE replace(excerpt, $c5$Joy is a 24-bed personal care home in Loganville, GA. Here is the honest case for choosing a small senior living community over a large campus.$c5$, $c5$Joy is a 24-bed personal care home in Loganville, GA. Here is the honest case for choosing a small home over a large campus.$c5$) END,
+  meta_title = CASE WHEN meta_title IS NULL THEN meta_title ELSE replace(meta_title, $c5$Joy is a 24-bed personal care home in Loganville, GA. Here is the honest case for choosing a small senior living community over a large campus.$c5$, $c5$Joy is a 24-bed personal care home in Loganville, GA. Here is the honest case for choosing a small home over a large campus.$c5$) END,
+  meta_description = CASE WHEN meta_description IS NULL THEN meta_description ELSE replace(meta_description, $c5$Joy is a 24-bed personal care home in Loganville, GA. Here is the honest case for choosing a small senior living community over a large campus.$c5$, $c5$Joy is a 24-bed personal care home in Loganville, GA. Here is the honest case for choosing a small home over a large campus.$c5$) END,
+  hero_image_alt = CASE WHEN hero_image_alt IS NULL THEN hero_image_alt ELSE replace(hero_image_alt, $c5$Joy is a 24-bed personal care home in Loganville, GA. Here is the honest case for choosing a small senior living community over a large campus.$c5$, $c5$Joy is a 24-bed personal care home in Loganville, GA. Here is the honest case for choosing a small home over a large campus.$c5$) END,
+  body = replace(body, $c5$Joy is a 24-bed personal care home in Loganville, GA. Here is the honest case for choosing a small senior living community over a large campus.$c5$, $c5$Joy is a 24-bed personal care home in Loganville, GA. Here is the honest case for choosing a small home over a large campus.$c5$),
+  updated_at = now()
+WHERE strpos(coalesce(title,'') || E'\n' || coalesce(excerpt,'') || E'\n' || coalesce(meta_title,'') || E'\n' || coalesce(meta_description,'') || E'\n' || coalesce(hero_image_alt,'') || E'\n' || coalesce(body,''), $c5$Joy is a 24-bed personal care home in Loganville, GA. Here is the honest case for choosing a small senior living community over a large campus.$c5$) > 0;
+
+UPDATE posts SET
+  title = replace(title, $c6$We asked ourselves what we hear most often from the families who tour our community.$c6$, $c6$We asked ourselves what we hear most often from the families who tour our home.$c6$),
+  excerpt = CASE WHEN excerpt IS NULL THEN excerpt ELSE replace(excerpt, $c6$We asked ourselves what we hear most often from the families who tour our community.$c6$, $c6$We asked ourselves what we hear most often from the families who tour our home.$c6$) END,
+  meta_title = CASE WHEN meta_title IS NULL THEN meta_title ELSE replace(meta_title, $c6$We asked ourselves what we hear most often from the families who tour our community.$c6$, $c6$We asked ourselves what we hear most often from the families who tour our home.$c6$) END,
+  meta_description = CASE WHEN meta_description IS NULL THEN meta_description ELSE replace(meta_description, $c6$We asked ourselves what we hear most often from the families who tour our community.$c6$, $c6$We asked ourselves what we hear most often from the families who tour our home.$c6$) END,
+  hero_image_alt = CASE WHEN hero_image_alt IS NULL THEN hero_image_alt ELSE replace(hero_image_alt, $c6$We asked ourselves what we hear most often from the families who tour our community.$c6$, $c6$We asked ourselves what we hear most often from the families who tour our home.$c6$) END,
+  body = replace(body, $c6$We asked ourselves what we hear most often from the families who tour our community.$c6$, $c6$We asked ourselves what we hear most often from the families who tour our home.$c6$),
+  updated_at = now()
+WHERE strpos(coalesce(title,'') || E'\n' || coalesce(excerpt,'') || E'\n' || coalesce(meta_title,'') || E'\n' || coalesce(meta_description,'') || E'\n' || coalesce(hero_image_alt,'') || E'\n' || coalesce(body,''), $c6$We asked ourselves what we hear most often from the families who tour our community.$c6$) > 0;
+
+UPDATE posts SET
+  title = replace(title, $c7$A community that will actually just talk with you.$c7$, $c7$A personal care home that will actually just talk with you.$c7$),
+  excerpt = CASE WHEN excerpt IS NULL THEN excerpt ELSE replace(excerpt, $c7$A community that will actually just talk with you.$c7$, $c7$A personal care home that will actually just talk with you.$c7$) END,
+  meta_title = CASE WHEN meta_title IS NULL THEN meta_title ELSE replace(meta_title, $c7$A community that will actually just talk with you.$c7$, $c7$A personal care home that will actually just talk with you.$c7$) END,
+  meta_description = CASE WHEN meta_description IS NULL THEN meta_description ELSE replace(meta_description, $c7$A community that will actually just talk with you.$c7$, $c7$A personal care home that will actually just talk with you.$c7$) END,
+  hero_image_alt = CASE WHEN hero_image_alt IS NULL THEN hero_image_alt ELSE replace(hero_image_alt, $c7$A community that will actually just talk with you.$c7$, $c7$A personal care home that will actually just talk with you.$c7$) END,
+  body = replace(body, $c7$A community that will actually just talk with you.$c7$, $c7$A personal care home that will actually just talk with you.$c7$),
+  updated_at = now()
+WHERE strpos(coalesce(title,'') || E'\n' || coalesce(excerpt,'') || E'\n' || coalesce(meta_title,'') || E'\n' || coalesce(meta_description,'') || E'\n' || coalesce(hero_image_alt,'') || E'\n' || coalesce(body,''), $c7$A community that will actually just talk with you.$c7$) > 0;
+
+UPDATE posts SET
+  title = replace(title, $c8$In a smaller community like ours, the same caregiver walks in, and by the end of week one, she has learned that your dad hates ice in his water and that your mom likes to be the last one dressed for dinner because she wants time to put on her lipstick.$c8$, $c8$In a smaller home like ours, the same caregiver walks in, and by the end of week one, she has learned that your dad hates ice in his water and that your mom likes to be the last one dressed for dinner because she wants time to put on her lipstick.$c8$),
+  excerpt = CASE WHEN excerpt IS NULL THEN excerpt ELSE replace(excerpt, $c8$In a smaller community like ours, the same caregiver walks in, and by the end of week one, she has learned that your dad hates ice in his water and that your mom likes to be the last one dressed for dinner because she wants time to put on her lipstick.$c8$, $c8$In a smaller home like ours, the same caregiver walks in, and by the end of week one, she has learned that your dad hates ice in his water and that your mom likes to be the last one dressed for dinner because she wants time to put on her lipstick.$c8$) END,
+  meta_title = CASE WHEN meta_title IS NULL THEN meta_title ELSE replace(meta_title, $c8$In a smaller community like ours, the same caregiver walks in, and by the end of week one, she has learned that your dad hates ice in his water and that your mom likes to be the last one dressed for dinner because she wants time to put on her lipstick.$c8$, $c8$In a smaller home like ours, the same caregiver walks in, and by the end of week one, she has learned that your dad hates ice in his water and that your mom likes to be the last one dressed for dinner because she wants time to put on her lipstick.$c8$) END,
+  meta_description = CASE WHEN meta_description IS NULL THEN meta_description ELSE replace(meta_description, $c8$In a smaller community like ours, the same caregiver walks in, and by the end of week one, she has learned that your dad hates ice in his water and that your mom likes to be the last one dressed for dinner because she wants time to put on her lipstick.$c8$, $c8$In a smaller home like ours, the same caregiver walks in, and by the end of week one, she has learned that your dad hates ice in his water and that your mom likes to be the last one dressed for dinner because she wants time to put on her lipstick.$c8$) END,
+  hero_image_alt = CASE WHEN hero_image_alt IS NULL THEN hero_image_alt ELSE replace(hero_image_alt, $c8$In a smaller community like ours, the same caregiver walks in, and by the end of week one, she has learned that your dad hates ice in his water and that your mom likes to be the last one dressed for dinner because she wants time to put on her lipstick.$c8$, $c8$In a smaller home like ours, the same caregiver walks in, and by the end of week one, she has learned that your dad hates ice in his water and that your mom likes to be the last one dressed for dinner because she wants time to put on her lipstick.$c8$) END,
+  body = replace(body, $c8$In a smaller community like ours, the same caregiver walks in, and by the end of week one, she has learned that your dad hates ice in his water and that your mom likes to be the last one dressed for dinner because she wants time to put on her lipstick.$c8$, $c8$In a smaller home like ours, the same caregiver walks in, and by the end of week one, she has learned that your dad hates ice in his water and that your mom likes to be the last one dressed for dinner because she wants time to put on her lipstick.$c8$),
+  updated_at = now()
+WHERE strpos(coalesce(title,'') || E'\n' || coalesce(excerpt,'') || E'\n' || coalesce(meta_title,'') || E'\n' || coalesce(meta_description,'') || E'\n' || coalesce(hero_image_alt,'') || E'\n' || coalesce(body,''), $c8$In a smaller community like ours, the same caregiver walks in, and by the end of week one, she has learned that your dad hates ice in his water and that your mom likes to be the last one dressed for dinner because she wants time to put on her lipstick.$c8$) > 0;
+
+UPDATE posts SET
+  title = replace(title, $c9$A 24-bed community like Joy does not have hundreds of residents to spread its fixed costs across.$c9$, $c9$A 24-bed home like Joy does not have hundreds of residents to spread its fixed costs across.$c9$),
+  excerpt = CASE WHEN excerpt IS NULL THEN excerpt ELSE replace(excerpt, $c9$A 24-bed community like Joy does not have hundreds of residents to spread its fixed costs across.$c9$, $c9$A 24-bed home like Joy does not have hundreds of residents to spread its fixed costs across.$c9$) END,
+  meta_title = CASE WHEN meta_title IS NULL THEN meta_title ELSE replace(meta_title, $c9$A 24-bed community like Joy does not have hundreds of residents to spread its fixed costs across.$c9$, $c9$A 24-bed home like Joy does not have hundreds of residents to spread its fixed costs across.$c9$) END,
+  meta_description = CASE WHEN meta_description IS NULL THEN meta_description ELSE replace(meta_description, $c9$A 24-bed community like Joy does not have hundreds of residents to spread its fixed costs across.$c9$, $c9$A 24-bed home like Joy does not have hundreds of residents to spread its fixed costs across.$c9$) END,
+  hero_image_alt = CASE WHEN hero_image_alt IS NULL THEN hero_image_alt ELSE replace(hero_image_alt, $c9$A 24-bed community like Joy does not have hundreds of residents to spread its fixed costs across.$c9$, $c9$A 24-bed home like Joy does not have hundreds of residents to spread its fixed costs across.$c9$) END,
+  body = replace(body, $c9$A 24-bed community like Joy does not have hundreds of residents to spread its fixed costs across.$c9$, $c9$A 24-bed home like Joy does not have hundreds of residents to spread its fixed costs across.$c9$),
+  updated_at = now()
+WHERE strpos(coalesce(title,'') || E'\n' || coalesce(excerpt,'') || E'\n' || coalesce(meta_title,'') || E'\n' || coalesce(meta_description,'') || E'\n' || coalesce(hero_image_alt,'') || E'\n' || coalesce(body,''), $c9$A 24-bed community like Joy does not have hundreds of residents to spread its fixed costs across.$c9$) > 0;
+
+UPDATE posts SET
+  title = replace(title, $c10$As someone who runs an senior living community, I've seen what separates the people who age at home successfully from those who face a crisis that forces a sudden move.$c10$, $c10$As someone who runs a personal care home, I've seen what separates the people who age at home successfully from those who face a crisis that forces a sudden move.$c10$),
+  excerpt = CASE WHEN excerpt IS NULL THEN excerpt ELSE replace(excerpt, $c10$As someone who runs an senior living community, I've seen what separates the people who age at home successfully from those who face a crisis that forces a sudden move.$c10$, $c10$As someone who runs a personal care home, I've seen what separates the people who age at home successfully from those who face a crisis that forces a sudden move.$c10$) END,
+  meta_title = CASE WHEN meta_title IS NULL THEN meta_title ELSE replace(meta_title, $c10$As someone who runs an senior living community, I've seen what separates the people who age at home successfully from those who face a crisis that forces a sudden move.$c10$, $c10$As someone who runs a personal care home, I've seen what separates the people who age at home successfully from those who face a crisis that forces a sudden move.$c10$) END,
+  meta_description = CASE WHEN meta_description IS NULL THEN meta_description ELSE replace(meta_description, $c10$As someone who runs an senior living community, I've seen what separates the people who age at home successfully from those who face a crisis that forces a sudden move.$c10$, $c10$As someone who runs a personal care home, I've seen what separates the people who age at home successfully from those who face a crisis that forces a sudden move.$c10$) END,
+  hero_image_alt = CASE WHEN hero_image_alt IS NULL THEN hero_image_alt ELSE replace(hero_image_alt, $c10$As someone who runs an senior living community, I've seen what separates the people who age at home successfully from those who face a crisis that forces a sudden move.$c10$, $c10$As someone who runs a personal care home, I've seen what separates the people who age at home successfully from those who face a crisis that forces a sudden move.$c10$) END,
+  body = replace(body, $c10$As someone who runs an senior living community, I've seen what separates the people who age at home successfully from those who face a crisis that forces a sudden move.$c10$, $c10$As someone who runs a personal care home, I've seen what separates the people who age at home successfully from those who face a crisis that forces a sudden move.$c10$),
+  updated_at = now()
+WHERE strpos(coalesce(title,'') || E'\n' || coalesce(excerpt,'') || E'\n' || coalesce(meta_title,'') || E'\n' || coalesce(meta_description,'') || E'\n' || coalesce(hero_image_alt,'') || E'\n' || coalesce(body,''), $c10$As someone who runs an senior living community, I've seen what separates the people who age at home successfully from those who face a crisis that forces a sudden move.$c10$) > 0;
+
+UPDATE posts SET
+  title = replace(title, $c11$Running a small community like ours means there's nowhere to hide.$c11$, $c11$Running a small home like ours means there's nowhere to hide.$c11$),
+  excerpt = CASE WHEN excerpt IS NULL THEN excerpt ELSE replace(excerpt, $c11$Running a small community like ours means there's nowhere to hide.$c11$, $c11$Running a small home like ours means there's nowhere to hide.$c11$) END,
+  meta_title = CASE WHEN meta_title IS NULL THEN meta_title ELSE replace(meta_title, $c11$Running a small community like ours means there's nowhere to hide.$c11$, $c11$Running a small home like ours means there's nowhere to hide.$c11$) END,
+  meta_description = CASE WHEN meta_description IS NULL THEN meta_description ELSE replace(meta_description, $c11$Running a small community like ours means there's nowhere to hide.$c11$, $c11$Running a small home like ours means there's nowhere to hide.$c11$) END,
+  hero_image_alt = CASE WHEN hero_image_alt IS NULL THEN hero_image_alt ELSE replace(hero_image_alt, $c11$Running a small community like ours means there's nowhere to hide.$c11$, $c11$Running a small home like ours means there's nowhere to hide.$c11$) END,
+  body = replace(body, $c11$Running a small community like ours means there's nowhere to hide.$c11$, $c11$Running a small home like ours means there's nowhere to hide.$c11$),
+  updated_at = now()
+WHERE strpos(coalesce(title,'') || E'\n' || coalesce(excerpt,'') || E'\n' || coalesce(meta_title,'') || E'\n' || coalesce(meta_description,'') || E'\n' || coalesce(hero_image_alt,'') || E'\n' || coalesce(body,''), $c11$Running a small community like ours means there's nowhere to hide.$c11$) > 0;
+
+UPDATE posts SET
+  title = replace(title, $c12$At The Joy Senior Living in Loganville, we believe that our residents are the true heart of our community.$c12$, $c12$At The Joy Senior Living in Loganville, we believe that our residents are the true heart of our home.$c12$),
+  excerpt = CASE WHEN excerpt IS NULL THEN excerpt ELSE replace(excerpt, $c12$At The Joy Senior Living in Loganville, we believe that our residents are the true heart of our community.$c12$, $c12$At The Joy Senior Living in Loganville, we believe that our residents are the true heart of our home.$c12$) END,
+  meta_title = CASE WHEN meta_title IS NULL THEN meta_title ELSE replace(meta_title, $c12$At The Joy Senior Living in Loganville, we believe that our residents are the true heart of our community.$c12$, $c12$At The Joy Senior Living in Loganville, we believe that our residents are the true heart of our home.$c12$) END,
+  meta_description = CASE WHEN meta_description IS NULL THEN meta_description ELSE replace(meta_description, $c12$At The Joy Senior Living in Loganville, we believe that our residents are the true heart of our community.$c12$, $c12$At The Joy Senior Living in Loganville, we believe that our residents are the true heart of our home.$c12$) END,
+  hero_image_alt = CASE WHEN hero_image_alt IS NULL THEN hero_image_alt ELSE replace(hero_image_alt, $c12$At The Joy Senior Living in Loganville, we believe that our residents are the true heart of our community.$c12$, $c12$At The Joy Senior Living in Loganville, we believe that our residents are the true heart of our home.$c12$) END,
+  body = replace(body, $c12$At The Joy Senior Living in Loganville, we believe that our residents are the true heart of our community.$c12$, $c12$At The Joy Senior Living in Loganville, we believe that our residents are the true heart of our home.$c12$),
+  updated_at = now()
+WHERE strpos(coalesce(title,'') || E'\n' || coalesce(excerpt,'') || E'\n' || coalesce(meta_title,'') || E'\n' || coalesce(meta_description,'') || E'\n' || coalesce(hero_image_alt,'') || E'\n' || coalesce(body,''), $c12$At The Joy Senior Living in Loganville, we believe that our residents are the true heart of our community.$c12$) > 0;
+
+UPDATE posts SET
+  title = replace(title, $c13$Resident Council Meetings are the compass that guides us at The Joy Senior Living, ensuring we not only meet expectations but exceed them by creating a community where joy is woven into every detail.$c13$, $c13$Resident Council Meetings are the compass that guides us at The Joy Senior Living, ensuring we not only meet expectations but exceed them by creating a home where joy is woven into every detail.$c13$),
+  excerpt = CASE WHEN excerpt IS NULL THEN excerpt ELSE replace(excerpt, $c13$Resident Council Meetings are the compass that guides us at The Joy Senior Living, ensuring we not only meet expectations but exceed them by creating a community where joy is woven into every detail.$c13$, $c13$Resident Council Meetings are the compass that guides us at The Joy Senior Living, ensuring we not only meet expectations but exceed them by creating a home where joy is woven into every detail.$c13$) END,
+  meta_title = CASE WHEN meta_title IS NULL THEN meta_title ELSE replace(meta_title, $c13$Resident Council Meetings are the compass that guides us at The Joy Senior Living, ensuring we not only meet expectations but exceed them by creating a community where joy is woven into every detail.$c13$, $c13$Resident Council Meetings are the compass that guides us at The Joy Senior Living, ensuring we not only meet expectations but exceed them by creating a home where joy is woven into every detail.$c13$) END,
+  meta_description = CASE WHEN meta_description IS NULL THEN meta_description ELSE replace(meta_description, $c13$Resident Council Meetings are the compass that guides us at The Joy Senior Living, ensuring we not only meet expectations but exceed them by creating a community where joy is woven into every detail.$c13$, $c13$Resident Council Meetings are the compass that guides us at The Joy Senior Living, ensuring we not only meet expectations but exceed them by creating a home where joy is woven into every detail.$c13$) END,
+  hero_image_alt = CASE WHEN hero_image_alt IS NULL THEN hero_image_alt ELSE replace(hero_image_alt, $c13$Resident Council Meetings are the compass that guides us at The Joy Senior Living, ensuring we not only meet expectations but exceed them by creating a community where joy is woven into every detail.$c13$, $c13$Resident Council Meetings are the compass that guides us at The Joy Senior Living, ensuring we not only meet expectations but exceed them by creating a home where joy is woven into every detail.$c13$) END,
+  body = replace(body, $c13$Resident Council Meetings are the compass that guides us at The Joy Senior Living, ensuring we not only meet expectations but exceed them by creating a community where joy is woven into every detail.$c13$, $c13$Resident Council Meetings are the compass that guides us at The Joy Senior Living, ensuring we not only meet expectations but exceed them by creating a home where joy is woven into every detail.$c13$),
+  updated_at = now()
+WHERE strpos(coalesce(title,'') || E'\n' || coalesce(excerpt,'') || E'\n' || coalesce(meta_title,'') || E'\n' || coalesce(meta_description,'') || E'\n' || coalesce(hero_image_alt,'') || E'\n' || coalesce(body,''), $c13$Resident Council Meetings are the compass that guides us at The Joy Senior Living, ensuring we not only meet expectations but exceed them by creating a community where joy is woven into every detail.$c13$) > 0;
+
+UPDATE posts SET
+  title = replace(title, $c14$Reach out to schedule a visit and see how our community celebrates life every day.$c14$, $c14$Reach out to schedule a visit and see how our residents celebrate life every day.$c14$),
+  excerpt = CASE WHEN excerpt IS NULL THEN excerpt ELSE replace(excerpt, $c14$Reach out to schedule a visit and see how our community celebrates life every day.$c14$, $c14$Reach out to schedule a visit and see how our residents celebrate life every day.$c14$) END,
+  meta_title = CASE WHEN meta_title IS NULL THEN meta_title ELSE replace(meta_title, $c14$Reach out to schedule a visit and see how our community celebrates life every day.$c14$, $c14$Reach out to schedule a visit and see how our residents celebrate life every day.$c14$) END,
+  meta_description = CASE WHEN meta_description IS NULL THEN meta_description ELSE replace(meta_description, $c14$Reach out to schedule a visit and see how our community celebrates life every day.$c14$, $c14$Reach out to schedule a visit and see how our residents celebrate life every day.$c14$) END,
+  hero_image_alt = CASE WHEN hero_image_alt IS NULL THEN hero_image_alt ELSE replace(hero_image_alt, $c14$Reach out to schedule a visit and see how our community celebrates life every day.$c14$, $c14$Reach out to schedule a visit and see how our residents celebrate life every day.$c14$) END,
+  body = replace(body, $c14$Reach out to schedule a visit and see how our community celebrates life every day.$c14$, $c14$Reach out to schedule a visit and see how our residents celebrate life every day.$c14$),
+  updated_at = now()
+WHERE strpos(coalesce(title,'') || E'\n' || coalesce(excerpt,'') || E'\n' || coalesce(meta_title,'') || E'\n' || coalesce(meta_description,'') || E'\n' || coalesce(hero_image_alt,'') || E'\n' || coalesce(body,''), $c14$Reach out to schedule a visit and see how our community celebrates life every day.$c14$) > 0;
+
+UPDATE posts SET
+  title = replace(title, $c15$Communities like ours?$c15$, $c15$Homes like ours?$c15$),
+  excerpt = CASE WHEN excerpt IS NULL THEN excerpt ELSE replace(excerpt, $c15$Communities like ours?$c15$, $c15$Homes like ours?$c15$) END,
+  meta_title = CASE WHEN meta_title IS NULL THEN meta_title ELSE replace(meta_title, $c15$Communities like ours?$c15$, $c15$Homes like ours?$c15$) END,
+  meta_description = CASE WHEN meta_description IS NULL THEN meta_description ELSE replace(meta_description, $c15$Communities like ours?$c15$, $c15$Homes like ours?$c15$) END,
+  hero_image_alt = CASE WHEN hero_image_alt IS NULL THEN hero_image_alt ELSE replace(hero_image_alt, $c15$Communities like ours?$c15$, $c15$Homes like ours?$c15$) END,
+  body = replace(body, $c15$Communities like ours?$c15$, $c15$Homes like ours?$c15$),
+  updated_at = now()
+WHERE strpos(coalesce(title,'') || E'\n' || coalesce(excerpt,'') || E'\n' || coalesce(meta_title,'') || E'\n' || coalesce(meta_description,'') || E'\n' || coalesce(hero_image_alt,'') || E'\n' || coalesce(body,''), $c15$Communities like ours?$c15$) > 0;
+
+UPDATE posts SET
+  title = replace(title, $c16$Whether it's our director sharing a weekend walkthrough to ease a move-in or caregivers sitting among residents in our cozy common areas, answering questions with patience and a smile, it's this genuine care that turns our community into a sanctuary.$c16$, $c16$Whether it's our director sharing a weekend walkthrough to ease a move-in or caregivers sitting among residents in our cozy common areas, answering questions with patience and a smile, it's this genuine care that turns our home into a sanctuary.$c16$),
+  excerpt = CASE WHEN excerpt IS NULL THEN excerpt ELSE replace(excerpt, $c16$Whether it's our director sharing a weekend walkthrough to ease a move-in or caregivers sitting among residents in our cozy common areas, answering questions with patience and a smile, it's this genuine care that turns our community into a sanctuary.$c16$, $c16$Whether it's our director sharing a weekend walkthrough to ease a move-in or caregivers sitting among residents in our cozy common areas, answering questions with patience and a smile, it's this genuine care that turns our home into a sanctuary.$c16$) END,
+  meta_title = CASE WHEN meta_title IS NULL THEN meta_title ELSE replace(meta_title, $c16$Whether it's our director sharing a weekend walkthrough to ease a move-in or caregivers sitting among residents in our cozy common areas, answering questions with patience and a smile, it's this genuine care that turns our community into a sanctuary.$c16$, $c16$Whether it's our director sharing a weekend walkthrough to ease a move-in or caregivers sitting among residents in our cozy common areas, answering questions with patience and a smile, it's this genuine care that turns our home into a sanctuary.$c16$) END,
+  meta_description = CASE WHEN meta_description IS NULL THEN meta_description ELSE replace(meta_description, $c16$Whether it's our director sharing a weekend walkthrough to ease a move-in or caregivers sitting among residents in our cozy common areas, answering questions with patience and a smile, it's this genuine care that turns our community into a sanctuary.$c16$, $c16$Whether it's our director sharing a weekend walkthrough to ease a move-in or caregivers sitting among residents in our cozy common areas, answering questions with patience and a smile, it's this genuine care that turns our home into a sanctuary.$c16$) END,
+  hero_image_alt = CASE WHEN hero_image_alt IS NULL THEN hero_image_alt ELSE replace(hero_image_alt, $c16$Whether it's our director sharing a weekend walkthrough to ease a move-in or caregivers sitting among residents in our cozy common areas, answering questions with patience and a smile, it's this genuine care that turns our community into a sanctuary.$c16$, $c16$Whether it's our director sharing a weekend walkthrough to ease a move-in or caregivers sitting among residents in our cozy common areas, answering questions with patience and a smile, it's this genuine care that turns our home into a sanctuary.$c16$) END,
+  body = replace(body, $c16$Whether it's our director sharing a weekend walkthrough to ease a move-in or caregivers sitting among residents in our cozy common areas, answering questions with patience and a smile, it's this genuine care that turns our community into a sanctuary.$c16$, $c16$Whether it's our director sharing a weekend walkthrough to ease a move-in or caregivers sitting among residents in our cozy common areas, answering questions with patience and a smile, it's this genuine care that turns our home into a sanctuary.$c16$),
+  updated_at = now()
+WHERE strpos(coalesce(title,'') || E'\n' || coalesce(excerpt,'') || E'\n' || coalesce(meta_title,'') || E'\n' || coalesce(meta_description,'') || E'\n' || coalesce(hero_image_alt,'') || E'\n' || coalesce(body,''), $c16$Whether it's our director sharing a weekend walkthrough to ease a move-in or caregivers sitting among residents in our cozy common areas, answering questions with patience and a smile, it's this genuine care that turns our community into a sanctuary.$c16$) > 0;
+
+UPDATE posts SET
+  title = replace(title, $c17$In this post, we’ll explore why thoughtful dining matters so much for seniors, especially those in a personal care home or memory care, and how our community makes mealtime one of the best parts of the day.$c17$, $c17$In this post, we’ll explore why thoughtful dining matters so much for seniors, especially those in a personal care home or memory care, and how The Joy makes mealtime one of the best parts of the day.$c17$),
+  excerpt = CASE WHEN excerpt IS NULL THEN excerpt ELSE replace(excerpt, $c17$In this post, we’ll explore why thoughtful dining matters so much for seniors, especially those in a personal care home or memory care, and how our community makes mealtime one of the best parts of the day.$c17$, $c17$In this post, we’ll explore why thoughtful dining matters so much for seniors, especially those in a personal care home or memory care, and how The Joy makes mealtime one of the best parts of the day.$c17$) END,
+  meta_title = CASE WHEN meta_title IS NULL THEN meta_title ELSE replace(meta_title, $c17$In this post, we’ll explore why thoughtful dining matters so much for seniors, especially those in a personal care home or memory care, and how our community makes mealtime one of the best parts of the day.$c17$, $c17$In this post, we’ll explore why thoughtful dining matters so much for seniors, especially those in a personal care home or memory care, and how The Joy makes mealtime one of the best parts of the day.$c17$) END,
+  meta_description = CASE WHEN meta_description IS NULL THEN meta_description ELSE replace(meta_description, $c17$In this post, we’ll explore why thoughtful dining matters so much for seniors, especially those in a personal care home or memory care, and how our community makes mealtime one of the best parts of the day.$c17$, $c17$In this post, we’ll explore why thoughtful dining matters so much for seniors, especially those in a personal care home or memory care, and how The Joy makes mealtime one of the best parts of the day.$c17$) END,
+  hero_image_alt = CASE WHEN hero_image_alt IS NULL THEN hero_image_alt ELSE replace(hero_image_alt, $c17$In this post, we’ll explore why thoughtful dining matters so much for seniors, especially those in a personal care home or memory care, and how our community makes mealtime one of the best parts of the day.$c17$, $c17$In this post, we’ll explore why thoughtful dining matters so much for seniors, especially those in a personal care home or memory care, and how The Joy makes mealtime one of the best parts of the day.$c17$) END,
+  body = replace(body, $c17$In this post, we’ll explore why thoughtful dining matters so much for seniors, especially those in a personal care home or memory care, and how our community makes mealtime one of the best parts of the day.$c17$, $c17$In this post, we’ll explore why thoughtful dining matters so much for seniors, especially those in a personal care home or memory care, and how The Joy makes mealtime one of the best parts of the day.$c17$),
+  updated_at = now()
+WHERE strpos(coalesce(title,'') || E'\n' || coalesce(excerpt,'') || E'\n' || coalesce(meta_title,'') || E'\n' || coalesce(meta_description,'') || E'\n' || coalesce(hero_image_alt,'') || E'\n' || coalesce(body,''), $c17$In this post, we’ll explore why thoughtful dining matters so much for seniors, especially those in a personal care home or memory care, and how our community makes mealtime one of the best parts of the day.$c17$) > 0;
+
+UPDATE posts SET
+  title = replace(title, $c18$We invite you to discover how our community brings warmth, flavor, and care to every table.$c18$, $c18$We invite you to discover how The Joy brings warmth, flavor, and care to every table.$c18$),
+  excerpt = CASE WHEN excerpt IS NULL THEN excerpt ELSE replace(excerpt, $c18$We invite you to discover how our community brings warmth, flavor, and care to every table.$c18$, $c18$We invite you to discover how The Joy brings warmth, flavor, and care to every table.$c18$) END,
+  meta_title = CASE WHEN meta_title IS NULL THEN meta_title ELSE replace(meta_title, $c18$We invite you to discover how our community brings warmth, flavor, and care to every table.$c18$, $c18$We invite you to discover how The Joy brings warmth, flavor, and care to every table.$c18$) END,
+  meta_description = CASE WHEN meta_description IS NULL THEN meta_description ELSE replace(meta_description, $c18$We invite you to discover how our community brings warmth, flavor, and care to every table.$c18$, $c18$We invite you to discover how The Joy brings warmth, flavor, and care to every table.$c18$) END,
+  hero_image_alt = CASE WHEN hero_image_alt IS NULL THEN hero_image_alt ELSE replace(hero_image_alt, $c18$We invite you to discover how our community brings warmth, flavor, and care to every table.$c18$, $c18$We invite you to discover how The Joy brings warmth, flavor, and care to every table.$c18$) END,
+  body = replace(body, $c18$We invite you to discover how our community brings warmth, flavor, and care to every table.$c18$, $c18$We invite you to discover how The Joy brings warmth, flavor, and care to every table.$c18$),
+  updated_at = now()
+WHERE strpos(coalesce(title,'') || E'\n' || coalesce(excerpt,'') || E'\n' || coalesce(meta_title,'') || E'\n' || coalesce(meta_description,'') || E'\n' || coalesce(hero_image_alt,'') || E'\n' || coalesce(body,''), $c18$We invite you to discover how our community brings warmth, flavor, and care to every table.$c18$) > 0;
+
+UPDATE posts SET
+  title = replace(title, $c19$At our community, our beautifully designed porches are equipped with cozy seating and shade, making it easy for residents to breathe in the crisp spring air.$c19$, $c19$At The Joy, our beautifully designed porches are equipped with cozy seating and shade, making it easy for residents to breathe in the crisp spring air.$c19$),
+  excerpt = CASE WHEN excerpt IS NULL THEN excerpt ELSE replace(excerpt, $c19$At our community, our beautifully designed porches are equipped with cozy seating and shade, making it easy for residents to breathe in the crisp spring air.$c19$, $c19$At The Joy, our beautifully designed porches are equipped with cozy seating and shade, making it easy for residents to breathe in the crisp spring air.$c19$) END,
+  meta_title = CASE WHEN meta_title IS NULL THEN meta_title ELSE replace(meta_title, $c19$At our community, our beautifully designed porches are equipped with cozy seating and shade, making it easy for residents to breathe in the crisp spring air.$c19$, $c19$At The Joy, our beautifully designed porches are equipped with cozy seating and shade, making it easy for residents to breathe in the crisp spring air.$c19$) END,
+  meta_description = CASE WHEN meta_description IS NULL THEN meta_description ELSE replace(meta_description, $c19$At our community, our beautifully designed porches are equipped with cozy seating and shade, making it easy for residents to breathe in the crisp spring air.$c19$, $c19$At The Joy, our beautifully designed porches are equipped with cozy seating and shade, making it easy for residents to breathe in the crisp spring air.$c19$) END,
+  hero_image_alt = CASE WHEN hero_image_alt IS NULL THEN hero_image_alt ELSE replace(hero_image_alt, $c19$At our community, our beautifully designed porches are equipped with cozy seating and shade, making it easy for residents to breathe in the crisp spring air.$c19$, $c19$At The Joy, our beautifully designed porches are equipped with cozy seating and shade, making it easy for residents to breathe in the crisp spring air.$c19$) END,
+  body = replace(body, $c19$At our community, our beautifully designed porches are equipped with cozy seating and shade, making it easy for residents to breathe in the crisp spring air.$c19$, $c19$At The Joy, our beautifully designed porches are equipped with cozy seating and shade, making it easy for residents to breathe in the crisp spring air.$c19$),
+  updated_at = now()
+WHERE strpos(coalesce(title,'') || E'\n' || coalesce(excerpt,'') || E'\n' || coalesce(meta_title,'') || E'\n' || coalesce(meta_description,'') || E'\n' || coalesce(hero_image_alt,'') || E'\n' || coalesce(body,''), $c19$At our community, our beautifully designed porches are equipped with cozy seating and shade, making it easy for residents to breathe in the crisp spring air.$c19$) > 0;
+
+UPDATE posts SET
+  title = replace(title, $c20$Our senior living community encourages residents to unwind on the porch, whether they’re chatting away or simply enjoying the moment.$c20$, $c20$The Joy encourages residents to unwind on the porch, whether they’re chatting away or simply enjoying the moment.$c20$),
+  excerpt = CASE WHEN excerpt IS NULL THEN excerpt ELSE replace(excerpt, $c20$Our senior living community encourages residents to unwind on the porch, whether they’re chatting away or simply enjoying the moment.$c20$, $c20$The Joy encourages residents to unwind on the porch, whether they’re chatting away or simply enjoying the moment.$c20$) END,
+  meta_title = CASE WHEN meta_title IS NULL THEN meta_title ELSE replace(meta_title, $c20$Our senior living community encourages residents to unwind on the porch, whether they’re chatting away or simply enjoying the moment.$c20$, $c20$The Joy encourages residents to unwind on the porch, whether they’re chatting away or simply enjoying the moment.$c20$) END,
+  meta_description = CASE WHEN meta_description IS NULL THEN meta_description ELSE replace(meta_description, $c20$Our senior living community encourages residents to unwind on the porch, whether they’re chatting away or simply enjoying the moment.$c20$, $c20$The Joy encourages residents to unwind on the porch, whether they’re chatting away or simply enjoying the moment.$c20$) END,
+  hero_image_alt = CASE WHEN hero_image_alt IS NULL THEN hero_image_alt ELSE replace(hero_image_alt, $c20$Our senior living community encourages residents to unwind on the porch, whether they’re chatting away or simply enjoying the moment.$c20$, $c20$The Joy encourages residents to unwind on the porch, whether they’re chatting away or simply enjoying the moment.$c20$) END,
+  body = replace(body, $c20$Our senior living community encourages residents to unwind on the porch, whether they’re chatting away or simply enjoying the moment.$c20$, $c20$The Joy encourages residents to unwind on the porch, whether they’re chatting away or simply enjoying the moment.$c20$),
+  updated_at = now()
+WHERE strpos(coalesce(title,'') || E'\n' || coalesce(excerpt,'') || E'\n' || coalesce(meta_title,'') || E'\n' || coalesce(meta_description,'') || E'\n' || coalesce(hero_image_alt,'') || E'\n' || coalesce(body,''), $c20$Our senior living community encourages residents to unwind on the porch, whether they’re chatting away or simply enjoying the moment.$c20$) > 0;
+
+UPDATE posts SET
+  title = replace(title, $c21$Our community organizes porch-based activities like group chats and light exercise sessions to keep residents engaged and connected.$c21$, $c21$We organize porch-based activities like group chats and light exercise sessions to keep residents engaged and connected.$c21$),
+  excerpt = CASE WHEN excerpt IS NULL THEN excerpt ELSE replace(excerpt, $c21$Our community organizes porch-based activities like group chats and light exercise sessions to keep residents engaged and connected.$c21$, $c21$We organize porch-based activities like group chats and light exercise sessions to keep residents engaged and connected.$c21$) END,
+  meta_title = CASE WHEN meta_title IS NULL THEN meta_title ELSE replace(meta_title, $c21$Our community organizes porch-based activities like group chats and light exercise sessions to keep residents engaged and connected.$c21$, $c21$We organize porch-based activities like group chats and light exercise sessions to keep residents engaged and connected.$c21$) END,
+  meta_description = CASE WHEN meta_description IS NULL THEN meta_description ELSE replace(meta_description, $c21$Our community organizes porch-based activities like group chats and light exercise sessions to keep residents engaged and connected.$c21$, $c21$We organize porch-based activities like group chats and light exercise sessions to keep residents engaged and connected.$c21$) END,
+  hero_image_alt = CASE WHEN hero_image_alt IS NULL THEN hero_image_alt ELSE replace(hero_image_alt, $c21$Our community organizes porch-based activities like group chats and light exercise sessions to keep residents engaged and connected.$c21$, $c21$We organize porch-based activities like group chats and light exercise sessions to keep residents engaged and connected.$c21$) END,
+  body = replace(body, $c21$Our community organizes porch-based activities like group chats and light exercise sessions to keep residents engaged and connected.$c21$, $c21$We organize porch-based activities like group chats and light exercise sessions to keep residents engaged and connected.$c21$),
+  updated_at = now()
+WHERE strpos(coalesce(title,'') || E'\n' || coalesce(excerpt,'') || E'\n' || coalesce(meta_title,'') || E'\n' || coalesce(meta_description,'') || E'\n' || coalesce(hero_image_alt,'') || E'\n' || coalesce(body,''), $c21$Our community organizes porch-based activities like group chats and light exercise sessions to keep residents engaged and connected.$c21$) > 0;
+
+UPDATE posts SET
+  title = replace(title, $c22$To make the most of front porch sitting, our senior living community offers spring activities tailored for seniors:$c22$, $c22$To make the most of front porch sitting, The Joy offers spring activities tailored for seniors:$c22$),
+  excerpt = CASE WHEN excerpt IS NULL THEN excerpt ELSE replace(excerpt, $c22$To make the most of front porch sitting, our senior living community offers spring activities tailored for seniors:$c22$, $c22$To make the most of front porch sitting, The Joy offers spring activities tailored for seniors:$c22$) END,
+  meta_title = CASE WHEN meta_title IS NULL THEN meta_title ELSE replace(meta_title, $c22$To make the most of front porch sitting, our senior living community offers spring activities tailored for seniors:$c22$, $c22$To make the most of front porch sitting, The Joy offers spring activities tailored for seniors:$c22$) END,
+  meta_description = CASE WHEN meta_description IS NULL THEN meta_description ELSE replace(meta_description, $c22$To make the most of front porch sitting, our senior living community offers spring activities tailored for seniors:$c22$, $c22$To make the most of front porch sitting, The Joy offers spring activities tailored for seniors:$c22$) END,
+  hero_image_alt = CASE WHEN hero_image_alt IS NULL THEN hero_image_alt ELSE replace(hero_image_alt, $c22$To make the most of front porch sitting, our senior living community offers spring activities tailored for seniors:$c22$, $c22$To make the most of front porch sitting, The Joy offers spring activities tailored for seniors:$c22$) END,
+  body = replace(body, $c22$To make the most of front porch sitting, our senior living community offers spring activities tailored for seniors:$c22$, $c22$To make the most of front porch sitting, The Joy offers spring activities tailored for seniors:$c22$),
+  updated_at = now()
+WHERE strpos(coalesce(title,'') || E'\n' || coalesce(excerpt,'') || E'\n' || coalesce(meta_title,'') || E'\n' || coalesce(meta_description,'') || E'\n' || coalesce(hero_image_alt,'') || E'\n' || coalesce(body,''), $c22$To make the most of front porch sitting, our senior living community offers spring activities tailored for seniors:$c22$) > 0;
+
+UPDATE posts SET
+  title = replace(title, $c23$Our senior living community is designed with seniors in mind, offering safe, accessible outdoor spaces that prioritize comfort and enjoyment.$c23$, $c23$Our home is designed with seniors in mind, offering safe, accessible outdoor spaces that prioritize comfort and enjoyment.$c23$),
+  excerpt = CASE WHEN excerpt IS NULL THEN excerpt ELSE replace(excerpt, $c23$Our senior living community is designed with seniors in mind, offering safe, accessible outdoor spaces that prioritize comfort and enjoyment.$c23$, $c23$Our home is designed with seniors in mind, offering safe, accessible outdoor spaces that prioritize comfort and enjoyment.$c23$) END,
+  meta_title = CASE WHEN meta_title IS NULL THEN meta_title ELSE replace(meta_title, $c23$Our senior living community is designed with seniors in mind, offering safe, accessible outdoor spaces that prioritize comfort and enjoyment.$c23$, $c23$Our home is designed with seniors in mind, offering safe, accessible outdoor spaces that prioritize comfort and enjoyment.$c23$) END,
+  meta_description = CASE WHEN meta_description IS NULL THEN meta_description ELSE replace(meta_description, $c23$Our senior living community is designed with seniors in mind, offering safe, accessible outdoor spaces that prioritize comfort and enjoyment.$c23$, $c23$Our home is designed with seniors in mind, offering safe, accessible outdoor spaces that prioritize comfort and enjoyment.$c23$) END,
+  hero_image_alt = CASE WHEN hero_image_alt IS NULL THEN hero_image_alt ELSE replace(hero_image_alt, $c23$Our senior living community is designed with seniors in mind, offering safe, accessible outdoor spaces that prioritize comfort and enjoyment.$c23$, $c23$Our home is designed with seniors in mind, offering safe, accessible outdoor spaces that prioritize comfort and enjoyment.$c23$) END,
+  body = replace(body, $c23$Our senior living community is designed with seniors in mind, offering safe, accessible outdoor spaces that prioritize comfort and enjoyment.$c23$, $c23$Our home is designed with seniors in mind, offering safe, accessible outdoor spaces that prioritize comfort and enjoyment.$c23$),
+  updated_at = now()
+WHERE strpos(coalesce(title,'') || E'\n' || coalesce(excerpt,'') || E'\n' || coalesce(meta_title,'') || E'\n' || coalesce(meta_description,'') || E'\n' || coalesce(hero_image_alt,'') || E'\n' || coalesce(body,''), $c23$Our senior living community is designed with seniors in mind, offering safe, accessible outdoor spaces that prioritize comfort and enjoyment.$c23$) > 0;
+
+UPDATE posts SET
+  title = replace(title, $c24$This spring, we invite you to visit our senior living community and see our beautiful porches for yourself.$c24$, $c24$This spring, we invite you to visit The Joy and see our beautiful porches for yourself.$c24$),
+  excerpt = CASE WHEN excerpt IS NULL THEN excerpt ELSE replace(excerpt, $c24$This spring, we invite you to visit our senior living community and see our beautiful porches for yourself.$c24$, $c24$This spring, we invite you to visit The Joy and see our beautiful porches for yourself.$c24$) END,
+  meta_title = CASE WHEN meta_title IS NULL THEN meta_title ELSE replace(meta_title, $c24$This spring, we invite you to visit our senior living community and see our beautiful porches for yourself.$c24$, $c24$This spring, we invite you to visit The Joy and see our beautiful porches for yourself.$c24$) END,
+  meta_description = CASE WHEN meta_description IS NULL THEN meta_description ELSE replace(meta_description, $c24$This spring, we invite you to visit our senior living community and see our beautiful porches for yourself.$c24$, $c24$This spring, we invite you to visit The Joy and see our beautiful porches for yourself.$c24$) END,
+  hero_image_alt = CASE WHEN hero_image_alt IS NULL THEN hero_image_alt ELSE replace(hero_image_alt, $c24$This spring, we invite you to visit our senior living community and see our beautiful porches for yourself.$c24$, $c24$This spring, we invite you to visit The Joy and see our beautiful porches for yourself.$c24$) END,
+  body = replace(body, $c24$This spring, we invite you to visit our senior living community and see our beautiful porches for yourself.$c24$, $c24$This spring, we invite you to visit The Joy and see our beautiful porches for yourself.$c24$),
+  updated_at = now()
+WHERE strpos(coalesce(title,'') || E'\n' || coalesce(excerpt,'') || E'\n' || coalesce(meta_title,'') || E'\n' || coalesce(meta_description,'') || E'\n' || coalesce(hero_image_alt,'') || E'\n' || coalesce(body,''), $c24$This spring, we invite you to visit our senior living community and see our beautiful porches for yourself.$c24$) > 0;
+
+UPDATE posts SET
+  title = replace(title, $c25$Our caregivers are the heartbeat of our community.$c25$, $c25$Our caregivers are the heartbeat of our home.$c25$),
+  excerpt = CASE WHEN excerpt IS NULL THEN excerpt ELSE replace(excerpt, $c25$Our caregivers are the heartbeat of our community.$c25$, $c25$Our caregivers are the heartbeat of our home.$c25$) END,
+  meta_title = CASE WHEN meta_title IS NULL THEN meta_title ELSE replace(meta_title, $c25$Our caregivers are the heartbeat of our community.$c25$, $c25$Our caregivers are the heartbeat of our home.$c25$) END,
+  meta_description = CASE WHEN meta_description IS NULL THEN meta_description ELSE replace(meta_description, $c25$Our caregivers are the heartbeat of our community.$c25$, $c25$Our caregivers are the heartbeat of our home.$c25$) END,
+  hero_image_alt = CASE WHEN hero_image_alt IS NULL THEN hero_image_alt ELSE replace(hero_image_alt, $c25$Our caregivers are the heartbeat of our community.$c25$, $c25$Our caregivers are the heartbeat of our home.$c25$) END,
+  body = replace(body, $c25$Our caregivers are the heartbeat of our community.$c25$, $c25$Our caregivers are the heartbeat of our home.$c25$),
+  updated_at = now()
+WHERE strpos(coalesce(title,'') || E'\n' || coalesce(excerpt,'') || E'\n' || coalesce(meta_title,'') || E'\n' || coalesce(meta_description,'') || E'\n' || coalesce(hero_image_alt,'') || E'\n' || coalesce(body,''), $c25$Our caregivers are the heartbeat of our community.$c25$) > 0;
+
+UPDATE posts SET
+  title = replace(title, $c26$That means flexible visitation so families can drop by anytime, vibrant events like bingo nights and holiday feasts that spark laughter, and a community where every resident feels like they belong.$c26$, $c26$That means flexible visitation so families can drop by anytime, events like bingo nights and holiday feasts that spark laughter, and a home where every resident feels like they belong.$c26$),
+  excerpt = CASE WHEN excerpt IS NULL THEN excerpt ELSE replace(excerpt, $c26$That means flexible visitation so families can drop by anytime, vibrant events like bingo nights and holiday feasts that spark laughter, and a community where every resident feels like they belong.$c26$, $c26$That means flexible visitation so families can drop by anytime, events like bingo nights and holiday feasts that spark laughter, and a home where every resident feels like they belong.$c26$) END,
+  meta_title = CASE WHEN meta_title IS NULL THEN meta_title ELSE replace(meta_title, $c26$That means flexible visitation so families can drop by anytime, vibrant events like bingo nights and holiday feasts that spark laughter, and a community where every resident feels like they belong.$c26$, $c26$That means flexible visitation so families can drop by anytime, events like bingo nights and holiday feasts that spark laughter, and a home where every resident feels like they belong.$c26$) END,
+  meta_description = CASE WHEN meta_description IS NULL THEN meta_description ELSE replace(meta_description, $c26$That means flexible visitation so families can drop by anytime, vibrant events like bingo nights and holiday feasts that spark laughter, and a community where every resident feels like they belong.$c26$, $c26$That means flexible visitation so families can drop by anytime, events like bingo nights and holiday feasts that spark laughter, and a home where every resident feels like they belong.$c26$) END,
+  hero_image_alt = CASE WHEN hero_image_alt IS NULL THEN hero_image_alt ELSE replace(hero_image_alt, $c26$That means flexible visitation so families can drop by anytime, vibrant events like bingo nights and holiday feasts that spark laughter, and a community where every resident feels like they belong.$c26$, $c26$That means flexible visitation so families can drop by anytime, events like bingo nights and holiday feasts that spark laughter, and a home where every resident feels like they belong.$c26$) END,
+  body = replace(body, $c26$That means flexible visitation so families can drop by anytime, vibrant events like bingo nights and holiday feasts that spark laughter, and a community where every resident feels like they belong.$c26$, $c26$That means flexible visitation so families can drop by anytime, events like bingo nights and holiday feasts that spark laughter, and a home where every resident feels like they belong.$c26$),
+  updated_at = now()
+WHERE strpos(coalesce(title,'') || E'\n' || coalesce(excerpt,'') || E'\n' || coalesce(meta_title,'') || E'\n' || coalesce(meta_description,'') || E'\n' || coalesce(hero_image_alt,'') || E'\n' || coalesce(body,''), $c26$That means flexible visitation so families can drop by anytime, vibrant events like bingo nights and holiday feasts that spark laughter, and a community where every resident feels like they belong.$c26$) > 0;
+
+UPDATE posts SET
+  title = replace(title, $c27$At The Joy Senior Living in Loganville, GA, spring bursts with vibrant activities for our senior living community.$c27$, $c27$At The Joy Senior Living in Loganville, GA, spring bursts with activities for our residents.$c27$),
+  excerpt = CASE WHEN excerpt IS NULL THEN excerpt ELSE replace(excerpt, $c27$At The Joy Senior Living in Loganville, GA, spring bursts with vibrant activities for our senior living community.$c27$, $c27$At The Joy Senior Living in Loganville, GA, spring bursts with activities for our residents.$c27$) END,
+  meta_title = CASE WHEN meta_title IS NULL THEN meta_title ELSE replace(meta_title, $c27$At The Joy Senior Living in Loganville, GA, spring bursts with vibrant activities for our senior living community.$c27$, $c27$At The Joy Senior Living in Loganville, GA, spring bursts with activities for our residents.$c27$) END,
+  meta_description = CASE WHEN meta_description IS NULL THEN meta_description ELSE replace(meta_description, $c27$At The Joy Senior Living in Loganville, GA, spring bursts with vibrant activities for our senior living community.$c27$, $c27$At The Joy Senior Living in Loganville, GA, spring bursts with activities for our residents.$c27$) END,
+  hero_image_alt = CASE WHEN hero_image_alt IS NULL THEN hero_image_alt ELSE replace(hero_image_alt, $c27$At The Joy Senior Living in Loganville, GA, spring bursts with vibrant activities for our senior living community.$c27$, $c27$At The Joy Senior Living in Loganville, GA, spring bursts with activities for our residents.$c27$) END,
+  body = replace(body, $c27$At The Joy Senior Living in Loganville, GA, spring bursts with vibrant activities for our senior living community.$c27$, $c27$At The Joy Senior Living in Loganville, GA, spring bursts with activities for our residents.$c27$),
+  updated_at = now()
+WHERE strpos(coalesce(title,'') || E'\n' || coalesce(excerpt,'') || E'\n' || coalesce(meta_title,'') || E'\n' || coalesce(meta_description,'') || E'\n' || coalesce(hero_image_alt,'') || E'\n' || coalesce(body,''), $c27$At The Joy Senior Living in Loganville, GA, spring bursts with vibrant activities for our senior living community.$c27$) > 0;
+
+UPDATE posts SET
+  title = replace(title, $c28$The ceremony marked not just the inauguration of our new community but also the beginning of a new chapter for Loganville.$c28$, $c28$The ceremony marked not just the opening of our new home but also the beginning of a new chapter for Loganville.$c28$),
+  excerpt = CASE WHEN excerpt IS NULL THEN excerpt ELSE replace(excerpt, $c28$The ceremony marked not just the inauguration of our new community but also the beginning of a new chapter for Loganville.$c28$, $c28$The ceremony marked not just the opening of our new home but also the beginning of a new chapter for Loganville.$c28$) END,
+  meta_title = CASE WHEN meta_title IS NULL THEN meta_title ELSE replace(meta_title, $c28$The ceremony marked not just the inauguration of our new community but also the beginning of a new chapter for Loganville.$c28$, $c28$The ceremony marked not just the opening of our new home but also the beginning of a new chapter for Loganville.$c28$) END,
+  meta_description = CASE WHEN meta_description IS NULL THEN meta_description ELSE replace(meta_description, $c28$The ceremony marked not just the inauguration of our new community but also the beginning of a new chapter for Loganville.$c28$, $c28$The ceremony marked not just the opening of our new home but also the beginning of a new chapter for Loganville.$c28$) END,
+  hero_image_alt = CASE WHEN hero_image_alt IS NULL THEN hero_image_alt ELSE replace(hero_image_alt, $c28$The ceremony marked not just the inauguration of our new community but also the beginning of a new chapter for Loganville.$c28$, $c28$The ceremony marked not just the opening of our new home but also the beginning of a new chapter for Loganville.$c28$) END,
+  body = replace(body, $c28$The ceremony marked not just the inauguration of our new community but also the beginning of a new chapter for Loganville.$c28$, $c28$The ceremony marked not just the opening of our new home but also the beginning of a new chapter for Loganville.$c28$),
+  updated_at = now()
+WHERE strpos(coalesce(title,'') || E'\n' || coalesce(excerpt,'') || E'\n' || coalesce(meta_title,'') || E'\n' || coalesce(meta_description,'') || E'\n' || coalesce(hero_image_alt,'') || E'\n' || coalesce(body,''), $c28$The ceremony marked not just the inauguration of our new community but also the beginning of a new chapter for Loganville.$c28$) > 0;
+
+UPDATE posts SET
+  title = replace(title, $c29$Our staff at The Joy of Loganville showed true professionalism and enthusiasm, helping put together an event that reflected our community’s values and vision.$c29$, $c29$Our staff at The Joy of Loganville showed true professionalism and enthusiasm, helping put together an event that reflected The Joy’s values and vision.$c29$),
+  excerpt = CASE WHEN excerpt IS NULL THEN excerpt ELSE replace(excerpt, $c29$Our staff at The Joy of Loganville showed true professionalism and enthusiasm, helping put together an event that reflected our community’s values and vision.$c29$, $c29$Our staff at The Joy of Loganville showed true professionalism and enthusiasm, helping put together an event that reflected The Joy’s values and vision.$c29$) END,
+  meta_title = CASE WHEN meta_title IS NULL THEN meta_title ELSE replace(meta_title, $c29$Our staff at The Joy of Loganville showed true professionalism and enthusiasm, helping put together an event that reflected our community’s values and vision.$c29$, $c29$Our staff at The Joy of Loganville showed true professionalism and enthusiasm, helping put together an event that reflected The Joy’s values and vision.$c29$) END,
+  meta_description = CASE WHEN meta_description IS NULL THEN meta_description ELSE replace(meta_description, $c29$Our staff at The Joy of Loganville showed true professionalism and enthusiasm, helping put together an event that reflected our community’s values and vision.$c29$, $c29$Our staff at The Joy of Loganville showed true professionalism and enthusiasm, helping put together an event that reflected The Joy’s values and vision.$c29$) END,
+  hero_image_alt = CASE WHEN hero_image_alt IS NULL THEN hero_image_alt ELSE replace(hero_image_alt, $c29$Our staff at The Joy of Loganville showed true professionalism and enthusiasm, helping put together an event that reflected our community’s values and vision.$c29$, $c29$Our staff at The Joy of Loganville showed true professionalism and enthusiasm, helping put together an event that reflected The Joy’s values and vision.$c29$) END,
+  body = replace(body, $c29$Our staff at The Joy of Loganville showed true professionalism and enthusiasm, helping put together an event that reflected our community’s values and vision.$c29$, $c29$Our staff at The Joy of Loganville showed true professionalism and enthusiasm, helping put together an event that reflected The Joy’s values and vision.$c29$),
+  updated_at = now()
+WHERE strpos(coalesce(title,'') || E'\n' || coalesce(excerpt,'') || E'\n' || coalesce(meta_title,'') || E'\n' || coalesce(meta_description,'') || E'\n' || coalesce(hero_image_alt,'') || E'\n' || coalesce(body,''), $c29$Our staff at The Joy of Loganville showed true professionalism and enthusiasm, helping put together an event that reflected our community’s values and vision.$c29$) > 0;
+
+UPDATE posts SET
+  title = replace(title, $c30$It was a pleasure to show off the vibrant community that they are a part of, and their enthusiasm was contagious, spreading joy among all who attended.$c30$, $c30$It was a pleasure to show off their home, and their enthusiasm was contagious, spreading joy among all who attended.$c30$),
+  excerpt = CASE WHEN excerpt IS NULL THEN excerpt ELSE replace(excerpt, $c30$It was a pleasure to show off the vibrant community that they are a part of, and their enthusiasm was contagious, spreading joy among all who attended.$c30$, $c30$It was a pleasure to show off their home, and their enthusiasm was contagious, spreading joy among all who attended.$c30$) END,
+  meta_title = CASE WHEN meta_title IS NULL THEN meta_title ELSE replace(meta_title, $c30$It was a pleasure to show off the vibrant community that they are a part of, and their enthusiasm was contagious, spreading joy among all who attended.$c30$, $c30$It was a pleasure to show off their home, and their enthusiasm was contagious, spreading joy among all who attended.$c30$) END,
+  meta_description = CASE WHEN meta_description IS NULL THEN meta_description ELSE replace(meta_description, $c30$It was a pleasure to show off the vibrant community that they are a part of, and their enthusiasm was contagious, spreading joy among all who attended.$c30$, $c30$It was a pleasure to show off their home, and their enthusiasm was contagious, spreading joy among all who attended.$c30$) END,
+  hero_image_alt = CASE WHEN hero_image_alt IS NULL THEN hero_image_alt ELSE replace(hero_image_alt, $c30$It was a pleasure to show off the vibrant community that they are a part of, and their enthusiasm was contagious, spreading joy among all who attended.$c30$, $c30$It was a pleasure to show off their home, and their enthusiasm was contagious, spreading joy among all who attended.$c30$) END,
+  body = replace(body, $c30$It was a pleasure to show off the vibrant community that they are a part of, and their enthusiasm was contagious, spreading joy among all who attended.$c30$, $c30$It was a pleasure to show off their home, and their enthusiasm was contagious, spreading joy among all who attended.$c30$),
+  updated_at = now()
+WHERE strpos(coalesce(title,'') || E'\n' || coalesce(excerpt,'') || E'\n' || coalesce(meta_title,'') || E'\n' || coalesce(meta_description,'') || E'\n' || coalesce(hero_image_alt,'') || E'\n' || coalesce(body,''), $c30$It was a pleasure to show off the vibrant community that they are a part of, and their enthusiasm was contagious, spreading joy among all who attended.$c30$) > 0;
+
+UPDATE posts SET
+  title = replace(title, $c31$We are grateful for your support and look forward to growing together as a community here at The Joy of Loganville.$c31$, $c31$We are grateful for your support and look forward to growing together here at The Joy of Loganville.$c31$),
+  excerpt = CASE WHEN excerpt IS NULL THEN excerpt ELSE replace(excerpt, $c31$We are grateful for your support and look forward to growing together as a community here at The Joy of Loganville.$c31$, $c31$We are grateful for your support and look forward to growing together here at The Joy of Loganville.$c31$) END,
+  meta_title = CASE WHEN meta_title IS NULL THEN meta_title ELSE replace(meta_title, $c31$We are grateful for your support and look forward to growing together as a community here at The Joy of Loganville.$c31$, $c31$We are grateful for your support and look forward to growing together here at The Joy of Loganville.$c31$) END,
+  meta_description = CASE WHEN meta_description IS NULL THEN meta_description ELSE replace(meta_description, $c31$We are grateful for your support and look forward to growing together as a community here at The Joy of Loganville.$c31$, $c31$We are grateful for your support and look forward to growing together here at The Joy of Loganville.$c31$) END,
+  hero_image_alt = CASE WHEN hero_image_alt IS NULL THEN hero_image_alt ELSE replace(hero_image_alt, $c31$We are grateful for your support and look forward to growing together as a community here at The Joy of Loganville.$c31$, $c31$We are grateful for your support and look forward to growing together here at The Joy of Loganville.$c31$) END,
+  body = replace(body, $c31$We are grateful for your support and look forward to growing together as a community here at The Joy of Loganville.$c31$, $c31$We are grateful for your support and look forward to growing together here at The Joy of Loganville.$c31$),
+  updated_at = now()
+WHERE strpos(coalesce(title,'') || E'\n' || coalesce(excerpt,'') || E'\n' || coalesce(meta_title,'') || E'\n' || coalesce(meta_description,'') || E'\n' || coalesce(hero_image_alt,'') || E'\n' || coalesce(body,''), $c31$We are grateful for your support and look forward to growing together as a community here at The Joy of Loganville.$c31$) > 0;
+
+UPDATE posts SET
+  title = replace(title, $c32$We officially opened our doors to the community with a grand ribbon cutting ceremony. The ceremony marked not just the inauguration of our new community$c32$, $c32$We officially opened our doors to Loganville with a grand ribbon cutting ceremony. The ceremony marked not just the opening of our new home$c32$),
+  excerpt = CASE WHEN excerpt IS NULL THEN excerpt ELSE replace(excerpt, $c32$We officially opened our doors to the community with a grand ribbon cutting ceremony. The ceremony marked not just the inauguration of our new community$c32$, $c32$We officially opened our doors to Loganville with a grand ribbon cutting ceremony. The ceremony marked not just the opening of our new home$c32$) END,
+  meta_title = CASE WHEN meta_title IS NULL THEN meta_title ELSE replace(meta_title, $c32$We officially opened our doors to the community with a grand ribbon cutting ceremony. The ceremony marked not just the inauguration of our new community$c32$, $c32$We officially opened our doors to Loganville with a grand ribbon cutting ceremony. The ceremony marked not just the opening of our new home$c32$) END,
+  meta_description = CASE WHEN meta_description IS NULL THEN meta_description ELSE replace(meta_description, $c32$We officially opened our doors to the community with a grand ribbon cutting ceremony. The ceremony marked not just the inauguration of our new community$c32$, $c32$We officially opened our doors to Loganville with a grand ribbon cutting ceremony. The ceremony marked not just the opening of our new home$c32$) END,
+  hero_image_alt = CASE WHEN hero_image_alt IS NULL THEN hero_image_alt ELSE replace(hero_image_alt, $c32$We officially opened our doors to the community with a grand ribbon cutting ceremony. The ceremony marked not just the inauguration of our new community$c32$, $c32$We officially opened our doors to Loganville with a grand ribbon cutting ceremony. The ceremony marked not just the opening of our new home$c32$) END,
+  body = replace(body, $c32$We officially opened our doors to the community with a grand ribbon cutting ceremony. The ceremony marked not just the inauguration of our new community$c32$, $c32$We officially opened our doors to Loganville with a grand ribbon cutting ceremony. The ceremony marked not just the opening of our new home$c32$),
+  updated_at = now()
+WHERE strpos(coalesce(title,'') || E'\n' || coalesce(excerpt,'') || E'\n' || coalesce(meta_title,'') || E'\n' || coalesce(meta_description,'') || E'\n' || coalesce(hero_image_alt,'') || E'\n' || coalesce(body,''), $c32$We officially opened our doors to the community with a grand ribbon cutting ceremony. The ceremony marked not just the inauguration of our new community$c32$) > 0;
+
+UPDATE posts SET
+  title = replace(title, $c33$For more information about our specialized dementia care programs, please contact us or visit our community.$c33$, $c33$For more information about our specialized dementia care programs, please contact us or visit The Joy.$c33$),
+  excerpt = CASE WHEN excerpt IS NULL THEN excerpt ELSE replace(excerpt, $c33$For more information about our specialized dementia care programs, please contact us or visit our community.$c33$, $c33$For more information about our specialized dementia care programs, please contact us or visit The Joy.$c33$) END,
+  meta_title = CASE WHEN meta_title IS NULL THEN meta_title ELSE replace(meta_title, $c33$For more information about our specialized dementia care programs, please contact us or visit our community.$c33$, $c33$For more information about our specialized dementia care programs, please contact us or visit The Joy.$c33$) END,
+  meta_description = CASE WHEN meta_description IS NULL THEN meta_description ELSE replace(meta_description, $c33$For more information about our specialized dementia care programs, please contact us or visit our community.$c33$, $c33$For more information about our specialized dementia care programs, please contact us or visit The Joy.$c33$) END,
+  hero_image_alt = CASE WHEN hero_image_alt IS NULL THEN hero_image_alt ELSE replace(hero_image_alt, $c33$For more information about our specialized dementia care programs, please contact us or visit our community.$c33$, $c33$For more information about our specialized dementia care programs, please contact us or visit The Joy.$c33$) END,
+  body = replace(body, $c33$For more information about our specialized dementia care programs, please contact us or visit our community.$c33$, $c33$For more information about our specialized dementia care programs, please contact us or visit The Joy.$c33$),
+  updated_at = now()
+WHERE strpos(coalesce(title,'') || E'\n' || coalesce(excerpt,'') || E'\n' || coalesce(meta_title,'') || E'\n' || coalesce(meta_description,'') || E'\n' || coalesce(hero_image_alt,'') || E'\n' || coalesce(body,''), $c33$For more information about our specialized dementia care programs, please contact us or visit our community.$c33$) > 0;
+
+UPDATE posts SET
+  title = replace(title, $c34$Nestled in the heart of our community at The Joy of Loganville, something magical happens once a month.$c34$, $c34$Once a month at The Joy of Loganville, something magical happens.$c34$),
+  excerpt = CASE WHEN excerpt IS NULL THEN excerpt ELSE replace(excerpt, $c34$Nestled in the heart of our community at The Joy of Loganville, something magical happens once a month.$c34$, $c34$Once a month at The Joy of Loganville, something magical happens.$c34$) END,
+  meta_title = CASE WHEN meta_title IS NULL THEN meta_title ELSE replace(meta_title, $c34$Nestled in the heart of our community at The Joy of Loganville, something magical happens once a month.$c34$, $c34$Once a month at The Joy of Loganville, something magical happens.$c34$) END,
+  meta_description = CASE WHEN meta_description IS NULL THEN meta_description ELSE replace(meta_description, $c34$Nestled in the heart of our community at The Joy of Loganville, something magical happens once a month.$c34$, $c34$Once a month at The Joy of Loganville, something magical happens.$c34$) END,
+  hero_image_alt = CASE WHEN hero_image_alt IS NULL THEN hero_image_alt ELSE replace(hero_image_alt, $c34$Nestled in the heart of our community at The Joy of Loganville, something magical happens once a month.$c34$, $c34$Once a month at The Joy of Loganville, something magical happens.$c34$) END,
+  body = replace(body, $c34$Nestled in the heart of our community at The Joy of Loganville, something magical happens once a month.$c34$, $c34$Once a month at The Joy of Loganville, something magical happens.$c34$),
+  updated_at = now()
+WHERE strpos(coalesce(title,'') || E'\n' || coalesce(excerpt,'') || E'\n' || coalesce(meta_title,'') || E'\n' || coalesce(meta_description,'') || E'\n' || coalesce(hero_image_alt,'') || E'\n' || coalesce(body,''), $c34$Nestled in the heart of our community at The Joy of Loganville, something magical happens once a month.$c34$) > 0;
+
+UPDATE posts SET
+  title = replace(title, $c35$Pet therapy is just one of the many ways we strive to create a joyful, engaging, and compassionate environment for everyone who calls our community home.$c35$, $c35$Pet therapy is just one of the many ways we strive to create a joyful, engaging, and compassionate environment for everyone who calls The Joy home.$c35$),
+  excerpt = CASE WHEN excerpt IS NULL THEN excerpt ELSE replace(excerpt, $c35$Pet therapy is just one of the many ways we strive to create a joyful, engaging, and compassionate environment for everyone who calls our community home.$c35$, $c35$Pet therapy is just one of the many ways we strive to create a joyful, engaging, and compassionate environment for everyone who calls The Joy home.$c35$) END,
+  meta_title = CASE WHEN meta_title IS NULL THEN meta_title ELSE replace(meta_title, $c35$Pet therapy is just one of the many ways we strive to create a joyful, engaging, and compassionate environment for everyone who calls our community home.$c35$, $c35$Pet therapy is just one of the many ways we strive to create a joyful, engaging, and compassionate environment for everyone who calls The Joy home.$c35$) END,
+  meta_description = CASE WHEN meta_description IS NULL THEN meta_description ELSE replace(meta_description, $c35$Pet therapy is just one of the many ways we strive to create a joyful, engaging, and compassionate environment for everyone who calls our community home.$c35$, $c35$Pet therapy is just one of the many ways we strive to create a joyful, engaging, and compassionate environment for everyone who calls The Joy home.$c35$) END,
+  hero_image_alt = CASE WHEN hero_image_alt IS NULL THEN hero_image_alt ELSE replace(hero_image_alt, $c35$Pet therapy is just one of the many ways we strive to create a joyful, engaging, and compassionate environment for everyone who calls our community home.$c35$, $c35$Pet therapy is just one of the many ways we strive to create a joyful, engaging, and compassionate environment for everyone who calls The Joy home.$c35$) END,
+  body = replace(body, $c35$Pet therapy is just one of the many ways we strive to create a joyful, engaging, and compassionate environment for everyone who calls our community home.$c35$, $c35$Pet therapy is just one of the many ways we strive to create a joyful, engaging, and compassionate environment for everyone who calls The Joy home.$c35$),
+  updated_at = now()
+WHERE strpos(coalesce(title,'') || E'\n' || coalesce(excerpt,'') || E'\n' || coalesce(meta_title,'') || E'\n' || coalesce(meta_description,'') || E'\n' || coalesce(hero_image_alt,'') || E'\n' || coalesce(body,''), $c35$Pet therapy is just one of the many ways we strive to create a joyful, engaging, and compassionate environment for everyone who calls our community home.$c35$) > 0;
+
+UPDATE posts SET
+  title = replace(title, $c36$Stay tuned for more updates and delightful tales from our pet therapy sessions, and if you wish to experience the joy and tranquility of our community, we invite you to visit us and see firsthand the difference love on four paws can make.$c36$, $c36$Stay tuned for more updates and delightful tales from our pet therapy sessions, and if you wish to experience the joy and tranquility of our home, we invite you to visit us and see firsthand the difference love on four paws can make.$c36$),
+  excerpt = CASE WHEN excerpt IS NULL THEN excerpt ELSE replace(excerpt, $c36$Stay tuned for more updates and delightful tales from our pet therapy sessions, and if you wish to experience the joy and tranquility of our community, we invite you to visit us and see firsthand the difference love on four paws can make.$c36$, $c36$Stay tuned for more updates and delightful tales from our pet therapy sessions, and if you wish to experience the joy and tranquility of our home, we invite you to visit us and see firsthand the difference love on four paws can make.$c36$) END,
+  meta_title = CASE WHEN meta_title IS NULL THEN meta_title ELSE replace(meta_title, $c36$Stay tuned for more updates and delightful tales from our pet therapy sessions, and if you wish to experience the joy and tranquility of our community, we invite you to visit us and see firsthand the difference love on four paws can make.$c36$, $c36$Stay tuned for more updates and delightful tales from our pet therapy sessions, and if you wish to experience the joy and tranquility of our home, we invite you to visit us and see firsthand the difference love on four paws can make.$c36$) END,
+  meta_description = CASE WHEN meta_description IS NULL THEN meta_description ELSE replace(meta_description, $c36$Stay tuned for more updates and delightful tales from our pet therapy sessions, and if you wish to experience the joy and tranquility of our community, we invite you to visit us and see firsthand the difference love on four paws can make.$c36$, $c36$Stay tuned for more updates and delightful tales from our pet therapy sessions, and if you wish to experience the joy and tranquility of our home, we invite you to visit us and see firsthand the difference love on four paws can make.$c36$) END,
+  hero_image_alt = CASE WHEN hero_image_alt IS NULL THEN hero_image_alt ELSE replace(hero_image_alt, $c36$Stay tuned for more updates and delightful tales from our pet therapy sessions, and if you wish to experience the joy and tranquility of our community, we invite you to visit us and see firsthand the difference love on four paws can make.$c36$, $c36$Stay tuned for more updates and delightful tales from our pet therapy sessions, and if you wish to experience the joy and tranquility of our home, we invite you to visit us and see firsthand the difference love on four paws can make.$c36$) END,
+  body = replace(body, $c36$Stay tuned for more updates and delightful tales from our pet therapy sessions, and if you wish to experience the joy and tranquility of our community, we invite you to visit us and see firsthand the difference love on four paws can make.$c36$, $c36$Stay tuned for more updates and delightful tales from our pet therapy sessions, and if you wish to experience the joy and tranquility of our home, we invite you to visit us and see firsthand the difference love on four paws can make.$c36$),
+  updated_at = now()
+WHERE strpos(coalesce(title,'') || E'\n' || coalesce(excerpt,'') || E'\n' || coalesce(meta_title,'') || E'\n' || coalesce(meta_description,'') || E'\n' || coalesce(hero_image_alt,'') || E'\n' || coalesce(body,''), $c36$Stay tuned for more updates and delightful tales from our pet therapy sessions, and if you wish to experience the joy and tranquility of our community, we invite you to visit us and see firsthand the difference love on four paws can make.$c36$) > 0;
+
+UPDATE posts SET
+  title = replace(title, $c37$Nestled in Loganville, Georgia, The Joy Senior Living is more than just a senior care facility; it's a community that offers a personal touch in elder care.$c37$, $c37$In Loganville, Georgia, The Joy Senior Living is a licensed personal care home that offers a personal touch in elder care.$c37$),
+  excerpt = CASE WHEN excerpt IS NULL THEN excerpt ELSE replace(excerpt, $c37$Nestled in Loganville, Georgia, The Joy Senior Living is more than just a senior care facility; it's a community that offers a personal touch in elder care.$c37$, $c37$In Loganville, Georgia, The Joy Senior Living is a licensed personal care home that offers a personal touch in elder care.$c37$) END,
+  meta_title = CASE WHEN meta_title IS NULL THEN meta_title ELSE replace(meta_title, $c37$Nestled in Loganville, Georgia, The Joy Senior Living is more than just a senior care facility; it's a community that offers a personal touch in elder care.$c37$, $c37$In Loganville, Georgia, The Joy Senior Living is a licensed personal care home that offers a personal touch in elder care.$c37$) END,
+  meta_description = CASE WHEN meta_description IS NULL THEN meta_description ELSE replace(meta_description, $c37$Nestled in Loganville, Georgia, The Joy Senior Living is more than just a senior care facility; it's a community that offers a personal touch in elder care.$c37$, $c37$In Loganville, Georgia, The Joy Senior Living is a licensed personal care home that offers a personal touch in elder care.$c37$) END,
+  hero_image_alt = CASE WHEN hero_image_alt IS NULL THEN hero_image_alt ELSE replace(hero_image_alt, $c37$Nestled in Loganville, Georgia, The Joy Senior Living is more than just a senior care facility; it's a community that offers a personal touch in elder care.$c37$, $c37$In Loganville, Georgia, The Joy Senior Living is a licensed personal care home that offers a personal touch in elder care.$c37$) END,
+  body = replace(body, $c37$Nestled in Loganville, Georgia, The Joy Senior Living is more than just a senior care facility; it's a community that offers a personal touch in elder care.$c37$, $c37$In Loganville, Georgia, The Joy Senior Living is a licensed personal care home that offers a personal touch in elder care.$c37$),
+  updated_at = now()
+WHERE strpos(coalesce(title,'') || E'\n' || coalesce(excerpt,'') || E'\n' || coalesce(meta_title,'') || E'\n' || coalesce(meta_description,'') || E'\n' || coalesce(hero_image_alt,'') || E'\n' || coalesce(body,''), $c37$Nestled in Loganville, Georgia, The Joy Senior Living is more than just a senior care facility; it's a community that offers a personal touch in elder care.$c37$) > 0;
+
+UPDATE posts SET
+  title = replace(title, $c38$Our community is built on the bonds that our residents and staff develop with each other, creating a warm, family-like atmosphere.$c38$, $c38$Our home is built on the bonds that our residents and staff develop with each other, creating a warm, family-like atmosphere.$c38$),
+  excerpt = CASE WHEN excerpt IS NULL THEN excerpt ELSE replace(excerpt, $c38$Our community is built on the bonds that our residents and staff develop with each other, creating a warm, family-like atmosphere.$c38$, $c38$Our home is built on the bonds that our residents and staff develop with each other, creating a warm, family-like atmosphere.$c38$) END,
+  meta_title = CASE WHEN meta_title IS NULL THEN meta_title ELSE replace(meta_title, $c38$Our community is built on the bonds that our residents and staff develop with each other, creating a warm, family-like atmosphere.$c38$, $c38$Our home is built on the bonds that our residents and staff develop with each other, creating a warm, family-like atmosphere.$c38$) END,
+  meta_description = CASE WHEN meta_description IS NULL THEN meta_description ELSE replace(meta_description, $c38$Our community is built on the bonds that our residents and staff develop with each other, creating a warm, family-like atmosphere.$c38$, $c38$Our home is built on the bonds that our residents and staff develop with each other, creating a warm, family-like atmosphere.$c38$) END,
+  hero_image_alt = CASE WHEN hero_image_alt IS NULL THEN hero_image_alt ELSE replace(hero_image_alt, $c38$Our community is built on the bonds that our residents and staff develop with each other, creating a warm, family-like atmosphere.$c38$, $c38$Our home is built on the bonds that our residents and staff develop with each other, creating a warm, family-like atmosphere.$c38$) END,
+  body = replace(body, $c38$Our community is built on the bonds that our residents and staff develop with each other, creating a warm, family-like atmosphere.$c38$, $c38$Our home is built on the bonds that our residents and staff develop with each other, creating a warm, family-like atmosphere.$c38$),
+  updated_at = now()
+WHERE strpos(coalesce(title,'') || E'\n' || coalesce(excerpt,'') || E'\n' || coalesce(meta_title,'') || E'\n' || coalesce(meta_description,'') || E'\n' || coalesce(hero_image_alt,'') || E'\n' || coalesce(body,''), $c38$Our community is built on the bonds that our residents and staff develop with each other, creating a warm, family-like atmosphere.$c38$) > 0;
+
+UPDATE posts SET
+  title = replace(title, $c39$Discover intimate senior care at The Joy of Loganville. Personalized attention, vibrant community activities, and serene surroundings await!$c39$, $c39$Discover intimate senior care at The Joy of Loganville. Personalized attention, engaging activities, and serene surroundings await!$c39$),
+  excerpt = CASE WHEN excerpt IS NULL THEN excerpt ELSE replace(excerpt, $c39$Discover intimate senior care at The Joy of Loganville. Personalized attention, vibrant community activities, and serene surroundings await!$c39$, $c39$Discover intimate senior care at The Joy of Loganville. Personalized attention, engaging activities, and serene surroundings await!$c39$) END,
+  meta_title = CASE WHEN meta_title IS NULL THEN meta_title ELSE replace(meta_title, $c39$Discover intimate senior care at The Joy of Loganville. Personalized attention, vibrant community activities, and serene surroundings await!$c39$, $c39$Discover intimate senior care at The Joy of Loganville. Personalized attention, engaging activities, and serene surroundings await!$c39$) END,
+  meta_description = CASE WHEN meta_description IS NULL THEN meta_description ELSE replace(meta_description, $c39$Discover intimate senior care at The Joy of Loganville. Personalized attention, vibrant community activities, and serene surroundings await!$c39$, $c39$Discover intimate senior care at The Joy of Loganville. Personalized attention, engaging activities, and serene surroundings await!$c39$) END,
+  hero_image_alt = CASE WHEN hero_image_alt IS NULL THEN hero_image_alt ELSE replace(hero_image_alt, $c39$Discover intimate senior care at The Joy of Loganville. Personalized attention, vibrant community activities, and serene surroundings await!$c39$, $c39$Discover intimate senior care at The Joy of Loganville. Personalized attention, engaging activities, and serene surroundings await!$c39$) END,
+  body = replace(body, $c39$Discover intimate senior care at The Joy of Loganville. Personalized attention, vibrant community activities, and serene surroundings await!$c39$, $c39$Discover intimate senior care at The Joy of Loganville. Personalized attention, engaging activities, and serene surroundings await!$c39$),
+  updated_at = now()
+WHERE strpos(coalesce(title,'') || E'\n' || coalesce(excerpt,'') || E'\n' || coalesce(meta_title,'') || E'\n' || coalesce(meta_description,'') || E'\n' || coalesce(hero_image_alt,'') || E'\n' || coalesce(body,''), $c39$Discover intimate senior care at The Joy of Loganville. Personalized attention, vibrant community activities, and serene surroundings await!$c39$) > 0;
+
+UPDATE posts SET
+  title = replace(title, $c40$Our **senior living community in Loganville, GA**, offers **personal care** and a happy place to live.$c40$, $c40$Our personal care home in Loganville, GA, offers a happy place to live.$c40$),
+  excerpt = CASE WHEN excerpt IS NULL THEN excerpt ELSE replace(excerpt, $c40$Our **senior living community in Loganville, GA**, offers **personal care** and a happy place to live.$c40$, $c40$Our personal care home in Loganville, GA, offers a happy place to live.$c40$) END,
+  meta_title = CASE WHEN meta_title IS NULL THEN meta_title ELSE replace(meta_title, $c40$Our **senior living community in Loganville, GA**, offers **personal care** and a happy place to live.$c40$, $c40$Our personal care home in Loganville, GA, offers a happy place to live.$c40$) END,
+  meta_description = CASE WHEN meta_description IS NULL THEN meta_description ELSE replace(meta_description, $c40$Our **senior living community in Loganville, GA**, offers **personal care** and a happy place to live.$c40$, $c40$Our personal care home in Loganville, GA, offers a happy place to live.$c40$) END,
+  hero_image_alt = CASE WHEN hero_image_alt IS NULL THEN hero_image_alt ELSE replace(hero_image_alt, $c40$Our **senior living community in Loganville, GA**, offers **personal care** and a happy place to live.$c40$, $c40$Our personal care home in Loganville, GA, offers a happy place to live.$c40$) END,
+  body = replace(body, $c40$Our **senior living community in Loganville, GA**, offers **personal care** and a happy place to live.$c40$, $c40$Our personal care home in Loganville, GA, offers a happy place to live.$c40$),
+  updated_at = now()
+WHERE strpos(coalesce(title,'') || E'\n' || coalesce(excerpt,'') || E'\n' || coalesce(meta_title,'') || E'\n' || coalesce(meta_description,'') || E'\n' || coalesce(hero_image_alt,'') || E'\n' || coalesce(body,''), $c40$Our **senior living community in Loganville, GA**, offers **personal care** and a happy place to live.$c40$) > 0;
+
+UPDATE posts SET
+  title = replace(title, $c41$**Our Commitment to Your Wellbeing**The Joy Senior Living of Loganville isn’t just a place to live; it's a vibrant community that prioritizes joy, respect, and dignity.$c41$, $c41$Our Commitment to Your Wellbeing The Joy Senior Living of Loganville is a home that puts joy, respect, and dignity first.$c41$),
+  excerpt = CASE WHEN excerpt IS NULL THEN excerpt ELSE replace(excerpt, $c41$**Our Commitment to Your Wellbeing**The Joy Senior Living of Loganville isn’t just a place to live; it's a vibrant community that prioritizes joy, respect, and dignity.$c41$, $c41$Our Commitment to Your Wellbeing The Joy Senior Living of Loganville is a home that puts joy, respect, and dignity first.$c41$) END,
+  meta_title = CASE WHEN meta_title IS NULL THEN meta_title ELSE replace(meta_title, $c41$**Our Commitment to Your Wellbeing**The Joy Senior Living of Loganville isn’t just a place to live; it's a vibrant community that prioritizes joy, respect, and dignity.$c41$, $c41$Our Commitment to Your Wellbeing The Joy Senior Living of Loganville is a home that puts joy, respect, and dignity first.$c41$) END,
+  meta_description = CASE WHEN meta_description IS NULL THEN meta_description ELSE replace(meta_description, $c41$**Our Commitment to Your Wellbeing**The Joy Senior Living of Loganville isn’t just a place to live; it's a vibrant community that prioritizes joy, respect, and dignity.$c41$, $c41$Our Commitment to Your Wellbeing The Joy Senior Living of Loganville is a home that puts joy, respect, and dignity first.$c41$) END,
+  hero_image_alt = CASE WHEN hero_image_alt IS NULL THEN hero_image_alt ELSE replace(hero_image_alt, $c41$**Our Commitment to Your Wellbeing**The Joy Senior Living of Loganville isn’t just a place to live; it's a vibrant community that prioritizes joy, respect, and dignity.$c41$, $c41$Our Commitment to Your Wellbeing The Joy Senior Living of Loganville is a home that puts joy, respect, and dignity first.$c41$) END,
+  body = replace(body, $c41$**Our Commitment to Your Wellbeing**The Joy Senior Living of Loganville isn’t just a place to live; it's a vibrant community that prioritizes joy, respect, and dignity.$c41$, $c41$Our Commitment to Your Wellbeing The Joy Senior Living of Loganville is a home that puts joy, respect, and dignity first.$c41$),
+  updated_at = now()
+WHERE strpos(coalesce(title,'') || E'\n' || coalesce(excerpt,'') || E'\n' || coalesce(meta_title,'') || E'\n' || coalesce(meta_description,'') || E'\n' || coalesce(hero_image_alt,'') || E'\n' || coalesce(body,''), $c41$**Our Commitment to Your Wellbeing**The Joy Senior Living of Loganville isn’t just a place to live; it's a vibrant community that prioritizes joy, respect, and dignity.$c41$) > 0;
+
+UPDATE posts SET
+  title = replace(title, $c42$Peppur, our amazing Executive Director, deserves special acknowledgment for her leadership and vision, which have been central to our community’s ethos and success. Her guidance and dedication have inspired us all and have set a strong foundation for the future of The Joy!$c42$, $c42$$c42$),
+  excerpt = CASE WHEN excerpt IS NULL THEN excerpt ELSE replace(excerpt, $c42$Peppur, our amazing Executive Director, deserves special acknowledgment for her leadership and vision, which have been central to our community’s ethos and success. Her guidance and dedication have inspired us all and have set a strong foundation for the future of The Joy!$c42$, $c42$$c42$) END,
+  meta_title = CASE WHEN meta_title IS NULL THEN meta_title ELSE replace(meta_title, $c42$Peppur, our amazing Executive Director, deserves special acknowledgment for her leadership and vision, which have been central to our community’s ethos and success. Her guidance and dedication have inspired us all and have set a strong foundation for the future of The Joy!$c42$, $c42$$c42$) END,
+  meta_description = CASE WHEN meta_description IS NULL THEN meta_description ELSE replace(meta_description, $c42$Peppur, our amazing Executive Director, deserves special acknowledgment for her leadership and vision, which have been central to our community’s ethos and success. Her guidance and dedication have inspired us all and have set a strong foundation for the future of The Joy!$c42$, $c42$$c42$) END,
+  hero_image_alt = CASE WHEN hero_image_alt IS NULL THEN hero_image_alt ELSE replace(hero_image_alt, $c42$Peppur, our amazing Executive Director, deserves special acknowledgment for her leadership and vision, which have been central to our community’s ethos and success. Her guidance and dedication have inspired us all and have set a strong foundation for the future of The Joy!$c42$, $c42$$c42$) END,
+  body = replace(body, $c42$Peppur, our amazing Executive Director, deserves special acknowledgment for her leadership and vision, which have been central to our community’s ethos and success. Her guidance and dedication have inspired us all and have set a strong foundation for the future of The Joy!$c42$, $c42$$c42$),
+  updated_at = now()
+WHERE strpos(coalesce(title,'') || E'\n' || coalesce(excerpt,'') || E'\n' || coalesce(meta_title,'') || E'\n' || coalesce(meta_description,'') || E'\n' || coalesce(hero_image_alt,'') || E'\n' || coalesce(body,''), $c42$Peppur, our amazing Executive Director, deserves special acknowledgment for her leadership and vision, which have been central to our community’s ethos and success. Her guidance and dedication have inspired us all and have set a strong foundation for the future of The Joy!$c42$) > 0;
+
+UPDATE posts SET
+  title = replace(title, $c43$ Peppur’s vision and energy inspire us all to strive for excellence, and we’re endlessly grateful for her ability to hold our community together with grace and warmth.$c43$, $c43$$c43$),
+  excerpt = CASE WHEN excerpt IS NULL THEN excerpt ELSE replace(excerpt, $c43$ Peppur’s vision and energy inspire us all to strive for excellence, and we’re endlessly grateful for her ability to hold our community together with grace and warmth.$c43$, $c43$$c43$) END,
+  meta_title = CASE WHEN meta_title IS NULL THEN meta_title ELSE replace(meta_title, $c43$ Peppur’s vision and energy inspire us all to strive for excellence, and we’re endlessly grateful for her ability to hold our community together with grace and warmth.$c43$, $c43$$c43$) END,
+  meta_description = CASE WHEN meta_description IS NULL THEN meta_description ELSE replace(meta_description, $c43$ Peppur’s vision and energy inspire us all to strive for excellence, and we’re endlessly grateful for her ability to hold our community together with grace and warmth.$c43$, $c43$$c43$) END,
+  hero_image_alt = CASE WHEN hero_image_alt IS NULL THEN hero_image_alt ELSE replace(hero_image_alt, $c43$ Peppur’s vision and energy inspire us all to strive for excellence, and we’re endlessly grateful for her ability to hold our community together with grace and warmth.$c43$, $c43$$c43$) END,
+  body = replace(body, $c43$ Peppur’s vision and energy inspire us all to strive for excellence, and we’re endlessly grateful for her ability to hold our community together with grace and warmth.$c43$, $c43$$c43$),
+  updated_at = now()
+WHERE strpos(coalesce(title,'') || E'\n' || coalesce(excerpt,'') || E'\n' || coalesce(meta_title,'') || E'\n' || coalesce(meta_description,'') || E'\n' || coalesce(hero_image_alt,'') || E'\n' || coalesce(body,''), $c43$ Peppur’s vision and energy inspire us all to strive for excellence, and we’re endlessly grateful for her ability to hold our community together with grace and warmth.$c43$) > 0;
+
+UPDATE posts SET
+  title = replace(title, $c44$Peppur’s vision and energy inspire us all to strive for excellence, and we’re endlessly grateful for her ability to hold our community together with grace and warmth.$c44$, $c44$$c44$),
+  excerpt = CASE WHEN excerpt IS NULL THEN excerpt ELSE replace(excerpt, $c44$Peppur’s vision and energy inspire us all to strive for excellence, and we’re endlessly grateful for her ability to hold our community together with grace and warmth.$c44$, $c44$$c44$) END,
+  meta_title = CASE WHEN meta_title IS NULL THEN meta_title ELSE replace(meta_title, $c44$Peppur’s vision and energy inspire us all to strive for excellence, and we’re endlessly grateful for her ability to hold our community together with grace and warmth.$c44$, $c44$$c44$) END,
+  meta_description = CASE WHEN meta_description IS NULL THEN meta_description ELSE replace(meta_description, $c44$Peppur’s vision and energy inspire us all to strive for excellence, and we’re endlessly grateful for her ability to hold our community together with grace and warmth.$c44$, $c44$$c44$) END,
+  hero_image_alt = CASE WHEN hero_image_alt IS NULL THEN hero_image_alt ELSE replace(hero_image_alt, $c44$Peppur’s vision and energy inspire us all to strive for excellence, and we’re endlessly grateful for her ability to hold our community together with grace and warmth.$c44$, $c44$$c44$) END,
+  body = replace(body, $c44$Peppur’s vision and energy inspire us all to strive for excellence, and we’re endlessly grateful for her ability to hold our community together with grace and warmth.$c44$, $c44$$c44$),
+  updated_at = now()
+WHERE strpos(coalesce(title,'') || E'\n' || coalesce(excerpt,'') || E'\n' || coalesce(meta_title,'') || E'\n' || coalesce(meta_description,'') || E'\n' || coalesce(hero_image_alt,'') || E'\n' || coalesce(body,''), $c44$Peppur’s vision and energy inspire us all to strive for excellence, and we’re endlessly grateful for her ability to hold our community together with grace and warmth.$c44$) > 0;
+
+UPDATE posts SET
+  title = replace(title, $c45$ Peppur, our amazing Executive Director, deserves special acknowledgment for her leadership and vision, which have been central to our community’s ethos and success.$c45$, $c45$$c45$),
+  excerpt = CASE WHEN excerpt IS NULL THEN excerpt ELSE replace(excerpt, $c45$ Peppur, our amazing Executive Director, deserves special acknowledgment for her leadership and vision, which have been central to our community’s ethos and success.$c45$, $c45$$c45$) END,
+  meta_title = CASE WHEN meta_title IS NULL THEN meta_title ELSE replace(meta_title, $c45$ Peppur, our amazing Executive Director, deserves special acknowledgment for her leadership and vision, which have been central to our community’s ethos and success.$c45$, $c45$$c45$) END,
+  meta_description = CASE WHEN meta_description IS NULL THEN meta_description ELSE replace(meta_description, $c45$ Peppur, our amazing Executive Director, deserves special acknowledgment for her leadership and vision, which have been central to our community’s ethos and success.$c45$, $c45$$c45$) END,
+  hero_image_alt = CASE WHEN hero_image_alt IS NULL THEN hero_image_alt ELSE replace(hero_image_alt, $c45$ Peppur, our amazing Executive Director, deserves special acknowledgment for her leadership and vision, which have been central to our community’s ethos and success.$c45$, $c45$$c45$) END,
+  body = replace(body, $c45$ Peppur, our amazing Executive Director, deserves special acknowledgment for her leadership and vision, which have been central to our community’s ethos and success.$c45$, $c45$$c45$),
+  updated_at = now()
+WHERE strpos(coalesce(title,'') || E'\n' || coalesce(excerpt,'') || E'\n' || coalesce(meta_title,'') || E'\n' || coalesce(meta_description,'') || E'\n' || coalesce(hero_image_alt,'') || E'\n' || coalesce(body,''), $c45$ Peppur, our amazing Executive Director, deserves special acknowledgment for her leadership and vision, which have been central to our community’s ethos and success.$c45$) > 0;
+
+UPDATE posts SET
+  title = replace(title, $c46$Peppur, our amazing Executive Director, deserves special acknowledgment for her leadership and vision, which have been central to our community’s ethos and success.$c46$, $c46$$c46$),
+  excerpt = CASE WHEN excerpt IS NULL THEN excerpt ELSE replace(excerpt, $c46$Peppur, our amazing Executive Director, deserves special acknowledgment for her leadership and vision, which have been central to our community’s ethos and success.$c46$, $c46$$c46$) END,
+  meta_title = CASE WHEN meta_title IS NULL THEN meta_title ELSE replace(meta_title, $c46$Peppur, our amazing Executive Director, deserves special acknowledgment for her leadership and vision, which have been central to our community’s ethos and success.$c46$, $c46$$c46$) END,
+  meta_description = CASE WHEN meta_description IS NULL THEN meta_description ELSE replace(meta_description, $c46$Peppur, our amazing Executive Director, deserves special acknowledgment for her leadership and vision, which have been central to our community’s ethos and success.$c46$, $c46$$c46$) END,
+  hero_image_alt = CASE WHEN hero_image_alt IS NULL THEN hero_image_alt ELSE replace(hero_image_alt, $c46$Peppur, our amazing Executive Director, deserves special acknowledgment for her leadership and vision, which have been central to our community’s ethos and success.$c46$, $c46$$c46$) END,
+  body = replace(body, $c46$Peppur, our amazing Executive Director, deserves special acknowledgment for her leadership and vision, which have been central to our community’s ethos and success.$c46$, $c46$$c46$),
+  updated_at = now()
+WHERE strpos(coalesce(title,'') || E'\n' || coalesce(excerpt,'') || E'\n' || coalesce(meta_title,'') || E'\n' || coalesce(meta_description,'') || E'\n' || coalesce(hero_image_alt,'') || E'\n' || coalesce(body,''), $c46$Peppur, our amazing Executive Director, deserves special acknowledgment for her leadership and vision, which have been central to our community’s ethos and success.$c46$) > 0;
+
+UPDATE posts SET
+  title = replace(title, $c47$ Her guidance and dedication have inspired us all and have set a strong foundation for the future of The Joy!$c47$, $c47$$c47$),
+  excerpt = CASE WHEN excerpt IS NULL THEN excerpt ELSE replace(excerpt, $c47$ Her guidance and dedication have inspired us all and have set a strong foundation for the future of The Joy!$c47$, $c47$$c47$) END,
+  meta_title = CASE WHEN meta_title IS NULL THEN meta_title ELSE replace(meta_title, $c47$ Her guidance and dedication have inspired us all and have set a strong foundation for the future of The Joy!$c47$, $c47$$c47$) END,
+  meta_description = CASE WHEN meta_description IS NULL THEN meta_description ELSE replace(meta_description, $c47$ Her guidance and dedication have inspired us all and have set a strong foundation for the future of The Joy!$c47$, $c47$$c47$) END,
+  hero_image_alt = CASE WHEN hero_image_alt IS NULL THEN hero_image_alt ELSE replace(hero_image_alt, $c47$ Her guidance and dedication have inspired us all and have set a strong foundation for the future of The Joy!$c47$, $c47$$c47$) END,
+  body = replace(body, $c47$ Her guidance and dedication have inspired us all and have set a strong foundation for the future of The Joy!$c47$, $c47$$c47$),
+  updated_at = now()
+WHERE strpos(coalesce(title,'') || E'\n' || coalesce(excerpt,'') || E'\n' || coalesce(meta_title,'') || E'\n' || coalesce(meta_description,'') || E'\n' || coalesce(hero_image_alt,'') || E'\n' || coalesce(body,''), $c47$ Her guidance and dedication have inspired us all and have set a strong foundation for the future of The Joy!$c47$) > 0;
+
+UPDATE posts SET
+  title = replace(title, $c48$Her guidance and dedication have inspired us all and have set a strong foundation for the future of The Joy!$c48$, $c48$$c48$),
+  excerpt = CASE WHEN excerpt IS NULL THEN excerpt ELSE replace(excerpt, $c48$Her guidance and dedication have inspired us all and have set a strong foundation for the future of The Joy!$c48$, $c48$$c48$) END,
+  meta_title = CASE WHEN meta_title IS NULL THEN meta_title ELSE replace(meta_title, $c48$Her guidance and dedication have inspired us all and have set a strong foundation for the future of The Joy!$c48$, $c48$$c48$) END,
+  meta_description = CASE WHEN meta_description IS NULL THEN meta_description ELSE replace(meta_description, $c48$Her guidance and dedication have inspired us all and have set a strong foundation for the future of The Joy!$c48$, $c48$$c48$) END,
+  hero_image_alt = CASE WHEN hero_image_alt IS NULL THEN hero_image_alt ELSE replace(hero_image_alt, $c48$Her guidance and dedication have inspired us all and have set a strong foundation for the future of The Joy!$c48$, $c48$$c48$) END,
+  body = replace(body, $c48$Her guidance and dedication have inspired us all and have set a strong foundation for the future of The Joy!$c48$, $c48$$c48$),
+  updated_at = now()
+WHERE strpos(coalesce(title,'') || E'\n' || coalesce(excerpt,'') || E'\n' || coalesce(meta_title,'') || E'\n' || coalesce(meta_description,'') || E'\n' || coalesce(hero_image_alt,'') || E'\n' || coalesce(body,''), $c48$Her guidance and dedication have inspired us all and have set a strong foundation for the future of The Joy!$c48$) > 0;
+
+
+    INSERT INTO applied_content_updates (id) VALUES ('community-replacements-2026-09-28');
+  END IF;
+END
+$community_pass$;
+
+
+-- Award consolidation: one paragraph naming both the 2025 and 2026 awards,
+-- placed after the paragraph that ends "wrote about how it went."
+DO $award_para$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM applied_content_updates WHERE id = 'award-2025-paragraph-2026-09-28'
+  ) THEN
+    UPDATE posts SET
+      body = replace(
+        body,
+        $ap$wrote about how it went.$ap$,
+        $ap$wrote about how it went.
+
+A Place for Mom also gave The Joy its Best of Senior Living award in 2025, so 2026 makes two years in a row. Both times, the award came from reviews families wrote on A Place for Mom. Nothing we sent in had anything to do with it. The credit belongs to the caregivers and cooks who do the daily work, and to Mellissa Daniel, who leads them.$ap$
+      ),
+      updated_at = now()
+    WHERE slug = $ap$what-the-2026-best-of-senior-living-award-actually-means-for-loganville-families$ap$
+      AND strpos(body, $ap$wrote about how it went.$ap$) > 0
+      AND strpos(body, $ap$A Place for Mom also gave The Joy its Best of Senior Living award in 2025$ap$) = 0;
+
+    INSERT INTO applied_content_updates (id) VALUES ('award-2025-paragraph-2026-09-28');
+  END IF;
+END
+$award_para$;
+
+
+-- Redirected posts leave /blog, the sitemap, and Related reading.
+-- Runs once. A later publish in Admin is left alone.
+DO $unpublish_redirects$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM applied_content_updates WHERE id = 'unpublish-redirected-posts-2026-09-28'
+  ) THEN
+    UPDATE posts SET status = 'draft', updated_at = now()
+    WHERE slug IN ($un$welcome-to-the-joy$un$, $un$a-joyous-beginning-celebrating-the-grand-ribbon-cutting-at-the-joy-of-loganville$un$, $un$hearts-full-of-gratitude-what-our-families-are-sharing-about-life-at-the-joy$un$, $un$what-to-look-for-in-an-assisted-living-community-from-people-who-run-one$un$, $un$the-talk$un$, $un$fall-prevention-seniors-home-starts-now$un$, $un$is-it-time-for-senior-living-a-guide-to-knowing-when$un$, $un$maybe-its-time-for-a-little-more-joy$un$, $un$the-joy-senior-living-wins-best-of-senior-living-award-in-loganville-ga$un$, $un$we-just-received-our-2026-best-of-senior-living-award-from-a-place-for-mom$un$)
+      AND status IS DISTINCT FROM 'draft';
+
+    INSERT INTO applied_content_updates (id) VALUES ('unpublish-redirected-posts-2026-09-28');
+  END IF;
+END
+$unpublish_redirects$;
+
+
+-- Internal links that pointed at posts now redirected. Exact URL text only.
+-- Also covers the https://www form. A later edit that removes the old URL is left alone.
+
+UPDATE posts SET
+  body = replace(body, $lk0$/blog/welcome-to-the-joy$lk0$, $lk0$/about$lk0$),
+  updated_at = now()
+WHERE strpos(body, $lk0$/blog/welcome-to-the-joy$lk0$) > 0;
+
+UPDATE posts SET
+  body = replace(body, $lk0$https://www.joyseniorcare.com/blog/welcome-to-the-joy$lk0$, $lk0$https://www.joyseniorcare.com/about$lk0$),
+  updated_at = now()
+WHERE strpos(body, $lk0$https://www.joyseniorcare.com/blog/welcome-to-the-joy$lk0$) > 0;
+
+UPDATE posts SET
+  body = replace(body, $lk1$/blog/a-joyous-beginning-celebrating-the-grand-ribbon-cutting-at-the-joy-of-loganville$lk1$, $lk1$/about$lk1$),
+  updated_at = now()
+WHERE strpos(body, $lk1$/blog/a-joyous-beginning-celebrating-the-grand-ribbon-cutting-at-the-joy-of-loganville$lk1$) > 0;
+
+UPDATE posts SET
+  body = replace(body, $lk1$https://www.joyseniorcare.com/blog/a-joyous-beginning-celebrating-the-grand-ribbon-cutting-at-the-joy-of-loganville$lk1$, $lk1$https://www.joyseniorcare.com/about$lk1$),
+  updated_at = now()
+WHERE strpos(body, $lk1$https://www.joyseniorcare.com/blog/a-joyous-beginning-celebrating-the-grand-ribbon-cutting-at-the-joy-of-loganville$lk1$) > 0;
+
+UPDATE posts SET
+  body = replace(body, $lk2$/blog/hearts-full-of-gratitude-what-our-families-are-sharing-about-life-at-the-joy$lk2$, $lk2$/reviews$lk2$),
+  updated_at = now()
+WHERE strpos(body, $lk2$/blog/hearts-full-of-gratitude-what-our-families-are-sharing-about-life-at-the-joy$lk2$) > 0;
+
+UPDATE posts SET
+  body = replace(body, $lk2$https://www.joyseniorcare.com/blog/hearts-full-of-gratitude-what-our-families-are-sharing-about-life-at-the-joy$lk2$, $lk2$https://www.joyseniorcare.com/reviews$lk2$),
+  updated_at = now()
+WHERE strpos(body, $lk2$https://www.joyseniorcare.com/blog/hearts-full-of-gratitude-what-our-families-are-sharing-about-life-at-the-joy$lk2$) > 0;
+
+UPDATE posts SET
+  body = replace(body, $lk3$/blog/what-to-look-for-in-an-assisted-living-community-from-people-who-run-one$lk3$, $lk3$/blog/questions-to-ask-personal-care-home-tour$lk3$),
+  updated_at = now()
+WHERE strpos(body, $lk3$/blog/what-to-look-for-in-an-assisted-living-community-from-people-who-run-one$lk3$) > 0;
+
+UPDATE posts SET
+  body = replace(body, $lk3$https://www.joyseniorcare.com/blog/what-to-look-for-in-an-assisted-living-community-from-people-who-run-one$lk3$, $lk3$https://www.joyseniorcare.com/blog/questions-to-ask-personal-care-home-tour$lk3$),
+  updated_at = now()
+WHERE strpos(body, $lk3$https://www.joyseniorcare.com/blog/what-to-look-for-in-an-assisted-living-community-from-people-who-run-one$lk3$) > 0;
+
+UPDATE posts SET
+  body = replace(body, $lk4$/blog/the-talk$lk4$, $lk4$/blog/how-to-have-the-it-might-be-time-conversation$lk4$),
+  updated_at = now()
+WHERE strpos(body, $lk4$/blog/the-talk$lk4$) > 0;
+
+UPDATE posts SET
+  body = replace(body, $lk4$https://www.joyseniorcare.com/blog/the-talk$lk4$, $lk4$https://www.joyseniorcare.com/blog/how-to-have-the-it-might-be-time-conversation$lk4$),
+  updated_at = now()
+WHERE strpos(body, $lk4$https://www.joyseniorcare.com/blog/the-talk$lk4$) > 0;
+
+UPDATE posts SET
+  body = replace(body, $lk5$/blog/fall-prevention-seniors-home-starts-now$lk5$, $lk5$/blog/room-by-room-the-fall-prevention-walkthrough-every-adult-child-should-do$lk5$),
+  updated_at = now()
+WHERE strpos(body, $lk5$/blog/fall-prevention-seniors-home-starts-now$lk5$) > 0;
+
+UPDATE posts SET
+  body = replace(body, $lk5$https://www.joyseniorcare.com/blog/fall-prevention-seniors-home-starts-now$lk5$, $lk5$https://www.joyseniorcare.com/blog/room-by-room-the-fall-prevention-walkthrough-every-adult-child-should-do$lk5$),
+  updated_at = now()
+WHERE strpos(body, $lk5$https://www.joyseniorcare.com/blog/fall-prevention-seniors-home-starts-now$lk5$) > 0;
+
+UPDATE posts SET
+  body = replace(body, $lk6$/blog/is-it-time-for-senior-living-a-guide-to-knowing-when$lk6$, $lk6$/when-its-time$lk6$),
+  updated_at = now()
+WHERE strpos(body, $lk6$/blog/is-it-time-for-senior-living-a-guide-to-knowing-when$lk6$) > 0;
+
+UPDATE posts SET
+  body = replace(body, $lk6$https://www.joyseniorcare.com/blog/is-it-time-for-senior-living-a-guide-to-knowing-when$lk6$, $lk6$https://www.joyseniorcare.com/when-its-time$lk6$),
+  updated_at = now()
+WHERE strpos(body, $lk6$https://www.joyseniorcare.com/blog/is-it-time-for-senior-living-a-guide-to-knowing-when$lk6$) > 0;
+
+UPDATE posts SET
+  body = replace(body, $lk7$/blog/maybe-its-time-for-a-little-more-joy$lk7$, $lk7$/when-its-time$lk7$),
+  updated_at = now()
+WHERE strpos(body, $lk7$/blog/maybe-its-time-for-a-little-more-joy$lk7$) > 0;
+
+UPDATE posts SET
+  body = replace(body, $lk7$https://www.joyseniorcare.com/blog/maybe-its-time-for-a-little-more-joy$lk7$, $lk7$https://www.joyseniorcare.com/when-its-time$lk7$),
+  updated_at = now()
+WHERE strpos(body, $lk7$https://www.joyseniorcare.com/blog/maybe-its-time-for-a-little-more-joy$lk7$) > 0;
+
+UPDATE posts SET
+  body = replace(body, $lk8$/blog/the-joy-senior-living-wins-best-of-senior-living-award-in-loganville-ga$lk8$, $lk8$/blog/what-the-2026-best-of-senior-living-award-actually-means-for-loganville-families$lk8$),
+  updated_at = now()
+WHERE strpos(body, $lk8$/blog/the-joy-senior-living-wins-best-of-senior-living-award-in-loganville-ga$lk8$) > 0;
+
+UPDATE posts SET
+  body = replace(body, $lk8$https://www.joyseniorcare.com/blog/the-joy-senior-living-wins-best-of-senior-living-award-in-loganville-ga$lk8$, $lk8$https://www.joyseniorcare.com/blog/what-the-2026-best-of-senior-living-award-actually-means-for-loganville-families$lk8$),
+  updated_at = now()
+WHERE strpos(body, $lk8$https://www.joyseniorcare.com/blog/the-joy-senior-living-wins-best-of-senior-living-award-in-loganville-ga$lk8$) > 0;
+
+UPDATE posts SET
+  body = replace(body, $lk9$/blog/we-just-received-our-2026-best-of-senior-living-award-from-a-place-for-mom$lk9$, $lk9$/blog/what-the-2026-best-of-senior-living-award-actually-means-for-loganville-families$lk9$),
+  updated_at = now()
+WHERE strpos(body, $lk9$/blog/we-just-received-our-2026-best-of-senior-living-award-from-a-place-for-mom$lk9$) > 0;
+
+UPDATE posts SET
+  body = replace(body, $lk9$https://www.joyseniorcare.com/blog/we-just-received-our-2026-best-of-senior-living-award-from-a-place-for-mom$lk9$, $lk9$https://www.joyseniorcare.com/blog/what-the-2026-best-of-senior-living-award-actually-means-for-loganville-families$lk9$),
+  updated_at = now()
+WHERE strpos(body, $lk9$https://www.joyseniorcare.com/blog/we-just-received-our-2026-best-of-senior-living-award-from-a-place-for-mom$lk9$) > 0;
+
+
+-- Budgeting post: drop the promise of a workbook that does not exist.
+-- Exact-match only. Worksheet headings are not touched.
+UPDATE posts SET
+  body = replace(
+    replace(
+      body,
+      $wb$Use this workbook as a guide to navigate the complexities of senior care costs and develop a sustainable financial plan.$wb$,
+      $wb$Use this guide to navigate the complexities of senior care costs and develop a sustainable financial plan.$wb$
+    ),
+    $wb$This comprehensive workbook will guide you through the process of understanding costs, assessing financial resources, and developing a realistic budget for senior care.$wb$,
+    $wb$This guide will walk you through the process of understanding costs, assessing financial resources, and developing a realistic budget for senior care.$wb$
+  ),
+  excerpt = CASE
+    WHEN btrim(excerpt) = $wb$Planning for a parent's care? Our free workbook compares in-home care, personal care home, and nursing home costs so you can build a realistic care budget.$wb$
+      THEN $wb$Planning for a parent's care? This guide compares in-home care, personal care home, and nursing home costs so you can build a realistic care budget.$wb$
+    ELSE excerpt
+  END,
+  meta_description = CASE
+    WHEN btrim(meta_description) = $wb$Planning for a parent's care? Our free workbook compares in-home care, personal care home, and nursing home costs so you can build a realistic care budget.$wb$
+      THEN $wb$Planning for a parent's care? This guide compares in-home care, personal care home, and nursing home costs so you can build a realistic care budget.$wb$
+    ELSE meta_description
+  END,
+  updated_at = now()
+WHERE slug = $wb$budgeting-for-senior-care-how-to-prepare-for-the-ever-raising-cost-of-senior-care$wb$
+  AND (
+    strpos(body, $wb$Use this workbook as a guide to navigate the complexities of senior care costs and develop a sustainable financial plan.$wb$) > 0
+    OR strpos(body, $wb$This comprehensive workbook will guide you through the process of understanding costs, assessing financial resources, and developing a realistic budget for senior care.$wb$) > 0
+    OR btrim(excerpt) = $wb$Planning for a parent's care? Our free workbook compares in-home care, personal care home, and nursing home costs so you can build a realistic care budget.$wb$
+    OR btrim(meta_description) = $wb$Planning for a parent's care? Our free workbook compares in-home care, personal care home, and nursing home costs so you can build a realistic care budget.$wb$
+  );
+
+
+-- Gallery captions and alt text. Matches by filename so a host prefix still hits.
+-- Inserts a row only when that file is not already in the gallery.
+DO $gallery_caps$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM applied_content_updates WHERE id = 'gallery-captions-2026-09-28'
+  ) THEN
+
+
+    UPDATE photos SET
+      caption = $g0$Holding hands and sharing a smile.$g0$,
+      image_alt = $g0$An older woman with white hair and glasses, a green knit wrap around her shoulders, smiles at a bearded man in a yellow cap. His arm is around her shoulders, and she holds his hand.$g0$
+    WHERE image_url LIKE $g0$%gallery-1157686.jpg$g0$;
+
+    INSERT INTO photos (image_url, caption, image_alt, posted_at)
+    SELECT $g0$https://pub-6e43e90472054fe3880f53e8c0ca3b60.r2.dev/blog/gallery-1157686.jpg$g0$, $g0$Holding hands and sharing a smile.$g0$, $g0$An older woman with white hair and glasses, a green knit wrap around her shoulders, smiles at a bearded man in a yellow cap. His arm is around her shoulders, and she holds his hand.$g0$,
+           TIMESTAMPTZ '2026-09-01 18:00:00+00' + (6 || ' minutes')::interval
+    WHERE NOT EXISTS (
+      SELECT 1 FROM photos WHERE image_url LIKE $g0$%gallery-1157686.jpg$g0$
+    );
+
+
+    UPDATE photos SET
+      caption = $g1$A cookout under the covered patio.$g1$,
+      image_alt = $g1$A large group eats at long tables under a covered wooden patio. Red cups sit on the tables, a walker and a wheelchair are parked nearby, and trees and parked cars fill the background.$g1$
+    WHERE image_url LIKE $g1$%gallery-474265.jpg$g1$;
+
+    INSERT INTO photos (image_url, caption, image_alt, posted_at)
+    SELECT $g1$https://pub-6e43e90472054fe3880f53e8c0ca3b60.r2.dev/blog/gallery-474265.jpg$g1$, $g1$A cookout under the covered patio.$g1$, $g1$A large group eats at long tables under a covered wooden patio. Red cups sit on the tables, a walker and a wheelchair are parked nearby, and trees and parked cars fill the background.$g1$,
+           TIMESTAMPTZ '2026-09-01 18:00:00+00' + (5 || ' minutes')::interval
+    WHERE NOT EXISTS (
+      SELECT 1 FROM photos WHERE image_url LIKE $g1$%gallery-474265.jpg$g1$
+    );
+
+
+    UPDATE photos SET
+      caption = $g2$Red, white and blue on a summer day.$g2$,
+      image_alt = $g2$Six adults and a young boy pose on a concrete walkway in patriotic clothes, including flag-print overalls and a USA T-shirt. The boy stands on a white cooler. Trees, parked cars and a stone planter are behind them.$g2$
+    WHERE image_url LIKE $g2$%gallery-519567.jpg$g2$;
+
+    INSERT INTO photos (image_url, caption, image_alt, posted_at)
+    SELECT $g2$https://pub-6e43e90472054fe3880f53e8c0ca3b60.r2.dev/blog/gallery-519567.jpg$g2$, $g2$Red, white and blue on a summer day.$g2$, $g2$Six adults and a young boy pose on a concrete walkway in patriotic clothes, including flag-print overalls and a USA T-shirt. The boy stands on a white cooler. Trees, parked cars and a stone planter are behind them.$g2$,
+           TIMESTAMPTZ '2026-09-01 18:00:00+00' + (4 || ' minutes')::interval
+    WHERE NOT EXISTS (
+      SELECT 1 FROM photos WHERE image_url LIKE $g2$%gallery-519567.jpg$g2$
+    );
+
+
+    UPDATE photos SET
+      caption = $g3$A hug on the couch.$g3$,
+      image_alt = $g3$Three older women sit close together on a dark gray couch. Two of them hug, and the third, wearing glasses and a green plaid pajama top, smiles at the camera.$g3$
+    WHERE image_url LIKE $g3$%gallery-403657.jpg$g3$;
+
+    INSERT INTO photos (image_url, caption, image_alt, posted_at)
+    SELECT $g3$https://pub-6e43e90472054fe3880f53e8c0ca3b60.r2.dev/blog/gallery-403657.jpg$g3$, $g3$A hug on the couch.$g3$, $g3$Three older women sit close together on a dark gray couch. Two of them hug, and the third, wearing glasses and a green plaid pajama top, smiles at the camera.$g3$,
+           TIMESTAMPTZ '2026-09-01 18:00:00+00' + (3 || ' minutes')::interval
+    WHERE NOT EXISTS (
+      SELECT 1 FROM photos WHERE image_url LIKE $g3$%gallery-403657.jpg$g3$
+    );
+
+
+    UPDATE photos SET
+      caption = $g4$A fall meal at the table.$g4$,
+      image_alt = $g4$Two women sit at a table with a white cloth and paper autumn leaves. The older woman in the middle has a plate of food in front of her. A third woman in a mustard-colored top leans in beside her and smiles. A fall wreath hangs on the glass doors behind them.$g4$
+    WHERE image_url LIKE $g4$%gallery-550456.jpg$g4$;
+
+    INSERT INTO photos (image_url, caption, image_alt, posted_at)
+    SELECT $g4$https://pub-6e43e90472054fe3880f53e8c0ca3b60.r2.dev/blog/gallery-550456.jpg$g4$, $g4$A fall meal at the table.$g4$, $g4$Two women sit at a table with a white cloth and paper autumn leaves. The older woman in the middle has a plate of food in front of her. A third woman in a mustard-colored top leans in beside her and smiles. A fall wreath hangs on the glass doors behind them.$g4$,
+           TIMESTAMPTZ '2026-09-01 18:00:00+00' + (2 || ' minutes')::interval
+    WHERE NOT EXISTS (
+      SELECT 1 FROM photos WHERE image_url LIKE $g4$%gallery-550456.jpg$g4$
+    );
+
+
+    UPDATE photos SET
+      caption = $g5$Gathered around the table during the holidays.$g5$,
+      image_alt = $g5$A group gathers around a table indoors. A smiling man in a white T-shirt sits in front, and a woman behind him holds up a peace sign. Beside him are an older woman in a black top with a red necklace and a woman in a pink embroidered top. Another woman in a gray jacket stands behind them, and small holiday decorations sit on the counter in the background.$g5$
+    WHERE image_url LIKE $g5$%gallery-415613.jpg$g5$;
+
+    INSERT INTO photos (image_url, caption, image_alt, posted_at)
+    SELECT $g5$https://pub-6e43e90472054fe3880f53e8c0ca3b60.r2.dev/blog/gallery-415613.jpg$g5$, $g5$Gathered around the table during the holidays.$g5$, $g5$A group gathers around a table indoors. A smiling man in a white T-shirt sits in front, and a woman behind him holds up a peace sign. Beside him are an older woman in a black top with a red necklace and a woman in a pink embroidered top. Another woman in a gray jacket stands behind them, and small holiday decorations sit on the counter in the background.$g5$,
+           TIMESTAMPTZ '2026-09-01 18:00:00+00' + (1 || ' minutes')::interval
+    WHERE NOT EXISTS (
+      SELECT 1 FROM photos WHERE image_url LIKE $g5$%gallery-415613.jpg$g5$
+    );
+
+
+    INSERT INTO applied_content_updates (id) VALUES ('gallery-captions-2026-09-28');
+  END IF;
+END
+$gallery_caps$;
+
+-- Row 46 of the community pass is a crawl of two adjacent sentences. The second
+-- sentence is replaced on its own (the "inauguration of our new community"
+-- sentence). This applies the first sentence, which is what remains in the post.
+DO $ribbon_doors$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM applied_content_updates WHERE id = 'ribbon-doors-sentence-2026-09-28'
+  ) THEN
+    UPDATE posts SET
+      body = replace(
+        body,
+        $rd$We officially opened our doors to the community with a grand ribbon cutting ceremony.$rd$,
+        $rd$We officially opened our doors to Loganville with a grand ribbon cutting ceremony.$rd$
+      ),
+      updated_at = now()
+    WHERE slug = $rd$a-joyous-beginning-celebrating-the-grand-ribbon-cutting-at-the-joy-of-loganville$rd$
+      AND strpos(body, $rd$We officially opened our doors to the community with a grand ribbon cutting ceremony.$rd$) > 0;
+
+    INSERT INTO applied_content_updates (id) VALUES ('ribbon-doors-sentence-2026-09-28');
+  END IF;
+END
+$ribbon_doors$;

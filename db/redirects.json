@@ -1,7 +1,7 @@
 [
   {
     "from": "/blog/room-by-room-fall-prevention-walkthrough",
-    "to": "/blog/fall-prevention-seniors-home-starts-now"
+    "to": "/blog/room-by-room-the-fall-prevention-walkthrough-every-adult-child-should-do"
   },
   {
     "from": "/blog/is-it-time-for-senior-living",
@@ -9,7 +9,7 @@
   },
   {
     "from": "/post/a-joyous-beginning-celebrating-the-grand-ribbon-cutting-at-the-joy-of-loganville",
-    "to": "/blog/a-joyous-beginning-celebrating-the-grand-ribbon-cutting-at-the-joy-of-loganville"
+    "to": "/about"
   },
   {
     "from": "/post/spring-fun-activities-to-enjoy-with-loved-ones-in-senior-living",
@@ -17,7 +17,7 @@
   },
   {
     "from": "/post/is-it-time-for-senior-living-a-guide-to-knowing-when",
-    "to": "/blog/is-it-time-for-senior-living-a-guide-to-knowing-when"
+    "to": "/when-its-time"
   },
   {
     "from": "/post/unleashing-joy-the-power-of-pet-therapy-at-the-joy-of-loganville",
@@ -49,7 +49,7 @@
   },
   {
     "from": "/post/hearts-full-of-gratitude-what-our-families-are-sharing-about-life-at-the-joy",
-    "to": "/blog/hearts-full-of-gratitude-what-our-families-are-sharing-about-life-at-the-joy"
+    "to": "/reviews"
   },
   {
     "from": "/post/heartwarming-indoor-activities-to-enjoy-with-your-senior-loved-one-this-winter",
@@ -61,7 +61,7 @@
   },
   {
     "from": "/post/maybe-its-time-for-a-little-more-joy",
-    "to": "/blog/maybe-its-time-for-a-little-more-joy"
+    "to": "/when-its-time"
   },
   {
     "from": "/post/navigating-conversations-a-familys-guide-to-transitioning-a-loved-one-to-memory-care",
@@ -81,7 +81,7 @@
   },
   {
     "from": "/post/the-joy-senior-living-wins-best-of-senior-living-award-in-loganville-ga",
-    "to": "/blog/the-joy-senior-living-wins-best-of-senior-living-award-in-loganville-ga"
+    "to": "/blog/what-the-2026-best-of-senior-living-award-actually-means-for-loganville-families"
   },
   {
     "from": "/post/the-joy-of-front-porch-sitting-embracing-relaxation-in-senior-living",
@@ -89,7 +89,7 @@
   },
   {
     "from": "/post/the-talk",
-    "to": "/blog/the-talk"
+    "to": "/blog/how-to-have-the-it-might-be-time-conversation"
   },
   {
     "from": "/post/understand-dementia-what-why-how-to-care-for-loved-ones",
@@ -97,15 +97,15 @@
   },
   {
     "from": "/post/we-just-received-our-2026-best-of-senior-living-award-from-a-place-for-mom",
-    "to": "/blog/we-just-received-our-2026-best-of-senior-living-award-from-a-place-for-mom"
+    "to": "/blog/what-the-2026-best-of-senior-living-award-actually-means-for-loganville-families"
   },
   {
     "from": "/post/welcome-to-the-joy",
-    "to": "/blog/welcome-to-the-joy"
+    "to": "/about"
   },
   {
     "from": "/post/what-to-look-for-in-an-assisted-living-community-from-people-who-run-one",
-    "to": "/blog/what-to-look-for-in-an-assisted-living-community-from-people-who-run-one"
+    "to": "/blog/questions-to-ask-personal-care-home-tour"
   },
   {
     "from": "/post/whats-the-difference-between-assisted-living-vs-personal-care-homes-in-georgia",
@@ -133,7 +133,7 @@
   },
   {
     "from": "/post/fall-prevention-seniors-home-starts-now",
-    "to": "/blog/fall-prevention-seniors-home-starts-now"
+    "to": "/blog/room-by-room-the-fall-prevention-walkthrough-every-adult-child-should-do"
   },
   {
     "from": "/service/personal-care",
@@ -218,5 +218,45 @@
   {
     "from": "/:slug(thank-you.*)",
     "to": "/"
+  },
+  {
+    "from": "/blog/welcome-to-the-joy",
+    "to": "/about"
+  },
+  {
+    "from": "/blog/a-joyous-beginning-celebrating-the-grand-ribbon-cutting-at-the-joy-of-loganville",
+    "to": "/about"
+  },
+  {
+    "from": "/blog/hearts-full-of-gratitude-what-our-families-are-sharing-about-life-at-the-joy",
+    "to": "/reviews"
+  },
+  {
+    "from": "/blog/what-to-look-for-in-an-assisted-living-community-from-people-who-run-one",
+    "to": "/blog/questions-to-ask-personal-care-home-tour"
+  },
+  {
+    "from": "/blog/the-talk",
+    "to": "/blog/how-to-have-the-it-might-be-time-conversation"
+  },
+  {
+    "from": "/blog/fall-prevention-seniors-home-starts-now",
+    "to": "/blog/room-by-room-the-fall-prevention-walkthrough-every-adult-child-should-do"
+  },
+  {
+    "from": "/blog/is-it-time-for-senior-living-a-guide-to-knowing-when",
+    "to": "/when-its-time"
+  },
+  {
+    "from": "/blog/maybe-its-time-for-a-little-more-joy",
+    "to": "/when-its-time"
+  },
+  {
+    "from": "/blog/the-joy-senior-living-wins-best-of-senior-living-award-in-loganville-ga",
+    "to": "/blog/what-the-2026-best-of-senior-living-award-actually-means-for-loganville-families"
+  },
+  {
+    "from": "/blog/we-just-received-our-2026-best-of-senior-living-award-from-a-place-for-mom",
+    "to": "/blog/what-the-2026-best-of-senior-living-award-actually-means-for-loganville-families"
   }
 ]

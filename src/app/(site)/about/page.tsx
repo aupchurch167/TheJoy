@@ -2,20 +2,19 @@ import type { Metadata } from "next";
 import { pageTwitter } from "@/lib/metadata";
 import { ABOUT, BUSINESS, CONTEXTUAL_READING, MELLISSA, OG_IMAGE } from "@/lib/site";
 import { aboutPageJsonLd } from "@/lib/schema";
-import { getSettings, tourHref } from "@/lib/settings";
+import { getSettings, tourHref, toTelHref } from "@/lib/settings";
 import { getSitePhotos } from "@/lib/site-photos";
 import JsonLd from "@/components/JsonLd";
 import Photo from "@/components/Photo";
 import TourButton from "@/components/TourButton";
 
 export const metadata: Metadata = pageTwitter({
-  title: "About The Joy Senior Living of Loganville",
-  description:
-    "The story of Joy Senior Living, a small personal care home in Loganville, GA led by Mellissa Daniel, and why small scale changes everything.",
+  title: { absolute: ABOUT.title },
+  description: ABOUT.description,
   alternates: { canonical: "/about" },
   openGraph: {
-    title: `About ${BUSINESS.name}`,
-    description: BUSINESS.descriptor,
+    title: ABOUT.title,
+    description: ABOUT.description,
     url: "/about",
     type: "website",
     images: [OG_IMAGE],
@@ -70,6 +69,17 @@ export default async function AboutPage() {
         </div>
       </section>
 
+      <section className="mx-auto mt-14 max-w-2xl px-5">
+        <h2 className="font-display text-3xl font-semibold text-ink">
+          {ABOUT.openedHeading}
+        </h2>
+        <div className="mt-5 space-y-5 text-lg text-ink-soft">
+          {ABOUT.opened.map((p) => (
+            <p key={p}>{p}</p>
+          ))}
+        </div>
+      </section>
+
       {/* Mellissa */}
       <section className="mx-auto mt-14 max-w-5xl px-5">
         <div className="grid items-center gap-10 sm:grid-cols-[minmax(0,320px)_1fr]">
@@ -116,6 +126,13 @@ export default async function AboutPage() {
         </p>
         <div className="mt-8">
           <TourButton href={tourHref(settings)}>Book a tour</TourButton>
+          <p className="mt-3 text-ink-soft">
+            Come see the house. Call{" "}
+            <a href={toTelHref(settings.phone)} className="font-semibold text-clay">
+              {settings.phone}
+            </a>
+            .
+          </p>
         </div>
       </section>
     </div>

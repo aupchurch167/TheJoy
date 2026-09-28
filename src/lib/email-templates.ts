@@ -97,7 +97,7 @@ Warmly,
 Mellissa Daniel
 Executive Director, Joy Senior Living
 
-*P.S.* If it would help to read something honest while you think, here is [how to know when it is time](https://www.joyseniorcare.com/blog/is-it-time-for-senior-living-a-guide-to-knowing-when).`,
+*P.S.* If it would help to read something honest while you think, here is [how to know when it is time](https://www.joyseniorcare.com/when-its-time).`,
   },
   {
     id: "families-event",
