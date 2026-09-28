@@ -857,3 +857,12 @@ UPDATE broadcasts b
    SET event_id = m.event_id, event_kind = m.kind
   FROM matches m
  WHERE b.id = m.broadcast_id AND m.n = 1;
+
+-- One-time content updates applied from db/content-updates.sql. A row means
+-- that update has already run. Boot checks this before inserting, so a later
+-- boot does not insert again and does not touch a row the owner edited,
+-- published, or deleted.
+CREATE TABLE IF NOT EXISTS applied_content_updates (
+  id         TEXT PRIMARY KEY,
+  applied_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
