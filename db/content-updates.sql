@@ -282,3 +282,11 @@ WHERE slug = $md$what-mellissa-notices-in-the-first-10-minutes-of-a-tour$md$
   AND (body LIKE $md$%Because she's a nurse, Mellissa clocks%$md$
        OR body LIKE $md$%Because she’s a nurse, Mellissa clocks%$md$
        OR body LIKE $md$%Because she&#x27;s a nurse, Mellissa clocks%$md$);
+
+-- what-mellissa-notices-in-the-first-10-minutes-of-a-tour: the excerpt (blog
+-- card) carries its own "nurse first" line, separate from meta_description.
+UPDATE posts SET
+  excerpt = replace(excerpt, $md$Mellissa Daniel is a nurse first.$md$, $md$Mellissa Daniel gives every tour herself.$md$),
+  updated_at = now()
+WHERE slug = $md$what-mellissa-notices-in-the-first-10-minutes-of-a-tour$md$
+  AND excerpt LIKE $md$%Mellissa Daniel is a nurse first.%$md$;
