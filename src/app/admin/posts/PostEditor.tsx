@@ -324,7 +324,7 @@ export default function PostEditor({
 
         <Field
           label="Author"
-          hint="Use Mellissa (RN) on care and memory-care posts; the company for general updates."
+          hint="Use Mellissa Daniel, Executive Director, on care and memory-care posts; the company for general updates."
         >
           <select
             value={f.author}
