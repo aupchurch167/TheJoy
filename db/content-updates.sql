@@ -473,3 +473,160 @@ UPDATE posts SET
   updated_at = now()
 WHERE slug = $md$cost-of-assisted-living-and-personal-care$md$
   AND body LIKE $md$%The cost of assisted living is real, and we will always be honest with you about it.%$md$;
+
+-- New post (2026-09-27): tour questions, owner-approved.
+-- Insert once. A later boot does not update the row, so an edit in Admin
+-- (title, body, excerpt, or anything else) is left alone.
+INSERT INTO posts (
+  slug,
+  title,
+  excerpt,
+  body,
+  author,
+  category,
+  status,
+  meta_description,
+  published_at
+)
+SELECT
+  $tourpost$questions-to-ask-personal-care-home-tour$tourpost$,
+  $tourpost$Questions to Ask The Joy on a Tour (and Our Honest Answers)$tourpost$,
+  $tourpost$Touring personal care homes for Mom or Dad? Print these questions for every tour. Here are The Joy's straight answers, including the ones that aren't perfect.$tourpost$,
+  $tourpost$You'll probably sit in the car for a minute before you walk in. Most people do. You've got a list on your phone or on the back of an envelope, and you're afraid you'll forget the one question that matters.
+
+So here's a list. These are the questions I'd want a family to ask any personal care home, including ours. Under each one is The Joy's straight answer. Where I don't have a verified answer written down, I've said so. Ask Mellissa in person.
+
+Print it. Bring it to every home you tour. Write their answers in the margins and compare.
+
+## Staffing and nursing
+
+### What's the overnight staff-to-resident ratio, and is a nurse on site at night?
+
+At The Joy, two staff are on shift every night for up to 24 residents. A nurse is in the house 24 hours a week, spread across three days. A nurse is not on site overnight. A certified medication aide is on staff 24 hours a day, including every night.
+
+I'd rather you hear that from me now than find out later. Here's the context. Georgia requires a certified memory care home to have at least two caregivers on site at all times, and to have 8 to 16 hours of licensed nurse time a week, depending on how many memory care residents live there. Our two overnight staff meet the first rule. Our 24 nurse hours a week go past the second.
+
+Georgia also requires a nurse or a certified medication aide in the building at all times. Our certified medication aide covers that, day and night.
+
+Ask every home the same question in the same words. Ask whether the overnight staff are awake. Write the numbers down.
+
+### What dementia training do your caregivers get?
+
+Georgia requires caregivers in a certified memory care home to get 4 hours of dementia orientation and 16 hours of specialized dementia training, then 8 more hours every year. That's the floor. A good answer tells you how the home meets it and what it adds.
+
+The Joy's answer: our caregivers get regular dementia training. We also host dementia caregiver support groups here at the home, so the families of people with dementia are in our building too.
+
+### Who gives the medications?
+
+In a Georgia memory care home, medications have to be given by a trained proxy caregiver, a nurse, or a certified medication aide. Ask who does it on each shift and how mistakes get caught.
+
+The Joy's answer: a certified medication aide is on staff 24 hours a day. Medications are counted at the end of every shift and again at the start of the next one. That's a double check at every shift change.
+
+## Memory care and safety
+
+### Is memory care a separate locked area, or mixed in with everyone else?
+
+The whole home is secured, and all 24 of our beds are licensed for memory care. So residents with dementia live alongside everyone else. There's no separate wing.
+
+In a home our size, that matters. If your mom moves in today and her memory gets worse next year, she doesn't get moved to a locked wing full of new faces. She stays where she is, with the people she already knows.
+
+## The home itself
+
+### Isn't a 24-suite home too small?
+
+Small is the point. With 24 suites, your dad sees the same faces every day. The staff know him by name, by habit, and by what his bad afternoons look like. It's hard to get lost in a crowd when there isn't one.
+
+It's still a fair question. A small home won't have everything a big building has. Ask us, and every small home you tour, what a normal day looks like.
+
+### You're new. Why should I trust you?
+
+We opened in 2024. The Walton County Chamber held our ribbon cutting on May 10 that year. That's more than two years of families and four state inspections (more on those below).
+
+In 2026, A Place for Mom gave us its Best of Senior Living award, which is based on reviews from families. We didn't write those reviews. You can read them yourself.
+
+### Where exactly are you?
+
+434 Conyers Rd in Loganville. We're in Walton County, right on the edge of Gwinnett. That makes us close for Gwinnett families in Snellville, Grayson, Lawrenceville, and Dacula, as well as families in Walton and Monroe.
+
+Close matters more than people expect. It decides whether you stop by on the way home from work or only on Sundays.
+
+### Are pets allowed? The websites don't agree.
+
+Yes. Some listing sites say we don't allow pets. They're wrong. Residents can have pets, pets are welcome to visit, and we have regular pet therapy visits with the Humane Society of Walton County. Ask us about the details for your parent's pet.
+
+## The state record
+
+### Can I see your most recent state inspection report?
+
+Yes. And you don't have to take our word for what's in it.
+
+The Joy is licensed by the Georgia Department of Community Health as a personal care home, license PCH012341, for 24 beds. We've been in compliance at every inspection. Our public inspection reports show no rule violations. There are four on file, from December 2024 through April 2026.
+
+To pull them yourself:
+
+1. Go to forms.dch.georgia.gov/HFRD, the state's Healthcare Facility Regulation site.
+2. Click "Search Inspection Reports."
+3. Search for "Joy Senior Living of Loganville."
+4. Open each report and read it.
+
+Do this for every home on your list. It doesn't take long, and the state wrote those reports, not us.
+
+## Family, money, and the hard limits
+
+### How will you keep me updated, and who do I call?
+
+A few families have told us it was hard to reach someone by phone for an update. That's fair, and we heard it.
+
+Here's how to reach us. Our main line is [(470) 684-3569](tel:+14706843569), and more than one person on staff answers it. Families also get the owners' phone numbers. If you can't reach one of us, you can reach another.
+
+Mellissa Daniel, our Executive Director, gives every tour herself. The person you meet on your tour is the person running the home.
+
+Ask every home you visit the same thing. Who picks up when you call, and what do you do if they don't?
+
+### What does admission involve, and what's included in the monthly rate?
+
+Our monthly rate includes all care, meals, and help with daily living. Call us for current rates. We'd rather give you a real number for your parent than a range that doesn't fit.
+
+Ask every home for its full paperwork list up front, in writing. Ask how it handles price increases, too. Georgia requires a personal care home to give 30 days' notice before raising prices for personal services and 60 days' notice for room and board.
+
+### What care can't you provide, and when would someone need to move?
+
+Every personal care home has limits. Georgia doesn't allow a personal care home to provide continuous medical or nursing care. A home that says it can handle anything isn't being straight with you.
+
+Ask us where our line is when you tour, and ask every home the same question. Get the answer in writing before you sign anything.
+
+### Do you work with hospice?
+
+Yes. We coordinate with hospice and home health providers. Our Dementia Caregiver Support Group meets at The Joy with our hospice partners.
+
+## The short list
+
+1. What's the overnight staff-to-resident ratio? Is a nurse on site at night?
+2. What dementia training do caregivers get?
+3. Who gives the medications?
+4. Is memory care separate, or mixed in with everyone else?
+5. What will my parent give up in a small home?
+6. How long have you been open, and what do families say?
+7. How close are you to where I live and work?
+8. Are pets allowed?
+9. Can I see your most recent state inspection report?
+10. How will you keep me updated, and who do I call?
+11. What does admission involve, and what does the monthly rate include?
+12. What care can't you provide, and when would someone need to move?
+13. Do you work with hospice?
+
+## Come see us
+
+Book a tour at [joyseniorcare.com/tour](/tour) or call [(470) 684-3569](tel:+14706843569). Bring this list and ask Mellissa every question on it. Then take it to the next home and ask them too.
+
+Adam Upchurch\
+Owner, The Joy Senior Living
+$tourpost$,
+  $tourpost$Adam Upchurch$tourpost$,
+  $tourpost$articles$tourpost$,
+  $tourpost$published$tourpost$,
+  $tourpost$Touring personal care homes for Mom or Dad? Print these questions for every tour. Here are The Joy's straight answers, including the ones that aren't perfect.$tourpost$,
+  TIMESTAMPTZ '2026-09-27 12:00:00 America/New_York'
+WHERE NOT EXISTS (
+  SELECT 1 FROM posts WHERE slug = $tourpost$questions-to-ask-personal-care-home-tour$tourpost$
+);
