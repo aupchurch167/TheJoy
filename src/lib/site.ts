@@ -94,7 +94,8 @@ export const TOUR_URL =
 
 /**
  * Public site URL (used for canonical links, sitemap, schema, robots Host).
- * The canonical host is www; non-www requests 301 to it at the DNS/host level.
+ * The canonical host is www. The proxy 301s the apex (and http, when the
+ * request reaches the app) to this origin in one hop.
  * Override with NEXT_PUBLIC_SITE_URL in the env if the domain ever changes.
  *
  * www is forced even when the env var is set to the bare apex: canonical /
@@ -672,7 +673,7 @@ export const SERVICES = {
  *
  * `gated: "memory"` ties a service to MEMORY_CARE.enabled, so memory care only
  * appears (card + page + sitemap) while that flag is true. The old Webflow URLs
- * (/service/<slug>) 301 to these via db/redirects.json.
+ * (/service/<slug>) 301 to these via db/redirects.json (applied in the proxy).
  */
 export type ServiceDetail = {
   slug: string;
@@ -705,7 +706,58 @@ export type ServiceDetail = {
     faqsLede?: string;
     faqs: { q: string; a: string }[];
   };
+  /**
+   * One existing blog post, linked by its title. Optional. No new claims.
+   */
+  reading?: { href: string; title: string };
 };
+
+/**
+ * Existing page titles, used as the link text from the homepage body.
+ * These are the document titles (the absolute <title> strings).
+ */
+export const HOME_GUIDES: { href: string; title: string }[] = [
+  {
+    href: "/cost",
+    title: "Cost of a Personal Care Home in Loganville, GA | Joy",
+  },
+  {
+    href: "/reviews",
+    title: "Reviews: What Families Say About The Joy | Loganville, GA",
+  },
+  {
+    href: "/tour-checklist",
+    title: "Personal Care Home Tour Checklist: 25 Questions to Ask | Joy",
+  },
+  {
+    href: "/small-home-difference",
+    title: "Small Personal Care Homes vs. Large Facilities in Georgia | Joy",
+  },
+];
+
+/**
+ * Existing posts to link from the page that already covers the same topic.
+ * Anchor text is the post title. Do not add a claim around it.
+ */
+export const CONTEXTUAL_READING = {
+  respite: {
+    href: "/blog/you-dont-have-to-be-falling-apart-to-take-a-break",
+    title: "You Don't Have to Be Falling Apart to Take a Break",
+  },
+  cost: {
+    href: "/blog/budgeting-for-senior-care-how-to-prepare-for-the-ever-raising-cost-of-senior-care",
+    title:
+      "Budgeting for Senior Care: How to prepare for the ever raising cost of Senior Care",
+  },
+  memoryCare: {
+    href: "/blog/understand-dementia-what-why-how-to-care-for-loved-ones",
+    title: "Understand Dementia: What, Why & How to Care for Loved Ones",
+  },
+  about: {
+    href: "/blog/the-people-who-know-how-your-mother-takes-her-coffee",
+    title: "The People Who Know How Your Mother Takes Her Coffee",
+  },
+} as const;
 
 export const SERVICE_DETAILS: ServiceDetail[] = [
   {
@@ -830,6 +882,7 @@ export const SERVICE_DETAILS: ServiceDetail[] = [
       alt: "A guest room set up for a short respite stay at Joy Senior Living",
     },
     intro: `Not every stay is permanent. Joy offers respite care: a short stay, from a few days to a few weeks, in a private room with the same care every resident gets.`,
+    reading: CONTEXTUAL_READING.respite,
     sections: [
       {
         heading: "When families use it",

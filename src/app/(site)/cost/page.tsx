@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { pageTwitter } from "@/lib/metadata";
-import { BUSINESS, OG_IMAGE, SITE_URL } from "@/lib/site";
+import { BUSINESS, CONTEXTUAL_READING, OG_IMAGE, SITE_URL } from "@/lib/site";
 import { breadcrumbJsonLd, faqPageJsonLdFrom } from "@/lib/schema";
 import JsonLd from "@/components/JsonLd";
 import {
@@ -158,6 +158,14 @@ export default async function CostPage() {
           </div>
           <p className="mt-6 max-w-[38em] text-lg leading-relaxed text-ink-soft">
             {RATES_NOTE}
+          </p>
+          <p className="mt-6 max-w-[38em] text-lg leading-relaxed text-ink-soft">
+            <a
+              href={CONTEXTUAL_READING.cost.href}
+              className="font-semibold text-clay underline"
+            >
+              {CONTEXTUAL_READING.cost.title}
+            </a>
           </p>
         </div>
       </section>

@@ -156,6 +156,10 @@
     "to": "/services/nutrition"
   },
   {
+    "from": "/services/memory-care",
+    "to": "/memory-care"
+  },
+  {
     "from": "/contact",
     "to": "/tour"
   },
@@ -169,7 +173,7 @@
   },
   {
     "from": "/pricing",
-    "to": "/blog/cost-of-assisted-living-and-personal-care"
+    "to": "/cost"
   },
   {
     "from": "/loganville",

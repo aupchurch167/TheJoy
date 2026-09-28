@@ -7,6 +7,9 @@ import { TOWNS } from "@/lib/landing";
 export const dynamic = "force-dynamic";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  // Static pages have no stored content timestamp, so they omit <lastmod>.
+  // Blog lastmod is posts.updated_at. RSVP, admin, and redirect sources are
+  // not listed. Every URL here is a final 200 that is allowed to be indexed.
   const entries: MetadataRoute.Sitemap = [
     { url: `${SITE_URL}/`, changeFrequency: "weekly", priority: 1 },
     { url: `${SITE_URL}/about`, changeFrequency: "monthly", priority: 0.7 },

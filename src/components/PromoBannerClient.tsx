@@ -8,6 +8,17 @@ import Link from "next/link";
  * exact message (stored in localStorage). Change the message in the admin and
  * it reappears for everyone, because the storage key is derived from the text.
  */
+function isRsvpHref(url: string): boolean {
+  try {
+    const path = url.startsWith("/")
+      ? url
+      : new URL(url).pathname;
+    return path === "/rsvp" || path.startsWith("/rsvp/");
+  } catch {
+    return false;
+  }
+}
+
 function storageKeyFor(text: string): string {
   // Small stable hash of the message, so a new promo is a new key.
   let h = 0;
@@ -65,8 +76,18 @@ export default function PromoBannerClient({
 
   const hasCta = ctaLabel !== "" && ctaUrl !== "";
   const isInternal = ctaUrl.startsWith("/");
+  // RSVP pages are noindex on purpose. The banner is on every page, so the
+  // link is nofollow and Google can see the noindex without us asking it to
+  // crawl the form from the rest of the site.
+  const isRsvp = isRsvpHref(ctaUrl);
   const ctaClass =
     "shrink-0 whitespace-nowrap font-semibold underline underline-offset-2 hover:text-white/80";
+  const rel = [
+    isRsvp ? "nofollow" : "",
+    !isInternal && ctaUrl.startsWith("http") ? "noopener noreferrer" : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
 
   return (
     <div className="relative bg-clay text-white">
@@ -74,16 +95,15 @@ export default function PromoBannerClient({
         <span>{text}</span>
         {hasCta &&
           (isInternal ? (
-            <Link href={ctaUrl} className={ctaClass}>
+            <Link href={ctaUrl} className={ctaClass} rel={rel || undefined}>
               {ctaLabel}
             </Link>
           ) : (
             <a
               href={ctaUrl}
               className={ctaClass}
-              {...(ctaUrl.startsWith("http")
-                ? { target: "_blank", rel: "noopener noreferrer" }
-                : {})}
+              {...(ctaUrl.startsWith("http") ? { target: "_blank" } : {})}
+              {...(rel ? { rel } : {})}
             >
               {ctaLabel}
             </a>

@@ -6,7 +6,8 @@
  * operator). The schema is idempotent (CREATE ... IF NOT EXISTS, ADD COLUMN IF
  * NOT EXISTS, seed with ON CONFLICT DO NOTHING), and db/content-updates.sql
  * only rewrites a row while its description is still the short text it shipped
- * with, so applying both every boot is safe. It is best-effort: failures are
+ * with, and later statements only replace an exact leftover string, so applying
+ * both every boot is safe. It is best-effort: failures are
  * logged, never fatal, so the site still starts and shows its graceful
  * "database not connected" states.
  *

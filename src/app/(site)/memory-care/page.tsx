@@ -4,6 +4,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import {
   BUSINESS,
+  CONTEXTUAL_READING,
   MEMORY_CARE,
   MEMORY_CARE_EDUCATION,
   OG_IMAGE,
@@ -64,6 +65,14 @@ export default async function MemoryCarePage() {
         {MEMORY_CARE.body.map((para, i) => (
           <p key={i}>{para}</p>
         ))}
+        <p>
+          <a
+            href={CONTEXTUAL_READING.memoryCare.href}
+            className="font-semibold text-clay underline"
+          >
+            {CONTEXTUAL_READING.memoryCare.title}
+          </a>
+        </p>
       </div>
 
       {/* Visual: the steady day. Routine is the therapy, so we show it. */}

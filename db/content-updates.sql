@@ -760,3 +760,79 @@ $sgpost$,
   END IF;
 END
 $apply_sgpost$;
+
+-- Broken worksheet links. Exact markdown anchors only, so a later edit to the
+-- surrounding sentence is left alone. A no-op once the old link is gone.
+-- Anchor text promised a download that does not exist. The page it points at
+-- now is /cost. Surrounding sentences are not rewritten.
+UPDATE posts SET
+  body = replace(
+    body,
+    $md$[Download the workbook here](http://www.joyseniorcare.com/senior-living-expense-worksheet)$md$,
+    $md$[What it costs](/cost)$md$
+  ),
+  updated_at = now()
+WHERE slug = $md$budgeting-for-senior-care-how-to-prepare-for-the-ever-raising-cost-of-senior-care$md$
+  AND strpos(
+    body,
+    $md$[Download the workbook here](http://www.joyseniorcare.com/senior-living-expense-worksheet)$md$
+  ) > 0;
+
+UPDATE posts SET
+  body = replace(
+    body,
+    $md$[download our workbook](https://www.joyseniorcare.com/senior-living-expense-worksheet)$md$,
+    $md$[see what it costs](/cost)$md$
+  ),
+  updated_at = now()
+WHERE slug = $md$understand-dementia-what-why-how-to-care-for-loved-ones$md$
+  AND strpos(
+    body,
+    $md$[download our workbook](https://www.joyseniorcare.com/senior-living-expense-worksheet)$md$
+  ) > 0;
+
+-- Homepage link that 301s twice (http apex, then www). Point it at /.
+UPDATE posts SET
+  body = replace(
+    body,
+    $md$[joyseniorcare.com](http://joyseniorcare.com/)$md$,
+    $md$[joyseniorcare.com](/)$md$
+  ),
+  updated_at = now()
+WHERE slug = $md$welcome-to-the-joy$md$
+  AND strpos(body, $md$[joyseniorcare.com](http://joyseniorcare.com/)$md$) > 0;
+
+-- Old Calendly URL (a previous director). The tour path is /tour.
+UPDATE posts SET
+  body = replace(
+    body,
+    $md$[Schedule a consultation for personal care](https://calendly.com/peppur/tour-the-joy-of-loganville?month=2024-05)$md$,
+    $md$[Schedule a consultation for personal care](/tour)$md$
+  ),
+  updated_at = now()
+WHERE slug = $md$balancing-caregiving-for-aging-parents$md$
+  AND strpos(
+    body,
+    $md$[Schedule a consultation for personal care](https://calendly.com/peppur/tour-the-joy-of-loganville?month=2024-05)$md$
+  ) > 0;
+
+-- the-talk meta description is missing its first letter ("he families...").
+-- The sentence is otherwise complete, so the missing character is "T".
+-- Only an exact match of that truncated summary is rewritten.
+UPDATE posts SET
+  excerpt = CASE
+    WHEN btrim(excerpt) = $talk$he families who start early, listen more than they talk, and let it take time almost always get somewhere everyone can live with. Here's what that looks like.$talk$
+      THEN $talk$The families who start early, listen more than they talk, and let it take time almost always get somewhere everyone can live with. Here's what that looks like.$talk$
+    ELSE excerpt
+  END,
+  meta_description = CASE
+    WHEN btrim(meta_description) = $talk$he families who start early, listen more than they talk, and let it take time almost always get somewhere everyone can live with. Here's what that looks like.$talk$
+      THEN $talk$The families who start early, listen more than they talk, and let it take time almost always get somewhere everyone can live with. Here's what that looks like.$talk$
+    ELSE meta_description
+  END,
+  updated_at = now()
+WHERE slug = $talk$the-talk$talk$
+  AND (
+    btrim(excerpt) = $talk$he families who start early, listen more than they talk, and let it take time almost always get somewhere everyone can live with. Here's what that looks like.$talk$
+    OR btrim(meta_description) = $talk$he families who start early, listen more than they talk, and let it take time almost always get somewhere everyone can live with. Here's what that looks like.$talk$
+  );

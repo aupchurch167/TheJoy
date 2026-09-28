@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { pageTwitter } from "@/lib/metadata";
 import Link from "next/link";
-import { notFound, redirect } from "next/navigation";
+import { notFound, permanentRedirect } from "next/navigation";
 import {
   BUSINESS,
   getServiceDetail,
@@ -57,7 +57,9 @@ export default async function ServiceDetailPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  if (slug === "memory-care") redirect(REDIRECT_TO_MEMORY_CARE);
+  // The proxy 301s /services/memory-care before this renders. This is only a
+  // backstop so the detail template cannot also answer at this URL.
+  if (slug === "memory-care") permanentRedirect(REDIRECT_TO_MEMORY_CARE);
 
   const service = getServiceDetail(slug);
   if (!service) notFound();
@@ -109,6 +111,17 @@ export default async function ServiceDetailPage({
       />
 
       <p className="mt-8 text-lg text-ink-soft">{service.intro}</p>
+
+      {service.reading && (
+        <p className="mt-6 text-lg leading-relaxed text-ink-soft">
+          <a
+            href={service.reading.href}
+            className="font-semibold text-clay underline"
+          >
+            {service.reading.title}
+          </a>
+        </p>
+      )}
 
       {service.sections.map((section) => (
         <section key={section.heading}>
