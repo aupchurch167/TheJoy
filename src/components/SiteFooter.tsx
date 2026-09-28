@@ -8,6 +8,7 @@ import {
   DCH_INSPECTION_SEARCH,
   DCH_INSPECTION_LINK_LABEL,
 } from "@/lib/site";
+import { TOWNS } from "@/lib/landing";
 import { getSettings, toTelHref, toMailHref } from "@/lib/settings";
 import { getSitePhotos } from "@/lib/site-photos";
 
@@ -173,6 +174,21 @@ export default async function SiteFooter() {
                 {DCH_INSPECTION_LINK_LABEL}
               </a>
             </li>
+          </ul>
+        </div>
+      </div>
+
+      <div className="border-t border-line/70">
+        <div className="mx-auto max-w-6xl px-5 py-6 text-sm text-ink-soft">
+          <p className="font-semibold text-ink">Areas we serve</p>
+          <ul className="mt-2 flex flex-wrap gap-x-4 gap-y-1">
+            {Object.values(TOWNS).map((town) => (
+              <li key={town.slug}>
+                <a href={`/serving/${town.slug}`} className="hover:text-clay">
+                  {town.name}
+                </a>
+              </li>
+            ))}
           </ul>
         </div>
       </div>

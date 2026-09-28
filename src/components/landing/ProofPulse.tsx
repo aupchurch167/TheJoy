@@ -9,22 +9,30 @@ import Photo from "@/components/Photo";
  * (§2) and uses the real award files; the memory-care badge only shows when
  * memory care is offered (§4).
  */
-export default async function ProofPulse() {
+export default async function ProofPulse({
+  caption = "She gives every tour herself.",
+  alt,
+  src,
+}: {
+  caption?: string;
+  alt?: string;
+  src?: string;
+}) {
   const { mellissa } = await getSitePhotos();
   const badges = BADGES.filter((b) => !b.requiresMemoryCare || MEMORY_CARE.enabled);
 
   return (
     <div className="flex flex-wrap items-center gap-x-6 gap-y-5">
       <Photo
-        src={mellissa.src}
-        alt={mellissa.alt}
+        src={src || mellissa.src}
+        alt={alt || mellissa.alt}
         rounded="rounded-full"
         className="h-24 w-24 flex-none ring-1 ring-line"
         sizes="96px"
       />
       <p className="min-w-[15rem] flex-1 text-lg leading-relaxed text-ink-soft">
         <strong className="text-ink">Mellissa Daniel, Executive Director.</strong>{" "}
-        She gives every tour herself.
+        {caption}
       </p>
       {badges.length > 0 && (
         <div className="flex flex-none items-center gap-3">

@@ -14,9 +14,15 @@ import TourButton from "@/components/TourButton";
 export default async function CtaBand({
   headline,
   dark = false,
+  note = "No pressure and nothing to sign.",
+  phoneLead = "Or call Mellissa at",
 }: {
   headline: string;
   dark?: boolean;
+  /** Reassurance under the tour button. Empty hides the line. */
+  note?: string;
+  /** Words immediately before the phone number, which stays a tel: link. */
+  phoneLead?: string;
 }) {
   const settings = await getSettings();
   const tour = tourHref(settings);
@@ -34,11 +40,11 @@ export default async function CtaBand({
               Book a tour
             </TourButton>
           </div>
-          <p className="mt-4 text-sm text-white/60">
-            No pressure and nothing to sign.
-          </p>
-          <p className="mt-2 text-white/90">
-            Or call Mellissa at{" "}
+          {note ? (
+            <p className="mt-4 text-sm text-white/60">{note}</p>
+          ) : null}
+          <p className={note ? "mt-2 text-white/90" : "mt-4 text-white/90"}>
+            {phoneLead}{" "}
             <a
               href={toTelHref(phone)}
               className="font-semibold underline decoration-white/40 underline-offset-4 hover:text-white"
@@ -60,11 +66,9 @@ export default async function CtaBand({
         <div className="mt-6">
           <TourButton href={tour}>Book a tour</TourButton>
         </div>
-        <p className="mt-3 text-sm text-ink-faint">
-          No pressure and nothing to sign.
-        </p>
-        <p className="mt-2 text-ink-soft">
-          Or call Mellissa at{" "}
+        {note ? <p className="mt-3 text-sm text-ink-faint">{note}</p> : null}
+        <p className={note ? "mt-2 text-ink-soft" : "mt-3 text-ink-soft"}>
+          {phoneLead}{" "}
           <a
             href={toTelHref(phone)}
             className="font-semibold text-clay hover:text-clay-dark"

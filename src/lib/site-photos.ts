@@ -168,8 +168,8 @@ export const SITE_PHOTO_SLOTS: PhotoSlot[] = [
     settingKey: "photo_about_mellissa",
     label: "About page: Mellissa's photo",
     hint: "Mellissa's portrait on the About page. Leave unset to reuse her homepage photo.",
-    defaultSrc: MELLISSA.photo,
-    alt: `${MELLISSA.heading}, Executive Director at Joy Senior Living`,
+    defaultSrc: ABOUT.mellissaSrc,
+    alt: ABOUT.mellissaAlt,
     aspect: "aspect-[4/5]",
     group: "About page",
   },
@@ -281,7 +281,7 @@ export const getSitePhotos = cache(async (): Promise<SitePhotos> => {
     ),
     // About-page Mellissa: her own override, else the homepage Mellissa photo.
     aboutMellissa: {
-      src: map.get("photo_about_mellissa") || src(mellissa),
+      src: map.get("photo_about_mellissa") || ABOUT.mellissaSrc,
       alt: bySlot("about_mellissa").alt,
     },
   };
