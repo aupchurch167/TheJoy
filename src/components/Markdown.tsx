@@ -1,7 +1,17 @@
-import ReactMarkdown from "react-markdown";
+import ReactMarkdown, { defaultUrlTransform } from "react-markdown";
 import remarkGfm from "remark-gfm";
 import remarkBreaks from "remark-breaks";
 import type { Root, Element } from "hast";
+
+/**
+ * react-markdown drops any URL whose protocol is not http(s), mailto, irc, or
+ * xmpp. Phone numbers in a post are written as tel: links, so those stay.
+ * Anything else still goes through the default transform.
+ */
+function urlTransform(value: string): string {
+  if (/^tel:\+?[0-9]{7,15}$/.test(value)) return value;
+  return defaultUrlTransform(value);
+}
 
 /**
  * The page template already renders each post's title as the one <h1>. Imported
@@ -52,7 +62,11 @@ export default function Markdown({
     variant === "compact" ? [remarkGfm, remarkBreaks] : [remarkGfm];
   return (
     <div className={VARIANTS[variant]}>
-      <ReactMarkdown remarkPlugins={remarkPlugins} rehypePlugins={[rehypeDemoteH1]}>
+      <ReactMarkdown
+        remarkPlugins={remarkPlugins}
+        rehypePlugins={[rehypeDemoteH1]}
+        urlTransform={urlTransform}
+      >
         {children}
       </ReactMarkdown>
     </div>
