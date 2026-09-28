@@ -639,29 +639,42 @@ UPDATE posts SET
 WHERE slug = $md$what-mellissa-notices-in-the-first-10-minutes-of-a-tour$md$
   AND body LIKE $md$%an caregiver at heart%$md$;
 
--- New post (2026-09-28): what a dementia caregiver support group is like.
--- Staged for the owner to review. The posts table can store status 'draft',
--- but this row is 'published' so that merging to main puts it on /blog and in
--- the sitemap the same way the other posts go live. Until this file runs on
--- the live database, the post stays off the site.
--- Insert once. A later boot does not update the row, so an edit in Admin
--- (title, body, excerpt, or anything else) is left alone.
-INSERT INTO posts (
-  slug,
-  title,
-  excerpt,
-  body,
-  author,
-  category,
-  status,
-  meta_description,
-  published_at
-)
-SELECT
-  $sgpost$dementia-caregiver-support-group$sgpost$,
-  $sgpost$What a Dementia Caregiver Support Group Is Like$sgpost$,
-  $sgpost$Caring for a parent with dementia? Here's what a caregiver support group is, what happens at a meeting, and how to tell if one is right for you. Plain answers.$sgpost$,
-  $sgpost$It's 4:30 in the afternoon and Mom asks where her car is. She hasn't driven in three years. You tell her it's at the shop. That's the fourth time today.
+-- Draft post (2026-09-28): what a dementia caregiver support group is like.
+-- Inserted once, as a draft, so it shows in Admin > Posts under Drafts. The
+-- owner reviews and publishes it there. This statement does not publish it.
+--
+-- applied_content_updates (created in schema.sql) records that this update
+-- already ran. A later boot skips the block entirely, so it never overwrites
+-- an edit or a publish, and it never recreates the row after a delete.
+-- The slug check avoids a duplicate if that slug is already present.
+-- Columns match createPost for a draft: hero_image, hero_image_alt, and
+-- meta_title are null; published_at is null; id, created_at, and updated_at
+-- are left to the table defaults.
+DO $apply_sgpost$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM applied_content_updates
+    WHERE id = 'dementia-caregiver-support-group-2026-09-28'
+  ) THEN
+    INSERT INTO posts (
+      slug,
+      title,
+      excerpt,
+      body,
+      hero_image,
+      hero_image_alt,
+      author,
+      category,
+      status,
+      meta_title,
+      meta_description,
+      published_at
+    )
+    SELECT
+      $sgpost$dementia-caregiver-support-group$sgpost$,
+      $sgpost$What a Dementia Caregiver Support Group Is Like$sgpost$,
+      $sgpost$Caring for a parent with dementia? Here's what a caregiver support group is, what happens at a meeting, and how to tell if one is right for you. Plain answers.$sgpost$,
+      $sgpost$It's 4:30 in the afternoon and Mom asks where her car is. She hasn't driven in three years. You tell her it's at the shop. That's the fourth time today.
 
 You don't correct her anymore. You learned that the hard way. You've also stopped telling friends about days like this. They say "that must be so hard" and change the subject. They mean well. They just don't know.
 
@@ -730,11 +743,20 @@ Mom will probably ask about her car again tomorrow. Come tell us what you said.
 Adam Upchurch\
 Owner, The Joy Senior Living
 $sgpost$,
-  $sgpost$Adam Upchurch$sgpost$,
-  $sgpost$articles$sgpost$,
-  $sgpost$published$sgpost$,
-  $sgpost$Caring for a parent with dementia? Here's what a caregiver support group is, what happens at a meeting, and how to tell if one is right for you. Plain answers.$sgpost$,
-  TIMESTAMPTZ '2026-09-28 12:00:00 America/New_York'
-WHERE NOT EXISTS (
-  SELECT 1 FROM posts WHERE slug = $sgpost$dementia-caregiver-support-group$sgpost$
-);
+      NULL,
+      NULL,
+      $sgpost$Adam Upchurch$sgpost$,
+      $sgpost$articles$sgpost$,
+      $sgpost$draft$sgpost$,
+      NULL,
+      $sgpost$Caring for a parent with dementia? Here's what a caregiver support group is, what happens at a meeting, and how to tell if one is right for you. Plain answers.$sgpost$,
+      NULL
+    WHERE NOT EXISTS (
+      SELECT 1 FROM posts WHERE slug = $sgpost$dementia-caregiver-support-group$sgpost$
+    );
+
+    INSERT INTO applied_content_updates (id)
+    VALUES ('dementia-caregiver-support-group-2026-09-28');
+  END IF;
+END
+$apply_sgpost$;
