@@ -11,7 +11,7 @@ import TourChecklist from "@/components/landing/TourChecklist";
 
 export const metadata: Metadata = pageTwitter({
   title: {
-    absolute: "Assisted Living Tour Checklist: 25 Questions to Ask | Joy",
+    absolute: "Personal Care Home Tour Checklist: 25 Questions to Ask | Joy",
   },
   description:
     "25 questions to bring to any senior living tour: care, staffing, safety, money, gut checks. Free to read and print. Bring all 25 to Joy; we like the hard ones.",

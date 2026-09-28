@@ -52,6 +52,38 @@ export const BUSINESS = {
 export const BUSINESS_ADDRESS_ONE_LINE = `${BUSINESS.address.street}, ${BUSINESS.address.city}, ${BUSINESS.address.state} ${BUSINESS.address.zip}`;
 
 /**
+ * Georgia DCH license facts. Rule 111-8-62-.11(4) requires a home with a
+ * website to link from its main page to inspection reports from the past 18
+ * months. The search URL is the public DCH inspection-report search. Do not
+ * add claims about what those reports found.
+ */
+export const DCH_FACILITY_ID = "PCH012341";
+
+export const DCH_INSPECTION_SEARCH =
+  "https://weblink.dch.georgia.gov/WebLink/CustomSearch.aspx?SearchName=InspectionReportSearch&repo=WEB";
+
+export const DCH_INSPECTION_LINK_LABEL = "State inspection reports (Georgia DCH)";
+
+export const DCH_LICENSE_STATEMENT = `Licensed by the Georgia Department of Community Health as a personal care home (facility ID ${DCH_FACILITY_ID}).`;
+
+export const DCH_REPORTS_LEDE = "Reports from the past 18 months:";
+
+export const DCH_REPORTS: { label: string; href: string }[] = [
+  {
+    label: "2/9/2026 re-licensure inspection",
+    href: "https://weblink.dch.georgia.gov/WebLink/DocView.aspx?id=268461&dbid=0&repo=WEB",
+  },
+  {
+    label: "4/9/2026 monitoring survey",
+    href: "https://weblink.dch.georgia.gov/WebLink/DocView.aspx?id=417284&dbid=0&repo=WEB",
+  },
+  {
+    label: "5/15/2025 complaint investigation",
+    href: "https://weblink.dch.georgia.gov/WebLink/DocView.aspx?id=270802&dbid=0&repo=WEB",
+  },
+];
+
+/**
  * The ONE tour path for the whole site (TalkFurther). The old site had three
  * conflicting CTAs; this is the single one. Set the real TalkFurther URL in
  * the NEXT_PUBLIC_TALKFURTHER_URL env var (Railway). Until then this falls

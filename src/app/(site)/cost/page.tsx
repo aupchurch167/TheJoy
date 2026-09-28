@@ -20,7 +20,7 @@ import CostCalculator from "@/components/landing/CostCalculator";
 
 export const metadata: Metadata = pageTwitter({
   title: {
-    absolute: "Cost of Assisted Living & Personal Care in Loganville, GA | Joy",
+    absolute: "Cost of a Personal Care Home in Loganville, GA | Joy",
   },
   description:
     "Real prices, published: personal care from $4,500/mo, memory care from $5,500/mo. See what the number covers and what it replaces. Loganville, GA.",

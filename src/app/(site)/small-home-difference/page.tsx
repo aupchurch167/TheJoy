@@ -18,7 +18,7 @@ import FamilyQuote from "@/components/landing/FamilyQuote";
 
 export const metadata: Metadata = pageTwitter({
   title: {
-    absolute: "Small Assisted Living Homes vs. Large Facilities in Georgia | Joy",
+    absolute: "Small Personal Care Homes vs. Large Facilities in Georgia | Joy",
   },
   description:
     "24 beds vs. 120. What a small personal care home notices that a big building can't. How to compare, and what to ask both.",

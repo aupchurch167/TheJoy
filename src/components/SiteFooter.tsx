@@ -1,5 +1,13 @@
 import Link from "next/link";
-import { BUSINESS, SOCIAL, BADGES, MEMORY_CARE, SITE_URL } from "@/lib/site";
+import {
+  BUSINESS,
+  SOCIAL,
+  BADGES,
+  MEMORY_CARE,
+  SITE_URL,
+  DCH_INSPECTION_SEARCH,
+  DCH_INSPECTION_LINK_LABEL,
+} from "@/lib/site";
 import { getSettings, toTelHref, toMailHref } from "@/lib/settings";
 import { getSitePhotos } from "@/lib/site-photos";
 
@@ -154,6 +162,16 @@ export default async function SiteFooter() {
               <Link href="/small-home-difference" className="hover:text-clay">
                 The small-home difference
               </Link>
+            </li>
+            <li>
+              <a
+                href={DCH_INSPECTION_SEARCH}
+                target="_blank"
+                rel="noopener"
+                className="hover:text-clay"
+              >
+                {DCH_INSPECTION_LINK_LABEL}
+              </a>
             </li>
           </ul>
         </div>
