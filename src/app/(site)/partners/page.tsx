@@ -1,7 +1,5 @@
 import type { Metadata } from "next";
 import { pageTwitter } from "@/lib/metadata";
-import { existsSync } from "fs";
-import { join } from "path";
 import {
   BUSINESS,
   BUSINESS_ADDRESS_ONE_LINE,
@@ -29,38 +27,30 @@ export const metadata: Metadata = pageTwitter({
   },
 });
 
-/**
- * Resolve the first filename that actually exists in public/partners, so a
- * missing PDF shows a "being finalized" note instead of a broken download link.
- * Checked at build time; drop the file in and redeploy and the button appears.
- */
-function pdfHref(names: string[]): string | null {
-  for (const n of names) {
-    if (existsSync(join(process.cwd(), "public", "partners", n))) {
-      return `/partners/${n}`;
-    }
-  }
-  return null;
-}
-
 const DOWNLOADS = [
   {
     label: "Partner Fact Sheet",
     blurb:
       "An overview of Joy, who we are a good fit for, and a short admissions cheat sheet. One page to keep by the phone.",
-    names: ["partner-fact-sheet.pdf", "partner-packet.pdf"],
+    href: "/partners/partner-fact-sheet.pdf",
+  },
+  {
+    label: "Partner Packet",
+    blurb:
+      "Overview, clinical fit, and the admissions cheat sheet for a referral.",
+    href: "/partners/partner-packet.pdf",
   },
   {
     label: "Rate Card",
     blurb:
       "Current rates and fees, written plainly. What the number covers, so there are no surprises at move-in.",
-    names: ["rate-card.pdf"],
+    href: "/partners/rate-card.pdf",
   },
   {
     label: "Photo Tour",
     blurb:
       "Real photos of the house, the suites, and the yard. No stock, no staging, just the rooms as they are.",
-    names: ["photo-tour.pdf"],
+    href: "/partners/photo-tour.pdf",
   },
 ];
 
@@ -203,10 +193,8 @@ export default function PartnersPage() {
           <p className="mt-3 max-w-[42em] text-lg leading-relaxed text-ink-soft">
             No form, no gate. Download what you need and send it along.
           </p>
-          <div className="mt-8 grid gap-5 md:grid-cols-3">
-            {DOWNLOADS.map((d) => {
-              const href = pdfHref(d.names);
-              return (
+          <div className="mt-8 grid gap-5 md:grid-cols-2">
+            {DOWNLOADS.map((d) => (
               <div
                 key={d.label}
                 className="flex flex-col rounded-2xl border border-line bg-white p-6"
@@ -218,24 +206,17 @@ export default function PartnersPage() {
                   {d.blurb}
                 </p>
                 <div className="mt-5">
-                  {href ? (
-                    <a
-                      href={href}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center justify-center rounded-full bg-clay px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-clay-dark"
-                    >
-                      Download PDF
-                    </a>
-                  ) : (
-                    <span className="inline-flex items-center rounded-full bg-surface px-4 py-2.5 text-sm font-medium text-ink-faint ring-1 ring-line">
-                      Being finalized, call and we&rsquo;ll send it
-                    </span>
-                  )}
+                  <a
+                    href={d.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center justify-center rounded-full bg-clay px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-clay-dark"
+                  >
+                    Download PDF
+                  </a>
                 </div>
               </div>
-              );
-            })}
+            ))}
           </div>
         </div>
       </section>
