@@ -197,7 +197,7 @@ export const ORG_PROFILE = {
     "https://enjoysrliving.com/directory/the-joy-senior-living-of-loganville",
   ],
   // §4-compliant: "assisted living" appears only as the search category.
-  description: `The Joy Senior Living of Loganville is a ${BUSINESS.beds}-suite personal care home in ${BUSINESS.address.city}, ${BUSINESS.address.state} offering senior living, memory care, and respite care. Families searching for assisted living near ${BUSINESS.address.city} find a personal care home small enough to know every resident by name. Led by an executive director with more than 20 years of experience as a registered nurse, The Joy provides staff on-site around the clock, home-cooked meals, and daily activities.`,
+  description: `The Joy Senior Living of Loganville is a ${BUSINESS.beds}-suite personal care home in ${BUSINESS.address.city}, ${BUSINESS.address.state} offering senior living, memory care, and respite care. Families searching for assisted living near ${BUSINESS.address.city} find a personal care home small enough to know every resident by name. Led by Executive Director ${BUSINESS.director.name}, The Joy provides staff on-site around the clock, home-cooked meals, and daily activities.`,
 } as const;
 
 /**

@@ -207,8 +207,8 @@ export function servicesCollectionJsonLd() {
 
 /**
  * schema.org Person for Mellissa Daniel, Joy's Executive Director. She is the
- * site's E-E-A-T anchor (a registered nurse with 20+ years of experience, per
- * the owner-supplied ORG_PROFILE). Referenced by @id from the AboutPage.
+ * site's E-E-A-T anchor. Do not add credentials or experience figures unless
+ * they are verified. Referenced by @id from the AboutPage.
  */
 export function mellissaPersonJsonLd() {
   return {
@@ -217,7 +217,7 @@ export function mellissaPersonJsonLd() {
     name: BUSINESS.director.name,
     jobTitle: BUSINESS.director.title,
     description:
-      "Executive Director at Joy Senior Living and a registered nurse with more than 20 years of experience.",
+      "Executive Director at Joy Senior Living.",
     url: `${SITE_URL}/about`,
     worksFor: {
       "@type": ["LocalBusiness", "SeniorCare"],
@@ -303,7 +303,7 @@ export function breadcrumbJsonLd(items: { name: string; path: string }[]) {
  * to send). Anyone or anything NOT here (the company name, or a stray/imported
  * byline) is the publishing Organization, not a Person named after a company.
  * Keyed by lowercased full name. Mellissa references her established Person
- * entity (an RN byline on care topics is worth more than any backlink).
+ * entity.
  */
 const PERSON_AUTHORS: Record<
   string,
@@ -314,7 +314,6 @@ const PERSON_AUTHORS: Record<
     url: `${SITE_URL}/about`,
     id: `${SITE_URL}/#mellissa`,
     jobTitle: BUSINESS.director.title,
-    credential: "RN",
   },
   "adam upchurch": {
     name: "Adam Upchurch",
@@ -370,8 +369,8 @@ function authorEntity(author: string) {
 }
 
 /**
- * Human byline for a post. A known person shows their name and credential (e.g.
- * "Mellissa Daniel, RN"); anything else shows the organization name.
+ * Human byline for a post. A known person shows their name (plus a credential
+ * only if one is set); anything else shows the organization name.
  */
 export function authorByline(author: string): string {
   const p = personProfile(author);
