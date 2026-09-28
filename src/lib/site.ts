@@ -137,31 +137,6 @@ export const SOCIAL: { label: string; href: string }[] = [
 ];
 
 /**
- * The one Joy to Enjoy referral handoff. Rendered once, in the footer.
- * Host is always https://enjoysrliving.com. Do not drop the UTMs, and do not
- * point these at /admin, /api, /claim, drafts, or a preview host.
- */
-export const ENJOY_HANDOFF = {
-  heading: "Comparing senior living options?",
-  before: "Explore",
-  careCheck: {
-    label: "Care Check",
-    href: "https://enjoysrliving.com/care-check?utm_source=joy&utm_medium=referral&utm_campaign=compare-options",
-  },
-  afterCareCheck: ",",
-  walton: {
-    label: "communities in Walton County",
-    href: "https://enjoysrliving.com/directory/in/walton?utm_source=joy&utm_medium=referral&utm_campaign=compare-options",
-  },
-  afterWalton: ", and",
-  listing: {
-    label: "our listing",
-    href: "https://enjoysrliving.com/directory/the-joy-senior-living-of-loganville?utm_source=joy&utm_medium=referral&utm_campaign=compare-options",
-  },
-  after: "on Enjoy Senior Living.",
-} as const;
-
-/**
  * Entity/SEO profile for the schema.org LocalBusiness markup (owner-supplied
  * data plus external listings). §4 note: the schema NEVER declares Joy an
  * assisted living facility. The `@type` stays LocalBusiness/SeniorCare and the
