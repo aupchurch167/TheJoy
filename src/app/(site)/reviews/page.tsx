@@ -3,7 +3,12 @@ import { pageTwitter } from "@/lib/metadata";
 import { BUSINESS, OG_IMAGE } from "@/lib/site";
 import { breadcrumbJsonLd } from "@/lib/schema";
 import JsonLd from "@/components/JsonLd";
-import { reviewQuotes, REVIEW_BADGES, REVIEW_LINKS } from "@/lib/landing";
+import {
+  reviewQuotes,
+  REVIEW_BADGES,
+  REVIEW_LINKS,
+  REVIEW_RATINGS_AS_OF,
+} from "@/lib/landing";
 import { hasDatabase } from "@/lib/db";
 import {
   listPublishedReviews,
@@ -105,6 +110,7 @@ export default async function ReviewsPage() {
             </span>
           ))}
         </div>
+        <p className="mt-3 text-xs text-ink-faint">{REVIEW_RATINGS_AS_OF}</p>
       </section>
 
       <CtaBand headline="Read them all. Then come see whether it's true." />

@@ -19,7 +19,7 @@ import EssayRows from "@/components/landing/EssayRows";
 
 export const metadata: Metadata = pageTwitter({
   title: {
-    absolute: "Signs It's Time for Assisted Living: What Families Notice | Joy",
+    absolute: "Signs It's Time for a Personal Care Home: What Families Notice | Joy",
   },
   description:
     "The signs are rarely loud (unopened mail, the same story twice, a new grip on the stairs). How families know it's time, from a Loganville personal care home.",

@@ -140,12 +140,20 @@ export function reviewQuotes(): { quote: string; who: string; align: "start" | "
   }));
 }
 
-/** Star ratings shown as chips on /reviews (counts intentionally omitted). */
+/**
+ * Third-party figures shown as chips on /reviews (September 2026):
+ * Google 4.5 from 24 reviews, Caring.com 4.8 from 5 reviews. A Place for Mom's
+ * chip stays the Best of Senior Living award (its star rating, 4.9 from 24
+ * reviews, was already accurate and is not hardcoded here).
+ */
 export const REVIEW_BADGES: { label: string; value: string }[] = [
   { label: "A Place for Mom", value: "Best of Senior Living" },
-  { label: "Google", value: "4.9" },
-  { label: "Caring.com", value: "5.0" },
+  { label: "Google", value: "4.5 (24 reviews)" },
+  { label: "Caring.com", value: "4.8 (5 reviews)" },
 ];
+
+/** Shown next to the rating chips. Keep in sync with REVIEW_BADGES. */
+export const REVIEW_RATINGS_AS_OF = "as of September 2026";
 
 /**
  * Where families can read the reviews in full. TODO(owner): replace with the

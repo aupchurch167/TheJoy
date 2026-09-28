@@ -290,3 +290,186 @@ UPDATE posts SET
   updated_at = now()
 WHERE slug = $md$what-mellissa-notices-in-the-first-10-minutes-of-a-tour$md$
   AND excerpt LIKE $md$%Mellissa Daniel is a nurse first.%$md$;
+
+-- Compliance (2026-09-28): ratings and "assisted living" self-descriptions.
+-- Each statement changes a row only while the old wording is still present,
+-- so a later edit in Admin is left alone. Re-running is a no-op.
+-- Slugs are not renamed.
+
+-- Google 4.9 -> 4.5 (24 reviews). Caring.com 5.0 -> 4.8 (5 reviews).
+-- A Place for Mom 4.9 is already accurate and is not rewritten.
+UPDATE review_sources SET
+  rating_value = '4.5 (24 reviews)',
+  updated_at = now()
+WHERE btrim(rating_value) IN ('4.9', '4.90')
+  AND (source = 'google' OR lower(btrim(label)) = 'google');
+
+UPDATE review_sources SET
+  rating_value = '4.8 (5 reviews)',
+  updated_at = now()
+WHERE btrim(rating_value) IN ('5', '5.0', '5.00')
+  AND (source = 'caring' OR lower(label) LIKE '%caring%');
+
+-- spring-fun-activities: do not list Joy as an assisted living setting.
+UPDATE posts SET
+  body = replace(body,
+    $md$personal care or assisted living settings like The Joy Senior Living$md$,
+    $md$a personal care home like The Joy Senior Living$md$),
+  updated_at = now()
+WHERE slug = $md$spring-fun-activities-to-enjoy-with-loved-ones-in-senior-living$md$
+  AND body LIKE $md$%personal care or assisted living settings like The Joy Senior Living%$md$;
+
+-- balancing-caregiving: the section was naming Joy as assisted living or a personal care home.
+UPDATE posts SET
+  body = replace(replace(body,
+    $md$Assisted Living/Personal Care Homes$md$,
+    $md$Personal care homes$md$),
+    $md$Assisted living facilities or personal care homes, like The Joy of Loganville, provide a more permanent solution.$md$,
+    $md$A personal care home like The Joy of Loganville provides a more permanent solution.$md$),
+  updated_at = now()
+WHERE slug = $md$balancing-caregiving-for-aging-parents$md$
+  AND (body LIKE $md$%Assisted Living/Personal Care Homes%$md$
+       OR body LIKE $md$%Assisted living facilities or personal care homes, like The Joy of Loganville, provide a more permanent solution.%$md$);
+
+-- hearts-full-of-gratitude: Joy's own programs were called assisted living.
+UPDATE posts SET
+  body = replace(replace(body,
+    $md$whether in assisted living's lively social circles or the secure, sensory-rich spaces of our memory care neighborhood$md$,
+    $md$whether in our personal care home or the quieter spaces of our memory care neighborhood$md$),
+    $md$or the vibrant independence of assisted living$md$,
+    $md$or daily life in our personal care home$md$),
+  updated_at = now()
+WHERE slug = $md$hearts-full-of-gratitude-what-our-families-are-sharing-about-life-at-the-joy$md$
+  AND (body LIKE $md$%whether in assisted living's lively social circles or the secure, sensory-rich spaces of our memory care neighborhood%$md$
+       OR body LIKE $md$%or the vibrant independence of assisted living%$md$);
+
+-- nourishing: "our community" was described as assisted living and memory care.
+UPDATE posts SET
+  body = replace(replace(body,
+    $md$especially those in assisted living or memory care$md$,
+    $md$especially those in a personal care home or memory care$md$),
+    $md$In both assisted living and memory care, we emphasize$md$,
+    $md$In both personal care and memory care, we emphasize$md$),
+  updated_at = now()
+WHERE slug = $md$nourishing-the-golden-years-the-vital-role-of-nutrition-in-senior-living$md$
+  AND (body LIKE $md$%especially those in assisted living or memory care%$md$
+       OR body LIKE $md$%In both assisted living and memory care, we emphasize%$md$);
+
+-- resident council: "our assisted living and memory care neighborhoods".
+UPDATE posts SET
+  body = replace(body,
+    $md$both our assisted living and memory care neighborhoods$md$,
+    $md$both personal care and memory care$md$),
+  updated_at = now()
+WHERE slug = $md$the-heart-of-our-community-how-resident-council-meetings-bring-joy-to-life-at-the-joy-senior-living$md$
+  AND body LIKE $md$%both our assisted living and memory care neighborhoods%$md$;
+
+-- award post: the closing line called Joy a 24-bed assisted living community.
+UPDATE posts SET
+  body = replace(body,
+    $md$24-bed assisted living and memory care community$md$,
+    $md$24-bed personal care home with memory care$md$),
+  hero_image_alt = replace(hero_image_alt,
+    $md$24-bed assisted living and memory care community$md$,
+    $md$24-bed personal care home with memory care$md$),
+  updated_at = now()
+WHERE slug = $md$we-just-received-our-2026-best-of-senior-living-award-from-a-place-for-mom$md$
+  AND (body LIKE $md$%24-bed assisted living and memory care community%$md$
+       OR hero_image_alt LIKE $md$%24-bed assisted living and memory care community%$md$);
+
+-- what-to-look-for: title and body said the authors run an assisted living community.
+-- The slug stays. Generic lines about "considering assisted living" are left as-is.
+UPDATE posts SET
+  title = replace(title,
+    $md$What to Look for in an Assisted Living Community (From People Who Run One)$md$,
+    $md$What to Look for in a Personal Care Home (From People Who Run One)$md$),
+  meta_title = replace(meta_title,
+    $md$What to Look for in an Assisted Living Community (From People Who Run One)$md$,
+    $md$What to Look for in a Personal Care Home (From People Who Run One)$md$),
+  excerpt = replace(excerpt,
+    $md$What to Look for in an Assisted Living Community (From People Who Run One)$md$,
+    $md$What to Look for in a Personal Care Home (From People Who Run One)$md$),
+  meta_description = replace(meta_description,
+    $md$What to Look for in an Assisted Living Community (From People Who Run One)$md$,
+    $md$What to Look for in a Personal Care Home (From People Who Run One)$md$),
+  body = replace(replace(body,
+    $md$What to Look for in an Assisted Living Community (From People Who Run One)$md$,
+    $md$What to Look for in a Personal Care Home (From People Who Run One)$md$),
+    $md$We run a 24-bed assisted living community in Loganville, Georgia.$md$,
+    $md$We run a 24-bed personal care home in Loganville, Georgia.$md$),
+  hero_image_alt = replace(hero_image_alt,
+    $md$What to Look for in an Assisted Living Community (From People Who Run One)$md$,
+    $md$What to Look for in a Personal Care Home (From People Who Run One)$md$),
+  updated_at = now()
+WHERE slug = $md$what-to-look-for-in-an-assisted-living-community-from-people-who-run-one$md$
+  AND (title LIKE $md$%What to Look for in an Assisted Living Community (From People Who Run One)%$md$
+       OR meta_title LIKE $md$%What to Look for in an Assisted Living Community (From People Who Run One)%$md$
+       OR excerpt LIKE $md$%What to Look for in an Assisted Living Community (From People Who Run One)%$md$
+       OR meta_description LIKE $md$%What to Look for in an Assisted Living Community (From People Who Run One)%$md$
+       OR body LIKE $md$%What to Look for in an Assisted Living Community (From People Who Run One)%$md$
+       OR body LIKE $md$%We run a 24-bed assisted living community in Loganville, Georgia.%$md$
+       OR hero_image_alt LIKE $md$%What to Look for in an Assisted Living Community (From People Who Run One)%$md$);
+
+-- small-enough: the post used "small assisted living in Loganville" for Joy itself.
+UPDATE posts SET
+  title = replace(title,
+    $md$Small Assisted Living in Loganville$md$,
+    $md$Small Personal Care Home in Loganville$md$),
+  meta_title = replace(meta_title,
+    $md$Small Assisted Living in Loganville$md$,
+    $md$Small Personal Care Home in Loganville$md$),
+  excerpt = replace(replace(excerpt,
+    $md$What a small assisted living in Loganville actually feels like on a Tuesday — the aide who knows your dad's coffee, the cook who remembers, the tradeoffs.$md$,
+    $md$What a small personal care home in Loganville actually feels like on a Tuesday (the aide who knows your dad's coffee, the cook who remembers, the tradeoffs).$md$),
+    $md$small assisted living in Loganville$md$,
+    $md$small personal care home in Loganville$md$),
+  meta_description = replace(replace(meta_description,
+    $md$What a small assisted living in Loganville actually feels like on a Tuesday — the aide who knows your dad's coffee, the cook who remembers, the tradeoffs.$md$,
+    $md$What a small personal care home in Loganville actually feels like on a Tuesday (the aide who knows your dad's coffee, the cook who remembers, the tradeoffs).$md$),
+    $md$What a small assisted living in Loganville actually feels like on a Tuesday — with honest tradeoffs.$md$,
+    $md$What a small personal care home in Loganville actually feels like on a Tuesday (with honest tradeoffs).$md$),
+  body = replace(body,
+    $md$small assisted living in Loganville$md$,
+    $md$small personal care home in Loganville$md$),
+  hero_image_alt = replace(replace(hero_image_alt,
+    $md$Small Assisted Living in Loganville$md$,
+    $md$Small Personal Care Home in Loganville$md$),
+    $md$small assisted living in Loganville$md$,
+    $md$small personal care home in Loganville$md$),
+  updated_at = now()
+WHERE slug = $md$small-enough-to-know-your-parent-by-name$md$
+  AND (title LIKE $md$%Small Assisted Living in Loganville%$md$
+       OR meta_title LIKE $md$%Small Assisted Living in Loganville%$md$
+       OR excerpt LIKE $md$%small assisted living in Loganville%$md$
+       OR meta_description LIKE $md$%small assisted living in Loganville%$md$
+       OR body LIKE $md$%small assisted living in Loganville%$md$
+       OR hero_image_alt LIKE $md$%ssisted Living in Loganville%$md$
+       OR hero_image_alt LIKE $md$%small assisted living in Loganville%$md$);
+
+-- Leftover lowercase phrase in meta/excerpt after the full-sentence rewrite above,
+-- and the "with honest tradeoffs" variant if it was the stored description.
+UPDATE posts SET
+  excerpt = replace(excerpt,
+    $md$small assisted living in Loganville$md$,
+    $md$small personal care home in Loganville$md$),
+  meta_description = replace(replace(meta_description,
+    $md$small assisted living in Loganville$md$,
+    $md$small personal care home in Loganville$md$),
+    $md$What a small personal care home in Loganville actually feels like on a Tuesday — with honest tradeoffs.$md$,
+    $md$What a small personal care home in Loganville actually feels like on a Tuesday (with honest tradeoffs).$md$),
+  updated_at = now()
+WHERE slug = $md$small-enough-to-know-your-parent-by-name$md$
+  AND (excerpt LIKE $md$%small assisted living in Loganville%$md$
+       OR meta_description LIKE $md$%small assisted living in Loganville%$md$
+       OR meta_description LIKE $md$%Tuesday — with honest tradeoffs.%$md$);
+
+-- cost article: Joy's own voice was attached to "the cost of assisted living".
+-- The title still discusses assisted living cost as a category families compare
+-- with personal care, and the slug is unchanged.
+UPDATE posts SET
+  body = replace(body,
+    $md$The cost of assisted living is real, and we will always be honest with you about it.$md$,
+    $md$The cost of a personal care home is real, and we will always be honest with you about it.$md$),
+  updated_at = now()
+WHERE slug = $md$cost-of-assisted-living-and-personal-care$md$
+  AND body LIKE $md$%The cost of assisted living is real, and we will always be honest with you about it.%$md$;

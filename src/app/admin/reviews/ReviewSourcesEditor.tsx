@@ -108,7 +108,7 @@ function SourceRow({ draft }: { draft: Draft }) {
           <Input
             value={d.rating_value}
             onChange={(e) => setD({ ...d, rating_value: e.target.value })}
-            placeholder="e.g. 4.9"
+            placeholder="e.g. 4.5"
           />
         </Field>
         <Field label="Badge label (optional)">

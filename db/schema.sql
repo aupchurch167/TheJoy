@@ -801,7 +801,7 @@ CREATE TABLE IF NOT EXISTS review_sources (
   source       TEXT PRIMARY KEY,                 -- google|apfm|caring|...
   label        TEXT NOT NULL,                    -- display label
   profile_url  TEXT,
-  rating_value TEXT,                             -- display string, e.g. "4.9"
+  rating_value TEXT,                             -- display string, e.g. "4.5"
   badge_label  TEXT,                             -- e.g. "Best of Senior Living"
   enabled      BOOLEAN NOT NULL DEFAULT TRUE,
   updated_at   TIMESTAMPTZ NOT NULL DEFAULT now()
