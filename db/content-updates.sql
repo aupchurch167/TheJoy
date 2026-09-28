@@ -139,14 +139,14 @@ UPDATE posts SET
 WHERE slug = $md$the-joy-senior-living-wins-best-of-senior-living-award-in-loganville-ga$md$
   AND btrim(coalesce(nullif(btrim(meta_description), ''), excerpt, '')) = $md$The Joy Senior Living celebrates the Best of Senior Living award from A Place for Mom$md$;
 
--- we-just-received-our-2026-best-of-senior-living-award-from-a-place-for-mom (75 -> 155)
+-- we-just-received-our-2026-best-of-senior-living-award-from-a-place-for-mom (75 -> 158)
 UPDATE posts SET
   excerpt = CASE
-    WHEN excerpt IS NULL OR btrim(excerpt) = '' OR btrim(excerpt) = $md$We just received our 2026 Best of Senior Living award from A Place for Mom.$md$ THEN $md$Our 2026 Best of Senior Living award from A Place for Mom comes from family reviews. Meet Mellissa Daniel, RN, who leads our Loganville, GA home every day.$md$
+    WHEN excerpt IS NULL OR btrim(excerpt) = '' OR btrim(excerpt) = $md$We just received our 2026 Best of Senior Living award from A Place for Mom.$md$ THEN $md$Our 2026 Best of Senior Living award from A Place for Mom comes from family reviews. Meet Mellissa Daniel, who leads our Loganville, GA home every single day.$md$
     ELSE excerpt
   END,
   meta_description = CASE
-    WHEN nullif(btrim(meta_description), '') IS NOT NULL THEN $md$Our 2026 Best of Senior Living award from A Place for Mom comes from family reviews. Meet Mellissa Daniel, RN, who leads our Loganville, GA home every day.$md$
+    WHEN nullif(btrim(meta_description), '') IS NOT NULL THEN $md$Our 2026 Best of Senior Living award from A Place for Mom comes from family reviews. Meet Mellissa Daniel, who leads our Loganville, GA home every single day.$md$
     ELSE meta_description
   END,
   updated_at = now()
@@ -232,3 +232,61 @@ UPDATE posts SET
   ),
   updated_at = now()
 WHERE body LIKE '%' || 'calendly link' || '%';
+
+-- Correction (2026-09-27): Mellissa Daniel is not a registered nurse. Remove
+-- every RN / nurse claim about her from post copy. Idempotent: each statement
+-- only matches while the incorrect text is still present.
+
+-- we-just-received-our-2026-best-of-senior-living-award-from-a-place-for-mom:
+-- force the corrected description (guard: not already the new text), since the
+-- live excerpt carried an RN claim.
+UPDATE posts SET
+  excerpt = $md$Our 2026 Best of Senior Living award from A Place for Mom comes from family reviews. Meet Mellissa Daniel, who leads our Loganville, GA home every single day.$md$,
+  meta_description = CASE
+    WHEN nullif(btrim(meta_description), '') IS NOT NULL THEN $md$Our 2026 Best of Senior Living award from A Place for Mom comes from family reviews. Meet Mellissa Daniel, who leads our Loganville, GA home every single day.$md$
+    ELSE meta_description
+  END,
+  updated_at = now()
+WHERE slug = $md$we-just-received-our-2026-best-of-senior-living-award-from-a-place-for-mom$md$
+  AND (excerpt IS DISTINCT FROM $md$Our 2026 Best of Senior Living award from A Place for Mom comes from family reviews. Meet Mellissa Daniel, who leads our Loganville, GA home every single day.$md$
+       OR (nullif(btrim(meta_description), '') IS NOT NULL AND meta_description IS DISTINCT FROM $md$Our 2026 Best of Senior Living award from A Place for Mom comes from family reviews. Meet Mellissa Daniel, who leads our Loganville, GA home every single day.$md$));
+
+-- Any post body that still names her with the RN credential.
+UPDATE posts SET
+  body = replace(replace(body, $md$Mellissa Daniel, RN,$md$, $md$Mellissa Daniel,$md$), $md$Mellissa Daniel, RN$md$, $md$Mellissa Daniel$md$),
+  updated_at = now()
+WHERE body LIKE $md$%Mellissa Daniel, RN%$md$;
+
+-- what-mellissa-notices-in-the-first-10-minutes-of-a-tour: description.
+UPDATE posts SET
+  excerpt = CASE
+    WHEN btrim(excerpt) = $md$Mellissa Daniel is a nurse first. See what her eye reads in the first ten minutes of a tour at Joy, our personal care home in Loganville, GA.$md$ THEN $md$Mellissa Daniel gives every tour herself. See what her eye reads in the first ten minutes of a tour at Joy, our personal care home in Loganville, GA.$md$
+    ELSE excerpt
+  END,
+  meta_description = CASE
+    WHEN btrim(meta_description) = $md$Mellissa Daniel is a nurse first. See what her eye reads in the first ten minutes of a tour at Joy, our personal care home in Loganville, GA.$md$ THEN $md$Mellissa Daniel gives every tour herself. See what her eye reads in the first ten minutes of a tour at Joy, our personal care home in Loganville, GA.$md$
+    ELSE meta_description
+  END,
+  updated_at = now()
+WHERE slug = $md$what-mellissa-notices-in-the-first-10-minutes-of-a-tour$md$
+  AND (btrim(excerpt) = $md$Mellissa Daniel is a nurse first. See what her eye reads in the first ten minutes of a tour at Joy, our personal care home in Loganville, GA.$md$ OR btrim(meta_description) = $md$Mellissa Daniel is a nurse first. See what her eye reads in the first ten minutes of a tour at Joy, our personal care home in Loganville, GA.$md$);
+
+-- what-mellissa-notices-in-the-first-10-minutes-of-a-tour: body sentence.
+UPDATE posts SET
+  body = replace(replace(replace(body,
+    $md$Because she's a nurse, Mellissa clocks$md$, $md$Mellissa clocks$md$),
+    $md$Because she’s a nurse, Mellissa clocks$md$, $md$Mellissa clocks$md$),
+    $md$Because she&#x27;s a nurse, Mellissa clocks$md$, $md$Mellissa clocks$md$),
+  updated_at = now()
+WHERE slug = $md$what-mellissa-notices-in-the-first-10-minutes-of-a-tour$md$
+  AND (body LIKE $md$%Because she's a nurse, Mellissa clocks%$md$
+       OR body LIKE $md$%Because she’s a nurse, Mellissa clocks%$md$
+       OR body LIKE $md$%Because she&#x27;s a nurse, Mellissa clocks%$md$);
+
+-- what-mellissa-notices-in-the-first-10-minutes-of-a-tour: the excerpt (blog
+-- card) carries its own "nurse first" line, separate from meta_description.
+UPDATE posts SET
+  excerpt = replace(excerpt, $md$Mellissa Daniel is a nurse first.$md$, $md$Mellissa Daniel gives every tour herself.$md$),
+  updated_at = now()
+WHERE slug = $md$what-mellissa-notices-in-the-first-10-minutes-of-a-tour$md$
+  AND excerpt LIKE $md$%Mellissa Daniel is a nurse first.%$md$;

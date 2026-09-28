@@ -31,7 +31,7 @@ export const PARTNER_EMAIL_TEMPLATES: PartnerEmailTemplate[] = [
       "Same-day PCH assessments near [Walton/Eastside] (24-suite home in Loganville)",
     body: `[Name],
 
-I'm Adam, owner of The Joy Senior Living in Loganville, a 24-suite licensed personal care home about [15] minutes from [hospital]. Our Executive Director, Mellissa Daniel, RN, has 20+ years, and our nurse is Marla Allen. They do our assessments, bedside if that's easier for you.
+I'm Adam, owner of The Joy Senior Living in Loganville, a 24-suite licensed personal care home about [15] minutes from [hospital]. Our Executive Director is Mellissa Daniel, and our nurse is Marla Allen. They do our assessments, bedside if that's easier for you.
 
 Two things that make us useful for tough discharges:
 
@@ -189,7 +189,7 @@ Rather than leave you hanging: [alternative, e.g. "this profile usually needs an
 
 Send the next one. The fast no is part of the service.
 
-Mellissa Daniel, RN
+Mellissa Daniel
 Executive Director, The Joy Senior Living`,
   },
   {

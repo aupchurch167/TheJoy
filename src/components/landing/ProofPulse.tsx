@@ -23,8 +23,8 @@ export default async function ProofPulse() {
         sizes="96px"
       />
       <p className="min-w-[15rem] flex-1 text-lg leading-relaxed text-ink-soft">
-        <strong className="text-ink">Mellissa Daniel, RN.</strong> 20+ years. She
-        gives every tour herself.
+        <strong className="text-ink">Mellissa Daniel, Executive Director.</strong>{" "}
+        She gives every tour herself.
       </p>
       {badges.length > 0 && (
         <div className="flex flex-none items-center gap-3">
