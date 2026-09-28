@@ -87,7 +87,7 @@ const FACTS = [
   MEMORY_CARE.enabled
     ? "Personal care, memory care, and respite"
     : "Personal care and respite",
-  `24/7 awake staff, RN Executive Director (${BUSINESS.director.name})`,
+  `24/7 awake staff, Executive Director ${BUSINESS.director.name}`,
   "Hospice and home health welcome in-house",
   BUSINESS_ADDRESS_ONE_LINE,
   "~15 min Piedmont Walton · ~20 min Piedmont Eastside · ~30 min Northside Gwinnett",
@@ -335,7 +335,7 @@ export default function PartnersPage() {
                 Tours &amp; assessments
               </p>
               <p className="mt-2 font-display text-xl font-semibold text-ink">
-                {BUSINESS.director.name}, RN
+                {BUSINESS.director.name}
               </p>
               <p className="text-ink-soft">Executive Director</p>
               <div className="mt-4 space-y-1 text-sm">
