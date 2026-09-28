@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { BUSINESS, SOCIAL, BADGES, MEMORY_CARE, ENJOY_HANDOFF, SITE_URL } from "@/lib/site";
+import { BUSINESS, SOCIAL, BADGES, MEMORY_CARE, SITE_URL } from "@/lib/site";
 import { getSettings, toTelHref, toMailHref } from "@/lib/settings";
 import { getSitePhotos } from "@/lib/site-photos";
 
@@ -156,42 +156,6 @@ export default async function SiteFooter() {
               </Link>
             </li>
           </ul>
-        </div>
-      </div>
-
-      <div className="border-t border-line/70">
-        <div className="mx-auto max-w-6xl px-5 py-8">
-          <p className="font-semibold text-ink">{ENJOY_HANDOFF.heading}</p>
-          <p className="mt-2 max-w-2xl text-sm leading-relaxed text-ink-soft">
-            {ENJOY_HANDOFF.before}{" "}
-            <a
-              href={ENJOY_HANDOFF.careCheck.href}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="font-semibold text-clay hover:underline"
-            >
-              {ENJOY_HANDOFF.careCheck.label}
-            </a>
-            {ENJOY_HANDOFF.afterCareCheck}{" "}
-            <a
-              href={ENJOY_HANDOFF.walton.href}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="font-semibold text-clay hover:underline"
-            >
-              {ENJOY_HANDOFF.walton.label}
-            </a>
-            {ENJOY_HANDOFF.afterWalton}{" "}
-            <a
-              href={ENJOY_HANDOFF.listing.href}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="font-semibold text-clay hover:underline"
-            >
-              {ENJOY_HANDOFF.listing.label}
-            </a>{" "}
-            {ENJOY_HANDOFF.after}
-          </p>
         </div>
       </div>
 
