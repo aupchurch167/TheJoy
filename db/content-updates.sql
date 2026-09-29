@@ -1629,3 +1629,145 @@ BEGIN
   END IF;
 END
 $ribbon_doors$;
+
+
+
+-- Publish the dementia caregiver support group post (2026-09-28).
+-- One marker. A later boot does not run this block, so an edit in Admin
+-- after this publish is left alone.
+--
+-- The earlier draft block records its marker even when the INSERT matches
+-- nothing (the slug is already there). A row that is published with no
+-- publish time is not on the site (404) and is not status draft, so
+-- Admin > Posts > Drafts does not list it, and the marker stops any retry.
+-- This block does not depend on that marker. If the slug is missing, insert
+-- the same post. If the row is already there, change only status, the
+-- publish time, and the hero image.
+-- The marker is written only after that row is actually published with this
+-- date and image, so a failed insert is tried again on the next boot.
+DO $publish_sgpost$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM applied_content_updates
+    WHERE id = 'publish-dementia-caregiver-support-group-2026-09-28'
+  ) THEN
+    INSERT INTO posts (
+      slug,
+      title,
+      excerpt,
+      body,
+      hero_image,
+      hero_image_alt,
+      author,
+      category,
+      status,
+      meta_title,
+      meta_description,
+      published_at
+    )
+    SELECT
+      $pubsg$dementia-caregiver-support-group$pubsg$,
+      $pubsg$What a Dementia Caregiver Support Group Is Like$pubsg$,
+      $pubsg$Caring for a parent with dementia? Here's what a caregiver support group is, what happens at a meeting, and how to tell if one is right for you. Plain answers.$pubsg$,
+      $pubsg$It's 4:30 in the afternoon and Mom asks where her car is. She hasn't driven in three years. You tell her it's at the shop. That's the fourth time today.
+
+You don't correct her anymore. You learned that the hard way. You've also stopped telling friends about days like this. They say "that must be so hard" and change the subject. They mean well. They just don't know.
+
+Some people do know. They meet in support groups.
+
+## What a caregiver support group is
+
+A dementia caregiver support group is a regular meeting for the people doing the caring. The son who moved Dad into the spare bedroom. The daughter who drives over every morning before work to make sure Mom took her pills. The spouse, the grandchild, the neighbor who ended up doing more than anyone planned.
+
+It isn't therapy, and it isn't a class. Nobody's there to diagnose your parent or grade how you're doing. It's a group of people in the same situation, usually with a facilitator who keeps the conversation moving and makes sure everyone who wants to talk gets the chance.
+
+Groups meet at churches, hospitals, libraries, and senior care homes. Some meet online. The Alzheimer's Association runs and lists groups across Georgia, and its website has a search by zip code.
+
+## Why it helps
+
+**You stop being the only one.** Dementia care is lonely in a specific way. Your parent may not remember the hard day you both just had. Your friends can't picture it. A group is a room where you don't have to explain the basics. Say "she accused me of stealing her purse again," and nobody flinches.
+
+**You get tips that actually work.** Someone in the room has already dealt with what you're facing this week. The refusing to bathe. The 3 a.m. wandering. The fight over the car keys. They'll tell you what they tried, what failed, and what finally worked. That's hard to find in a pamphlet.
+
+**The stress has somewhere to go.** Caregivers carry a lot they don't say out loud: frustration, guilt about the frustration, fear about money, resentment toward the sibling who calls once a month with advice. Saying it to people who get it takes some of the weight off. It won't all go away, but some of it will.
+
+**You can grieve while your parent is still here.** Dementia takes a person a little at a time. Many caregivers mourn the mom or dad they used to talk to while caring for the one in front of them, and feel strange about it. A group is one of the few places where that grief makes sense to everyone listening.
+
+## What happens at a meeting
+
+Most groups follow a loose pattern. People arrive, get a cup of coffee, and sit in a circle. The facilitator opens, and people go around and say how things have been. Sometimes the whole hour stays there. Sometimes one person's week turns into the conversation.
+
+Some groups bring in a guest now and then. That might be a hospice nurse, an elder law attorney, or someone from a local agency who can explain what help is out there.
+
+You can talk as much as you want. You can also just listen. That's allowed, especially the first time. Nobody will push you to share.
+
+What's said in the room stays in the room. Most groups say that out loud at the start.
+
+## How to know if one is right for you
+
+A group might help if:
+
+- You haven't told anyone how hard this really is.
+- You keep searching online at night for answers to the same problems.
+- You feel short-tempered with your parent and guilty afterward.
+- Your own doctor's appointments keep getting pushed back.
+- You're starting to wonder what comes next, and you don't know who to ask.
+
+Try a group more than once before you decide. The first meeting can feel awkward. The second is usually easier, because now you know a face or two.
+
+If a group isn't for you, that's fine too. Some people do better one on one with a counselor. Some prefer an online group they can join after bedtime. The Alzheimer's Association also runs a free 24/7 Helpline at [800-272-3900](tel:+18002723900), staffed by people trained in dementia care. What matters is that you're not carrying this alone.
+
+## If you can't get away
+
+For a lot of caregivers, the hardest part is leaving the house. Somebody has to be with Mom.
+
+Ask a sibling or a friend for one afternoon a month. Be specific about the day and the time. People who say "let me know if you need anything" often mean it. They just need to be told what to do.
+
+Some senior care homes also offer respite stays, a short stay where your parent is cared for while you rest or handle your own life for a few days. It's worth asking about, even if you're not ready to use it yet.
+
+## A group that meets near you
+
+The Joy Senior Living is a licensed personal care home in Loganville, right on the Gwinnett edge. We host a Dementia Caregiver Support Group on site on the third Thursday of every month at 2pm.
+
+It's free and open to anyone caring for someone with dementia. You don't need a parent living with us, and you don't need to be thinking about a move. If you live in Walton or Gwinnett County and you're doing this at home, you're welcome.
+
+For details, call [(470) 684-3569](tel:+14706843569) or email [hello@joyseniorcare.com](mailto:hello@joyseniorcare.com). You don't need to bring anything or prepare anything.
+
+Mom will probably ask about her car again tomorrow. Come tell us what you said.
+
+Adam Upchurch\
+Owner, The Joy Senior Living
+$pubsg$,
+      $pubsg$https://pub-6e43e90472054fe3880f53e8c0ca3b60.r2.dev/blog/community-6-256645.jpg$pubsg$,
+      $pubsg$The garden and grounds at Joy Senior Living$pubsg$,
+      $pubsg$Adam Upchurch$pubsg$,
+      $pubsg$articles$pubsg$,
+      $pubsg$published$pubsg$,
+      NULL,
+      $pubsg$Caring for a parent with dementia? Here's what a caregiver support group is, what happens at a meeting, and how to tell if one is right for you. Plain answers.$pubsg$,
+      TIMESTAMPTZ '2026-09-28 12:00:00 America/New_York'
+    WHERE NOT EXISTS (
+      SELECT 1 FROM posts WHERE slug = $pubsg$dementia-caregiver-support-group$pubsg$
+    );
+
+    UPDATE posts SET
+      status = 'published',
+      published_at = TIMESTAMPTZ '2026-09-28 12:00:00 America/New_York',
+      hero_image = $pubsg$https://pub-6e43e90472054fe3880f53e8c0ca3b60.r2.dev/blog/community-6-256645.jpg$pubsg$,
+      hero_image_alt = $pubsg$The garden and grounds at Joy Senior Living$pubsg$,
+      updated_at = now()
+    WHERE slug = $pubsg$dementia-caregiver-support-group$pubsg$;
+
+    IF EXISTS (
+      SELECT 1 FROM posts
+      WHERE slug = $pubsg$dementia-caregiver-support-group$pubsg$
+        AND status = 'published'
+        AND published_at = TIMESTAMPTZ '2026-09-28 12:00:00 America/New_York'
+        AND hero_image = $pubsg$https://pub-6e43e90472054fe3880f53e8c0ca3b60.r2.dev/blog/community-6-256645.jpg$pubsg$
+    ) THEN
+      INSERT INTO applied_content_updates (id)
+      VALUES ('publish-dementia-caregiver-support-group-2026-09-28');
+    END IF;
+  END IF;
+END
+$publish_sgpost$;

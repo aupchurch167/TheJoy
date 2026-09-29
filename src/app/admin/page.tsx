@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { requireAdmin } from "@/lib/require-admin";
 import { hasDatabase } from "@/lib/db";
-import { getAllPosts } from "@/lib/posts";
+import { adminListStatus, getAllPosts } from "@/lib/posts";
 import { getAllLeads, getSourceReport, getFamilyMembers } from "@/lib/leads";
 import { getAllBroadcasts } from "@/lib/broadcasts";
 import { getKeywordTrends, rankLoggingEnabled } from "@/lib/ranks";
@@ -91,9 +91,9 @@ export default async function AdminDashboard() {
   const tourRate = totalLeads > 0 ? toured / totalLeads : null;
 
   // Content metrics
-  const published = posts.filter((p) => p.status === "published").length;
-  const draftPosts = posts.filter((p) => p.status === "draft").length;
-  const scheduledPosts = posts.filter((p) => p.status === "scheduled").length;
+  const published = posts.filter((p) => adminListStatus(p) === "published").length;
+  const draftPosts = posts.filter((p) => adminListStatus(p) === "draft").length;
+  const scheduledPosts = posts.filter((p) => adminListStatus(p) === "scheduled").length;
   const draftEmails = broadcasts.filter((b) => b.status === "draft").length;
 
   const bestRank = trends.reduce<number | null>((best, t) => {
@@ -209,8 +209,8 @@ export default async function AdminDashboard() {
                     <p className="min-w-0 truncate font-medium text-ink">
                       {p.title || "(untitled)"}
                     </p>
-                    <Badge tone={POST_TONE[p.status] ?? "neutral"}>
-                      {p.status}
+                    <Badge tone={POST_TONE[adminListStatus(p)] ?? "neutral"}>
+                      {adminListStatus(p)}
                     </Badge>
                   </Link>
                 </li>
