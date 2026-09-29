@@ -1,6 +1,6 @@
 import { requireAdmin } from "@/lib/require-admin";
 import { hasDatabase } from "@/lib/db";
-import { getAllPosts, type Post } from "@/lib/posts";
+import { adminListStatus, getAllPosts, type Post } from "@/lib/posts";
 import { formatDate } from "@/lib/format";
 import { PageHeader, ButtonLink, EmptyState, NotConnected } from "@/components/admin/ui";
 import PostsList, { type PostItem } from "./PostsList";
@@ -53,17 +53,20 @@ export default async function PostsPage() {
     );
   }
 
-  const items: PostItem[] = posts.map((p) => ({
-    id: p.id,
-    title: p.title,
-    slug: p.slug,
-    category: p.category,
-    author: p.author || "Joy Senior Living",
-    status: p.status as PostItem["status"],
-    heroImage: p.hero_image,
-    readingMin: readingTime(p.body),
-    whenLabel: whenLabel(p),
-  }));
+  const items: PostItem[] = posts.map((p) => {
+    const status = adminListStatus(p);
+    return {
+      id: p.id,
+      title: p.title,
+      slug: p.slug,
+      category: p.category,
+      author: p.author || "Joy Senior Living",
+      status,
+      heroImage: p.hero_image,
+      readingMin: readingTime(p.body),
+      whenLabel: whenLabel({ ...p, status }),
+    };
+  });
 
   return <PostsList posts={items} />;
 }

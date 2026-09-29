@@ -20,6 +20,24 @@ export type Post = {
   updated_at: string;
 };
 
+/**
+ * Status for the Admin > Posts filters. The public site only shows a row when
+ * status is published and published_at is set. A published or scheduled row
+ * with no publish time 404s, and the Drafts tab used to skip it because the
+ * stored status is not draft. Count that row as a draft so it is visible.
+ */
+export function adminListStatus(
+  post: Pick<Post, "status" | "published_at">
+): PostStatus {
+  if (
+    (post.status === "published" || post.status === "scheduled") &&
+    !post.published_at
+  ) {
+    return "draft";
+  }
+  return post.status;
+}
+
 export type PostInput = {
   slug: string;
   title: string;
