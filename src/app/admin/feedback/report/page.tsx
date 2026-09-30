@@ -4,6 +4,9 @@ import {
   getFeedbackSummary,
   listReadableResponses,
   getFeedbackTrend,
+  listRounds,
+  roundLabel,
+  isRoundKey,
   type FeedbackRange,
 } from "@/lib/feedback";
 import { aiEnabled } from "@/lib/ai";
@@ -37,8 +40,19 @@ function resolveRange(sp: {
   preset?: string;
   from?: string;
   to?: string;
+  round?: string;
 }): ResolvedRange {
   const preset = sp.preset ?? "all";
+  if (preset === "round" && isRoundKey(sp.round))
+    return {
+      preset,
+      label: `${roundLabel(sp.round)} round`,
+      round: sp.round,
+      from: null,
+      to: null,
+      fromInput: "",
+      toInput: "",
+    };
   const now = new Date();
   const ms = now.getTime();
   const day = 24 * 60 * 60 * 1000;
@@ -74,7 +88,12 @@ function resolveRange(sp: {
 export default async function FeedbackReportPage({
   searchParams,
 }: {
-  searchParams: Promise<{ preset?: string; from?: string; to?: string }>;
+  searchParams: Promise<{
+    preset?: string;
+    from?: string;
+    to?: string;
+    round?: string;
+  }>;
 }) {
   await requireAdmin();
 
@@ -89,10 +108,11 @@ export default async function FeedbackReportPage({
 
   const range = resolveRange(await searchParams);
 
-  const [summary, responses, trend] = await Promise.all([
+  const [summary, responses, trend, rounds] = await Promise.all([
     getFeedbackSummary(range),
     listReadableResponses(range),
     getFeedbackTrend(12),
+    listRounds(),
   ]);
 
   const generated = formatDate(new Date());
@@ -131,6 +151,8 @@ export default async function FeedbackReportPage({
       <div className="mb-6">
         <ReportRange
           preset={range.preset}
+          round={range.round ?? null}
+          rounds={rounds.map((r) => ({ value: r, label: roundLabel(r) }))}
           from={range.fromInput}
           to={range.toInput}
         />
@@ -139,8 +161,10 @@ export default async function FeedbackReportPage({
       <FeedbackSummary summary={summary} />
 
       <AiSummary
+        key={range.label}
         from={range.from ?? null}
         to={range.to ?? null}
+        round={range.round ?? null}
         label={range.label}
         aiEnabled={aiEnabled()}
       />

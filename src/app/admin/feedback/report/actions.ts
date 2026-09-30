@@ -4,6 +4,7 @@ import { requireAdmin } from "@/lib/require-admin";
 import {
   getFeedbackSummary,
   listReadableResponses,
+  isRoundKey,
   type FeedbackRange,
 } from "@/lib/feedback";
 import { summarizeFeedback, aiEnabled, type FeedbackDigest } from "@/lib/ai";
@@ -33,6 +34,9 @@ export async function summarizeFeedbackReport(
       ok: false,
       error: "AI is not configured yet (set ANTHROPIC_API_KEY).",
     };
+  }
+  if (range.round && !isRoundKey(range.round)) {
+    return { ok: false, error: "Unknown round." };
   }
   try {
     const [summary, responses] = await Promise.all([

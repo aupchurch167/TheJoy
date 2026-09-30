@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { requireAdmin } from "@/lib/require-admin";
 import { hasDatabase } from "@/lib/db";
 import {
@@ -5,6 +6,10 @@ import {
   listReadableResponses,
   listCallbackRequests,
   getFeedbackSummary,
+  listRounds,
+  roundLabel,
+  currentRoundLabel,
+  isRoundKey,
   SURVEY_MIN_INTERVAL_DAYS,
 } from "@/lib/feedback";
 import {
@@ -33,7 +38,45 @@ import {
 
 export const dynamic = "force-dynamic";
 
-export default async function FeedbackPage() {
+/**
+ * Round picker. Each round is the month a survey went out; the page opens on
+ * the newest one so a new round is never averaged in with the last.
+ */
+function RoundPicker({
+  rounds,
+  active,
+}: {
+  rounds: string[];
+  active: string | null;
+}) {
+  const pill = (on: boolean) =>
+    `rounded-full px-3 py-1 text-sm font-medium transition-colors ${
+      on ? "bg-clay text-white" : "border border-line text-ink-soft hover:bg-surface"
+    }`;
+  return (
+    <div className="mb-6 flex flex-wrap items-center gap-1.5">
+      <span className="mr-1 text-sm text-ink-soft">Round:</span>
+      {rounds.map((r) => (
+        <Link
+          key={r}
+          href={`/admin/feedback?round=${r}`}
+          className={pill(active === r)}
+        >
+          {roundLabel(r)}
+        </Link>
+      ))}
+      <Link href="/admin/feedback?round=all" className={pill(active === null)}>
+        All rounds
+      </Link>
+    </div>
+  );
+}
+
+export default async function FeedbackPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ round?: string }>;
+}) {
   await requireAdmin();
 
   if (!hasDatabase()) {
@@ -45,14 +88,25 @@ export default async function FeedbackPage() {
     );
   }
 
+  // ?round=YYYY-MM picks a round, ?round=all shows everything, and no param
+  // opens on the newest round.
+  const rounds = await listRounds();
+  const param = (await searchParams).round;
+  const round: string | null =
+    param === "all"
+      ? null
+      : isRoundKey(param) && rounds.includes(param)
+        ? param
+        : (rounds[0] ?? null);
+
   const [requests, responses, callbacks, families, smsCount, summary] =
     await Promise.all([
-      listFeedbackRequests(),
-      listReadableResponses(),
+      listFeedbackRequests(round),
+      listReadableResponses({ round }),
       listCallbackRequests(),
       getSubscribedByAudience("families"),
       countFamilySurveyTextable(),
-      getFeedbackSummary(),
+      getFeedbackSummary({ round }),
     ]);
   const familyCount = families.length;
 
@@ -88,14 +142,24 @@ export default async function FeedbackPage() {
               emailEnabled={emailEnabled()}
               smsEnabled={smsEnabled()}
               intervalDays={SURVEY_MIN_INTERVAL_DAYS}
+              roundName={currentRoundLabel()}
             />
             <SendSurveyForm />
           </div>
         }
       />
 
+      {rounds.length > 0 && <RoundPicker rounds={rounds} active={round} />}
+
       {/* Compilation */}
-      <FeedbackSummary summary={summary} reportHref="/admin/feedback/report" />
+      <FeedbackSummary
+        summary={summary}
+        reportHref={
+          round
+            ? `/admin/feedback/report?preset=round&round=${round}`
+            : "/admin/feedback/report"
+        }
+      />
 
       {/* Requests */}
       <section>
