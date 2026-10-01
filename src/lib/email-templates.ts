@@ -13,8 +13,11 @@
  * resident goes to the families list. The letter shell (letterhead, badges,
  * footer, unsubscribe) is added automatically, so bodies start at the greeting.
  *
- * This file is pure data (client-safe): no server imports.
+ * This file is pure data (client-safe): no server imports. The Book a tour
+ * button uses TOUR_URL from site.ts so it stays on the TalkFurther scheduler.
  */
+
+import { TOUR_URL } from "./site";
 
 export type TemplateAudience = "leads" | "families" | "any";
 
@@ -72,7 +75,7 @@ The best way to understand a small home is to stand in it. Come by, meet me, and
 
 I can usually work around your schedule, including evenings and weekends. Tell me a day that works and I will hold a time for you.
 
-[[button:Book a tour|https://www.joyseniorcare.com/tour]]
+[[button:Book a tour|${TOUR_URL}]]
 
 Or call and ask for me at (470) 684-3569.
 

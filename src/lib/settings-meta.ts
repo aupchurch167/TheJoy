@@ -83,7 +83,7 @@ export const SETTING_META: Record<
   },
   talkfurther_url: {
     label: "Tour link (TalkFurther)",
-    hint: "The TalkFurther scheduler link, used when the toggle above is on. Blank falls back to the on-site Tour page.",
+    hint: "The TalkFurther scheduler link, used when the toggle above is on. Leave blank to use https://www.joyseniorcare.com/#/further/55.",
     type: "url",
     group: "Contact & links",
   },

@@ -1,5 +1,5 @@
 import Anthropic from "@anthropic-ai/sdk";
-import { BUSINESS } from "./site";
+import { BUSINESS, TOUR_URL } from "./site";
 import { BIRTHDAY_INVITE_HTML } from "./email-designs";
 import type { EmailPlan } from "./email-model";
 
@@ -461,7 +461,7 @@ ${styleBrief(style)}
 The email is rendered inside a warm, Georgia-serif letter template (letterhead, award badges, and footer are added for you). Compose the BODY in Markdown, and you may use these building blocks for structure and flair:
 - "# Headline" for the opening line, and "## Subheading" for sections.
 - "> quote" for a pull-quote (renders with an accent bar). Only quote REAL words the operator provides; never invent a testimonial.
-- [[button:Label|https://... or tel:+1...]] for a filled call-to-action button (e.g. [[button:Book a tour|https://www.joyseniorcare.com/tour]] or [[button:Call (470) 684-3569|tel:+14706843569]]).
+- [[button:Label|https://... or tel:+1...]] for a filled call-to-action button (e.g. [[button:Book a tour|${TOUR_URL}]] or [[button:Call (470) 684-3569|tel:+14706843569]]).
 - [[banner:Short line]] for a centered accent band (great for a birthday or holiday cheer).
 - [[divider]] for a small ornamental divider between sections.
 - {{first_name}} to greet the recipient by name (it is filled per person at send).

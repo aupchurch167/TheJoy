@@ -7,7 +7,7 @@ import {
   resetLinkInBio,
   validateLinkInBioV2,
   linkInBioV2Defaults,
-  LINKINBIO_TOUR_HREF,
+  withPinnedTourHref,
   type LinkInBioContentV2,
 } from "@/lib/linkinbio";
 
@@ -15,16 +15,9 @@ export type LinkInBioResult =
   | { ok: true; message: string; content: LinkInBioContentV2 }
   | { ok: false; error: string };
 
-/** Coerce the tour-pinned link back to /tour before saving (defense in depth). */
+/** Coerce the tour link onto TalkFurther before saving (defense in depth). */
 function pinTour(content: LinkInBioContentV2): LinkInBioContentV2 {
-  return {
-    ...content,
-    blocks: content.blocks.map((b) =>
-      b.type === "link" && b.pinned === "tour"
-        ? { ...b, url: LINKINBIO_TOUR_HREF }
-        : b
-    ),
-  };
+  return withPinnedTourHref(content);
 }
 
 export async function saveLinkInBioContent(

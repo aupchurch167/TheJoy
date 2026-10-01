@@ -1,12 +1,25 @@
-import { TOUR_URL } from "@/lib/site";
+import { SITE_URL, TOUR_URL } from "@/lib/site";
 
 /**
  * The ONE tour path for the entire site (TalkFurther). Every "book a tour"
  * action on the site routes through here. Do not add other tour links.
  *
  * The destination comes from site settings (talkfurther_url); server components
- * pass it via `href`. Falls back to the env/phone tour path when omitted.
+ * pass it via `href`. Falls back to TOUR_URL when omitted.
  */
+
+/** Same-origin links (including the TalkFurther hash URL) stay in this tab. */
+function opensInNewTab(url: string): boolean {
+  if (!/^https?:/i.test(url)) return false;
+  try {
+    const host = new URL(url).hostname.replace(/^www\./i, "").toLowerCase();
+    const siteHost = new URL(SITE_URL).hostname.replace(/^www\./i, "").toLowerCase();
+    return host !== siteHost;
+  } catch {
+    return true;
+  }
+}
+
 export default function TourButton({
   children = "Book a tour",
   variant = "primary",
@@ -26,7 +39,7 @@ export default function TourButton({
       ? "bg-clay text-white hover:bg-clay-dark"
       : "bg-white text-clay ring-1 ring-clay/30 hover:bg-clay/5";
 
-  const external = /^https?:/i.test(url);
+  const external = opensInNewTab(url);
 
   return (
     <a

@@ -3,6 +3,8 @@ import { hasDatabase, query } from "./db";
 import {
   linkInBioV2Defaults,
   newLinkBlock,
+  withPinnedTourHref,
+  LINKINBIO_TOUR_HREF,
   type Block,
   type LinkBlock,
   type LinkInBioContentV2,
@@ -56,15 +58,17 @@ function isV2(v: unknown): v is LinkInBioContentV2 {
  *   3. else the shipped defaults.
  */
 export const getLinkInBio = cache(async (): Promise<LinkInBioContentV2> => {
-  if (!hasDatabase()) return linkInBioV2Defaults();
+  if (!hasDatabase()) return withPinnedTourHref(linkInBioV2Defaults());
   try {
     const v2 = await readSetting(LINKINBIO_V2_KEY);
-    if (isV2(v2)) return v2;
+    if (isV2(v2)) return withPinnedTourHref(v2);
     const v1 = await readSetting(LINKINBIO_V1_KEY);
-    if (v1 && typeof v1 === "object") return migrateFromV1(v1 as Record<string, unknown>);
-    return linkInBioV2Defaults();
+    if (v1 && typeof v1 === "object") {
+      return withPinnedTourHref(migrateFromV1(v1 as Record<string, unknown>));
+    }
+    return withPinnedTourHref(linkInBioV2Defaults());
   } catch {
-    return linkInBioV2Defaults();
+    return withPinnedTourHref(linkInBioV2Defaults());
   }
 });
 
@@ -166,7 +170,12 @@ function migrateFromV1(old: Record<string, unknown>): LinkInBioContentV2 {
     );
   }
   blocks.push(
-    newLinkFrom({ title: str("tourLabel", "Book a tour"), url: "/tour", style: "filled", pinned: "tour" })
+    newLinkFrom({
+      title: str("tourLabel", "Book a tour"),
+      url: LINKINBIO_TOUR_HREF,
+      style: "filled",
+      pinned: "tour",
+    })
   );
   if (str("callLabel")) {
     blocks.push(newLinkFrom({ title: str("callLabel"), url: str("callHref"), style: "filled" }));

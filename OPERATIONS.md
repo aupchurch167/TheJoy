@@ -80,7 +80,11 @@ site never publishes made-up quotes:
       Google Business Profile exactly (name, address, phone must match).
 - [ ] Confirm **memory care** is within Joy's personal care home license. If it
       is not, set `MEMORY_CARE.enabled = false` in `src/lib/site.ts`.
-- [ ] Paste the real **TalkFurther** tour URL into `NEXT_PUBLIC_TALKFURTHER_URL`.
+- [x] TalkFurther tour URL. The default in `src/lib/site.ts` is
+      `https://www.joyseniorcare.com/#/further/55` (instance 55). Set the same
+      value as `NEXT_PUBLIC_TALKFURTHER_URL` on the Railway app service only
+      to override it, then redeploy (Next.js inlines `NEXT_PUBLIC_*` at build
+      time). A blank or phone value is ignored.
 - [ ] Add Mellissa's photo + words, and the real testimonials (section 3).
 - [ ] Update the award year in `AWARD` once a year.
 
@@ -92,7 +96,8 @@ See `.env.example` for the full list with comments. The important ones:
 
 - `DATABASE_URL` — set automatically when you add Railway Postgres.
 - `NEXT_PUBLIC_SITE_URL` — `https://joyseniorcare.com`.
-- `NEXT_PUBLIC_TALKFURTHER_URL` — the tour link.
+- `NEXT_PUBLIC_TALKFURTHER_URL` — optional override for the Book a tour link.
+  When unset, the site uses `https://www.joyseniorcare.com/#/further/55`.
 - `RESEND_API_KEY`, `EMAIL_FROM`, `LEAD_NOTIFY_TO` — email (optional; the site
   works without them, it just will not send emails yet).
 - `CONNECTEAM_API_KEY` — optional; syncs the staff roster for team feedback
@@ -696,12 +701,14 @@ moment (the header and footer read these on every page).
 
 - **Careers link**: paste your Indeed ads URL to show a **Careers** link in the
   header and footer (it opens in a new tab). Leave it blank to hide the link.
-- **Tour link**: paste your TalkFurther URL. Blank falls back to the phone
-  number so the button never dead-ends.
+- **Tour link**: paste a TalkFurther URL to override the built-in scheduler.
+  Leave it blank to use `https://www.joyseniorcare.com/#/further/55`. A phone
+  link stored here is ignored. Call buttons elsewhere still use the phone.
 - URL fields must be a real http(s) link (or blank); the others cannot be blank.
 
-Two of these seed blank on purpose and are yours to fill in the admin screen the
-first time: **Careers link** (your Indeed URL) and **Tour link** (TalkFurther).
+The **Careers link** (your Indeed URL) seeds blank on purpose and is yours to
+fill in the admin screen the first time. The **Tour link** can stay blank: Book
+a tour already opens the TalkFurther scheduler.
 
 Adding a brand-new setting key later is a one-line change in `src/lib/settings.ts`
 (and `settings-meta.ts` for its label); no other code is needed.

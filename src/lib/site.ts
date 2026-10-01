@@ -84,15 +84,6 @@ export const DCH_REPORTS: { label: string; href: string }[] = [
 ];
 
 /**
- * The ONE tour path for the whole site (TalkFurther). The old site had three
- * conflicting CTAs; this is the single one. Set the real TalkFurther URL in
- * the NEXT_PUBLIC_TALKFURTHER_URL env var (Railway). Until then this falls
- * back to the phone number so the button never dead-ends.
- */
-export const TOUR_URL =
-  process.env.NEXT_PUBLIC_TALKFURTHER_URL || BUSINESS.phoneHref;
-
-/**
  * Public site URL (used for canonical links, sitemap, schema, robots Host).
  * The canonical host is www. The proxy 301s the apex (and http, when the
  * request reaches the app) to this origin in one hop.
@@ -115,6 +106,38 @@ function canonicalSiteUrl(raw: string): string {
 export const SITE_URL = canonicalSiteUrl(
   process.env.NEXT_PUBLIC_SITE_URL || "https://www.joyseniorcare.com"
 );
+
+/**
+ * Owner-approved TalkFurther scheduler (instance 55). This is the ONE tour
+ * path for the whole site. NEXT_PUBLIC_TALKFURTHER_URL (Railway, inlined at
+ * build time) may override it. A blank or phone value never wins: Book a tour
+ * stays on this scheduler, and call buttons keep using BUSINESS.phoneHref.
+ */
+export const TALKFURTHER_TOUR_URL = `${SITE_URL}/#/further/55`;
+
+function configuredTourUrl(): string | undefined {
+  const raw = process.env.NEXT_PUBLIC_TALKFURTHER_URL?.trim();
+  if (!raw || raw.toLowerCase().startsWith("tel:")) return undefined;
+  // A same-origin hash path (the form in .env.example) is not a full URL.
+  // Absolutize it so email and drip links work outside the browser.
+  if (raw.startsWith("#")) return `${SITE_URL}/${raw}`;
+  if (raw.startsWith("/#")) return `${SITE_URL}${raw}`;
+  return raw;
+}
+
+export const TOUR_URL = configuredTourUrl() || TALKFURTHER_TOUR_URL;
+
+/** True when a stored tour link is missing or still a click-to-call fallback. */
+export function isUnsetTourUrl(value: string | null | undefined): boolean {
+  const v = (value || "").trim();
+  return v === "" || v.toLowerCase().startsWith("tel:");
+}
+
+/** Stored scheduler URL, or TOUR_URL when that value is blank or a phone link. */
+export function resolveTourUrl(value: string | null | undefined): string {
+  const v = (value || "").trim();
+  return isUnsetTourUrl(v) ? TOUR_URL : v;
+}
 
 /**
  * Default social-share image (og:image / twitter:image). Points at the

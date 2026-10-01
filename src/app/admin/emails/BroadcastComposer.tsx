@@ -27,6 +27,7 @@ import ConfirmButton from "@/components/admin/ConfirmButton";
 import ImageCropper from "@/components/admin/ImageCropper";
 import { useToast } from "@/components/admin/Toast";
 import { formatDateTime, formatSource } from "@/lib/format";
+import { TOUR_URL } from "@/lib/site";
 
 const INPUT =
   "w-full rounded-lg border border-line bg-white px-3 py-2.5 text-sm text-ink placeholder:text-ink-faint transition-colors focus:border-clay focus:outline-none focus:ring-2 focus:ring-clay/30";
@@ -994,7 +995,11 @@ export default function BroadcastComposer({
                     value={insUrl}
                     onChange={(e) => setInsUrl(e.target.value)}
                     onKeyDown={(e) => e.key === "Enter" && confirmInsert()}
-                    placeholder="https://… , tel:+1…, or mailto:…"
+                    placeholder={
+                      insertKind === "button"
+                        ? TOUR_URL
+                        : "https://… , tel:+1…, or mailto:…"
+                    }
                     className={`${INPUT} mt-1 h-9`}
                   />
                 </label>
