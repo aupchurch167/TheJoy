@@ -1794,3 +1794,75 @@ UPDATE posts SET
 WHERE strpos(body, $md$[Schedule a visit](/tour)$md$) > 0
    OR strpos(body, $md$[Schedule a consultation for personal care](/tour)$md$) > 0
    OR strpos(body, $md$[joyseniorcare.com/tour](/tour)$md$) > 0;
+
+-- Published RSVP page for the Oct 26, 2026 Dementia Caregiver Support Group
+-- (Caring for Yourself). One marker. A later boot skips this block, so an
+-- edit or a delete in Admin is left alone, and the row is not inserted again.
+--
+-- Columns match createEvent: title, description, location, starts_at, ends_at,
+-- capacity, status, event_type, theme, is_potluck, potluck_ask, body_heading,
+-- what_to_expect, closing_note, rsvp_token, created_by. id, created_at, and
+-- updated_at use the table defaults. created_by is null (no admin session).
+--
+-- This insert does not create a broadcast, a drip, or any other send.
+-- The marker is written only after the published row is present.
+DO $apply_care1026$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM applied_content_updates
+    WHERE id = 'event-dementia-caregiver-caring-for-yourself-2026-10-26'
+  ) THEN
+    INSERT INTO events (
+      title,
+      description,
+      location,
+      starts_at,
+      ends_at,
+      capacity,
+      status,
+      event_type,
+      theme,
+      is_potluck,
+      potluck_ask,
+      body_heading,
+      what_to_expect,
+      closing_note,
+      rsvp_token,
+      created_by
+    )
+    SELECT
+      $c1026$Dementia Caregiver Support Group: Caring for Yourself$c1026$,
+      $c1026$Join us for the Dementia Caregiver Support Group: Caring for Yourself. Hosted by Willowbrook Hospice and open to all caregivers. There is no fee.
+
+[Register on Eventbrite](https://www.eventbrite.com/e/dementia-caregiver-support-group-caring-for-yourself-tickets-2002717387618)$c1026$,
+      $c1026$The Joy Senior Living of Loganville, 434 Conyers Rd, Loganville, GA 30052$c1026$,
+      TIMESTAMPTZ '2026-10-26 14:00:00 America/New_York',
+      TIMESTAMPTZ '2026-10-26 15:00:00 America/New_York',
+      NULL,
+      $c1026$published$c1026$,
+      $c1026$community$c1026$,
+      $c1026$classic$c1026$,
+      FALSE,
+      NULL,
+      $c1026$Caring for Yourself as a Dementia Caregiver$c1026$,
+      $c1026$Doors open at 1:45 PM. Willowbrook Hospice will lead this session for caregivers. No fee; open to all caregivers.$c1026$,
+      NULL,
+      $c1026$a28350145530a5cdafcc598a2df6c286$c1026$,
+      NULL
+    WHERE NOT EXISTS (
+      SELECT 1 FROM events
+      WHERE rsvp_token = $c1026$a28350145530a5cdafcc598a2df6c286$c1026$
+    );
+
+    IF EXISTS (
+      SELECT 1 FROM events
+      WHERE rsvp_token = $c1026$a28350145530a5cdafcc598a2df6c286$c1026$
+        AND status = 'published'
+        AND title = $c1026$Dementia Caregiver Support Group: Caring for Yourself$c1026$
+    ) THEN
+      INSERT INTO applied_content_updates (id)
+      VALUES ('event-dementia-caregiver-caring-for-yourself-2026-10-26');
+    END IF;
+  END IF;
+END
+$apply_care1026$;
