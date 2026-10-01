@@ -14,11 +14,13 @@ import type { FeedbackDigest } from "@/lib/ai";
 export default function AiSummary({
   from,
   to,
+  round = null,
   label,
   aiEnabled,
 }: {
   from: string | null;
   to: string | null;
+  round?: string | null;
   label: string;
   aiEnabled: boolean;
 }) {
@@ -28,7 +30,7 @@ export default function AiSummary({
 
   function generate() {
     start(async () => {
-      const res = await summarizeFeedbackReport({ from, to, label });
+      const res = await summarizeFeedbackReport({ from, to, round, label });
       if (!res.ok) {
         toastError(res.error);
         return;

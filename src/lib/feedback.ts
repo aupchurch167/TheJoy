@@ -37,6 +37,8 @@ export type FeedbackRequest = {
   completed_at: string | null;
   created_by: string;
   created_at: string;
+  /** Feedback round: the month the invitation went out, 'YYYY-MM'. */
+  round: string;
 };
 
 /**
@@ -45,6 +47,44 @@ export type FeedbackRequest = {
  * window, so re-running "send to all" only reaches families who are due again.
  */
 export const SURVEY_MIN_INTERVAL_DAYS = 30;
+
+/**
+ * A feedback round is the calendar month a survey went out ('YYYY-MM'). The
+ * database stamps new requests with the current month (db/schema.sql), so
+ * sending in October makes the October round; a skipped month has no round.
+ */
+export function roundLabel(round: string): string {
+  const [y, m] = round.split("-").map(Number);
+  if (!y || !m) return round;
+  return new Date(Date.UTC(y, m - 1, 1)).toLocaleString("en-US", {
+    month: "long",
+    year: "numeric",
+    timeZone: "UTC",
+  });
+}
+
+/** The round a survey sent right now joins (e.g. "September 2026"). */
+export function currentRoundLabel(): string {
+  return new Date().toLocaleString("en-US", {
+    month: "long",
+    year: "numeric",
+    timeZone: "America/New_York",
+  });
+}
+
+export function isRoundKey(v: unknown): v is string {
+  return typeof v === "string" && /^\d{4}-(0[1-9]|1[0-2])$/.test(v);
+}
+
+/** Every round that has had at least one invitation, newest first. */
+export async function listRounds(): Promise<string[]> {
+  const rows = await query<{ round: string }>(
+    `SELECT DISTINCT round FROM feedback_requests
+      WHERE round IS NOT NULL
+      ORDER BY round DESC`
+  );
+  return rows.map((r) => r.round);
+}
 
 export type FeedbackResponse = {
   id: string;
@@ -62,6 +102,7 @@ export type FeedbackResponse = {
   is_anonymous: boolean;
   sentiment: Sentiment;
   created_at: string;
+  round: string | null;
 };
 
 export type CallbackRequest = {
@@ -237,23 +278,37 @@ export type FeedbackSummary = {
 const numOrNull = (v: unknown): number | null =>
   v === null || v === undefined ? null : Number(v);
 
-/** Optional reporting window (ISO timestamps). Omit a bound to leave it open. */
-export type FeedbackRange = { from?: string | null; to?: string | null };
+/**
+ * Optional reporting filter: a window (ISO timestamps; omit a bound to leave it
+ * open) and/or a single round ('YYYY-MM').
+ */
+export type FeedbackRange = {
+  from?: string | null;
+  to?: string | null;
+  round?: string | null;
+};
 
-/** Build a "created_at BETWEEN ..." clause, pushing bound params as it goes. */
+/**
+ * Build a WHERE clause on `<prefix>created_at` / `<prefix>round`, pushing bound
+ * params as it goes. `prefix` is a table alias with its dot ("resp.") or "".
+ */
 function rangeClause(
-  col: string,
+  prefix: string,
   range: FeedbackRange | undefined,
   params: unknown[]
 ): string {
   const conds: string[] = [];
   if (range?.from) {
     params.push(range.from);
-    conds.push(`${col} >= $${params.length}`);
+    conds.push(`${prefix}created_at >= $${params.length}`);
   }
   if (range?.to) {
     params.push(range.to);
-    conds.push(`${col} <= $${params.length}`);
+    conds.push(`${prefix}created_at <= $${params.length}`);
+  }
+  if (range?.round) {
+    params.push(range.round);
+    conds.push(`${prefix}round = $${params.length}`);
   }
   return conds.length ? `WHERE ${conds.join(" AND ")}` : "";
 }
@@ -266,9 +321,9 @@ export async function getFeedbackSummary(
   range?: FeedbackRange
 ): Promise<FeedbackSummary> {
   const reqParams: unknown[] = [];
-  const reqWhere = rangeClause("created_at", range, reqParams);
+  const reqWhere = rangeClause("", range, reqParams);
   const respParams: unknown[] = [];
-  const respWhere = rangeClause("created_at", range, respParams);
+  const respWhere = rangeClause("", range, respParams);
 
   const [reqRows, respRows, cbRows] = await Promise.all([
     query<{ sent: string; completed: string }>(
@@ -355,6 +410,7 @@ export type ReadableResponse = {
   could_be_better: string | null;
   suggestions: string | null;
   created_at: string;
+  round: string | null;
 };
 
 /** Every response on file for the reader (attributed and anonymous), concerns first. */
@@ -362,14 +418,14 @@ export async function listReadableResponses(
   range?: FeedbackRange
 ): Promise<ReadableResponse[]> {
   const params: unknown[] = [];
-  const where = rangeClause("resp.created_at", range, params);
+  const where = rangeClause("resp.", range, params);
   return query<ReadableResponse>(
     `SELECT resp.id, resp.request_id, req.family_name, resp.is_anonymous,
             resp.overall_rating, resp.sentiment, resp.would_recommend,
             resp.rating_care, resp.rating_communication, resp.rating_dining,
             resp.rating_home_feel, resp.rating_engagement,
             resp.going_well, resp.could_be_better, resp.suggestions,
-            resp.created_at
+            resp.created_at, resp.round
        FROM feedback_responses resp
        LEFT JOIN feedback_requests req ON req.id = resp.request_id
        ${where}
@@ -378,38 +434,40 @@ export async function listReadableResponses(
   );
 }
 
-/** One month's bucket for the trend view. */
+/** One round's bucket for the trend view. */
 export type FeedbackTrendPoint = {
-  month: string; // 'YYYY-MM'
+  round: string; // 'YYYY-MM'
   responses: number;
   avgOverall: number | null;
   concern: number;
 };
 
 /**
- * Monthly response counts and average rating, oldest to newest, so the report
- * can show how feedback changes over time. Limited to the most recent `months`.
+ * Response counts and average rating per round, oldest to newest, so the report
+ * can show how feedback changes from one round to the next. Limited to the most
+ * recent `rounds`.
  */
-export async function getFeedbackTrend(months = 12): Promise<FeedbackTrendPoint[]> {
+export async function getFeedbackTrend(rounds = 12): Promise<FeedbackTrendPoint[]> {
   const rows = await query<{
-    month: string;
+    round: string;
     responses: string;
     avg_overall: string | null;
     concern: string;
   }>(
-    `SELECT to_char(date_trunc('month', created_at), 'YYYY-MM') AS month,
+    `SELECT round,
             COUNT(*) AS responses,
             AVG(overall_rating) AS avg_overall,
             COUNT(*) FILTER (WHERE sentiment = 'concern') AS concern
        FROM feedback_responses
+      WHERE round IS NOT NULL
       GROUP BY 1
       ORDER BY 1 DESC
       LIMIT $1`,
-    [months]
+    [rounds]
   );
   return rows
     .map((r) => ({
-      month: r.month,
+      round: r.round,
       responses: Number(r.responses),
       avgOverall: numOrNull(r.avg_overall),
       concern: Number(r.concern),
@@ -417,7 +475,9 @@ export async function getFeedbackTrend(months = 12): Promise<FeedbackTrendPoint[
     .reverse();
 }
 
-export async function listFeedbackRequests(): Promise<FeedbackRequestRow[]> {
+export async function listFeedbackRequests(
+  round?: string | null
+): Promise<FeedbackRequestRow[]> {
   return query<FeedbackRequestRow>(
     `SELECT r.*,
             resp.overall_rating AS rating, resp.sentiment, resp.would_recommend,
@@ -426,7 +486,9 @@ export async function listFeedbackRequests(): Promise<FeedbackRequestRow[]> {
             resp.going_well, resp.could_be_better, resp.suggestions
        FROM feedback_requests r
        LEFT JOIN feedback_responses resp ON resp.request_id = r.id
-      ORDER BY r.created_at DESC`
+      WHERE ($1::text IS NULL OR r.round = $1)
+      ORDER BY r.created_at DESC`,
+    [round ?? null]
   );
 }
 
@@ -435,6 +497,7 @@ export async function listFeedbackRequests(): Promise<FeedbackRequestRow[]> {
 /**
  * Store a survey response. When anonymous, request_id is left NULL so the
  * answers can't be tied to the family; the request is still stamped completed.
+ * The response carries the request's round either way.
  * Returns the new response row.
  */
 export async function submitResponse(input: {
@@ -457,8 +520,9 @@ export async function submitResponse(input: {
     `INSERT INTO feedback_responses
        (request_id, overall_rating, rating_care, rating_communication,
         rating_dining, rating_home_feel, rating_engagement, would_recommend,
-        going_well, could_be_better, suggestions, is_anonymous, sentiment)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+        going_well, could_be_better, suggestions, is_anonymous, sentiment,
+        round)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
      RETURNING *`,
     [
       input.anonymous ? null : input.request.id,
@@ -474,6 +538,9 @@ export async function submitResponse(input: {
       input.suggestions?.trim() || null,
       input.anonymous,
       sentiment,
+      // The round of the link, not the day it was answered, so a late answer
+      // still counts toward the round that asked for it.
+      input.request.round,
     ]
   );
   // The request is marked completed either way (so the admin sees it was done).

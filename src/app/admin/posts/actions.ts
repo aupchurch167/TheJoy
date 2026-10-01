@@ -11,6 +11,7 @@ import {
   slugify,
   type PostStatus,
 } from "@/lib/posts";
+import { submitToIndexNow, postUrls } from "@/lib/indexnow";
 
 const PostSchema = z.object({
   id: z.string().uuid().optional(),
@@ -92,6 +93,10 @@ export async function savePost(input: unknown): Promise<SaveResult> {
     revalidatePath("/blog");
     revalidatePath(`/blog/${post.slug}`);
     revalidatePath("/admin");
+
+    // Tell Bing the post is live (or changed). Fire and forget; a failed ping
+    // never fails the save. Scheduled posts ping when the worker publishes them.
+    if (post.status === "published") void submitToIndexNow(postUrls(post.slug));
 
     return { ok: true, id: post.id, slug: post.slug };
   } catch (err) {

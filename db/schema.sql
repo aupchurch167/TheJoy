@@ -866,3 +866,32 @@ CREATE TABLE IF NOT EXISTS applied_content_updates (
   id         TEXT PRIMARY KEY,
   applied_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+
+-- Feedback rounds. A round is the month a survey invitation went out, as
+-- 'YYYY-MM' in the business timezone (e.g. '2026-09'). Every request is
+-- stamped when it is created, and a response inherits the round of the link it
+-- came from (anonymous included), so an August link answered in October still
+-- counts toward August. Skipped months simply have no round.
+ALTER TABLE feedback_requests ADD COLUMN IF NOT EXISTS round TEXT;
+ALTER TABLE feedback_requests ALTER COLUMN round
+  SET DEFAULT to_char(now() AT TIME ZONE 'America/New_York', 'YYYY-MM');
+ALTER TABLE feedback_responses ADD COLUMN IF NOT EXISTS round TEXT;
+UPDATE feedback_requests
+   SET round = to_char(created_at AT TIME ZONE 'America/New_York', 'YYYY-MM')
+ WHERE round IS NULL;
+UPDATE feedback_responses resp
+   SET round = req.round
+  FROM feedback_requests req
+ WHERE resp.round IS NULL AND resp.request_id = req.id;
+-- Older anonymous responses carry no link back, so they go to the latest round
+-- that had gone out by the time they were submitted.
+UPDATE feedback_responses resp
+   SET round = COALESCE(
+         (SELECT max(req.round) FROM feedback_requests req
+           WHERE req.created_at <= resp.created_at),
+         to_char(resp.created_at AT TIME ZONE 'America/New_York', 'YYYY-MM'))
+ WHERE resp.round IS NULL;
+CREATE INDEX IF NOT EXISTS feedback_requests_round_idx
+  ON feedback_requests (round);
+CREATE INDEX IF NOT EXISTS feedback_responses_round_idx
+  ON feedback_responses (round);

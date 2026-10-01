@@ -1,7 +1,7 @@
 import { Card } from "@/components/admin/ui";
 import type { FeedbackTrendPoint } from "@/lib/feedback";
 
-/** Month label from 'YYYY-MM' (e.g. "Aug 2026"). */
+/** Round label from 'YYYY-MM' (e.g. "Aug 2026"). */
 function monthLabel(ym: string): string {
   const [y, m] = ym.split("-").map(Number);
   const name = [
@@ -12,7 +12,7 @@ function monthLabel(ym: string): string {
 }
 
 /**
- * How feedback changed month over month: response volume and average rating,
+ * How feedback changed from one round to the next: response volume and average rating,
  * as simple bars. Rating bar is scaled to 5; the number is shown alongside.
  */
 export default function FeedbackTrend({
@@ -20,7 +20,7 @@ export default function FeedbackTrend({
 }: {
   points: FeedbackTrendPoint[];
 }) {
-  if (points.length < 2) return null; // need at least two months to show a trend
+  if (points.length < 2) return null; // need at least two rounds to show a trend
 
   const maxCount = Math.max(...points.map((p) => p.responses), 1);
 
@@ -30,7 +30,7 @@ export default function FeedbackTrend({
         How it is trending
       </h2>
       <p className="mt-1 text-sm text-ink-soft">
-        Responses and average rating by month.
+        Responses and average rating for each round, by the month the survey went out.
       </p>
 
       <Card className="mt-3">
@@ -39,9 +39,9 @@ export default function FeedbackTrend({
             const ratingPct = p.avgOverall != null ? (p.avgOverall / 5) * 100 : 0;
             const countPct = (p.responses / maxCount) * 100;
             return (
-              <li key={p.month} className="grid grid-cols-[4.5rem_1fr] items-center gap-3">
+              <li key={p.round} className="grid grid-cols-[4.5rem_1fr] items-center gap-3">
                 <span className="text-xs font-medium text-ink-soft">
-                  {monthLabel(p.month)}
+                  {monthLabel(p.round)}
                 </span>
                 <div className="space-y-1">
                   <div className="flex items-center gap-2">

@@ -514,6 +514,13 @@ Using it:
   the callback holds the contact info they chose to give.
 - **Callback requests** table: mark each open / contacted / resolved.
 - Links are single-use; a completed link shows a plain "no longer active" page.
+- **Rounds**: every survey belongs to the round named for the month it went out
+  (September 2026, October 2026, ...). Send once a month or twice a quarter; a
+  skipped month just has no round. An answer counts toward the round of the
+  link it came from, even if the family answers weeks later (anonymous answers
+  too). The Feedback page opens on the newest round, with pills to switch
+  rounds or see all of them together. The report has the same round pills, and
+  its trend chart compares one round to the next.
 - Automatic sends (30/90 days post move-in) are deferred to the Phase 5 cron.
 
 ## 11. Family emails and the photo gallery (Phase 4)
@@ -647,6 +654,26 @@ Repeat deliveries are ignored, so it is safe if TalkFurther retries.
 nightly. It needs a `SERPAPI_KEY` (from serpapi.com); without it the page stays
 empty and nothing is charged. The tracked keywords live in `src/lib/site.ts`
 (`TRACKED_KEYWORDS`) if you want to change them.
+
+### Bing (IndexNow)
+
+IndexNow tells Bing the moment a page is new or changed, so it gets crawled in
+minutes instead of days. (Yandex, Seznam and Naver share the same feed. Google
+does not use it; Search Console covers Google.)
+
+Setup, once:
+
+1. Make up a key: 8 to 128 letters, digits or dashes. Bing's page at
+   bing.com/indexnow/getstarted will generate one for you.
+2. In Railway, set `INDEXNOW_KEY` to that key and redeploy.
+3. Check `https://www.joyseniorcare.com/<your key>.txt` shows the key. That is
+   how Bing confirms the site is ours. (Nothing to upload; the site serves it.)
+4. `/admin > SEO > Send all pages to Bing` once, to submit every page in the
+   sitemap.
+
+After that it runs itself: publishing or editing a blog post pings Bing, and so
+does a scheduled post going live. Pings only go out from the real www domain,
+never the Railway preview URL. Without the key, nothing is sent.
 
 ### Analytics (optional)
 

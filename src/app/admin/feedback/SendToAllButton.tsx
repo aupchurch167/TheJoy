@@ -19,12 +19,14 @@ export default function SendToAllButton({
   emailEnabled,
   smsEnabled,
   intervalDays,
+  roundName,
 }: {
   emailCount: number;
   smsCount: number;
   emailEnabled: boolean;
   smsEnabled: boolean;
   intervalDays: number;
+  roundName: string;
 }) {
   const router = useRouter();
   const { success, error } = useToast();
@@ -88,7 +90,7 @@ export default function SendToAllButton({
         onClick={() => {
           if (
             !window.confirm(
-              `Send a feedback survey by ${channelWord} to eligible family members? ` +
+              `Send the ${roundName} feedback survey by ${channelWord} to eligible family members? ` +
                 `Anyone already surveyed in the last ${intervalDays} days is skipped.`
             )
           )
