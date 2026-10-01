@@ -1,6 +1,13 @@
 import { cache } from "react";
 import { hasDatabase, query } from "./db";
-import { BUSINESS, BUSINESS_ADDRESS_ONE_LINE, TOUR_URL, HERO } from "./site";
+import {
+  BUSINESS,
+  BUSINESS_ADDRESS_ONE_LINE,
+  TOUR_URL,
+  HERO,
+  isUnsetTourUrl,
+  resolveTourUrl,
+} from "./site";
 import { SETTING_KEYS, URL_KEYS, type SettingKey } from "./settings-meta";
 
 /**
@@ -33,7 +40,7 @@ function defaults(): SiteSettings {
     // Book-a-tour mode: "on" opens the TalkFurther scheduler, "" routes to the
     // on-site /tour page (contact form + call Mellissa). Defaults to on.
     tour_use_talkfurther: "on",
-    // Falls back to the env/phone tour path when no setting is stored.
+    // Blank or a stored phone link resolves to TOUR_URL (TalkFurther).
     talkfurther_url: TOUR_URL,
     // Owner/admin numbers that get the required test text before a blast.
     sms_test_numbers: process.env.SMS_TEST_NUMBERS || "",
@@ -77,8 +84,8 @@ export const getSettings = cache(async (): Promise<SiteSettings> => {
       careers_url: get("careers_url") || d.careers_url,
       // tour_use_talkfurther: bool stored as "on"/""; unset falls back to on.
       tour_use_talkfurther: get("tour_use_talkfurther") ?? d.tour_use_talkfurther,
-      // talkfurther_url: empty falls back to the default tour path.
-      talkfurther_url: get("talkfurther_url") || d.talkfurther_url,
+      // talkfurther_url: blank or a phone link uses the TalkFurther default.
+      talkfurther_url: resolveTourUrl(get("talkfurther_url")),
       // sms_test_numbers: empty falls back to the env default (if any).
       sms_test_numbers: get("sms_test_numbers") || d.sms_test_numbers,
       // hero_headline: empty falls back to the built-in headline.
@@ -122,8 +129,15 @@ export async function getAllSettings(): Promise<
   }
   return SETTING_KEYS.map((key) => ({
     key,
-    // careers_url / talkfurther_url default to blank in the editor.
-    value: stored.get(key) ?? (URL_KEYS.includes(key) ? "" : d[key]),
+    // careers_url / talkfurther_url default to blank in the editor. A stored
+    // phone link is treated as unset so the field shows the built-in default
+    // (blank) instead of the old click-to-call fallback.
+    value:
+      key === "talkfurther_url"
+        ? stored.get(key) && !isUnsetTourUrl(stored.get(key))
+          ? stored.get(key)!
+          : ""
+        : (stored.get(key) ?? (URL_KEYS.includes(key) ? "" : d[key])),
   }));
 }
 
@@ -143,14 +157,14 @@ export async function saveSettings(
 
 /**
  * The "Book a tour" destination for the whole site, honoring the admin toggle.
- * When TalkFurther is on, buttons open the scheduler URL (falling back to the
- * on-site /tour page if it is blank); when off, they go to /tour (the contact
- * form + call-Mellissa page). This is the ONE tour path (§ AGENTS.md): the
- * /tour page itself houses the single TalkFurther button.
+ * When TalkFurther is on, buttons open the scheduler (TOUR_URL when the stored
+ * link is blank or still a phone number). When off, they go to /tour (the
+ * contact form plus a call line). The /tour page's own button still opens
+ * TalkFurther.
  */
 export function tourHref(settings: SiteSettings): string {
   if (settings.tour_use_talkfurther === "on") {
-    return settings.talkfurther_url || "/tour";
+    return resolveTourUrl(settings.talkfurther_url);
   }
   return "/tour";
 }

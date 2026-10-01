@@ -10,6 +10,7 @@ import {
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import PhotoInput from "@/components/admin/PhotoInput";
+import { TOUR_URL } from "@/lib/site";
 import MessagePhotos from "./MessagePhotos";
 import {
   saveStudioDraft,
@@ -900,7 +901,7 @@ export default function EmailStudio({
                                     patchCta({ url: e.target.value });
                                     if (linkedEventId) setLinkedEventId(null);
                                   }}
-                                  placeholder="https://joyseniorcare.com/tour"
+                                  placeholder={TOUR_URL}
                                 />
                               </FieldRow>
                               {linkedEventId && (

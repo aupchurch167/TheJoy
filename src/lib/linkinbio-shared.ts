@@ -1,4 +1,4 @@
-import { BUSINESS, BUSINESS_ADDRESS_ONE_LINE } from "./site";
+import { BUSINESS, BUSINESS_ADDRESS_ONE_LINE, TOUR_URL } from "./site";
 
 /**
  * Link-in-bio v2: a profile header + an ordered list of typed blocks (the
@@ -9,8 +9,8 @@ import { BUSINESS, BUSINESS_ADDRESS_ONE_LINE } from "./site";
  * counts) lives in linkinbio.ts, which re-exports everything here.
  *
  * Two project rules override the design handoff and are enforced in validation:
- *  - ONE tour path (AGENTS.md): the tour link block is pinned to /tour; only its
- *    title is editable, never its URL, so a second tour link can't drift in.
+ *  - ONE tour path (AGENTS.md): the tour link block is pinned to the TalkFurther
+ *    scheduler (TOUR_URL); only its title is editable, never its URL.
  *  - Voice + compliance (§2/§4): every editable string is linted (no "assisted
  *    living", no em-dashes, no banned words).
  */
@@ -42,7 +42,7 @@ export type LinkBlock = {
   thumbUrl?: string;
   schedStart?: string; // ISO date (YYYY-MM-DD), optional
   schedEnd?: string;
-  /** "tour" pins this link to the canonical /tour path (URL locked). */
+  /** "tour" pins this link to the TalkFurther scheduler (URL locked). */
   pinned?: "tour";
 };
 export type HeaderBlock = { id: string; type: "header"; text: string; active: boolean };
@@ -90,7 +90,47 @@ export type LinkInBioContentV2 = {
 /* ---------------------------- constants -------------------------------- */
 
 /** The canonical, non-editable tour destination (the site's one tour path). */
-export const LINKINBIO_TOUR_HREF = "/tour";
+export const LINKINBIO_TOUR_HREF = TOUR_URL;
+
+const TOUR_CTA_TITLE = /book(?:\s+a)?\s+tour|schedule(?:\s+a)?\s+tour/i;
+
+/** The old on-site tour page, with or without a trailing slash. Not /tour-checklist. */
+function isLegacyTourPage(value: string): boolean {
+  const v = value.trim();
+  if (v === "/tour" || v === "/tour/") return true;
+  try {
+    const u = new URL(v);
+    const host = u.hostname.replace(/^www\./i, "").toLowerCase();
+    if (host !== "joyseniorcare.com") return false;
+    const path = u.pathname.replace(/\/+$/, "") || "/";
+    return path === "/tour";
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Force the pinned tour block onto TalkFurther. Also retarget a "Book a tour"
+ * (or "Schedule a tour") block that still points at /tour or a phone link.
+ * Call buttons keep their tel: href.
+ */
+export function withPinnedTourHref(content: LinkInBioContentV2): LinkInBioContentV2 {
+  return {
+    ...content,
+    blocks: content.blocks.map((b) => {
+      if (b.type !== "link") return b;
+      if (b.pinned === "tour") return { ...b, url: LINKINBIO_TOUR_HREF };
+      const url = (b.url || "").trim();
+      if (
+        TOUR_CTA_TITLE.test(b.title || "") &&
+        (url.toLowerCase().startsWith("tel:") || isLegacyTourPage(url))
+      ) {
+        return { ...b, url: LINKINBIO_TOUR_HREF };
+      }
+      return b;
+    }),
+  };
+}
 
 /** The fixed regulatory line in the footer (never editable). */
 export const LINKINBIO_LICENSE_LINE =
@@ -319,7 +359,7 @@ function lintCopy(s: string): string | null {
 /**
  * Enforce voice/compliance on all editable copy and validate every link shape.
  * Returns an error string, or null when everything passes. Also the place the
- * tour-pin rule is enforced (pinned tour URL must be /tour).
+ * tour-pin rule is enforced (pinned tour URL must be the TalkFurther scheduler).
  */
 export function validateLinkInBioV2(content: LinkInBioContentV2): string | null {
   const strings: string[] = [content.profile.name, content.profile.bio, content.profile.photoCaption];
@@ -331,7 +371,7 @@ export function validateLinkInBioV2(content: LinkInBioContentV2): string | null 
       links.push([`Link "${b.title || "untitled"}"`, b.url]);
       if (b.showThumb && b.thumbUrl) links.push([`Thumbnail for "${b.title}"`, b.thumbUrl]);
       if (b.pinned === "tour" && b.url.trim() !== LINKINBIO_TOUR_HREF) {
-        return "The tour button always links to /tour (that is the site's one tour path).";
+        return "The tour button always links to the TalkFurther scheduler (the site's one tour path).";
       }
     } else if (b.type === "header") {
       strings.push(b.text);

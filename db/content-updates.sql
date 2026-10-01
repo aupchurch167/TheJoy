@@ -219,16 +219,16 @@ UPDATE posts SET
         replace(
           body,
           'Schedule a visit: ' || chr(92) || '[' || 'calendly link' || chr(92) || ']',
-          '[Schedule a visit](/tour)'
+          '[Schedule a visit](https://www.joyseniorcare.com/#/further/55)'
         ),
         'Schedule a visit: ' || '[' || 'calendly link' || ']',
-        '[Schedule a visit](/tour)'
+        '[Schedule a visit](https://www.joyseniorcare.com/#/further/55)'
       ),
       chr(92) || '[' || 'calendly link' || chr(92) || ']',
-      '[Schedule a visit](/tour)'
+      '[Schedule a visit](https://www.joyseniorcare.com/#/further/55)'
     ),
     '[' || 'calendly link' || ']',
-    '[Schedule a visit](/tour)'
+    '[Schedule a visit](https://www.joyseniorcare.com/#/further/55)'
   ),
   updated_at = now()
 WHERE body LIKE '%' || 'calendly link' || '%';
@@ -617,7 +617,7 @@ Yes. We coordinate with hospice and home health providers. Our Dementia Caregive
 
 ## Come see us
 
-Book a tour at [joyseniorcare.com/tour](/tour) or call [(470) 684-3569](tel:+14706843569). Bring this list and ask Mellissa every question on it. Then take it to the next home and ask them too.
+Book a tour at [joyseniorcare.com](https://www.joyseniorcare.com/#/further/55) or call [(470) 684-3569](tel:+14706843569). Bring this list and ask Mellissa every question on it. Then take it to the next home and ask them too.
 
 Adam Upchurch\
 Owner, The Joy Senior Living
@@ -802,12 +802,12 @@ UPDATE posts SET
 WHERE slug = $md$welcome-to-the-joy$md$
   AND strpos(body, $md$[joyseniorcare.com](http://joyseniorcare.com/)$md$) > 0;
 
--- Old Calendly URL (a previous director). The tour path is /tour.
+-- Old Calendly URL (a previous director). The tour path is TalkFurther.
 UPDATE posts SET
   body = replace(
     body,
     $md$[Schedule a consultation for personal care](https://calendly.com/peppur/tour-the-joy-of-loganville?month=2024-05)$md$,
-    $md$[Schedule a consultation for personal care](/tour)$md$
+    $md$[Schedule a consultation for personal care](https://www.joyseniorcare.com/#/further/55)$md$
   ),
   updated_at = now()
 WHERE slug = $md$balancing-caregiving-for-aging-parents$md$
@@ -1771,3 +1771,26 @@ $pubsg$,
   END IF;
 END
 $publish_sgpost$;
+
+-- In-post tour CTAs that still point at /tour (including rows an older
+-- version of this file pointed at /tour). TalkFurther instance 55. The match
+-- includes the closing paren, so /tour-checklist is left alone. The phone
+-- link stays.
+UPDATE posts SET
+  body = replace(
+    replace(
+      replace(
+        body,
+        $md$[Schedule a visit](/tour)$md$,
+        $md$[Schedule a visit](https://www.joyseniorcare.com/#/further/55)$md$
+      ),
+      $md$[Schedule a consultation for personal care](/tour)$md$,
+      $md$[Schedule a consultation for personal care](https://www.joyseniorcare.com/#/further/55)$md$
+    ),
+    $md$[joyseniorcare.com/tour](/tour)$md$,
+    $md$[joyseniorcare.com](https://www.joyseniorcare.com/#/further/55)$md$
+  ),
+  updated_at = now()
+WHERE strpos(body, $md$[Schedule a visit](/tour)$md$) > 0
+   OR strpos(body, $md$[Schedule a consultation for personal care](/tour)$md$) > 0
+   OR strpos(body, $md$[joyseniorcare.com/tour](/tour)$md$) > 0;

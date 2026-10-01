@@ -4,6 +4,7 @@ import {
   BUSINESS,
   BUSINESS_ADDRESS_ONE_LINE,
   OG_IMAGE,
+  resolveTourUrl,
 } from "@/lib/site";
 import { contactPageJsonLd, breadcrumbJsonLd } from "@/lib/schema";
 import { getSettings, toTelHref } from "@/lib/settings";
@@ -94,7 +95,9 @@ export default async function TourPage() {
         </div>
 
         <div className="mt-8 flex flex-wrap items-center gap-4">
-          <TourButton href={settings.talkfurther_url}>Book a tour</TourButton>
+          <TourButton href={resolveTourUrl(settings.talkfurther_url)}>
+            Book a tour
+          </TourButton>
           <a
             href={toTelHref(settings.phone)}
             className="text-lg font-semibold text-clay hover:text-clay-dark"

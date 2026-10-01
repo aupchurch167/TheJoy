@@ -342,7 +342,9 @@ function BlockCard({
                 <div className="truncate text-xs text-ink-soft">{b.url || "No link yet"}</div>
               )}
               {b.type === "link" && b.pinned === "tour" && (
-                <div className="text-[11px] font-medium text-gold">Tour link (locked to /tour)</div>
+                <div className="text-[11px] font-medium text-gold">
+                  Tour link (locked to the TalkFurther scheduler)
+                </div>
               )}
             </>
           )}
@@ -450,7 +452,7 @@ function LinkFields({
         placeholder="https://"
         disabled={pinned}
         className={`${FIELD} ${pinned ? "opacity-60" : ""}`}
-        title={pinned ? "The tour link is locked to /tour" : undefined}
+        title={pinned ? "The tour link is locked to the TalkFurther scheduler" : undefined}
       />
       <input
         value={b.subtitle}
