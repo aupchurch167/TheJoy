@@ -42,7 +42,8 @@ function loadNoindexHeaders(): HeaderRules {
 }
 
 /**
- * next/image remote hosts. Must be a SUPERSET of the allowlist in Photo.tsx.
+ * next/image remote hosts. Must be a SUPERSET of the allowlist in
+ * src/lib/optimizable-image.ts (used by Photo and Markdown images).
  * We serve our own images from Cloudflare R2 (pub-*.r2.dev, or a custom public
  * URL) and, transitionally, legacy blog images from the Webflow CDN. AVIF/WebP
  * are enabled so multi-megabyte uploads are resized and re-encoded on the fly.
