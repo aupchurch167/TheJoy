@@ -7,6 +7,7 @@ import {
   publicUrlProblem,
 } from "@/lib/storage";
 import { slugify } from "@/lib/posts";
+import { compressForWeb } from "@/lib/compress-image";
 
 export const runtime = "nodejs";
 
@@ -46,15 +47,16 @@ export async function POST(request: Request) {
     );
   }
 
-  const ext = file.type.split("/")[1].replace("jpeg", "jpg");
-  const base = slugify(file.name.replace(/\.[^.]+$/, "")) || "image";
-  // Deterministic-ish unique key without Date.now (kept simple + collision-safe
-  // via the random-ish suffix from the file size + name).
-  const key = `blog/${base}-${file.size}.${ext}`;
-
   try {
-    const bytes = Buffer.from(await file.arrayBuffer());
-    const url = await uploadImage(bytes, key, file.type);
+    const raw = Buffer.from(await file.arrayBuffer());
+    const prepared = await compressForWeb(raw, file.type);
+    const ext =
+      prepared.contentType.split("/")[1]?.replace("jpeg", "jpg") || "jpg";
+    const base = slugify(file.name.replace(/\.[^.]+$/, "")) || "image";
+    // Suffix is the stored byte length so two uploads of the same name still
+    // land on different keys.
+    const key = `blog/${base}-${prepared.bytes.length}.${ext}`;
+    const url = await uploadImage(prepared.bytes, key, prepared.contentType);
 
     // The upload can succeed to the bucket yet not be publicly readable (wrong
     // S3_PUBLIC_URL, or the bucket is not public). Catch that here so the admin

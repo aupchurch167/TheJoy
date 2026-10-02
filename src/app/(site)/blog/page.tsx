@@ -9,6 +9,7 @@ import { blogCollectionJsonLd, breadcrumbJsonLd } from "@/lib/schema";
 import JsonLd from "@/components/JsonLd";
 import Photo from "@/components/Photo";
 import LeadForm from "@/components/LeadForm";
+import { BLOG_CARD_SIZES } from "@/lib/optimizable-image";
 
 export const dynamic = "force-dynamic";
 
@@ -70,6 +71,7 @@ export default async function BlogIndex() {
                       src={post.hero_image}
                       alt={post.hero_image_alt || post.title}
                       className="aspect-[4/3] w-full"
+                      sizes={BLOG_CARD_SIZES}
                     />
                   ) : (
                     <div className="hidden sm:block" />

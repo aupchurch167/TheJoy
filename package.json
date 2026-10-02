@@ -9,7 +9,8 @@
     "lint": "eslint",
     "migrate": "node scripts/migrate.mjs",
     "import:webflow": "node scripts/import-webflow.mjs",
-    "migrate:blog-images": "node scripts/migrate-blog-images.mjs"
+    "migrate:blog-images": "node scripts/migrate-blog-images.mjs",
+    "images:recompress": "node --experimental-strip-types scripts/recompress-r2-images.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.112.4",
