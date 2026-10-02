@@ -1794,3 +1794,126 @@ UPDATE posts SET
 WHERE strpos(body, $md$[Schedule a visit](/tour)$md$) > 0
    OR strpos(body, $md$[Schedule a consultation for personal care](/tour)$md$) > 0
    OR strpos(body, $md$[joyseniorcare.com/tour](/tour)$md$) > 0;
+
+-- Published post (2026-10-02): memory care in Loganville, when home care
+-- isn't enough. Owner-approved companion to /memory-care.
+-- One marker. A later boot skips this block, so an edit in Admin is left
+-- alone. The slug check avoids a duplicate. The marker is written only once
+-- the row exists, so a failed insert is tried again on the next boot.
+DO $apply_mcl$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM applied_content_updates
+    WHERE id = 'memory-care-loganville-what-to-look-for-2026-10-02'
+  ) THEN
+    INSERT INTO posts (
+      slug,
+      title,
+      excerpt,
+      body,
+      hero_image,
+      hero_image_alt,
+      author,
+      category,
+      status,
+      meta_title,
+      meta_description,
+      published_at
+    )
+    SELECT
+      $mcl$memory-care-loganville-what-to-look-for$mcl$,
+      $mcl$When Home Care Isn't Enough: Memory Care for a Parent in Loganville$mcl$,
+      $mcl$Signs home care may not be enough, what a good memory care tour covers, and how a small personal care home in Loganville approaches dementia care.$mcl$,
+      $mcl$There's a week when the old plan stops working. Mom walks out the front door looking for a house she left in 1987. Dad takes his morning pills at lunch and again after dinner because he forgot the first round. Late afternoon turns sharp. The aide leaves at 6. You're still awake at midnight listening for footsteps.
+
+Home care can be excellent. Many families run it longer than anyone thought possible. Then the gaps show up in the hours nobody covers, and safety stops being theoretical.
+
+Skip the lecture about when you "should" move your parent. What follows is a plain look at where home care hits its limits, what a memory care tour should cover, and how a small personal care home in Loganville runs dementia care day to day.
+
+## Home care vs memory care
+
+Home care usually means a caregiver comes to the house for set hours. One person. One schedule. Your mom stays in familiar rooms. That can work for a long time, especially early on.
+
+It starts to fall short when needs don't fit a clock:
+
+- Wandering or exit-seeking, especially evenings and nights
+- Missed or double-dosed medications despite reminders
+- Sundowning that turns the late day into conflict or fear
+- Falls when nobody is there to steady a transfer
+- Care hours stacking up until you're paying for near-constant coverage and still filling the overnight yourself
+
+Memory care is a setting built around those risks. In Georgia, that often means a licensed personal care home with memory care certification, secured doors, staff trained for dementia, and routines that hold steady when your parent's memory doesn't.
+
+Home care is still the right tool for some families. Memory care is the next step when one-on-one hours at home can't keep your parent safe through a full day and night. You don't have to hate home care to admit it isn't enough anymore.
+
+If you're comparing options around Loganville, ask each place the same questions. Write the answers down. The differences show up in staffing, medications, and how the building is secured, not in the lobby flowers.
+
+## What to look for on a memory care tour
+
+A tour should feel like an interview you run, not a sales pitch you sit through. Bring a short list. Ask the same questions at every home.
+
+**Overnight staffing.** Who is awake at 2 a.m.? How many people are on the floor? Is a nurse on site overnight, or is overnight coverage handled another way? Get numbers, not adjectives.
+
+**Medications.** Who gives meds on each shift? How do they catch mistakes? Ask whether meds are counted at shift change.
+
+**Secured home.** Is memory care a locked wing, or is the whole home secured? What happens if your parent's needs change a year from now? Do they move to a different unit with new faces, or stay where they are?
+
+**Dementia training.** What training do caregivers get beyond the state minimum? How often is it refreshed?
+
+**Family communication.** Who calls you when something changes? How fast? What does a normal update look like?
+
+We've written a fuller list of **[questions to ask on a tour](/blog/questions-to-ask-personal-care-home-tour)** in the tour-questions guide on joyseniorcare.com. Print it. Use it at every stop, including ours. Compare answers side by side when you get home.
+
+Also watch the ordinary things. How staff talk to residents when they think you're not listening. Whether people look rushed. Whether your dad would know which faces to expect tomorrow morning. Those details rarely make the brochure.
+
+## What memory care means at a personal care home like The Joy
+
+The Joy is a licensed personal care home at [434 Conyers Rd in Loganville](/serving/loganville) (Walton County, on the Gwinnett edge). We are not a large assisted living campus. Georgia licenses us as a personal care home (PCH012341), with 24 beds and suites. Memory care is licensed throughout the home. The whole home is secured.
+
+That structure matters for dementia. If your mom moves in now and her memory worsens later, she doesn't get relocated to a separate locked floor full of strangers. She stays in the house she already knows, with caregivers who already know her habits.
+
+A few facts about how we staff and run the day, once, without turning this into a pitch sheet:
+
+- Two staff overnight
+- A nurse on site 24 hours a week across three days (not overnight)
+- A certified medication aide on staff 24 hours a day, including overnight
+- Medications counted each shift
+- Dementia training for caregivers, plus on-site support groups for families
+
+Routines do a lot of the quiet work. Same mealtimes. Same faces on the same shifts. Help with ADLs, meals, and care wrapped into the monthly rate (we don't list prices here; call for current numbers). Pets and pet therapy are part of life in the house when it fits the resident.
+
+Executive Director Mellissa Daniel can walk you through whether that model matches what your parent needs. She is not a nurse. Ask clinical questions of the clinical staff. Ask her about the house, the team, and how families stay in the loop.
+
+For the service-page overview of how we approach dementia care, see [memory care](/memory-care) on joyseniorcare.com. This post is the companion: home care limits, tour checklist, Loganville context.
+
+## Soft next step
+
+If home care still covers the nights and your parent is safe, keep going. Revisit the question when the gaps show up.
+
+If you're already past that point, tour with a list. Use the [tour-questions guide](/blog/questions-to-ask-personal-care-home-tour) on joyseniorcare.com so every home answers the same things. When you want to talk about The Joy specifically, call [(470) 684-3569](tel:+14706843569).
+
+Take the time you need. This decision sticks. Better to ask the hard questions now than to wonder about them after the move.
+$mcl$,
+      $mcl$https://pub-6e43e90472054fe3880f53e8c0ca3b60.r2.dev/blog/664633a85061d1ce12331725-11-217278-217278.jpg$mcl$,
+      $mcl$The building at Joy Senior Living, a small senior living home in Loganville, Georgia$mcl$,
+      $mcl$Adam Upchurch$mcl$,
+      $mcl$articles$mcl$,
+      $mcl$published$mcl$,
+      NULL,
+      $mcl$Signs home care may not be enough, what a good memory care tour covers, and how a small personal care home in Loganville approaches dementia care.$mcl$,
+      TIMESTAMPTZ '2026-10-02 12:00:00 America/New_York'
+    WHERE NOT EXISTS (
+      SELECT 1 FROM posts WHERE slug = $mcl$memory-care-loganville-what-to-look-for$mcl$
+    );
+
+    IF EXISTS (
+      SELECT 1 FROM posts
+      WHERE slug = $mcl$memory-care-loganville-what-to-look-for$mcl$
+        AND status = 'published'
+    ) THEN
+      INSERT INTO applied_content_updates (id)
+      VALUES ('memory-care-loganville-what-to-look-for-2026-10-02');
+    END IF;
+  END IF;
+END
+$apply_mcl$;

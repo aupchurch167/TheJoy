@@ -2,7 +2,7 @@ import type { MetadataRoute } from "next";
 import { SITE_URL, MEMORY_CARE, visibleServiceDetails } from "@/lib/site";
 import { hasDatabase } from "@/lib/db";
 import { getPublishedPosts } from "@/lib/posts";
-import { TOWNS } from "@/lib/landing";
+import { LOGANVILLE_SERVING, TOWNS } from "@/lib/landing";
 
 export const dynamic = "force-dynamic";
 
@@ -20,6 +20,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${SITE_URL}/when-its-time`, changeFrequency: "monthly", priority: 0.7 },
     { url: `${SITE_URL}/tour-checklist`, changeFrequency: "monthly", priority: 0.7 },
     { url: `${SITE_URL}/small-home-difference`, changeFrequency: "monthly", priority: 0.7 },
+    {
+      url: `${SITE_URL}/serving/${LOGANVILLE_SERVING.slug}`,
+      changeFrequency: "monthly" as const,
+      priority: 0.7,
+    },
     ...Object.keys(TOWNS).map((town) => ({
       url: `${SITE_URL}/serving/${town}`,
       changeFrequency: "monthly" as const,

@@ -523,6 +523,16 @@ export const CHECKLIST_QUOTE = {
 
 /* -------------------------- /serving/* --------------------------- */
 
+/**
+ * Loganville is the home city, not a drive-from town. Its page is
+ * `src/app/(site)/serving/loganville/page.tsx` (its own copy, not this
+ * template). Listed with the areas we serve and in the sitemap.
+ */
+export const LOGANVILLE_SERVING = {
+  slug: "loganville",
+  name: "Loganville",
+} as const;
+
 export type TownSection = {
   heading: string;
   paragraphs: string[];
