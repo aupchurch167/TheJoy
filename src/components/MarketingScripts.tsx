@@ -72,6 +72,43 @@ b.parentNode.insertBefore(a, b);
 })();`}
         </Script>
       )}
+
+      {/* Book-a-tour bridge. The Further widget no longer reacts to the
+          #/further/55 hash (the URL changes but the scheduler never opens), so
+          same-site #/further/ links call its openTour() API instead. Landing
+          on a #/further/ URL (email and drip links, new tabs) opens it too.
+          If the widget never loads (blocked or down), clicks go to /tour. */}
+      {talkFurtherEnabled && (
+        <Script id="talkfurther-tour-links" strategy="afterInteractive">
+          {`(function () {
+function isTourHash(h) { return /^#\\/further\\//.test(h || ""); }
+function openTour() {
+  try {
+    if (window.FurtherEmbeddedVSA && window.FurtherEmbeddedVSA.openTour) { window.FurtherEmbeddedVSA.openTour(); return true; }
+    if (window.FurtherChat && window.FurtherChat.openTour) { window.FurtherChat.openTour(); return true; }
+  } catch (e) {}
+  return false;
+}
+document.addEventListener("click", function (e) {
+  if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+  var a = e.target && e.target.closest && e.target.closest("a[href]");
+  if (!a) return;
+  var url;
+  try { url = new URL(a.href, location.href); } catch (err) { return; }
+  if (url.hostname.replace(/^www\\./, "") !== location.hostname.replace(/^www\\./, "")) return;
+  if (!isTourHash(url.hash)) return;
+  e.preventDefault();
+  if (!openTour() && location.pathname !== "/tour") location.href = "/tour";
+}, true);
+if (isTourHash(location.hash)) {
+  var tries = 0;
+  var timer = setInterval(function () {
+    if (openTour() || ++tries > 40) clearInterval(timer);
+  }, 500);
+}
+})();`}
+        </Script>
+      )}
     </>
   );
 }
