@@ -1,5 +1,6 @@
 import { Resend } from "resend";
 import { marked } from "marked";
+import { constrainContentImages, LETTER_IMAGE_PX } from "./email-images";
 import {
   BUSINESS,
   BUSINESS_ADDRESS_ONE_LINE,
@@ -112,7 +113,6 @@ const ST = {
   a: "color:#5a6b45;text-decoration:underline;",
   bq: "margin:0 0 22px 0;border-left:3px solid #7a8c62;padding-left:20px;",
   bqp: "margin:0 0 10px 0;font-family:Georgia,'Times New Roman',serif;font-size:19px;line-height:31px;mso-line-height-rule:exactly;color:#2c3126;font-style:italic;",
-  img: "display:block;border:0;outline:none;width:100%;max-width:504px;height:auto;margin:6px 0 22px 0;",
   hr: "border:0;border-top:1px solid #ddd8cc;margin:26px 0;",
   ul: "margin:0 0 18px 0;padding-left:22px;",
   li: "font-family:Georgia,'Times New Roman',serif;font-size:16px;line-height:27px;mso-line-height-rule:exactly;color:#3a4032;margin:0 0 8px 0;",
@@ -131,7 +131,6 @@ function styleEmailBody(html: string): string {
     .replace(/<h3>/g, `<h3 style="${ST.h2}">`)
     .replace(/<p>/g, `<p style="${ST.p}">`)
     .replace(/<a /g, `<a style="${ST.a}" `)
-    .replace(/<img /g, `<img style="${ST.img}" `)
     .replace(/<hr\s*\/?>/g, `<hr style="${ST.hr}">`)
     .replace(/<ul>/g, `<ul style="${ST.ul}">`)
     .replace(/<ol>/g, `<ol style="${ST.ul}">`)
@@ -201,6 +200,9 @@ function wrapEmail(
   unsubUrl?: string,
   showBadges = true
 ): string {
+  // Photos in the letter (Markdown ![]() and any raw <img> in an HTML body)
+  // share the studio clipping wrapper, capped at the text column.
+  const content = constrainContentImages(innerHtml, LETTER_IMAGE_PX);
   const badges = BADGES.filter(
     (b) => !b.requiresMemoryCare || MEMORY_CARE.enabled
   )
@@ -231,6 +233,7 @@ function wrapEmail(
 @media only screen and (max-width:620px){
   .wrap{width:100% !important;}
   .pad{padding-left:24px !important;padding-right:24px !important;}
+  .joy-photo{width:100% !important;max-width:100% !important;height:auto !important;}
 }
 </style></head>
 <body style="margin:0;padding:0;background-color:#efece5;">
@@ -252,7 +255,7 @@ function wrapEmail(
   </td></tr>
 
   <tr><td class="pad" style="padding:34px 48px 0 48px;">
-    ${innerHtml}
+    ${content}
   </td></tr>
 
 ${badgesRow}

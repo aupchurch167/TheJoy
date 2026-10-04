@@ -11,6 +11,12 @@
  * a valid, unsubscribable email.
  */
 
+import {
+  emailImageHtml,
+  STUDIO_BODY_HALF_PX,
+  STUDIO_BODY_IMAGE_PX,
+  STUDIO_CARD_PX,
+} from "./email-images";
 import { seasonalMonth, seasonalMonthName } from "./seasonal";
 
 export { seasonalMonthName };
@@ -191,27 +197,30 @@ const CONFETTI = `<div style="text-align:center;padding:14px 0 8px;letter-spacin
 const BUNTING = `<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin-top:0"><tbody><tr><td height="7" width="20%" style="background:#f7b32b;font-size:1px;line-height:1px">&nbsp;</td><td height="7" width="20%" style="background:#4ea5a2;font-size:1px;line-height:1px">&nbsp;</td><td height="7" width="20%" style="background:#9b6bc9;font-size:1px;line-height:1px">&nbsp;</td><td height="7" width="20%" style="background:#f7b32b;font-size:1px;line-height:1px">&nbsp;</td><td height="7" width="20%" style="background:#4ea5a2;font-size:1px;line-height:1px">&nbsp;</td></tr></tbody></table>`;
 
 /**
- * Render in-body photos as an email-safe block: one photo full width, two or
- * more in a 2-per-row table (each cell 50%). Returns "" when there are none.
+ * Render in-body photos as an email-safe block: one photo the width of the
+ * text column, two or more in a 2-per-row table (each cell 50%). Returns ""
+ * when there are none. Each photo is clipped to that column (see email-images).
  */
 function renderGallery(photos: string[]): string {
+  const photo = (url: string, width: number) =>
+    emailImageHtml({
+      src: esc(url),
+      width,
+      styleExtra: "border-radius:10px;",
+    });
   if (photos.length === 0) return "";
   if (photos.length === 1) {
-    return `<tr><td style="padding:16px 26px 0"><img src="${esc(
-      photos[0]
-    )}" width="100%" alt="" style="display:block;width:100%;max-width:100%;height:auto;border:0;border-radius:10px"></td></tr>`;
+    return `<tr><td style="padding:16px 26px 0">${photo(photos[0], STUDIO_BODY_IMAGE_PX)}</td></tr>`;
   }
   const cell = (u: string | undefined, side: "l" | "r") =>
     u
-      ? `<td width="50%" valign="top" style="padding:0 ${side === "l" ? "4px" : "0"} 8px ${side === "l" ? "0" : "4px"}"><img src="${esc(
-          u
-        )}" width="100%" alt="" style="display:block;width:100%;max-width:100%;height:auto;border:0;border-radius:10px"></td>`
+      ? `<td width="50%" valign="top" style="padding:0 ${side === "l" ? "4px" : "0"} 8px ${side === "l" ? "0" : "4px"}">${photo(u, STUDIO_BODY_HALF_PX)}</td>`
       : `<td width="50%" style="padding:0 0 8px"></td>`;
   let rows = "";
   for (let i = 0; i < photos.length; i += 2) {
     rows += `<tr>${cell(photos[i], "l")}${cell(photos[i + 1], "r")}</tr>`;
   }
-  return `<tr><td style="padding:16px 26px 0"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tbody>${rows}</tbody></table></td></tr>`;
+  return `<tr><td style="padding:16px 26px 0"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;"><tbody>${rows}</tbody></table></td></tr>`;
 }
 
 /** Render the structured model to a complete standalone HTML email. */
@@ -238,7 +247,7 @@ ${p.confetti ? BUNTING : ""}
     PHOTO_THEMES.includes(model.theme)
       ? `<tr><td style="padding:0 22px">${
           model.photoUrl
-            ? `<img src="${esc(model.photoUrl)}" width="100%" alt="" style="display:block;width:100%;max-width:100%;height:auto;border:0">`
+            ? emailImageHtml({ src: esc(model.photoUrl), width: STUDIO_CARD_PX })
             : `<div style="height:150px;background:repeating-linear-gradient(45deg,#eef2f3 0 10px,#e3e7e9 10px 20px);text-align:center;line-height:150px;font-family:Arial,Helvetica,sans-serif;font-size:12px;color:#626d70">Add a photo (of the person you're spotlighting)</div>`
         }</td></tr>`
       : "";
@@ -279,12 +288,18 @@ ${model.plan.treats ? `🍦 <strong style="color:${p.a3}">Treats:</strong> ${esc
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="color-scheme" content="light">
 <title>${esc(title)}</title>
+<style type="text/css">
+@media only screen and (max-width:620px){
+  .wrap{width:100% !important;}
+  .joy-photo{width:100% !important;max-width:100% !important;height:auto !important;}
+}
+</style>
 </head>
 <body style="margin:0;padding:0;background:${p.page}">
 <span style="display:none;font-size:1px;color:${p.page};line-height:1px;max-height:0;max-width:0;opacity:0;overflow:hidden">${esc(model.heroSub || title)}</span>
 <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background:${p.page}"><tbody>
 <tr><td align="center" style="padding:24px 12px">
-<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="600" style="width:600px;max-width:600px"><tbody>
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="600" class="wrap" style="width:100%;max-width:600px"><tbody>
 ${p.confetti ? `<tr><td>${CONFETTI}</td></tr>` : ""}
 ${hero}
 ${photo}
