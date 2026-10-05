@@ -1917,3 +1917,128 @@ $mcl$,
   END IF;
 END
 $apply_mcl$;
+
+
+-- SEO audit (2026-10-05): meta descriptions over 165 characters as served
+-- (apostrophes count as 5 once encoded), plus three that broke the voice
+-- rules (em-dashes, "loved ones"). Same guard as the Bing block at the top:
+-- a row changes only while its public description is still the old text, so
+-- a later edit in Admin is left alone.
+-- questions-to-ask-personal-care-home-tour
+UPDATE posts SET
+  excerpt = CASE
+    WHEN btrim(coalesce(excerpt, '')) = $md$Touring personal care homes for Mom or Dad? Print these questions for every tour. Here are The Joy's straight answers, including the ones that aren't perfect.$md$ THEN $md$Touring personal care homes for Mom or Dad? Print these questions for every tour, plus The Joy's straight answers (including the imperfect ones).$md$
+    ELSE excerpt
+  END,
+  meta_description = CASE
+    WHEN nullif(btrim(meta_description), '') IS NOT NULL THEN $md$Touring personal care homes for Mom or Dad? Print these questions for every tour, plus The Joy's straight answers (including the imperfect ones).$md$
+    ELSE meta_description
+  END,
+  updated_at = now()
+WHERE slug = $md$questions-to-ask-personal-care-home-tour$md$
+  AND btrim(coalesce(nullif(btrim(meta_description), ''), excerpt, '')) = $md$Touring personal care homes for Mom or Dad? Print these questions for every tour. Here are The Joy's straight answers, including the ones that aren't perfect.$md$;
+-- when-you-and-your-siblings-cant-agree-about-moms-care
+UPDATE posts SET
+  excerpt = CASE
+    WHEN btrim(coalesce(excerpt, '')) = $md$Fighting with your siblings about Mom's care? Honest, plainspoken advice from Joy Senior Living in Loganville on having the hard conversation and keeping the family whole.$md$ THEN $md$Fighting with your siblings about Mom's care? Plain advice from Joy Senior Living in Loganville on the hard conversation and keeping the family whole.$md$
+    ELSE excerpt
+  END,
+  meta_description = CASE
+    WHEN nullif(btrim(meta_description), '') IS NOT NULL THEN $md$Fighting with your siblings about Mom's care? Plain advice from Joy Senior Living in Loganville on the hard conversation and keeping the family whole.$md$
+    ELSE meta_description
+  END,
+  updated_at = now()
+WHERE slug = $md$when-you-and-your-siblings-cant-agree-about-moms-care$md$
+  AND btrim(coalesce(nullif(btrim(meta_description), ''), excerpt, '')) = $md$Fighting with your siblings about Mom's care? Honest, plainspoken advice from Joy Senior Living in Loganville on having the hard conversation and keeping the family whole.$md$;
+-- its-college-football-season-so-heres-how-to-make-football-season-one-to-remember
+UPDATE posts SET
+  excerpt = CASE
+    WHEN btrim(coalesce(excerpt, '')) = $md$College football season means the world to a lot of seniors. Here's how to keep game day special with your parent, from a small personal care home in Loganville, GA.$md$ THEN $md$College football means the world to a lot of seniors. How to keep game day special with your parent, from a small personal care home in Loganville, GA.$md$
+    ELSE excerpt
+  END,
+  meta_description = CASE
+    WHEN nullif(btrim(meta_description), '') IS NOT NULL THEN $md$College football means the world to a lot of seniors. How to keep game day special with your parent, from a small personal care home in Loganville, GA.$md$
+    ELSE meta_description
+  END,
+  updated_at = now()
+WHERE slug = $md$its-college-football-season-so-heres-how-to-make-football-season-one-to-remember$md$
+  AND btrim(coalesce(nullif(btrim(meta_description), ''), excerpt, '')) = $md$College football season means the world to a lot of seniors. Here's how to keep game day special with your parent, from a small personal care home in Loganville, GA.$md$;
+-- what-the-2026-best-of-senior-living-award-actually-means-for-loganville-families
+UPDATE posts SET
+  excerpt = CASE
+    WHEN btrim(coalesce(excerpt, '')) = $md$Curious about the 2026 Best of Senior Living award? Here's what it's really based on and what earns it at Joy, a small personal care home in Loganville, GA.$md$ THEN $md$Curious about the 2026 Best of Senior Living award? What it is really based on, and what earns it at Joy, a small personal care home in Loganville, GA.$md$
+    ELSE excerpt
+  END,
+  meta_description = CASE
+    WHEN nullif(btrim(meta_description), '') IS NOT NULL THEN $md$Curious about the 2026 Best of Senior Living award? What it is really based on, and what earns it at Joy, a small personal care home in Loganville, GA.$md$
+    ELSE meta_description
+  END,
+  updated_at = now()
+WHERE slug = $md$what-the-2026-best-of-senior-living-award-actually-means-for-loganville-families$md$
+  AND btrim(coalesce(nullif(btrim(meta_description), ''), excerpt, '')) = $md$Curious about the 2026 Best of Senior Living award? Here's what it's really based on and what earns it at Joy, a small personal care home in Loganville, GA.$md$;
+-- understand-dementia-what-why-how-to-care-for-loved-ones
+UPDATE posts SET
+  excerpt = CASE
+    WHEN btrim(coalesce(excerpt, '')) = $md$New to dementia caregiving? Learn the common symptoms, types like Alzheimer's and vascular dementia, how it's diagnosed, and how to plan routines and support.$md$ THEN $md$New to dementia caregiving? Learn the common symptoms, types like Alzheimer's and vascular dementia, how it is diagnosed, and how to plan routines.$md$
+    ELSE excerpt
+  END,
+  meta_description = CASE
+    WHEN nullif(btrim(meta_description), '') IS NOT NULL THEN $md$New to dementia caregiving? Learn the common symptoms, types like Alzheimer's and vascular dementia, how it is diagnosed, and how to plan routines.$md$
+    ELSE meta_description
+  END,
+  updated_at = now()
+WHERE slug = $md$understand-dementia-what-why-how-to-care-for-loved-ones$md$
+  AND btrim(coalesce(nullif(btrim(meta_description), ''), excerpt, '')) = $md$New to dementia caregiving? Learn the common symptoms, types like Alzheimer's and vascular dementia, how it's diagnosed, and how to plan routines and support.$md$;
+-- after-the-summer-visit-signs-aging-parent-needs-help
+UPDATE posts SET
+  excerpt = CASE
+    WHEN btrim(coalesce(excerpt, '')) = $md$The quiet signs your aging parent needs help — the ones you notice after a summer visit and can't unsee. What they mean and what to do next.$md$ THEN $md$The quiet signs your aging parent needs help (the ones you notice after a summer visit and can't unsee). What they mean and what to do next.$md$
+    ELSE excerpt
+  END,
+  meta_description = CASE
+    WHEN nullif(btrim(meta_description), '') IS NOT NULL THEN $md$The quiet signs your aging parent needs help (the ones you notice after a summer visit and can't unsee). What they mean and what to do next.$md$
+    ELSE meta_description
+  END,
+  updated_at = now()
+WHERE slug = $md$after-the-summer-visit-signs-aging-parent-needs-help$md$
+  AND btrim(coalesce(nullif(btrim(meta_description), ''), excerpt, '')) = $md$The quiet signs your aging parent needs help — the ones you notice after a summer visit and can't unsee. What they mean and what to do next.$md$;
+-- how-to-have-the-it-might-be-time-conversation
+UPDATE posts SET
+  excerpt = CASE
+    WHEN btrim(coalesce(excerpt, '')) = $md$How to talk to a parent about assisted living without it ending in silence — the phrases that shut it down, the ones that open it back up, and what to try next.$md$ THEN $md$How to talk to a parent about assisted living without it ending in silence: the phrases that shut it down, the ones that open it back up, what to try next.$md$
+    ELSE excerpt
+  END,
+  meta_description = CASE
+    WHEN nullif(btrim(meta_description), '') IS NOT NULL THEN $md$How to talk to a parent about assisted living without it ending in silence: the phrases that shut it down, the ones that open it back up, what to try next.$md$
+    ELSE meta_description
+  END,
+  updated_at = now()
+WHERE slug = $md$how-to-have-the-it-might-be-time-conversation$md$
+  AND btrim(coalesce(nullif(btrim(meta_description), ''), excerpt, '')) = $md$How to talk to a parent about assisted living without it ending in silence — the phrases that shut it down, the ones that open it back up, and what to try next.$md$;
+-- spring-fun-activities-to-enjoy-with-loved-ones-in-senior-living
+UPDATE posts SET
+  excerpt = CASE
+    WHEN btrim(coalesce(excerpt, '')) = $md$Discover fun springtime activities to enjoy with loved ones, from gardening and picnics to nature walks—perfect for seniors in senior living$md$ THEN $md$Spring activities to share with a parent in senior living, from gardening and picnics to slow walks outside. Simple ideas from Joy in Loganville, GA.$md$
+    ELSE excerpt
+  END,
+  meta_description = CASE
+    WHEN nullif(btrim(meta_description), '') IS NOT NULL THEN $md$Spring activities to share with a parent in senior living, from gardening and picnics to slow walks outside. Simple ideas from Joy in Loganville, GA.$md$
+    ELSE meta_description
+  END,
+  updated_at = now()
+WHERE slug = $md$spring-fun-activities-to-enjoy-with-loved-ones-in-senior-living$md$
+  AND btrim(coalesce(nullif(btrim(meta_description), ''), excerpt, '')) = $md$Discover fun springtime activities to enjoy with loved ones, from gardening and picnics to nature walks—perfect for seniors in senior living$md$;
+
+-- What We Cooked at Joy This Week: four body photos had no alt text. Only an
+-- empty alt is filled (`![](...)`), so alt text written in Admin is kept and
+-- a re-run changes nothing.
+UPDATE posts SET
+  body = regexp_replace(regexp_replace(regexp_replace(regexp_replace(
+    body,
+    $re$!\[[[:space:]]*\]\(([^)[:space:]]*/cafd45d8114769c0e0137388588a3a61-original-429483\.jpg)$re$, $re$![Grilled cheese on wheat bread, cut in half, beside a bowl of tomato soup with a swirl of cream](\1$re$, 'g'),
+    $re$!\[[[:space:]]*\]\(([^)[:space:]]*/41d772532d36c12f99fd3ee787d293c2-original-237667\.jpg)$re$, $re$![A thick milkshake in a tall cup, topped with whipped cream and chocolate syrup, with a straw](\1$re$, 'g'),
+    $re$!\[[[:space:]]*\]\(([^)[:space:]]*/65414149102b79b3af64b688121b47c7-original-518709\.jpg)$re$, $re$![Quesadilla wedges with pinto beans, salsa, and sour cream on a blue plate](\1$re$, 'g'),
+    $re$!\[[[:space:]]*\]\(([^)[:space:]]*/acfee759e87a06e6b644e3dda5af7f6d-original-539840\.jpg)$re$, $re$![Two plates of roast over mashed potatoes with mixed vegetables and a dinner roll, ready to serve](\1$re$, 'g'),
+  updated_at = now()
+WHERE slug = $md$what-we-cooked-at-joy-this-week$md$
+  AND body ~ $re$!\[[[:space:]]*\]\([^)[:space:]]*/(cafd45d8114769c0e0137388588a3a61-original-429483|41d772532d36c12f99fd3ee787d293c2-original-237667|65414149102b79b3af64b688121b47c7-original-518709|acfee759e87a06e6b644e3dda5af7f6d-original-539840)\.jpg$re$;

@@ -11,7 +11,9 @@ import TourButton from "@/components/TourButton";
 import LeadForm from "@/components/LeadForm";
 
 export const metadata: Metadata = pageTwitter({
-  title: "Memory Care & Personal Care Home in Loganville, GA",
+  title: {
+    absolute: "Memory Care & Personal Care Home in Loganville, GA | Joy",
+  },
   description:
     "Personal care, memory care, respite, activities, and home-cooked meals at Joy Senior Living, a small personal care home in Loganville, GA.",
   alternates: { canonical: "/services" },

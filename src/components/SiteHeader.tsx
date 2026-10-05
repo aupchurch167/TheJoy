@@ -46,7 +46,7 @@ export default async function SiteHeader() {
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={logoMark.set ? logoMark.src : logo.src}
-                  alt=""
+                  alt={`${BUSINESS.name} logo`}
                   className="h-9 w-auto"
                 />
                 <span className="font-display text-lg font-semibold leading-tight text-ink">

@@ -724,6 +724,10 @@ export type ServiceDetail = {
   name: string;
   /** One line for the overview card and the page sub-headline. */
   tagline: string;
+  /**
+   * The full <title> (the layout template is bypassed). Keep it at 62
+   * characters or fewer, brand included.
+   */
   metaTitle: string;
   metaDescription: string;
   intro: string;
@@ -808,7 +812,7 @@ export const SERVICE_DETAILS: ServiceDetail[] = [
     slug: "personal-care",
     name: "Personal care",
     tagline: "Help with the day, from people who know your parent by name.",
-    metaTitle: "Personal Care in a Loganville Personal Care Home",
+    metaTitle: "Personal Care in a Loganville Personal Care Home | Joy",
     metaDescription:
       "Personal care at Joy Senior Living, a small personal care home in Loganville, GA: bathing, dressing, medications, meals, and 24-hour support.",
     photo: {
@@ -884,7 +888,7 @@ export const SERVICE_DETAILS: ServiceDetail[] = [
     slug: "memory-care",
     name: "Memory care",
     tagline: "The same small home, the same familiar faces, for a parent living with memory loss.",
-    metaTitle: "Memory Care in a Loganville Personal Care Home",
+    metaTitle: "Memory Care in a Loganville Personal Care Home | Joy",
     metaDescription:
       "Memory care at Joy Senior Living in Loganville, GA, offered within our personal care home: a small, familiar setting with trained staff and steady routines for a parent living with dementia.",
     photo: {
@@ -918,7 +922,7 @@ export const SERVICE_DETAILS: ServiceDetail[] = [
     slug: "respite-care",
     name: "Respite care",
     tagline: "A short stay, with the full care, when a family needs a break.",
-    metaTitle: "Respite Care & Short Stays in Loganville, GA",
+    metaTitle: "Respite Care & Short Stays in Loganville, GA | Joy",
     metaDescription:
       "Respite care at Joy Senior Living in Loganville, GA: short stays from a few days to a few weeks, in a private room with the same care every resident receives.",
     photo: {
