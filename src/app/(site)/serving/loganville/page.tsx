@@ -244,6 +244,17 @@ export default async function LoganvillePage() {
               Lawrenceville, Dacula, and nearby Walton and Monroe areas.
             </p>
             <p>
+              More for{" "}
+              <Link href="/serving/walton-county" className={linkClass}>
+                Walton County
+              </Link>{" "}
+              and{" "}
+              <Link href="/serving/gwinnett-county" className={linkClass}>
+                Gwinnett County
+              </Link>{" "}
+              families.
+            </p>
+            <p>
               Phone:{" "}
               <a href={toTelHref(phone)} className={linkClass}>
                 <strong>{phone}</strong>

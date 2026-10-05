@@ -2123,3 +2123,36 @@ BEGIN
   END IF;
 END
 $unpublish_again$;
+
+
+-- County hubs (2026-10-05): link an existing county mention in two posts to
+-- each new /serving/<county> page. No new prose. A row changes only while the
+-- exact phrase is still there and the post does not already link the hub, so
+-- a re-run or a later Admin edit is left alone.
+UPDATE posts SET
+  body = replace(body, $cl$close for Gwinnett families in Snellville$cl$, $cl$close for [Gwinnett families](/serving/gwinnett-county) in Snellville$cl$),
+  updated_at = now()
+WHERE slug = $cl$questions-to-ask-personal-care-home-tour$cl$
+  AND strpos(body, $cl$close for Gwinnett families in Snellville$cl$) > 0
+  AND strpos(body, $cl$(/serving/gwinnett-county)$cl$) = 0;
+
+UPDATE posts SET
+  body = replace(body, $cl$If you live in Walton or Gwinnett County and$cl$, $cl$If you live in Walton or [Gwinnett County](/serving/gwinnett-county) and$cl$),
+  updated_at = now()
+WHERE slug = $cl$dementia-caregiver-support-group$cl$
+  AND strpos(body, $cl$If you live in Walton or Gwinnett County and$cl$) > 0
+  AND strpos(body, $cl$(/serving/gwinnett-county)$cl$) = 0;
+
+UPDATE posts SET
+  body = replace(body, $cl$(Walton County, on the Gwinnett edge)$cl$, $cl$([Walton County](/serving/walton-county), on the Gwinnett edge)$cl$),
+  updated_at = now()
+WHERE slug = $cl$memory-care-loganville-what-to-look-for$cl$
+  AND strpos(body, $cl$(Walton County, on the Gwinnett edge)$cl$) > 0
+  AND strpos(body, $cl$(/serving/walton-county)$cl$) = 0;
+
+UPDATE posts SET
+  body = replace(body, $cl$touring communities in Walton County or greater Gwinnett$cl$, $cl$touring communities in [Walton County](/serving/walton-county) or greater Gwinnett$cl$),
+  updated_at = now()
+WHERE slug = $cl$small-enough-to-know-your-parent-by-name$cl$
+  AND strpos(body, $cl$touring communities in Walton County or greater Gwinnett$cl$) > 0
+  AND strpos(body, $cl$(/serving/walton-county)$cl$) = 0;

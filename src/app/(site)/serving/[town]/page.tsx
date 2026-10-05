@@ -8,10 +8,12 @@ import {
   servingServiceJsonLd,
 } from "@/lib/schema";
 import JsonLd from "@/components/JsonLd";
-import { TOWNS, TOWN_MELLISSA } from "@/lib/landing";
+import Link from "next/link";
+import { COUNTIES, TOWNS, TOWN_MELLISSA } from "@/lib/landing";
 import Accordion from "@/components/Accordion";
 import CtaBand from "@/components/landing/CtaBand";
 import ProofPulse from "@/components/landing/ProofPulse";
+import SectionCopy from "@/components/landing/SectionCopy";
 export function generateStaticParams() {
   return Object.keys(TOWNS).map((town) => ({ town }));
 }
@@ -38,34 +40,6 @@ export async function generateMetadata({
   });
 }
 
-function SectionCopy({
-  heading,
-  paragraphs,
-  pull,
-}: {
-  heading: string;
-  paragraphs: string[];
-  pull?: string;
-}) {
-  return (
-    <div className="space-y-4">
-      <h2 className="font-display text-2xl font-semibold text-ink sm:text-3xl">
-        {heading}
-      </h2>
-      {paragraphs.map((p) => (
-        <p key={p} className="max-w-[34em] text-lg leading-relaxed text-ink-soft">
-          {p}
-        </p>
-      ))}
-      {pull ? (
-        <p className="border-l-[3px] border-clay pl-4 font-display text-xl leading-snug text-ink text-pretty">
-          {pull}
-        </p>
-      ) : null}
-    </div>
-  );
-}
-
 export default async function ServingTownPage({
   params,
 }: {
@@ -74,6 +48,7 @@ export default async function ServingTownPage({
   const { town } = await params;
   const t = TOWNS[town];
   if (!t) notFound();
+  const county = COUNTIES[t.county];
 
   return (
     <>
@@ -96,6 +71,16 @@ export default async function ServingTownPage({
         </h1>
         <p className="mt-5 max-w-[33em] text-lg leading-relaxed text-ink-soft">
           {t.lede}
+        </p>
+        <p className="mt-4 text-base text-ink-soft">
+          Looking across {county.name}?{" "}
+          <Link
+            href={`/serving/${county.slug}`}
+            className="font-semibold text-clay underline underline-offset-2 hover:text-clay-dark"
+          >
+            Senior living in {county.name}
+          </Link>
+          .
         </p>
       </section>
 

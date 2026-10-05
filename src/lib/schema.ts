@@ -155,6 +155,28 @@ export function servingServiceJsonLd(town: { name: string; slug: string }) {
   };
 }
 
+/** Service markup for a /serving/<county> hub; areaServed is the county. */
+export function countyServiceJsonLd(county: { name: string; slug: string }) {
+  const url = `${SITE_URL}/serving/${county.slug}`;
+  return {
+    "@context": "https://schema.org",
+    "@type": "Service",
+    "@id": `${url}#service`,
+    name: `Senior living and personal care in ${county.name}, GA`,
+    serviceType: "Personal care home",
+    url,
+    provider: {
+      "@type": ["LocalBusiness", "SeniorCare"],
+      "@id": `${SITE_URL}/#business`,
+      name: BUSINESS.listingName,
+    },
+    areaServed: {
+      "@type": "AdministrativeArea",
+      name: `${county.name}, GA`,
+    },
+  };
+}
+
 /**
  * schema.org Service markup for a service page, tied to the business. `opts.url`
  * overrides the default /services/<slug> URL (memory care lives at /memory-care).

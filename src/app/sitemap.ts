@@ -2,7 +2,7 @@ import type { MetadataRoute } from "next";
 import { SITE_URL, MEMORY_CARE, visibleServiceDetails } from "@/lib/site";
 import { hasDatabase } from "@/lib/db";
 import { getPublishedPosts } from "@/lib/posts";
-import { LOGANVILLE_SERVING, TOWNS } from "@/lib/landing";
+import { COUNTIES, LOGANVILLE_SERVING, TOWNS } from "@/lib/landing";
 import { decideCanonical } from "@/lib/canonical-request";
 
 export const dynamic = "force-dynamic";
@@ -45,6 +45,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: "monthly" as const,
       priority: 0.7,
     },
+    ...Object.keys(COUNTIES).map((county) => ({
+      url: `${SITE_URL}/serving/${county}`,
+      changeFrequency: "monthly" as const,
+      priority: 0.7,
+    })),
     ...Object.keys(TOWNS).map((town) => ({
       url: `${SITE_URL}/serving/${town}`,
       changeFrequency: "monthly" as const,

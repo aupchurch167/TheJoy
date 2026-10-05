@@ -8,7 +8,7 @@ import {
   DCH_INSPECTION_SEARCH,
   DCH_INSPECTION_LINK_LABEL,
 } from "@/lib/site";
-import { LOGANVILLE_SERVING, TOWNS } from "@/lib/landing";
+import { COUNTIES, LOGANVILLE_SERVING, TOWNS } from "@/lib/landing";
 import { getSettings, toTelHref, toMailHref } from "@/lib/settings";
 import { getSitePhotos } from "@/lib/site-photos";
 
@@ -182,7 +182,11 @@ export default async function SiteFooter() {
         <div className="mx-auto max-w-6xl px-5 py-6 text-sm text-ink-soft">
           <p className="font-semibold text-ink">Areas we serve</p>
           <ul className="mt-2 flex flex-wrap gap-x-4 gap-y-1">
-            {[LOGANVILLE_SERVING, ...Object.values(TOWNS)].map((town) => (
+            {[
+              LOGANVILLE_SERVING,
+              ...Object.values(TOWNS),
+              ...Object.values(COUNTIES),
+            ].map((town) => (
               <li key={town.slug}>
                 <a href={`/serving/${town.slug}`} className="hover:text-clay">
                   {town.name}
