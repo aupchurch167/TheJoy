@@ -562,6 +562,40 @@ export async function setFamilyActive(
   await query(`UPDATE leads SET active = $2 WHERE id = $1`, [id, active]);
 }
 
+export type FamilyContactUpdate = {
+  name: string;
+  email: string | null;
+  phone: string | null;
+  residentName: string | null;
+  relation: string | null;
+};
+
+/**
+ * Edit a family contact's details. Opt-in flags are left alone, except that
+ * text consent is cleared when the phone number is removed.
+ */
+export async function updateFamilyMember(
+  id: string,
+  input: FamilyContactUpdate
+): Promise<void> {
+  const email = input.email?.trim() ? input.email.trim().toLowerCase() : null;
+  const phone = input.phone?.trim() || null;
+  await query(
+    `UPDATE leads
+        SET name = $2, email = $3, phone = $4, resident_name = $5, relation = $6,
+            sms_consent = CASE WHEN $4::text IS NULL THEN FALSE ELSE sms_consent END
+      WHERE id = $1 AND audience = 'families'`,
+    [
+      id,
+      input.name.trim(),
+      email,
+      phone,
+      input.residentName?.trim() || null,
+      input.relation?.trim() || null,
+    ]
+  );
+}
+
 /** Toggle a family contact's SMS consent (opt them in/out of text blasts). */
 export async function setFamilySmsConsent(
   id: string,
@@ -599,11 +633,16 @@ export async function deleteSubscriber(id: string): Promise<void> {
   await query(`DELETE FROM leads WHERE id = $1`, [id]);
 }
 
-export async function familyEmailExists(email: string): Promise<boolean> {
+export async function familyEmailExists(
+  email: string,
+  excludeId?: string
+): Promise<boolean> {
   if (!email.trim()) return false;
   const rows = await query<{ id: string }>(
-    `SELECT id FROM leads WHERE audience = 'families' AND lower(email) = lower($1)`,
-    [email]
+    `SELECT id FROM leads
+      WHERE audience = 'families' AND lower(email) = lower($1)
+        AND ($2::uuid IS NULL OR id <> $2::uuid)`,
+    [email, excludeId ?? null]
   );
   return rows.length > 0;
 }
