@@ -1,6 +1,5 @@
 import Hero from "@/components/sections/Hero";
 import TrustStrip from "@/components/sections/TrustStrip";
-import LicensedInspected from "@/components/sections/LicensedInspected";
 import Difference from "@/components/sections/Difference";
 import ATuesday from "@/components/sections/ATuesday";
 import HomeServices from "@/components/sections/HomeServices";
@@ -84,7 +83,6 @@ export default async function Home() {
           your questions -> come see it. */}
       <Hero />
       <TrustStrip />
-      <LicensedInspected />
       <Difference />
       <HomeGuides />
       <ATuesday />
