@@ -7,9 +7,11 @@ import {
 } from "@/lib/site";
 
 /**
- * Homepage trust block for Georgia DCH rule 111-8-62-.11(4): the license
- * statement plus direct links to inspection reports from the past 18 months.
- * States only the license and the report names. No result claims.
+ * Trust block for Georgia DCH rule 111-8-62-.11(4): the license statement
+ * plus direct links to inspection reports from the past 18 months. Rendered
+ * at the bottom of the About page. The site footer still links to the DCH
+ * search from every page, including the homepage. States only the license
+ * and the report names. No result claims.
  */
 export default function LicensedInspected() {
   return (
