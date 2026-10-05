@@ -208,7 +208,7 @@ function wrapEmail(
   )
     .map(
       (b, i) =>
-        `<img src="${SITE_URL}${b.src}" width="66" alt="${escapeAttr(
+        `<img src="${/^https?:\/\//.test(b.src) ? b.src : `${SITE_URL}${b.src}`}" width="66" alt="${escapeAttr(
           b.alt
         )}" style="border:0;outline:none;width:66px;height:auto;vertical-align:middle;${i > 0 ? "padding-left:14px;" : ""}">`
     )

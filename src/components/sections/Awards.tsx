@@ -21,17 +21,26 @@ export default function Awards() {
           Recognized for our care
         </h2>
         <div className="mt-6 flex flex-wrap items-center justify-center gap-8 sm:gap-12">
-          {badges.map((b) => (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              key={b.src}
-              src={b.src}
-              alt={b.alt}
-              loading="lazy"
-              decoding="async"
-              className="h-24 w-auto sm:h-28"
-            />
-          ))}
+          {badges.map((b) => {
+            const img = (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={b.src}
+                alt={b.alt}
+                loading="lazy"
+                decoding="async"
+                className="h-24 w-auto sm:h-28"
+              />
+            );
+            // A followed link (no nofollow) so the award site gets the credit.
+            return b.href ? (
+              <a key={b.src} href={b.href} target="_blank" rel="noopener">
+                {img}
+              </a>
+            ) : (
+              <span key={b.src}>{img}</span>
+            );
+          })}
         </div>
       </div>
     </section>

@@ -19,7 +19,8 @@ export const RATES: {
   amount: string;
   unit: string;
 }[] = [
-  { key: "senior", label: "Senior Living", amount: "$5,500", unit: "from, per month" },
+  { key: "personal", label: "Personal Care", amount: "$5,500", unit: "from, per month" },
+  { key: "memory", label: "Memory Care", amount: "$6,000", unit: "from, per month" },
   { key: "respite", label: "Respite", amount: "$300", unit: "from, per day" },
 ];
 
@@ -61,7 +62,7 @@ export const COST_LEDGER = {
  * invitation). Copy and default numbers live here because the rate helper and
  * the "starts at" figures are copy claims, editable in one place.
  *
- * joyFrom mirrors the Senior Living rate in RATES ($5,500). If that rate
+ * joyFrom mirrors the Personal Care rate in RATES ($5,500). If that rate
  * changes, change it in both places. The rate helper's "$28 to $32 an hour in
  * 2026" is a market claim; update the year and range when it stops being true.
  */
@@ -78,7 +79,7 @@ export const COST_CALCULATOR = {
     other: 0,
   },
   joyFrom: 5500,
-  joyLabel: "Senior living",
+  joyLabel: "Personal care",
   helpers: {
     paidHelp: "Drag to what she has now, or zero if you are the one covering it.",
     hourlyRate:
@@ -903,14 +904,11 @@ export type County = {
   mellissaCaption: string;
 };
 
-/**
- * Published rates, as given by the owner for the county pages. The /cost rate
- * card shows "Senior Living from $5,500"; keep the two in agreement.
- */
+/** Published rates. Keep in agreement with RATES (the /cost rate card). */
 const COUNTY_COST: CountySection = {
   heading: "What it costs",
   paragraphs: [
-    "We publish our prices. Personal care starts at $4,500 a month, and memory care starts at $5,500. Mellissa sets the exact rate after she meets your parent, because it depends on the care they need.",
+    "We publish our prices. Personal care starts at $5,500 a month, and memory care starts at $6,000. Mellissa sets the exact rate after she meets your parent, because it depends on the care they need.",
     "The rate covers the suite, three cooked meals a day, help with bathing, dressing and medications, housekeeping and laundry, and someone awake all night. One number, one check.",
   ],
   link: { href: "/cost", label: "See what the rate covers and what it replaces" },

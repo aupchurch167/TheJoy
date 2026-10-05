@@ -162,11 +162,22 @@ export const AWARD = {
 
 /**
  * Award / recognition badges shown on the homepage. Real third-party awards
- * only. Images live in /public/images/badges. `requiresMemoryCare` hides a
+ * only. Most images live in /public/images/badges. `requiresMemoryCare` hides a
  * badge unless MEMORY_CARE.enabled (so we never claim memory care recognition
  * if memory care is not offered). To update the year, replace the image file.
+ *
+ * `href` wraps the badge in a followed link to the awarding site. The Enjoy
+ * badge loads straight from Enjoy (not a copy in /public) so its score stays
+ * current and it disappears if the score drops below 8.5.
  */
-export const BADGES: { src: string; alt: string; requiresMemoryCare?: boolean }[] = [
+export type Badge = {
+  src: string;
+  alt: string;
+  href?: string;
+  requiresMemoryCare?: boolean;
+};
+
+export const BADGES: Badge[] = [
   {
     src: "/images/badges/apfm-best-of-senior-living.png",
     alt: "A Place for Mom Best of Senior Living award badge",
@@ -179,6 +190,11 @@ export const BADGES: { src: string; alt: string; requiresMemoryCare?: boolean }[
     src: "/images/badges/best-in-memory-care.png",
     alt: "Best in Memory Care award from Assisted Living Magazine",
     requiresMemoryCare: true,
+  },
+  {
+    src: "https://enjoysrliving.com/badges/2026/the-joy-senior-living-of-loganville-800.png",
+    alt: "Enjoy Award 2026 – Best of Senior Living",
+    href: "https://enjoysrliving.com/directory/the-joy-senior-living-of-loganville?utm_source=badge&utm_medium=web",
   },
 ];
 
@@ -209,7 +225,7 @@ export const ORG_PROFILE = {
     "https://cdn.prod.website-files.com/6655063219502b9f80b43360/66550793cb73b19370860b32_Copy%20of%20Joy%20Logo%20(1200%20x%20500%20px)%20(1)-p-500.png",
   geo: { latitude: 33.836512, longitude: -83.904572 },
   openingHours: "Mo-Su 00:00-23:59",
-  priceRange: "$4,500 - $5,900 per month",
+  priceRange: "From $5,500 per month",
   areaServed: [
     "Loganville, GA",
     "Snellville, GA",

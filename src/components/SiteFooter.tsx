@@ -200,17 +200,26 @@ export default async function SiteFooter() {
       {badges.length > 0 && (
         <div className="border-t border-line/70">
           <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-center gap-6 px-5 py-6 sm:gap-10">
-            {badges.map((b) => (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                key={b.src}
-                src={b.src}
-                alt={b.alt}
-                loading="lazy"
-                decoding="async"
-                className="h-16 w-auto"
-              />
-            ))}
+            {badges.map((b) => {
+              const img = (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={b.src}
+                  alt={b.alt}
+                  loading="lazy"
+                  decoding="async"
+                  className="h-16 w-auto"
+                />
+              );
+              // A followed link (no nofollow) so the award site gets the credit.
+              return b.href ? (
+                <a key={b.src} href={b.href} target="_blank" rel="noopener">
+                  {img}
+                </a>
+              ) : (
+                <span key={b.src}>{img}</span>
+              );
+            })}
           </div>
         </div>
       )}
