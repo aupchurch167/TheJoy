@@ -1,4 +1,3 @@
-import Image from "next/image";
 import { BADGES, MEMORY_CARE } from "@/lib/site";
 import { getSitePhotos } from "@/lib/site-photos";
 import Photo from "@/components/Photo";
@@ -37,15 +36,17 @@ export default async function ProofPulse({
       {badges.length > 0 && (
         <div className="flex flex-none items-center gap-3">
           {badges.map((b) => (
-            <span key={b.src} className="relative block h-16 w-16">
-              <Image
-                src={b.src}
-                alt={b.alt}
-                fill
-                sizes="64px"
-                className="object-contain"
-              />
-            </span>
+            // Plain <img>: a badge can come straight from the awarding site
+            // (Enjoy), which next/image would refuse or cache past a change.
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              key={b.src}
+              src={b.src}
+              alt={b.alt}
+              loading="lazy"
+              decoding="async"
+              className="h-16 w-16 object-contain"
+            />
           ))}
         </div>
       )}

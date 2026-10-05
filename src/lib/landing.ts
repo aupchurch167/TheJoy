@@ -19,7 +19,8 @@ export const RATES: {
   amount: string;
   unit: string;
 }[] = [
-  { key: "senior", label: "Senior Living", amount: "$5,500", unit: "from, per month" },
+  { key: "personal", label: "Personal Care", amount: "$5,500", unit: "from, per month" },
+  { key: "memory", label: "Memory Care", amount: "$6,000", unit: "from, per month" },
   { key: "respite", label: "Respite", amount: "$300", unit: "from, per day" },
 ];
 
@@ -61,7 +62,7 @@ export const COST_LEDGER = {
  * invitation). Copy and default numbers live here because the rate helper and
  * the "starts at" figures are copy claims, editable in one place.
  *
- * joyFrom mirrors the Senior Living rate in RATES ($5,500). If that rate
+ * joyFrom mirrors the Personal Care rate in RATES ($5,500). If that rate
  * changes, change it in both places. The rate helper's "$28 to $32 an hour in
  * 2026" is a market claim; update the year and range when it stops being true.
  */
@@ -78,7 +79,7 @@ export const COST_CALCULATOR = {
     other: 0,
   },
   joyFrom: 5500,
-  joyLabel: "Senior living",
+  joyLabel: "Personal care",
   helpers: {
     paidHelp: "Drag to what she has now, or zero if you are the one covering it.",
     hourlyRate:
@@ -568,6 +569,8 @@ export type Town = {
   faqsHeading: string;
   faqs: { title: string; body: string }[];
   mellissaCaption: string;
+  /** The county hub this town links up to (a key of COUNTIES). */
+  county: CountySlug;
 };
 
 export const TOWN_MELLISSA = {
@@ -633,6 +636,7 @@ export const TOWNS: Record<string, Town> = {
       },
     ],
     mellissaCaption: "She'll be the one who shows you around.",
+    county: "gwinnett-county",
   },
 
   grayson: {
@@ -689,6 +693,7 @@ export const TOWNS: Record<string, Town> = {
       },
     ],
     mellissaCaption: "She runs the house herself.",
+    county: "gwinnett-county",
   },
 
   monroe: {
@@ -751,6 +756,7 @@ export const TOWNS: Record<string, Town> = {
       },
     ],
     mellissaCaption: "She leads the home here in Loganville.",
+    county: "walton-county",
   },
 
   lawrenceville: {
@@ -803,6 +809,7 @@ export const TOWNS: Record<string, Town> = {
       },
     ],
     mellissaCaption: "You'll meet her on your tour.",
+    county: "gwinnett-county",
   },
 
   dacula: {
@@ -864,5 +871,215 @@ export const TOWNS: Record<string, Town> = {
       },
     ],
     mellissaCaption: "Families call her when they aren't sure it's time.",
+    county: "gwinnett-county",
+  },
+};
+
+/* ----------------------- /serving/<county> ------------------------ */
+
+export type CountySlug = "gwinnett-county" | "walton-county";
+
+export type CountySection = TownSection & {
+  /** Optional link line under the paragraphs. */
+  link?: { href: string; label: string };
+};
+
+export type County = {
+  slug: CountySlug;
+  /** "Gwinnett County" */
+  name: string;
+  title: string;
+  description: string;
+  eyebrow: string;
+  h1: string;
+  lede: string;
+  openingCta: TownCta;
+  closingCta: TownCta;
+  sections: CountySection[];
+  /** The spoke pages under this hub. */
+  townsHeading: string;
+  towns: { href: string; name: string; line: string }[];
+  faqsHeading: string;
+  faqs: { title: string; body: string }[];
+  mellissaCaption: string;
+};
+
+/** Published rates. Keep in agreement with RATES (the /cost rate card). */
+const COUNTY_COST: CountySection = {
+  heading: "What it costs",
+  paragraphs: [
+    "We publish our prices. Personal care starts at $5,500 a month, and memory care starts at $6,000. Mellissa sets the exact rate after she meets your parent, because it depends on the care they need.",
+    "The rate covers the suite, three cooked meals a day, help with bathing, dressing and medications, housekeeping and laundry, and someone awake all night. One number, one check.",
+  ],
+  link: { href: "/cost", label: "See what the rate covers and what it replaces" },
+};
+
+/**
+ * County hubs above the town pages. Drive times are the ones already published
+ * on the town pages (TOWNS) and hospital times are the ones on /partners. Do
+ * not add a time that is not published there first.
+ */
+export const COUNTIES: Record<CountySlug, County> = {
+  "gwinnett-county": {
+    slug: "gwinnett-county",
+    name: "Gwinnett County",
+    title: "Senior Living & Personal Care in Gwinnett County, GA | The Joy",
+    description:
+      "A 24-suite personal care home with memory care on the southeast edge of Gwinnett County, about ten minutes from Grayson and twelve from Snellville.",
+    eyebrow: "Gwinnett County",
+    h1: "A small home on the southeast edge of Gwinnett County.",
+    lede: "The Joy is a licensed personal care home with memory care in Loganville, right where Gwinnett meets Walton County. It's about ten minutes from Grayson and twelve from Snellville. There are 24 suites, and Mellissa Daniel runs the house.",
+    openingCta: {
+      headline: "Come see the house. Mellissa will walk you through it.",
+      note: "",
+      phoneLead: "Or call",
+    },
+    closingCta: {
+      headline: "On the Gwinnett line, and small on purpose. Come look around.",
+      note: "A tour is a walk through the house and your questions answered.",
+      phoneLead: "Questions first? Call",
+    },
+    sections: [
+      {
+        heading: "What a Gwinnett search turns up",
+        paragraphs: [
+          "Search for assisted living in Gwinnett County and the list is long. You'll find big senior buildings all over the county, with long hallways and a dining room that seats a crowd. Some families tour one and feel right at home. If that suits your mom, it's a fine choice.",
+          "Other families walk out worried. They picture Dad as one more door on a long hall. Those families tend to keep looking for something smaller.",
+          "In Georgia, smaller often means a licensed personal care home. That's what The Joy is. One house with 24 suites. Everyone eats at the same table, and the same team sees your dad every day. They learn his whole story, and they notice when something is off.",
+          "Memory care is part of the license, throughout the home. The whole house is secured. There isn't a separate wing your dad gets moved into later. If his memory changes, he stays in the house he already knows, with people who already know him.",
+        ],
+        pull: "Big is easy to find. Small takes a little more looking.",
+      },
+      {
+        heading: "Where we are, from four Gwinnett towns",
+        paragraphs: [
+          "The Joy is on Conyers Road in Loganville. That's Walton County, right on the Gwinnett line. For a lot of Gwinnett families, it's closer than it sounds.",
+          "From Grayson it's about ten minutes down Highway 20. From Snellville it's about twelve minutes east on US 78. From Dacula it's about fifteen minutes. From Lawrenceville it's about twenty, south on Highway 20 through Grayson.",
+          "Close matters more than people expect. When your mom is fifteen minutes away, you stop putting visits on the calendar. You stop by after work because you can.",
+        ],
+      },
+      {
+        heading: "If your dad is at Piedmont Eastside or Northside Gwinnett",
+        paragraphs: [
+          "A lot of these decisions start in a hospital room. A doctor says your dad can't go home alone, and the discharge planner wants a plan by Friday.",
+          "Call us from the hospital. Piedmont Eastside is about twenty minutes from the house, and Northside Gwinnett is about thirty. When we can, Mellissa does the assessment the same day, and she can come to his bedside. Then she'll tell you plainly whether The Joy fits what he needs.",
+          "If you're not ready to decide on a permanent move, ask about respite. A respite stay runs from a few days to a few weeks, with the same care every resident gets. Some families use it as the bridge home from the hospital. Others use it to see whether The Joy fits before they decide anything.",
+          "Hospice and home health are welcome in the house, so a new need doesn't automatically mean a new move.",
+        ],
+      },
+      {
+        heading: "If you're still caring for a parent at home",
+        paragraphs: [
+          "Not every Gwinnett family is ready to talk about a move. Some are doing the caregiving themselves, every day, and it's wearing thin.",
+          "A caregiver support group meets at The Joy on the third Thursday of every month at 2pm. It's free. You don't need a parent living with us, and you don't need to be thinking about a move. Come once and see if it helps.",
+        ],
+        link: { href: "/blog/dementia-caregiver-support-group", label: "What the support group is like" },
+      },
+      COUNTY_COST,
+    ],
+    townsHeading: "Gwinnett towns near The Joy",
+    towns: [
+      { href: "/serving/grayson", name: "Grayson", line: "About ten minutes down Highway 20." },
+      { href: "/serving/snellville", name: "Snellville", line: "About twelve minutes east on US 78." },
+      { href: "/serving/dacula", name: "Dacula", line: "About fifteen minutes, with a free caregiver support group every month." },
+      { href: "/serving/lawrenceville", name: "Lawrenceville", line: "About twenty minutes, for families who want small." },
+    ],
+    faqsHeading: "What Gwinnett families ask us",
+    faqs: [
+      {
+        title: "Are there small personal care homes in Gwinnett County?",
+        body: "The Joy is just over the county line in Loganville, on the southeast edge of Gwinnett. It has 24 suites in one house. Wherever you look, ask each home for its license type and number. Georgia's inspection reports are public, and ours are linked from our About page.",
+      },
+      {
+        title: "How is a personal care home different from the big places in Gwinnett?",
+        body: "Mostly size. The Joy has 24 suites in one house, and the same caregivers see the same residents every day. A certified medication aide is on staff 24 hours a day, overnight included, and medications are counted at every shift change. A nurse is on site 24 hours a week, spread across three days. A nurse isn't here overnight, and we'd rather you hear that from us.",
+      },
+      {
+        title: "Which Gwinnett cities are you closest to?",
+        body: "Grayson is about ten minutes away. Snellville is about twelve, Dacula about fifteen, and Lawrenceville about twenty.",
+      },
+      {
+        title: "Can you take someone straight from a Gwinnett hospital?",
+        body: "Often, yes, if a suite is open and The Joy fits what your parent needs. Call from the hospital. Mellissa does a same-day assessment when she can, at the bedside if that helps, and the move can often happen the next day. If we're not the right fit, she'll say so.",
+      },
+    ],
+    mellissaCaption: "She'll be the one who shows you around.",
+  },
+
+  "walton-county": {
+    slug: "walton-county",
+    name: "Walton County",
+    title: "Senior Living & Personal Care in Walton County, GA | The Joy",
+    description:
+      "A 24-suite personal care home with memory care in Loganville, on the Walton side of the Gwinnett line. About 15 minutes from Monroe and Piedmont Walton.",
+    eyebrow: "Walton County",
+    h1: "A small personal care home in Walton County.",
+    lede: "The Joy is in Loganville, right where Walton County meets Gwinnett. It's a licensed personal care home with memory care and 24 suites, about fifteen minutes from Monroe. Mellissa Daniel runs the house.",
+    openingCta: {
+      headline: "See it in person. Mellissa will likely be the one who greets you.",
+      note: "",
+      phoneLead: "Or call",
+    },
+    closingCta: {
+      headline: "In the county she knows. Visit when you can.",
+      note: "Come for a tour. You won't be asked to sign anything.",
+      phoneLead: "Or call",
+    },
+    sections: [
+      {
+        heading: "Staying in the county",
+        paragraphs: [
+          "Loganville sits on the line between two counties. The Joy is on the Walton side, on Conyers Road.",
+          "If your mom has spent her life in Monroe, Social Circle, Between, Good Hope or Walnut Grove, she doesn't have to leave the county to get more help. Her church friends can still come by. So can her neighbors and the grandkids.",
+          "We're one house with 24 suites. Everyone eats at the same table. Staff know who needs the long walk after lunch and who needs quiet when the afternoon gets hard.",
+          "If you're caring for a parent at home and not ready for any of this, that's fine too. A free caregiver support group meets here on the third Thursday of every month at 2pm. Walton families are welcome, whether or not a move is ever on the table.",
+        ],
+        pull: "Needing more help doesn't have to mean leaving the county.",
+      },
+      {
+        heading: "Fifteen minutes from Monroe, and from Piedmont Walton",
+        paragraphs: [
+          "From downtown Monroe it's about fifteen minutes west on Highway 78. Piedmont Walton is about fifteen minutes from the house, too.",
+          "A lot of hard decisions start in a hospital room. Someone tells you your mom can't go back home alone, and you have a weekend to figure out what comes next. If that's where you are, call us from the hospital. When we can, Mellissa will assess her the same day, and she can come to the bedside. We'll tell you what's open and what a move would look like.",
+          "If it's too soon to decide, a respite stay can bridge the gap. It runs from a few days to a few weeks, with the same care every resident gets.",
+        ],
+      },
+      {
+        heading: "What to check anywhere you tour",
+        paragraphs: [
+          "Whether you tour one place or five, ask each of them the same questions.",
+          "Ask for the license type and number. Georgia's Department of Community Health inspects personal care homes, and the reports are public. Read the recent ones. Ours are linked from our About page.",
+          "Ask who's awake at night and who gives medications. At The Joy, a certified medication aide is on staff 24 hours a day, overnight included. A nurse is on site 24 hours a week across three days, and not overnight.",
+          "Ask what happens when a resident's needs change. A good home will tell you where its line is. So will we.",
+        ],
+        link: { href: "/tour-checklist", label: "Print our 25-question tour checklist" },
+      },
+      COUNTY_COST,
+    ],
+    townsHeading: "More for Walton County families",
+    towns: [
+      { href: "/serving/monroe", name: "Monroe", line: "About fifteen minutes on Highway 78, in the same county." },
+      { href: "/serving/loganville", name: "Loganville", line: "Our home town. What a licensed personal care home is, and who it fits." },
+    ],
+    faqsHeading: "Questions from Walton County families",
+    faqs: [
+      {
+        title: "Is The Joy in Walton County?",
+        body: "Yes. The Joy is at 434 Conyers Rd in Loganville, on the Walton side of the Gwinnett line.",
+      },
+      {
+        title: "How far is The Joy from Monroe?",
+        body: "About fifteen minutes. Head west on Highway 78 into Loganville, then a short way down Conyers Road.",
+      },
+      {
+        title: "Do you have memory care?",
+        body: "Yes. The Joy is licensed for memory care throughout the home, and the whole home is secured. If her memory changes, she stays in the house she already knows, with people who already know her.",
+      },
+      {
+        title: "Can she come straight from Piedmont Walton?",
+        body: "Often, yes, if a suite is open and The Joy fits what she needs. Call from the hospital. Mellissa does a same-day assessment when she can, at the bedside if that helps. If we're not the right fit, she'll tell you.",
+      },
+    ],
+    mellissaCaption: "She leads the home here in Loganville.",
   },
 };

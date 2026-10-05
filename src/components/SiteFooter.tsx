@@ -8,7 +8,7 @@ import {
   DCH_INSPECTION_SEARCH,
   DCH_INSPECTION_LINK_LABEL,
 } from "@/lib/site";
-import { LOGANVILLE_SERVING, TOWNS } from "@/lib/landing";
+import { COUNTIES, LOGANVILLE_SERVING, TOWNS } from "@/lib/landing";
 import { getSettings, toTelHref, toMailHref } from "@/lib/settings";
 import { getSitePhotos } from "@/lib/site-photos";
 
@@ -182,7 +182,11 @@ export default async function SiteFooter() {
         <div className="mx-auto max-w-6xl px-5 py-6 text-sm text-ink-soft">
           <p className="font-semibold text-ink">Areas we serve</p>
           <ul className="mt-2 flex flex-wrap gap-x-4 gap-y-1">
-            {[LOGANVILLE_SERVING, ...Object.values(TOWNS)].map((town) => (
+            {[
+              LOGANVILLE_SERVING,
+              ...Object.values(TOWNS),
+              ...Object.values(COUNTIES),
+            ].map((town) => (
               <li key={town.slug}>
                 <a href={`/serving/${town.slug}`} className="hover:text-clay">
                   {town.name}
@@ -196,17 +200,26 @@ export default async function SiteFooter() {
       {badges.length > 0 && (
         <div className="border-t border-line/70">
           <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-center gap-6 px-5 py-6 sm:gap-10">
-            {badges.map((b) => (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                key={b.src}
-                src={b.src}
-                alt={b.alt}
-                loading="lazy"
-                decoding="async"
-                className="h-16 w-auto"
-              />
-            ))}
+            {badges.map((b) => {
+              const img = (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={b.src}
+                  alt={b.alt}
+                  loading="lazy"
+                  decoding="async"
+                  className="h-16 w-auto"
+                />
+              );
+              // A followed link (no nofollow) so the award site gets the credit.
+              return b.href ? (
+                <a key={b.src} href={b.href} target="_blank" rel="noopener">
+                  {img}
+                </a>
+              ) : (
+                <span key={b.src}>{img}</span>
+              );
+            })}
           </div>
         </div>
       )}

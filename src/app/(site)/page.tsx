@@ -31,7 +31,7 @@ export const metadata: Metadata = pageTwitter({
   // the brand-first homepage title is not double-branded. (The `keywords` meta
   // tag was removed: Google ignores it and it only advertised our targets.)
   title: {
-    absolute: `${BUSINESS.name} | Personal Care & Memory Care in Loganville, GA`,
+    absolute: `${BUSINESS.name} | Personal Care & Memory Care, Loganville GA`,
   },
   description: `A ${BUSINESS.beds}-resident personal care home and memory care in ${BUSINESS.address.city}, Georgia. Small enough to know your parent by name. Book a tour or call ${BUSINESS.phone}.`,
   alternates: { canonical: "/" },

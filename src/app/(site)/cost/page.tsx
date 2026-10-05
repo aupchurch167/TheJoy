@@ -23,7 +23,7 @@ export const metadata: Metadata = pageTwitter({
     absolute: "Cost of a Personal Care Home in Loganville, GA | Joy",
   },
   description:
-    "Real prices, published: personal care from $4,500/mo, memory care from $5,500/mo. See what the number covers and what it replaces. Loganville, GA.",
+    "Real prices, published: personal care from $5,500/mo, memory care from $6,000/mo. See what the number covers and what it replaces. Loganville, GA.",
   alternates: { canonical: "/cost" },
   openGraph: {
     title: `What it costs | ${BUSINESS.name}`,
@@ -140,7 +140,7 @@ export default async function CostPage() {
           <h2 className="font-display text-2xl font-semibold text-ink sm:text-3xl">
             Our rates
           </h2>
-          <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-3">
             {RATES.map((r) => (
               <div
                 key={r.key}

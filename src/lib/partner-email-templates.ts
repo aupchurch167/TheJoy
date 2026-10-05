@@ -88,7 +88,7 @@ Adam
 
 Your clients ask you where mom should live, and it's not your job to know, but handing them a good answer makes you look good.
 
-The Joy is a 24-suite personal care home in Loganville (personal care, memory care, respite). One thing your clients will care about: pricing is published on our site, from $5,000/month.
+The Joy is a 24-suite personal care home in Loganville (personal care, memory care, respite). One thing your clients will care about: pricing is published on our site, from $5,500/month.
 
 I just wanted to introduce our community in case a client ever has a need that fits with us. Can I send a few packets for your office?
 
@@ -214,7 +214,7 @@ Mellissa & Adam`,
 
 It's been a couple months, no ask, just keeping us findable.
 
-One update worth having on file: [pick ONE true thing, e.g. "we've had good outcomes lately with post-hospital respite stays that turned permanent once the family exhaled" / "Mellissa's now doing bedside assessments at [hospital] within hours of a call" / "we just published our rates publicly, from $4,500 all-in, which makes the family conversation easier"].
+One update worth having on file: [pick ONE true thing, e.g. "we've had good outcomes lately with post-hospital respite stays that turned permanent once the family exhaled" / "Mellissa's now doing bedside assessments at [hospital] within hours of a call" / "we just published our rates publicly, from $5,500 all-in, which makes the family conversation easier"].
 
 Census line's the same: (470) 684-3569.
 

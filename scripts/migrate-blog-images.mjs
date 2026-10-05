@@ -6,7 +6,9 @@
  * subscription is cancelled, every one of those images (and its Article-schema
  * image) breaks. This script downloads each Webflow image, uploads it to R2,
  * VERIFIES the new public URL actually loads, and only THEN rewrites the URL in
- * the post's hero_image and body. Anything it cannot download or verify is left
+ * the post's hero_image and body. A Webflow URL that is gone (404/410) has
+ * its reference removed (hero_image cleared, markdown image dropped). Anything
+ * else it cannot download or verify is left
  * exactly as-is and reported, so a misconfigured bucket can never corrupt the
  * database. It is idempotent (already-migrated URLs are skipped) and safe to
  * re-run.
@@ -63,9 +65,13 @@ if (missing.length) {
 const PUBLIC_BASE = S3_PUBLIC_URL.replace(/\/$/, "");
 const BUCKET = S3_BUCKET.replace(/^\/+|\/+$/g, "");
 
-// Any image URL on a Webflow host, up to whitespace / markdown / html delimiters.
+// Any image URL on a Webflow host, up to whitespace / markdown / html
+// delimiters. A balanced "(...)" is part of the URL: Webflow filenames like
+// "Is%20it%20time%20for%20help%20(1).png" were cut at the ")" before.
 const WEBFLOW_RE =
-  /https?:\/\/(?:uploads-ssl\.webflow\.com|[a-z0-9.-]*\.website-files\.com)\/[^\s)"'<>\]]+/gi;
+  /https?:\/\/(?:uploads-ssl\.webflow\.com|[a-z0-9.-]*\.website-files\.com)\/(?:[^\s()"'<>\]]|\([^\s()"'<>\]]*\))+/gi;
+const WEBFLOW_HOST_RE =
+  /^https?:\/\/(?:uploads-ssl\.webflow\.com|[a-z0-9.-]*\.website-files\.com)\//i;
 
 const CONTENT_TYPE_BY_EXT = {
   jpg: "image/jpeg",
@@ -99,14 +105,30 @@ function collect(text, set) {
   for (const m of String(text).matchAll(WEBFLOW_RE)) set.add(m[0]);
 }
 
+// Same shape as the bucket's other blog files: blog/<name>-<6 digits>.<ext>
+// (e.g. blog/mellissa-541839.jpg). The digits come from a hash of the full
+// Webflow URL, so a re-run reuses the same key and two images that share a
+// filename never collide.
 function keyFor(url) {
   const { pathname } = new URL(url);
-  const base = pathname.split("/").filter(Boolean).pop() || "image";
-  const safe = base.replace(/[^a-zA-Z0-9._-]/g, "-").replace(/^-+/, "");
-  // Prefix a short hash of the full URL so two images that happen to share a
-  // filename never collide in the bucket.
-  const hash = createHash("sha1").update(url).digest("hex").slice(0, 8);
-  return `blog/${hash}-${safe}`;
+  const file = decodeURIComponent(pathname.split("/").filter(Boolean).pop() || "image");
+  const dot = file.lastIndexOf(".");
+  const ext = dot > 0 ? file.slice(dot + 1).toLowerCase() : "jpg";
+  const stem = (dot > 0 ? file.slice(0, dot) : file)
+    // Webflow prefixes a 24-hex asset id; it is noise in our bucket.
+    .replace(/^[0-9a-f]{24}_/i, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 60) || "image";
+  const digest = createHash("sha1").update(url).digest();
+  const digits = String(digest.readUInt32BE(0) % 900000 + 100000);
+  return `blog/${stem}-${digits}.${ext}`;
+}
+
+/** Escape a string for use inside a RegExp. */
+function escapeRe(s) {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
 function contentTypeFor(url, headerType) {
@@ -120,7 +142,13 @@ async function download(url) {
   const timer = setTimeout(() => controller.abort(), 20000);
   try {
     const res = await fetch(url, { cache: "no-store", signal: controller.signal });
-    if (!res.ok) return { ok: false, status: res.status };
+    if (!res.ok) {
+      // The Webflow CDN answers a missing file with 403 and an S3
+      // AccessDenied body, not 404. Count that as gone.
+      const text = res.status === 403 ? await res.text().catch(() => "") : "";
+      const missing = /<Code>(AccessDenied|NoSuchKey)<\/Code>/.test(text);
+      return { ok: false, status: missing ? 404 : res.status };
+    }
     const buf = Buffer.from(await res.arrayBuffer());
     return {
       ok: true,
@@ -176,7 +204,9 @@ async function main() {
 
   const found = new Set();
   for (const p of posts) {
-    collect(p.hero_image, found);
+    // hero_image is a whole URL; take it as-is rather than pattern-matching.
+    const hero = (p.hero_image || "").trim();
+    if (WEBFLOW_HOST_RE.test(hero)) found.add(hero);
     collect(p.body, found);
   }
 
@@ -189,10 +219,17 @@ async function main() {
 
   // old Webflow URL -> new R2 URL (only for images that uploaded AND verified).
   const map = new Map();
+  // Webflow URLs that are gone (404/410). Their references are removed.
+  const gone = new Set();
   const failures = [];
   for (const url of found) {
     const key = keyFor(url);
     const dl = await download(url);
+    if (!dl.ok && (dl.status === 404 || dl.status === 410)) {
+      gone.add(url);
+      console.log(`gone (${dl.status}): ${url}\n     -> reference will be removed`);
+      continue;
+    }
     if (!dl.ok) {
       failures.push({ url, reason: `download failed (${dl.status ?? "no response"})` });
       continue;
@@ -236,7 +273,7 @@ async function main() {
     for (const f of failures) console.log(`  ${f.url}\n    ${f.reason}`);
   }
 
-  if (map.size === 0) {
+  if (map.size === 0 && gone.size === 0) {
     await pool.end();
     return;
   }
@@ -247,9 +284,23 @@ async function main() {
     let hero = p.hero_image;
     let body = p.body;
     let touched = false;
+    if (hero) hero = hero.trim();
     if (hero && map.has(hero)) {
       hero = map.get(hero);
       touched = true;
+    } else if (hero && gone.has(hero)) {
+      hero = null;
+      touched = true;
+    }
+    if (body) {
+      for (const oldUrl of gone) {
+        // Drop the whole markdown image, not just the URL inside it.
+        const img = new RegExp(`!\\[[^\\]]*\\]\\(${escapeRe(oldUrl)}[^)]*\\)\\n?`, "g");
+        if (img.test(body)) {
+          body = body.replace(img, "");
+          touched = true;
+        }
+      }
     }
     if (body) {
       for (const [oldUrl, newUrl] of map) {
@@ -262,9 +313,14 @@ async function main() {
     if (touched) {
       changed++;
       if (!DRY) {
+        // Conditional: only while the row still holds what this run read, so
+        // an edit made in Admin mid-run is never overwritten.
         await pool.query(
-          "UPDATE posts SET hero_image = $1, body = $2, updated_at = now() WHERE id = $3",
-          [hero, body, p.id]
+          `UPDATE posts SET hero_image = $1, body = $2, updated_at = now()
+           WHERE id = $3
+             AND hero_image IS NOT DISTINCT FROM $4
+             AND body IS NOT DISTINCT FROM $5`,
+          [hero, body, p.id, p.hero_image, p.body]
         );
       }
       console.log(`${DRY ? "[dry] " : ""}post updated: ${p.title || p.id}`);

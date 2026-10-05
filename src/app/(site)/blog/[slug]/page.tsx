@@ -28,12 +28,15 @@ export async function generateMetadata({
   const description = publicDescription(post);
   // published_at comes back from pg as a Date. Passing that object through
   // makes article:published_time render as "[object Object]".
+  // Post titles are long enough on their own, so blog posts skip the
+  // "| Joy Senior Living" template. og:title and twitter:title match.
+  const title = post.meta_title || post.title;
   return pageTwitter({
-    title: post.meta_title || post.title,
+    title: { absolute: title },
     description,
     alternates: { canonical: `/blog/${post.slug}` },
     openGraph: {
-      title: post.meta_title || post.title,
+      title,
       description,
       type: "article",
       url: `/blog/${post.slug}`,

@@ -2,9 +2,29 @@ import type { MetadataRoute } from "next";
 import { SITE_URL, MEMORY_CARE, visibleServiceDetails } from "@/lib/site";
 import { hasDatabase } from "@/lib/db";
 import { getPublishedPosts } from "@/lib/posts";
-import { LOGANVILLE_SERVING, TOWNS } from "@/lib/landing";
+import { COUNTIES, LOGANVILLE_SERVING, TOWNS } from "@/lib/landing";
+import { decideCanonical } from "@/lib/canonical-request";
 
 export const dynamic = "force-dynamic";
+
+/**
+ * True when the proxy would serve this URL as-is (no 301 from
+ * db/redirects.json, no 410). A published post whose slug was later folded
+ * into another post still has a row, so this is what keeps redirect sources
+ * out of the sitemap.
+ */
+function servesItself(url: string): boolean {
+  const { host, protocol, pathname, search } = new URL(url);
+  const decision = decideCanonical({
+    method: "GET",
+    hostHeader: host,
+    forwardedProto: protocol.replace(":", ""),
+    urlProtocol: protocol,
+    pathname,
+    search,
+  });
+  return decision.action === "next";
+}
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // Static pages have no stored content timestamp, so they omit <lastmod>.
@@ -25,6 +45,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: "monthly" as const,
       priority: 0.7,
     },
+    ...Object.keys(COUNTIES).map((county) => ({
+      url: `${SITE_URL}/serving/${county}`,
+      changeFrequency: "monthly" as const,
+      priority: 0.7,
+    })),
     ...Object.keys(TOWNS).map((town) => ({
       url: `${SITE_URL}/serving/${town}`,
       changeFrequency: "monthly" as const,
@@ -74,5 +99,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }
   }
 
-  return entries;
+  // Assertion: only final 200s are listed. Anything the proxy would redirect
+  // or mark gone is dropped here and logged so the cause can be fixed.
+  return entries.filter((entry) => {
+    if (servesItself(entry.url)) return true;
+    console.warn(`[sitemap] dropped ${entry.url}: not a final 200`);
+    return false;
+  });
 }

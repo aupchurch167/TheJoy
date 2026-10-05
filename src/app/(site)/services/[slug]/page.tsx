@@ -38,7 +38,7 @@ export async function generateMetadata({
   if (!service) return pageTwitter({ title: "Not found", robots: { index: false } });
 
   return pageTwitter({
-    title: service.metaTitle,
+    title: { absolute: service.metaTitle },
     description: service.metaDescription,
     alternates: { canonical: `/services/${service.slug}` },
     openGraph: {
