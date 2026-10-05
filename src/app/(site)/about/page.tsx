@@ -7,6 +7,7 @@ import { getSitePhotos } from "@/lib/site-photos";
 import JsonLd from "@/components/JsonLd";
 import Photo from "@/components/Photo";
 import TourButton from "@/components/TourButton";
+import LicensedInspected from "@/components/sections/LicensedInspected";
 
 export const metadata: Metadata = pageTwitter({
   title: { absolute: ABOUT.title },
@@ -120,7 +121,7 @@ export default async function AboutPage() {
       </section>
 
       {/* License + CTA */}
-      <section className="mx-auto mt-14 max-w-2xl px-5 pb-20">
+      <section className="mx-auto mt-14 max-w-2xl px-5">
         <p className="border-l-2 border-line pl-5 text-lg leading-relaxed text-ink-soft">
           {ABOUT.licenseNote}
         </p>
@@ -135,6 +136,11 @@ export default async function AboutPage() {
           </p>
         </div>
       </section>
+
+      {/* Same block that used to sit on the homepage, now closing About. */}
+      <div className="mt-16">
+        <LicensedInspected />
+      </div>
     </div>
   );
 }
