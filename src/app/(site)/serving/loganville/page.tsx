@@ -18,7 +18,7 @@ import JsonLd from "@/components/JsonLd";
 
 // Educational frame (§4): the homepage owns "personal care home in
 // Loganville". This page answers the assisted living search.
-const TITLE = "Assisted Living in Loganville: Options & Alternatives | Joy";
+const TITLE = "Looking at Assisted Living in Loganville? Options & Alternatives | Joy";
 const DESCRIPTION =
   "Looking at assisted living in Loganville? The Joy is a small licensed personal care home on the Gwinnett edge. What that means, who it fits, and what to ask.";
 

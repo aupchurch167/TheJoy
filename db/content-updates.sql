@@ -2042,3 +2042,84 @@ UPDATE posts SET
   updated_at = now()
 WHERE slug = $md$what-we-cooked-at-joy-this-week$md$
   AND body ~ $re$!\[[[:space:]]*\]\([^)[:space:]]*/(cafd45d8114769c0e0137388588a3a61-original-429483|41d772532d36c12f99fd3ee787d293c2-original-237667|65414149102b79b3af64b688121b47c7-original-518709|acfee759e87a06e6b644e3dda5af7f6d-original-539840)\.jpg$re$;
+
+
+-- Blog title audit (2026-10-05, owner-approved): 19 page titles over 70
+-- characters or using "loved ones". Written to meta_title only, so the tab
+-- title and og:title change and the on-page H1 and Article headline stay.
+-- A row changes only while its page title is still the crawled text, so a
+-- later edit in Admin is left alone and a re-run changes nothing.
+UPDATE posts SET meta_title = $t$College Football Season: Keeping Game Day Special for a Parent$t$, updated_at = now()
+WHERE slug = $t$its-college-football-season-so-heres-how-to-make-football-season-one-to-remember$t$
+  AND coalesce(nullif(btrim(meta_title), ''), title) = $t$It's College Football Season: so here's how to make football season one to remember with a Senior.$t$;
+UPDATE posts SET meta_title = $t$What Our 2026 Best of Senior Living Award Actually Means$t$, updated_at = now()
+WHERE slug = $t$what-the-2026-best-of-senior-living-award-actually-means-for-loganville-families$t$
+  AND coalesce(nullif(btrim(meta_title), ''), title) = $t$What the 2026 Best of Senior Living Award Actually Means for Loganville Families$t$;
+UPDATE posts SET meta_title = $t$Talking With a Parent Who Has Dementia (Without a Quiz)$t$, updated_at = now()
+WHERE slug = $t$how-to-talk-with-a-parent-who-has-dementia-without-it-feeling-like-a-quiz$t$
+  AND coalesce(nullif(btrim(meta_title), ''), title) = $t$How to Talk With a Parent Who Has Dementia (Without It Feeling Like a Quiz)$t$;
+UPDATE posts SET meta_title = $t$Room by Room: A Fall Prevention Walkthrough for Mom's House$t$, updated_at = now()
+WHERE slug = $t$room-by-room-the-fall-prevention-walkthrough-every-adult-child-should-do$t$
+  AND coalesce(nullif(btrim(meta_title), ''), title) = $t$Room-by-Room: The Fall Prevention Walkthrough Every Adult Child Should Do$t$;
+UPDATE posts SET meta_title = $t$The Summer Heat Talk to Have With Your Aging Parent in Georgia$t$, updated_at = now()
+WHERE slug = $t$the-summer-heat-talk-you-need-to-have-with-your-aging-parent-in-georgia$t$
+  AND coalesce(nullif(btrim(meta_title), ''), title) = $t$The Summer Heat Talk You Need to Have With Your Aging Parent in Georgia$t$;
+UPDATE posts SET meta_title = $t$After the Summer Visit: Signs Your Parent Hoped You'd Miss$t$, updated_at = now()
+WHERE slug = $t$after-the-summer-visit-signs-aging-parent-needs-help$t$
+  AND coalesce(nullif(btrim(meta_title), ''), title) = $t$After the Summer Visit: The Signs Your Aging Parent Was Hoping You Wouldn't See$t$;
+UPDATE posts SET meta_title = $t$How to Have the 'It Might Be Time' Talk Without the Silence$t$, updated_at = now()
+WHERE slug = $t$how-to-have-the-it-might-be-time-conversation$t$
+  AND coalesce(nullif(btrim(meta_title), ''), title) = $t$How to Actually Have the 'It Might Be Time' Conversation Without It Ending in Silence$t$;
+UPDATE posts SET meta_title = $t$Small Enough to Know Your Parent by Name, in Loganville$t$, updated_at = now()
+WHERE slug = $t$small-enough-to-know-your-parent-by-name$t$
+  AND coalesce(nullif(btrim(meta_title), ''), title) = $t$Small Enough to Know Your Parent by Name: What a Small Personal Care Home in Loganville Actually Looks Like$t$;
+UPDATE posts SET meta_title = $t$Why Assisted Living Costs So Much (and Where the Money Goes)$t$, updated_at = now()
+WHERE slug = $t$cost-of-assisted-living-and-personal-care$t$
+  AND coalesce(nullif(btrim(meta_title), ''), title) = $t$Why Is the Cost of Assisted Living So High? Where the Money Actually Goes$t$;
+UPDATE posts SET meta_title = $t$Keeping Your Parents Out of Assisted Living: An Owner's Guide$t$, updated_at = now()
+WHERE slug = $t$a-senior-living-owners-guide-to-keeping-your-parents-out-of-assisted-living$t$
+  AND coalesce(nullif(btrim(meta_title), ''), title) = $t$A Senior Living Owner's Guide to Keeping Your Parents Out of Assisted Living$t$;
+UPDATE posts SET meta_title = $t$The First Two Weeks After a Parent Moves Into Senior Living$t$, updated_at = now()
+WHERE slug = $t$the-first-two-weeks-what-really-happens-when-someone-moves-into-assisted-living$t$
+  AND coalesce(nullif(btrim(meta_title), ''), title) = $t$The First Two Weeks: What Really Happens When Someone Moves Into Senior Living$t$;
+UPDATE posts SET meta_title = $t$The Heart of Our Home: Resident Council Meetings at The Joy$t$, updated_at = now()
+WHERE slug = $t$the-heart-of-our-community-how-resident-council-meetings-bring-joy-to-life-at-the-joy-senior-living$t$
+  AND coalesce(nullif(btrim(meta_title), ''), title) = $t$The Heart of Our Home: How Resident Council Meetings Bring Joy to Life at The Joy Senior Living$t$;
+UPDATE posts SET meta_title = $t$Nourishing the Golden Years: Why Nutrition Matters for Seniors$t$, updated_at = now()
+WHERE slug = $t$nourishing-the-golden-years-the-vital-role-of-nutrition-in-senior-living$t$
+  AND coalesce(nullif(btrim(meta_title), ''), title) = $t$Nourishing the Golden Years: The Vital Role of Nutrition in Senior Living$t$;
+UPDATE posts SET meta_title = $t$Celebrate Spring: Activities to Share With Your Parent$t$, updated_at = now()
+WHERE slug = $t$spring-fun-activities-to-enjoy-with-loved-ones-in-senior-living$t$
+  AND coalesce(nullif(btrim(meta_title), ''), title) = $t$Celebrate Spring: Fun Activities to Enjoy with Loved Ones in Senior Living$t$;
+UPDATE posts SET meta_title = $t$Indoor Winter Activities to Enjoy With Your Aging Parent$t$, updated_at = now()
+WHERE slug = $t$heartwarming-indoor-activities-to-enjoy-with-your-senior-loved-one-this-winter$t$
+  AND coalesce(nullif(btrim(meta_title), ''), title) = $t$Heartwarming Indoor Activities to Enjoy with Your Senior Loved One This Winter$t$;
+UPDATE posts SET meta_title = $t$Budgeting for Senior Care: Preparing for Rising Costs$t$, updated_at = now()
+WHERE slug = $t$budgeting-for-senior-care-how-to-prepare-for-the-ever-raising-cost-of-senior-care$t$
+  AND coalesce(nullif(btrim(meta_title), ''), title) = $t$Budgeting for Senior Care: How to prepare for the ever raising cost of Senior Care$t$;
+UPDATE posts SET meta_title = $t$Talking About Memory Care: A Family's Guide to the Move$t$, updated_at = now()
+WHERE slug = $t$navigating-conversations-a-familys-guide-to-transitioning-a-loved-one-to-memory-care$t$
+  AND coalesce(nullif(btrim(meta_title), ''), title) = $t$Navigating Conversations: A Family’s Guide to Transitioning a Loved One to Memory Care$t$;
+UPDATE posts SET meta_title = $t$Understanding Dementia: What It Is and How to Help a Parent$t$, updated_at = now()
+WHERE slug = $t$understand-dementia-what-why-how-to-care-for-loved-ones$t$
+  AND coalesce(nullif(btrim(meta_title), ''), title) = $t$Understand Dementia: What, Why & How to Care for Loved Ones$t$;
+UPDATE posts SET meta_title = $t$Assisted Living vs. Personal Care Homes in Georgia$t$, updated_at = now()
+WHERE slug = $t$whats-the-difference-between-assisted-living-vs-personal-care-homes-in-georgia$t$
+  AND coalesce(nullif(btrim(meta_title), ''), title) = $t$What's the difference between Assisted Living vs. Personal Care Homes in Georgia?$t$;
+
+-- The ribbon cutting and hearts full of gratitude posts were unpublished on
+-- 2026-09-28 (both 301 elsewhere) but were published again, so /blog linked
+-- to redirects. Runs once. A later publish in Admin is left alone.
+DO $unpublish_again$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM applied_content_updates WHERE id = 'unpublish-redirected-posts-2026-10-05'
+  ) THEN
+    UPDATE posts SET status = 'draft', updated_at = now()
+    WHERE slug IN ($un$a-joyous-beginning-celebrating-the-grand-ribbon-cutting-at-the-joy-of-loganville$un$, $un$hearts-full-of-gratitude-what-our-families-are-sharing-about-life-at-the-joy$un$)
+      AND status = 'published';
+
+    INSERT INTO applied_content_updates (id) VALUES ('unpublish-redirected-posts-2026-10-05');
+  END IF;
+END
+$unpublish_again$;
