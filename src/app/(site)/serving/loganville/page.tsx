@@ -416,7 +416,7 @@ export default async function LoganvillePage() {
                 >
                   Enjoy Senior Living&apos;s Loganville directory
                 </a>
-                , which pulls them straight from the state.
+                {", which pulls them straight from the state."}
               </li>
               <li className="ml-5 list-disc">
                 <strong className="text-ink">
