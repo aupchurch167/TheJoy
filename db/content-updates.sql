@@ -2156,3 +2156,39 @@ UPDATE posts SET
 WHERE slug = $cl$small-enough-to-know-your-parent-by-name$cl$
   AND strpos(body, $cl$touring communities in Walton County or greater Gwinnett$cl$) > 0
   AND strpos(body, $cl$(/serving/walton-county)$cl$) = 0;
+
+-- Honest Map (2026-10-06): contextual links into /serving/loganville from
+-- comparison-frame posts. No new competitor facts. A row changes only while
+-- the exact sentence is still unlinked, so a later Admin edit is left alone.
+UPDATE posts SET
+  body = replace(
+    body,
+    $hm$If you're comparing options around Loganville, ask each place the same questions.$hm$,
+    $hm$If you're [comparing options around Loganville](/serving/loganville), ask each place the same questions.$hm$
+  ),
+  updated_at = now()
+WHERE slug = $hm$memory-care-loganville-what-to-look-for$hm$
+  AND strpos(body, $hm$If you're comparing options around Loganville, ask each place the same questions.$hm$) > 0
+  AND strpos(body, $hm$[comparing options around Loganville](/serving/loganville)$hm$) = 0;
+
+UPDATE posts SET
+  body = replace(
+    body,
+    $hm$Print it. Bring it to every home you tour. Write their answers in the margins and compare.$hm$,
+    $hm$Print it. Bring it to every home you tour. Write their answers in the margins and compare. If you are still choosing which places in Loganville belong on that list, read [what is actually in Loganville](/serving/loganville).$hm$
+  ),
+  updated_at = now()
+WHERE slug = $hm$questions-to-ask-personal-care-home-tour$hm$
+  AND strpos(body, $hm$Print it. Bring it to every home you tour. Write their answers in the margins and compare.$hm$) > 0
+  AND strpos(body, $hm$[what is actually in Loganville](/serving/loganville)$hm$) = 0;
+
+UPDATE posts SET
+  body = replace(
+    body,
+    $hm$The best way to know if a small personal care home in Loganville is right for your parent is to come sit in it for an hour.$hm$,
+    $hm$The best way to know if a [small personal care home in Loganville](/serving/loganville) is right for your parent is to come sit in it for an hour.$hm$
+  ),
+  updated_at = now()
+WHERE slug = $hm$small-enough-to-know-your-parent-by-name$hm$
+  AND strpos(body, $hm$The best way to know if a small personal care home in Loganville is right for your parent is to come sit in it for an hour.$hm$) > 0
+  AND strpos(body, $hm$[small personal care home in Loganville](/serving/loganville)$hm$) = 0;

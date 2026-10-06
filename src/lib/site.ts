@@ -780,6 +780,18 @@ export type ServiceDetail = {
  * Existing page titles, used as the link text from the homepage body.
  * These are the document titles (the absolute <title> strings).
  */
+/**
+ * Educational homepage link into /serving/loganville.
+ * The anchor is the one new homepage phrase for this page. Do not add another
+ * "assisted living" phrase around it, and do not repeat it on the Loganville page.
+ */
+export const HOME_LOGANVILLE_OPTIONS = {
+  href: "/serving/loganville",
+  lead: "If you are ",
+  anchor: "exploring assisted living options in Loganville",
+  tail: ", start with a plain look at what is actually in town.",
+} as const;
+
 export const HOME_GUIDES: { href: string; title: string }[] = [
   {
     href: "/cost",
