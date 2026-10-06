@@ -4,6 +4,7 @@ import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import {
   addFamilyMember,
+  editFamilyMember,
   removeFamilyMember,
   toggleFamilyActive,
   toggleFamilySmsConsent,
@@ -44,6 +45,7 @@ export default function FamilyManager({
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<Filter>("all");
   const [openMenu, setOpenMenu] = useState<string | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
 
   const [pending, start] = useTransition();
   const [enabling, startEnable] = useTransition();
@@ -335,18 +337,30 @@ export default function FamilyManager({
                   </div>
                 </div>
               </div>
-              {g.contacts.map((m) => (
-                <ContactRow
-                  key={m.id}
-                  m={m}
-                  menuOpen={openMenu === m.id}
-                  onOpenMenu={() => setOpenMenu(openMenu === m.id ? null : m.id)}
-                  onCloseMenu={() => setOpenMenu(null)}
-                  onToggleActive={() => onToggleActive(m)}
-                  onToggleSms={() => onToggleSms(m)}
-                  onRemove={() => onRemove(m.id, m.name || "Contact")}
-                />
-              ))}
+              {g.contacts.map((m) =>
+                editingId === m.id ? (
+                  <EditContactForm
+                    key={m.id}
+                    m={m}
+                    onDone={() => setEditingId(null)}
+                  />
+                ) : (
+                  <ContactRow
+                    key={m.id}
+                    m={m}
+                    menuOpen={openMenu === m.id}
+                    onOpenMenu={() => setOpenMenu(openMenu === m.id ? null : m.id)}
+                    onCloseMenu={() => setOpenMenu(null)}
+                    onToggleActive={() => onToggleActive(m)}
+                    onToggleSms={() => onToggleSms(m)}
+                    onEdit={() => {
+                      setOpenMenu(null);
+                      setEditingId(m.id);
+                    }}
+                    onRemove={() => onRemove(m.id, m.name || "Contact")}
+                  />
+                )
+              )}
             </div>
           ))}
         </div>
@@ -375,6 +389,7 @@ function ContactRow({
   onCloseMenu,
   onToggleActive,
   onToggleSms,
+  onEdit,
   onRemove,
 }: {
   m: Lead;
@@ -383,6 +398,7 @@ function ContactRow({
   onCloseMenu: () => void;
   onToggleActive: () => void;
   onToggleSms: () => void;
+  onEdit: () => void;
   onRemove: () => void;
 }) {
   const badge2 = m.unsubscribed_at
@@ -441,6 +457,9 @@ function ContactRow({
           <>
             <div className="fixed inset-0 z-30" onClick={onCloseMenu} />
             <div className="absolute right-0 top-7 z-40 flex min-w-[170px] flex-col rounded-xl border border-line bg-white p-1.5 shadow-[0_10px_30px_rgba(7,20,23,0.15)]">
+              <button type="button" onClick={onEdit} className="rounded-lg px-3 py-2 text-left text-[13px] text-ink hover:bg-paper">
+                Edit details
+              </button>
               {m.phone && !m.sms_opt_out_at && (
                 <button type="button" onClick={onToggleSms} className="rounded-lg px-3 py-2 text-left text-[13px] text-ink hover:bg-paper">
                   {m.sms_consent ? "Turn texts off" : "Turn texts on"}
@@ -457,6 +476,89 @@ function ContactRow({
         )}
       </div>
     </div>
+  );
+}
+
+function EditContactForm({ m, onDone }: { m: Lead; onDone: () => void }) {
+  const router = useRouter();
+  const { success } = useToast();
+  const [name, setName] = useState(m.name || "");
+  const [residentName, setResidentName] = useState(m.resident_name || "");
+  const [relation, setRelation] = useState(m.relation || "");
+  const [phone, setPhone] = useState(m.phone || "");
+  const [email, setEmail] = useState(m.email || "");
+  const [optIn, setOptIn] = useState(false);
+  const [error, setError] = useState("");
+  const [pending, start] = useTransition();
+
+  const emailChanged =
+    email.trim() !== "" && email.trim().toLowerCase() !== (m.email || "").toLowerCase();
+  const losesTexts = m.sms_consent && !phone.trim();
+
+  function onSave(e: React.FormEvent) {
+    e.preventDefault();
+    setError("");
+    start(async () => {
+      const res = await editFamilyMember(m.id, { name, residentName, relation, phone, email, optIn });
+      if (!res.ok) {
+        setError(res.error);
+        return;
+      }
+      success(`${name.trim() || "Contact"} updated.`);
+      onDone();
+      router.refresh();
+    });
+  }
+
+  return (
+    <form
+      onSubmit={onSave}
+      className="border-b border-line bg-paper px-4 py-4 last:border-b-0 sm:px-[18px]"
+    >
+      <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-3">
+        <label>
+          <span className={FIELD_LABEL}>Resident they visit</span>
+          <input className={FIELD} value={residentName} onChange={(e) => setResidentName(e.target.value)} />
+        </label>
+        <label>
+          <span className={FIELD_LABEL}>Contact name</span>
+          <input className={FIELD} value={name} onChange={(e) => setName(e.target.value)} autoFocus />
+        </label>
+        <label>
+          <span className={FIELD_LABEL}>Relation</span>
+          <input className={FIELD} value={relation} onChange={(e) => setRelation(e.target.value)} />
+        </label>
+        <label>
+          <span className={FIELD_LABEL}>Phone</span>
+          <input className={FIELD} value={phone} onChange={(e) => setPhone(e.target.value)} />
+        </label>
+        <label className="sm:col-span-2">
+          <span className={FIELD_LABEL}>Email</span>
+          <input className={FIELD} type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+        </label>
+      </div>
+
+      <div className="mt-3 flex flex-col gap-2 text-[12.5px] leading-relaxed text-ink-soft">
+        {emailChanged && (
+          <label className="flex items-start gap-2.5">
+            <input type="checkbox" checked={optIn} onChange={(e) => setOptIn(e.target.checked)} className="mt-0.5 h-[15px] w-[15px] accent-clay" />
+            They agreed to community emails at this address (invitations, monthly note, photos). Unsubscribe anytime.
+          </label>
+        )}
+        {losesTexts && <p>Removing the phone number turns texts off for this contact.</p>}
+      </div>
+
+      {error && <p className="mt-2 text-sm font-medium text-danger">{error}</p>}
+
+      <div className="mt-3 flex flex-wrap items-center gap-2.5">
+        <button type="submit" disabled={pending} className="rounded-[9px] bg-clay px-4 py-2 text-[13px] font-bold text-white hover:opacity-95 disabled:opacity-60">
+          {pending ? "Saving…" : "Save changes"}
+        </button>
+        <button type="button" onClick={onDone} className="text-[13px] font-semibold text-ink-soft hover:underline">
+          Cancel
+        </button>
+      </div>
+    </form>
   );
 }
 
