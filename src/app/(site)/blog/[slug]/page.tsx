@@ -13,6 +13,7 @@ import { getSettings, tourHref } from "@/lib/settings";
 import Markdown from "@/components/Markdown";
 import Photo from "@/components/Photo";
 import TourButton from "@/components/TourButton";
+import { BLOG_PROSE_SIZES } from "@/lib/optimizable-image";
 
 export const dynamic = "force-dynamic";
 
@@ -114,12 +115,15 @@ export default async function PostPage({
           src={post.hero_image}
           alt={post.hero_image_alt || post.title}
           priority
+          sizes={BLOG_PROSE_SIZES}
           className="mt-8 aspect-[16/9] w-full ring-1 ring-line"
         />
       )}
 
       <div className="mt-10">
-        <Markdown>{post.body}</Markdown>
+        <Markdown omitImageSrc={post.hero_image ?? undefined}>
+          {post.body}
+        </Markdown>
       </div>
 
       {/* Contextual internal link into the right care page. */}

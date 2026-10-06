@@ -4,6 +4,7 @@ import { isAdminRequest } from "@/lib/require-admin";
 import { imageGenEnabled, generateHeroImage } from "@/lib/image-gen";
 import { storageEnabled, uploadImage } from "@/lib/storage";
 import { slugify } from "@/lib/posts";
+import { compressForWeb } from "@/lib/compress-image";
 
 export const runtime = "nodejs";
 export const maxDuration = 120; // image generation can take a while
@@ -55,12 +56,14 @@ export async function POST(request: Request) {
   }
 
   try {
-    const { bytes, mimeType } = await generateHeroImage(parsed.data.prompt);
-    const ext = (mimeType.split("/")[1] || "png").replace("jpeg", "jpg");
+    const generated = await generateHeroImage(parsed.data.prompt);
+    const prepared = await compressForWeb(generated.bytes, generated.mimeType);
+    const ext =
+      prepared.contentType.split("/")[1]?.replace("jpeg", "jpg") || "jpg";
     const base = slugify(parsed.data.slug || "hero") || "hero";
     // Collision-safe key without Date.now (kept out of this runtime).
-    const key = `blog/ai/${base}-${bytes.length}.${ext}`;
-    const url = await uploadImage(bytes, key, mimeType);
+    const key = `blog/ai/${base}-${prepared.bytes.length}.${ext}`;
+    const url = await uploadImage(prepared.bytes, key, prepared.contentType);
     return NextResponse.json({ ok: true, url });
   } catch (err) {
     console.error("[generate-image]", err);
