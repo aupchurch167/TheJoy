@@ -24,6 +24,9 @@ const DESCRIPTION =
 
 const TOUR_QUESTIONS = "/blog/questions-to-ask-personal-care-home-tour";
 const MEMORY_CARE_GUIDE = "/blog/memory-care-loganville-what-to-look-for";
+// One Enjoy directory link on this page (Walton is canonical until Enjoy says otherwise).
+const ENJOY_LOGANVILLE_DIRECTORY =
+  "https://enjoysrliving.com/directory/in/walton/loganville";
 
 const FAQS: { title: string; body: string }[] = [
   {
@@ -33,6 +36,10 @@ const FAQS: { title: string; body: string }[] = [
   {
     title: 'So why do search results say "assisted living"?',
     body: 'Because most people search with that phrase. Directory sites and search engines group similar places under the words families type. "Assisted living Loganville" and "assisted living facilities Loganville GA" pull up personal care homes, larger campuses, and everything in between. The label in the search bar isn\'t the license on the wall.\n\nIf you care about the legal category, ask for the license type and number. Ask whether memory care is a separate unit or licensed across the home. Ask about overnight staffing and who gives medications. Those answers tell you more than the marketing name on a listing site.',
+  },
+  {
+    title: "How many senior living communities are in Loganville?",
+    body: "More than fifteen licensed communities operate in and around Loganville (one large campus, a mid-size community, and a dozen-plus small personal care homes). The exact list changes; the state's inspection records are the current source of truth, and Enjoy's Loganville directory keeps them in one place.",
   },
 ];
 
@@ -318,6 +325,130 @@ export default async function LoganvillePage() {
                 ))}
               </div>
             ))}
+          </div>
+        </section>
+
+        {/* Honest Map (Adam-approved). "Assisted living" appears in this
+            section only in the three frames from the draft: the opening
+            search sentence, The Retreat's offering line, and the license
+            bullet. No competitor sites. One Enjoy link, Walton URL. */}
+        <section className="mt-14 space-y-5">
+          <h2 className="font-display text-2xl font-semibold text-ink sm:text-3xl">
+            Every option in Loganville, honestly
+          </h2>
+          <div className="space-y-5 text-lg leading-relaxed text-ink-soft">
+            <p>
+              If you&apos;re searching for assisted living in Loganville,
+              here&apos;s what you&apos;ll actually find. We&apos;d rather you
+              hear it from someone local than from a national website
+              that&apos;s never been here.
+            </p>
+            <p>
+              Loganville has three kinds of senior living. Which kind fits her
+              matters more than any brochure.
+            </p>
+            <p>
+              <strong className="text-ink">The large campus.</strong> The
+              Retreat at Loganville is the big one (a full campus off Tommy Lee
+              Fuller Drive offering independent living, assisted living, and
+              memory care in one place). Campuses like this make sense when
+              she&apos;s mostly independent today and wants to move once, or
+              when she wants a built-in calendar of activities and a lot of
+              neighbors. The trade: more residents per caregiver, and a
+              different face helping her more often.
+            </p>
+            <p>
+              <strong className="text-ink">The mid-size community.</strong>{" "}
+              Magnolia Senior Living on Ozora Road sits in the middle (bigger
+              than a house, smaller than a campus). More structure than a small
+              home, more scale than one too.
+            </p>
+            <p>
+              <strong className="text-ink">The small homes.</strong> And then
+              there are more than a dozen small, state-licensed personal care
+              homes in and around Loganville (real houses, usually six to
+              twenty-four residents, where the same few caregivers cook the
+              meals, pass the time, and notice when something&apos;s off). The
+              Joy is one of them. We&apos;re 24 private suites on Conyers Road,
+              and yes (we&apos;re telling you about our competitors on our own
+              website). That should tell you something about how we run the
+              place.
+            </p>
+          </div>
+        </section>
+
+        <section className="mt-14 space-y-5">
+          <h2 className="font-display text-2xl font-semibold text-ink sm:text-3xl">
+            How to choose between them
+          </h2>
+          <div className="space-y-5 text-lg leading-relaxed text-ink-soft">
+            <p>
+              Not by the brochures. All three kinds will show you a clean lobby
+              and a smiling photo. Ask these instead, anywhere you tour
+              (including here):
+            </p>
+            <ul className="space-y-4">
+              <li className="ml-5 list-disc">
+                <strong className="text-ink">Show me your state license.</strong>{" "}
+                Georgia licenses personal care homes and assisted living
+                communities differently, and the license (not the sign out
+                front) tells you what a place is allowed to do. If memory care
+                is the need, ask to see the memory care certificate too. Anyone
+                who hesitates has answered a question you didn&apos;t ask.
+              </li>
+              <li className="ml-5 list-disc">
+                <strong className="text-ink">Who&apos;s awake at night?</strong>{" "}
+                Not &quot;is someone on call.&quot; Awake, in the building,
+                every night.
+              </li>
+              <li className="ml-5 list-disc">
+                <strong className="text-ink">
+                  Can I see your last inspection?
+                </strong>{" "}
+                Every licensed community in Georgia gets inspected by the
+                state, and the reports are public. You can read inspection
+                records for every Loganville community (ours included) on{" "}
+                <a
+                  href={ENJOY_LOGANVILLE_DIRECTORY}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={linkClass}
+                >
+                  Enjoy Senior Living&apos;s Loganville directory
+                </a>
+                {", which pulls them straight from the state."}
+              </li>
+              <li className="ml-5 list-disc">
+                <strong className="text-ink">
+                  Will you tell me if she&apos;s not a fit?
+                </strong>{" "}
+                The right place says no fast. We turn away families when her
+                needs are beyond what a small home should handle, and
+                we&apos;ll tell you who to call instead.
+              </li>
+            </ul>
+          </div>
+        </section>
+
+        <section className="mt-14 space-y-5">
+          <h2 className="font-display text-2xl font-semibold text-ink sm:text-3xl">
+            Who should tour Joy (and who shouldn&apos;t)
+          </h2>
+          <div className="space-y-5 text-lg leading-relaxed text-ink-soft">
+            <p>
+              Come see us if she needs daily help in a place that feels like a
+              home: meals cooked in the kitchen she can smell, the same faces
+              every morning, a porch instead of a lobby. Come if memory is the
+              worry and you want a small, secured home where the night staff
+              knows her by name.
+            </p>
+            <p>
+              Don&apos;t come if she needs skilled nursing (vents, IVs,
+              round-the-clock medical care) or if she&apos;d be happiest with
+              two hundred neighbors and an activities director. That&apos;s a
+              different kind of place, and we&apos;ll say so in the first phone
+              call, not after the deposit.
+            </p>
           </div>
         </section>
 
