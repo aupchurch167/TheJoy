@@ -20,6 +20,10 @@ import { canOptimize } from "@/lib/optimizable-image";
  * is for prose photos: the picture keeps its real aspect ratio and is capped
  * at the column width. Width and height are not written onto that img, because
  * next/image would lock the aspect ratio to whatever pixel size we guessed.
+ *
+ * priority marks the above-the-fold LCP photo. In Next 16 the old next/image
+ * `priority` prop only preloads, it no longer sets fetchpriority, so we pass
+ * `preload` and `fetchPriority="high"` explicitly.
  */
 
 export default function Photo({
@@ -69,6 +73,7 @@ export default function Photo({
           alt={alt}
           title={title}
           loading={priority ? "eager" : "lazy"}
+          fetchPriority={priority ? "high" : undefined}
           decoding="async"
           onError={() => setFailed(true)}
           className={imgClass}
@@ -85,7 +90,8 @@ export default function Photo({
       width: 1600,
       height: 1067,
       sizes,
-      priority,
+      preload: priority,
+      fetchPriority: priority ? "high" : undefined,
     });
 
     return (
@@ -94,6 +100,7 @@ export default function Photo({
         alt={alt}
         title={title}
         loading={props.loading}
+        fetchPriority={props.fetchPriority}
         decoding="async"
         sizes={props.sizes}
         srcSet={props.srcSet}
@@ -113,7 +120,8 @@ export default function Photo({
           title={title}
           fill
           sizes={sizes}
-          priority={priority}
+          preload={priority}
+          fetchPriority={priority ? "high" : undefined}
           onError={() => setFailed(true)}
           className="object-cover"
         />
@@ -129,6 +137,7 @@ export default function Photo({
       alt={alt}
       title={title}
       loading={priority ? "eager" : "lazy"}
+      fetchPriority={priority ? "high" : undefined}
       decoding="async"
       onError={() => setFailed(true)}
       className={`object-cover ${rounded} ${className}`}
