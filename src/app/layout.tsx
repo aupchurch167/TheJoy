@@ -4,9 +4,6 @@ import "./globals.css";
 import { BUSINESS, OG_IMAGE, SITE_URL } from "@/lib/site";
 import Analytics from "@/components/Analytics";
 
-// Public Cloudflare R2 bucket that holds uploaded photos and logos.
-const R2_ORIGIN = "https://pub-6e43e90472054fe3880f53e8c0ca3b60.r2.dev";
-
 export const viewport: Viewport = {
   themeColor: "#f8f8f9",
 };
@@ -73,12 +70,6 @@ export default function RootLayout({
       lang="en"
       className={`${fraunces.variable} ${inter.variable} h-full antialiased`}
     >
-      <head>
-        {/* Open the connection to the R2 photo bucket early. dns-prefetch is
-            the fallback for browsers without preconnect. */}
-        <link rel="preconnect" href={R2_ORIGIN} />
-        <link rel="dns-prefetch" href={R2_ORIGIN} />
-      </head>
       <body className="min-h-full flex flex-col bg-paper text-ink">
         {children}
         <Analytics />
