@@ -4,6 +4,7 @@ import { getSettings, toTelHref, tourHref } from "@/lib/settings";
 import { getSitePhotos } from "@/lib/site-photos";
 import TourButton from "./TourButton";
 import MobileNav from "./MobileNav";
+import BrandLogo from "./BrandLogo";
 
 // Memory Care sits in the nav only while it is offered within the license (§4).
 const NAV = [
@@ -32,23 +33,38 @@ export default async function SiteHeader() {
         >
           {logo.set ? (
             <>
-              {/* Full logo on larger screens. eslint-disable-next-line @next/next/no-img-element */}
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
+              {/* Full logo on larger screens. */}
+              <BrandLogo
                 src={logo.src}
                 alt={BUSINESS.name}
+                width={108}
+                height={36}
+                eager
                 className="hidden h-9 w-auto sm:block"
               />
               {/* On mobile: the compact mark PLUS the name in text, so the brand
                   reads even when only the mark is uploaded. Falls back to the
                   full logo if no separate mark exists. */}
               <span className="flex items-center gap-2 sm:hidden">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={logoMark.set ? logoMark.src : logo.src}
-                  alt={`${BUSINESS.name} logo`}
-                  className="h-9 w-auto"
-                />
+                {logoMark.set ? (
+                  <BrandLogo
+                    src={logoMark.src}
+                    alt={`${BUSINESS.name} logo`}
+                    width={36}
+                    height={36}
+                    eager
+                    className="h-9 w-auto"
+                  />
+                ) : (
+                  <BrandLogo
+                    src={logo.src}
+                    alt={`${BUSINESS.name} logo`}
+                    width={108}
+                    height={36}
+                    eager
+                    className="h-9 w-auto"
+                  />
+                )}
                 <span className="font-display text-lg font-semibold leading-tight text-ink">
                   {BUSINESS.name}
                 </span>

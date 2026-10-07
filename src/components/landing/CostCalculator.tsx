@@ -9,12 +9,6 @@ const C = COST_CALCULATOR;
 /** Hours per month a caregiver bills (24 * 30.4 / 24 = 30.4 days). */
 const DAYS_PER_MONTH = 30.4;
 
-declare global {
-  interface Window {
-    dataLayer?: Record<string, unknown>[];
-  }
-}
-
 /** Treat empty or non-numeric input as 0, never negative, no error state. */
 function num(s: string): number {
   const v = parseFloat(s);
@@ -27,19 +21,13 @@ function money(n: number): string {
   return `$${rounded.toLocaleString("en-US")}/mo`;
 }
 
-/** Fire once per browser session; also mirror to Plausible. */
+/** Fire once per browser session (Plausible). */
 function fireInteractionOnce() {
   try {
     if (sessionStorage.getItem("joy_calc_interaction")) return;
     sessionStorage.setItem("joy_calc_interaction", "1");
   } catch {
     /* private mode: fall through and still fire */
-  }
-  try {
-    window.dataLayer = window.dataLayer || [];
-    window.dataLayer.push({ event: "calculator_interaction" });
-  } catch {
-    /* ignore */
   }
   track("calculator_interaction");
 }
@@ -59,7 +47,7 @@ export default function CostCalculator() {
   const [other, setOther] = useState(String(C.defaults.other));
   const [interacted, setInteracted] = useState(false);
 
-  // Any change to a control counts as an interaction (fires the GTM event once).
+  // Any change to a control counts as an interaction (fires the event once).
   const onInteract = () => {
     setInteracted(true);
     fireInteractionOnce();
@@ -83,17 +71,6 @@ export default function CostCalculator() {
   useEffect(() => {
     if (!interacted) return;
     const t = setTimeout(() => {
-      try {
-        window.dataLayer = window.dataLayer || [];
-        window.dataLayer.push({
-          event: "calculator_result_viewed",
-          home_total: homeRounded,
-          care_type: "senior_living",
-          paid_hours: paidHours,
-        });
-      } catch {
-        /* ignore */
-      }
       track("calculator_result_viewed", {
         home_total: String(homeRounded),
         care_type: "senior_living",

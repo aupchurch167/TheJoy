@@ -11,6 +11,7 @@ import {
 import { COUNTIES, LOGANVILLE_SERVING, TOWNS } from "@/lib/landing";
 import { getSettings, toTelHref, toMailHref } from "@/lib/settings";
 import { getSitePhotos } from "@/lib/site-photos";
+import BrandLogo from "./BrandLogo";
 
 export default async function SiteFooter() {
   const [settings, { logo }] = await Promise.all([
@@ -32,8 +33,13 @@ export default async function SiteFooter() {
             className="inline-flex items-center"
           >
             {logo.set ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={logo.src} alt={BUSINESS.name} className="h-10 w-auto" />
+              <BrandLogo
+                src={logo.src}
+                alt={BUSINESS.name}
+                width={120}
+                height={40}
+                className="h-10 w-auto"
+              />
             ) : (
               <span className="font-display text-lg font-semibold text-ink">
                 {BUSINESS.name}
