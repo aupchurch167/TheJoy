@@ -85,7 +85,9 @@ export default function TextComposer({
     }
     setTestedBody(trimmed);
     success(
-      `Test sent to ${res.sent} owner/admin number${res.sent === 1 ? "" : "s"}. Review it, then send below.`
+      `Test sent to ${res.sent} owner/admin number${res.sent === 1 ? "" : "s"}${
+        res.skipped ? `. ${res.skipped} skipped (opted out)` : ""
+      }. Review it, then send below.`
     );
   }
 
@@ -101,7 +103,9 @@ export default function TextComposer({
       setConfirmOpen(false);
       setSentFlash(true);
       success(
-        `Text sent to ${res.sent} of ${res.total} families${res.failed ? `, ${res.failed} failed` : ""}.`
+        `Text sent to ${res.sent} of ${res.total} families${
+          res.skipped ? `, ${res.skipped} skipped (opted out)` : ""
+        }${res.failed ? `, ${res.failed} failed` : ""}.`
       );
       setTimeout(() => {
         setSentFlash(false);
