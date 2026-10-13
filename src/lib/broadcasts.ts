@@ -98,6 +98,51 @@ export async function createBroadcast(
 }
 
 /**
+ * The cron only sends email after a person schedules it. Drafts (the only
+ * status MCP creates) are not in this predicate, and scheduled_at must be due.
+ */
+export const DUE_BROADCAST_WHERE =
+  "status = 'scheduled' AND channel = 'email' AND scheduled_at <= now()";
+
+/**
+ * Put an unsent broadcast back to an unscheduled draft. Used if a create path
+ * ever returns something other than a draft, so MCP cannot leave a send queued.
+ */
+export async function forceUnsentBackToDraft(id: string): Promise<void> {
+  await query(
+    `UPDATE broadcasts
+        SET status = 'draft', scheduled_at = NULL, updated_at = now()
+      WHERE id = $1 AND status <> 'sent'`,
+    [id]
+  );
+}
+
+/** Drafts for one channel. Pass excludeAudience to hide leads from MCP. */
+export async function listChannelDrafts(
+  channel: BroadcastChannel,
+  limit: number,
+  opts?: { audience?: Audience; excludeAudience?: Audience }
+): Promise<Broadcast[]> {
+  const params: unknown[] = [channel, limit];
+  const conds = ["channel = $1", "status = 'draft'"];
+  if (opts?.audience) {
+    params.push(opts.audience);
+    conds.push(`audience = $${params.length}`);
+  }
+  if (opts?.excludeAudience) {
+    params.push(opts.excludeAudience);
+    conds.push(`audience <> $${params.length}`);
+  }
+  return query<Broadcast>(
+    `SELECT * FROM broadcasts
+      WHERE ${conds.join(" AND ")}
+      ORDER BY updated_at DESC
+      LIMIT $2`,
+    params
+  );
+}
+
+/**
  * What actually went out for an event: the answer to "did invites go out?",
  * which the event's own status cannot give (publishing only makes the RSVP
  * page public). `invitePending` is an invite composed but not yet sent, so
@@ -254,6 +299,45 @@ export async function updateBroadcast(
   return rows[0] ?? null;
 }
 
+/**
+ * Edit a broadcast only while it is still a draft. Scheduled, sending, and
+ * sent rows are left untouched (the WHERE is the guard, not a prior read).
+ * Does not change status or scheduled_at.
+ */
+export async function updateDraftBroadcast(
+  id: string,
+  fields: {
+    subject: string;
+    body: string;
+    format: BroadcastBodyFormat;
+    modelJson: unknown | null;
+    audience: Audience;
+    channel: BroadcastChannel;
+  }
+): Promise<Broadcast | null> {
+  const rows = await query<Broadcast>(
+    `UPDATE broadcasts
+        SET subject = $2,
+            body = $3,
+            body_format = $4,
+            model_json = $5::jsonb,
+            audience = $6,
+            updated_at = now()
+      WHERE id = $1 AND status = 'draft' AND channel = $7
+      RETURNING *`,
+    [
+      id,
+      fields.subject,
+      fields.body,
+      fields.format,
+      fields.modelJson != null ? JSON.stringify(fields.modelJson) : null,
+      fields.audience,
+      fields.channel,
+    ]
+  );
+  return rows[0] ?? null;
+}
+
 /** Move a broadcast to scheduled (send-now = scheduled_at now). */
 export async function scheduleBroadcast(
   id: string,
@@ -280,7 +364,7 @@ export async function getDueBroadcasts(): Promise<Broadcast[]> {
   // so they jump the throttled marketing (leads) queue.
   return query<Broadcast>(
     `SELECT * FROM broadcasts
-      WHERE status = 'scheduled' AND channel = 'email' AND scheduled_at <= now()
+      WHERE ${DUE_BROADCAST_WHERE}
       ORDER BY (priority OR audience = 'families') DESC, scheduled_at ASC`
   );
 }

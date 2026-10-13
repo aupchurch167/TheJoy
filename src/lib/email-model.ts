@@ -45,7 +45,7 @@ export const EMAIL_THEMES: { id: EmailTheme; label: string }[] = [
 ];
 
 /** The spotlight themes (employee/resident of the month) show a hero photo. */
-const PHOTO_THEMES: EmailTheme[] = ["photo", "employee", "resident"];
+export const PHOTO_THEMES: EmailTheme[] = ["photo", "employee", "resident"];
 
 export type EmailPlan = {
   label?: string;

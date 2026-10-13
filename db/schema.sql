@@ -895,3 +895,30 @@ CREATE INDEX IF NOT EXISTS feedback_requests_round_idx
   ON feedback_requests (round);
 CREATE INDEX IF NOT EXISTS feedback_responses_round_idx
   ON feedback_responses (round);
+
+-- ==========================================================================
+-- Joy Admin MCP (bots). Draft tools only; nothing here sends.
+-- Keys live in JOY_MCP_KEYS (hashes). This table is the call log, including
+-- denied calls. args are truncated before insert.
+-- ==========================================================================
+CREATE TABLE IF NOT EXISTS mcp_audit (
+  id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  at          TIMESTAMPTZ NOT NULL DEFAULT now(),
+  key_name    TEXT,
+  tool        TEXT,
+  args        JSONB,
+  ok          BOOLEAN NOT NULL,
+  error       TEXT,
+  result_ref  TEXT
+);
+CREATE INDEX IF NOT EXISTS mcp_audit_at_idx ON mcp_audit (at DESC);
+
+-- Create-tool retries. result stays null while the first call is in flight.
+CREATE TABLE IF NOT EXISTS mcp_idempotency (
+  key_name        TEXT NOT NULL,
+  tool            TEXT NOT NULL,
+  idempotency_key TEXT NOT NULL,
+  result          JSONB,
+  created_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
+  PRIMARY KEY (key_name, tool, idempotency_key)
+);
