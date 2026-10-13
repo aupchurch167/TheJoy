@@ -14,6 +14,7 @@ import { resolveRange, type RangeKey } from "@/lib/date-range";
 import { formatDate, formatPercent, formatSource, orDash } from "@/lib/format";
 import StageSelect from "./StageSelect";
 import ImportLeadsPanel from "./ImportLeadsPanel";
+import OptOutTextsButton from "./OptOutTextsButton";
 import {
   PageHeader,
   Badge,
@@ -438,12 +439,26 @@ export default async function LeadsPage({
                           unsubscribed
                         </Badge>
                       )}
+                      {lead.sms_opt_out_at && (
+                        <Badge tone="danger" className="ml-2">
+                          Opted out of texts
+                        </Badge>
+                      )}
                     </Td>
                     <Td className="text-ink-soft">{orDash(lead.resident_name)}</Td>
                     <Td className="text-ink-soft">
                       <div className="break-all">{orDash(lead.email)}</div>
                       {lead.phone && (
                         <div className="text-ink-faint">{lead.phone}</div>
+                      )}
+                      {lead.phone && !lead.sms_opt_out_at && (
+                        <div className="mt-1">
+                          <OptOutTextsButton
+                            id={lead.id}
+                            name={lead.name}
+                            optedOut={false}
+                          />
+                        </div>
                       )}
                     </Td>
                     <Td className="text-ink-soft">{formatSource(lead.source)}</Td>

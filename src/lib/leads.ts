@@ -1,4 +1,5 @@
 import { query } from "./db";
+import { toE164 } from "./sms";
 import { suppressEmail } from "./suppression";
 
 export type LeadInput = {
@@ -490,7 +491,7 @@ export async function insertFamilyMember(
  * requires explicit sms_consent.)
  */
 export async function getFamilySurveyTextRecipients(): Promise<Lead[]> {
-  return query<Lead>(
+  const rows = await query<Lead>(
     `SELECT * FROM leads
       WHERE audience = 'families'
         AND active = TRUE
@@ -498,18 +499,13 @@ export async function getFamilySurveyTextRecipients(): Promise<Lead[]> {
         AND phone IS NOT NULL AND phone <> ''
       ORDER BY lower(coalesce(resident_name,'')) ASC`
   );
+  return excludeOptedOutPhones(rows);
 }
 
 /** Count of family contacts a survey text could reach (see above). */
 export async function countFamilySurveyTextable(): Promise<number> {
-  const rows = await query<{ n: string }>(
-    `SELECT COUNT(*) AS n FROM leads
-      WHERE audience = 'families'
-        AND active = TRUE
-        AND sms_opt_out_at IS NULL
-        AND phone IS NOT NULL AND phone <> ''`
-  );
-  return Number(rows[0]?.n ?? 0);
+  const rows = await getFamilySurveyTextRecipients();
+  return rows.length;
 }
 
 /**
@@ -518,29 +514,47 @@ export async function countFamilySurveyTextable(): Promise<number> {
  * opt in their existing families in one step (they attest they have permission).
  */
 export async function enableSmsForFamiliesWithPhone(): Promise<number> {
-  const rows = await query<{ id: string }>(
-    `UPDATE leads SET sms_consent = TRUE
-      WHERE audience = 'families'
-        AND active = TRUE
-        AND sms_consent = FALSE
-        AND sms_opt_out_at IS NULL
-        AND phone IS NOT NULL AND phone <> ''
-      RETURNING id`
-  );
-  return rows.length;
-}
-
-/** Family contacts that have a phone but texts are not on yet (opt-out excluded). */
-export async function countFamiliesTextable(): Promise<number> {
-  const rows = await query<{ n: string }>(
-    `SELECT COUNT(*) AS n FROM leads
+  const candidates = await query<{ id: string; phone: string }>(
+    `SELECT id, phone FROM leads
       WHERE audience = 'families'
         AND active = TRUE
         AND sms_consent = FALSE
         AND sms_opt_out_at IS NULL
         AND phone IS NOT NULL AND phone <> ''`
   );
-  return Number(rows[0]?.n ?? 0);
+  const blocked = await optedOutE164Phones();
+  const ids = candidates
+    .filter((r) => {
+      const e164 = toE164(r.phone);
+      // A STOP on any row with this number blocks consent, even when this row's flag is empty.
+      return !e164 || !blocked.has(e164);
+    })
+    .map((r) => r.id);
+  if (ids.length === 0) return 0;
+  const rows = await query<{ id: string }>(
+    `UPDATE leads SET sms_consent = TRUE
+      WHERE id = ANY($1::uuid[])
+      RETURNING id`,
+    [ids]
+  );
+  return rows.length;
+}
+
+/** Family contacts that have a phone but texts are not on yet (opt-out excluded). */
+export async function countFamiliesTextable(): Promise<number> {
+  const rows = await query<{ phone: string }>(
+    `SELECT phone FROM leads
+      WHERE audience = 'families'
+        AND active = TRUE
+        AND sms_consent = FALSE
+        AND sms_opt_out_at IS NULL
+        AND phone IS NOT NULL AND phone <> ''`
+  );
+  const blocked = await optedOutE164Phones();
+  return rows.filter((r) => {
+    const e164 = toE164(r.phone);
+    return !e164 || !blocked.has(e164);
+  }).length;
 }
 
 export async function getFamilyMembers(): Promise<Lead[]> {
@@ -596,20 +610,110 @@ export async function updateFamilyMember(
   );
 }
 
-/** Toggle a family contact's SMS consent (opt them in/out of text blasts). */
+/**
+ * Toggle a family contact's SMS consent (marketing texts on or off).
+ * Consent cannot be turned back on after a STOP opt-out. That flag sticks
+ * until it is cleared on purpose, and nothing in the admin does that.
+ */
 export async function setFamilySmsConsent(
   id: string,
   consent: boolean
 ): Promise<void> {
-  await query(`UPDATE leads SET sms_consent = $2 WHERE id = $1`, [id, consent]);
-}
-
-/** Mark a contact opted out of texts (e.g. they replied STOP). */
-export async function markSmsOptOut(id: string): Promise<void> {
+  if (!consent) {
+    await query(`UPDATE leads SET sms_consent = FALSE WHERE id = $1`, [id]);
+    return;
+  }
   await query(
-    `UPDATE leads SET sms_opt_out_at = now(), sms_consent = FALSE WHERE id = $1`,
+    `UPDATE leads SET sms_consent = TRUE
+      WHERE id = $1 AND sms_opt_out_at IS NULL`,
     [id]
   );
+}
+
+/**
+ * True when any leads row with this phone (any formatting) has sms_opt_out_at
+ * set. The input is normalized with toE164. An invalid number is not opted out.
+ */
+export async function isPhoneSmsOptedOut(
+  phone?: string | null
+): Promise<boolean> {
+  const e164 = toE164(phone);
+  if (!e164) return false;
+  const blocked = await optedOutE164Phones();
+  return blocked.has(e164);
+}
+
+/**
+ * Record a STOP for every leads row with this phone (families and prospective
+ * leads). Clears text consent on those rows. Returns how many rows were updated.
+ */
+export async function markSmsOptOutByPhone(
+  phone?: string | null
+): Promise<number> {
+  const e164 = toE164(phone);
+  if (!e164) return 0;
+  const rows = await query<{ id: string; phone: string }>(
+    `SELECT id, phone FROM leads
+      WHERE phone IS NOT NULL AND btrim(phone) <> ''`
+  );
+  const ids = rows.filter((r) => toE164(r.phone) === e164).map((r) => r.id);
+  if (ids.length === 0) return 0;
+  const updated = await query<{ id: string }>(
+    `UPDATE leads
+        SET sms_opt_out_at = COALESCE(sms_opt_out_at, now()),
+            sms_consent = FALSE
+      WHERE id = ANY($1::uuid[])
+      RETURNING id`,
+    [ids]
+  );
+  return updated.length;
+}
+
+/**
+ * Mark a contact opted out of texts (they asked to stop, or replied STOP).
+ * The same phone on any other leads row is opted out too.
+ */
+export async function markSmsOptOut(id: string): Promise<void> {
+  const rows = await query<{ phone: string | null }>(
+    `SELECT phone FROM leads WHERE id = $1`,
+    [id]
+  );
+  const stamped = await markSmsOptOutByPhone(rows[0]?.phone);
+  if (stamped > 0) return;
+  await query(
+    `UPDATE leads
+        SET sms_opt_out_at = COALESCE(sms_opt_out_at, now()),
+            sms_consent = FALSE
+      WHERE id = $1`,
+    [id]
+  );
+}
+
+/** E.164 numbers that have opted out on at least one leads row. */
+async function optedOutE164Phones(): Promise<Set<string>> {
+  const rows = await query<{ phone: string }>(
+    `SELECT phone FROM leads
+      WHERE sms_opt_out_at IS NOT NULL
+        AND phone IS NOT NULL AND btrim(phone) <> ''`
+  );
+  const set = new Set<string>();
+  for (const row of rows) {
+    const e164 = toE164(row.phone);
+    if (e164) set.add(e164);
+  }
+  return set;
+}
+
+/** Drop rows whose phone matches any opted-out number, including other rows. */
+async function excludeOptedOutPhones<T extends { phone: string | null }>(
+  rows: T[]
+): Promise<T[]> {
+  const blocked = await optedOutE164Phones();
+  if (blocked.size === 0) return rows;
+  return rows.filter((r) => {
+    const e164 = toE164(r.phone);
+    return !e164 || !blocked.has(e164);
+  });
 }
 
 /**
@@ -617,7 +721,7 @@ export async function markSmsOptOut(id: string): Promise<void> {
  * given SMS consent, and have not opted out.
  */
 export async function getSmsRecipients(): Promise<Lead[]> {
-  return query<Lead>(
+  const rows = await query<Lead>(
     `SELECT * FROM leads
       WHERE audience = 'families'
         AND active = TRUE
@@ -626,6 +730,7 @@ export async function getSmsRecipients(): Promise<Lead[]> {
         AND phone IS NOT NULL AND phone <> ''
       ORDER BY lower(coalesce(resident_name,'')) ASC`
   );
+  return excludeOptedOutPhones(rows);
 }
 
 /** Remove a subscriber row (used to remove a family member). */
