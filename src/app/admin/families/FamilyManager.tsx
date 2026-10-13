@@ -10,6 +10,7 @@ import {
   toggleFamilySmsConsent,
   enableTextsForAll,
 } from "./actions";
+import { optOutOfTexts } from "@/app/admin/texts/actions";
 import type { Lead } from "@/lib/leads";
 import { useToast } from "@/components/admin/Toast";
 import FamilyImport from "./FamilyImport";
@@ -143,6 +144,24 @@ export default function FamilyManager({
     const res = await toggleFamilySmsConsent(m.id, !m.sms_consent);
     if (!res?.ok) return toastError("Could not update. Please try again.");
     success(`Texts turned ${!m.sms_consent ? "on" : "off"} for ${m.name}.`);
+    router.refresh();
+  }
+
+  async function onOptOut(m: Lead) {
+    setOpenMenu(null);
+    const who = m.name.trim() || "this person";
+    if (
+      !window.confirm(
+        `Opt ${who} out of texts? They asked to stop. This number will be skipped on family texts, survey texts, and deposit reminders. You cannot turn texts back on for this number.`
+      )
+    )
+      return;
+    const res = await optOutOfTexts(m.id);
+    if (!res.ok) {
+      toastError("Could not save the opt-out. Please try again.");
+      return;
+    }
+    success(`${who} opted out of texts.`);
     router.refresh();
   }
 
@@ -353,6 +372,7 @@ export default function FamilyManager({
                     onCloseMenu={() => setOpenMenu(null)}
                     onToggleActive={() => onToggleActive(m)}
                     onToggleSms={() => onToggleSms(m)}
+                    onOptOut={() => onOptOut(m)}
                     onEdit={() => {
                       setOpenMenu(null);
                       setEditingId(m.id);
@@ -389,6 +409,7 @@ function ContactRow({
   onCloseMenu,
   onToggleActive,
   onToggleSms,
+  onOptOut,
   onEdit,
   onRemove,
 }: {
@@ -398,6 +419,7 @@ function ContactRow({
   onCloseMenu: () => void;
   onToggleActive: () => void;
   onToggleSms: () => void;
+  onOptOut: () => void;
   onEdit: () => void;
   onRemove: () => void;
 }) {
@@ -445,6 +467,14 @@ function ContactRow({
             {badge2.label}
           </span>
         )}
+        {m.sms_opt_out_at && (
+          <span
+            className="whitespace-nowrap rounded-full px-2.5 py-0.5 text-[10.5px] font-bold"
+            style={{ background: "rgba(207,70,54,.1)", color: "#cf4636" }}
+          >
+            Opted out of texts
+          </span>
+        )}
         <button
           type="button"
           onClick={onOpenMenu}
@@ -456,13 +486,18 @@ function ContactRow({
         {menuOpen && (
           <>
             <div className="fixed inset-0 z-30" onClick={onCloseMenu} />
-            <div className="absolute right-0 top-7 z-40 flex min-w-[170px] flex-col rounded-xl border border-line bg-white p-1.5 shadow-[0_10px_30px_rgba(7,20,23,0.15)]">
+            <div className="absolute right-0 top-7 z-40 flex min-w-[260px] flex-col rounded-xl border border-line bg-white p-1.5 shadow-[0_10px_30px_rgba(7,20,23,0.15)]">
               <button type="button" onClick={onEdit} className="rounded-lg px-3 py-2 text-left text-[13px] text-ink hover:bg-paper">
                 Edit details
               </button>
               {m.phone && !m.sms_opt_out_at && (
                 <button type="button" onClick={onToggleSms} className="rounded-lg px-3 py-2 text-left text-[13px] text-ink hover:bg-paper">
                   {m.sms_consent ? "Turn texts off" : "Turn texts on"}
+                </button>
+              )}
+              {m.phone && !m.sms_opt_out_at && (
+                <button type="button" onClick={onOptOut} className="rounded-lg px-3 py-2 text-left text-[13px] text-danger hover:bg-danger/[0.06]">
+                  Opt out of texts (they asked to stop)
                 </button>
               )}
               <button type="button" onClick={onToggleActive} className="rounded-lg px-3 py-2 text-left text-[13px] text-ink hover:bg-paper">

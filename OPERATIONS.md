@@ -577,11 +577,28 @@ registered for **A2P 10DLC** business texting in Quo — carriers require this, 
 Quo walks you through it. Until both are set, the Texts page shows a warning and
 sending is off.
 
-**Consent (important):** texting has stricter rules than email. A text only goes
-to a family contact you have marked **Texts: on** in the Family list, who is
-active and has a phone. Only opt in people who agreed to be texted. Every message
-automatically adds "Reply STOP to opt out."; if someone asks to stop, use **Texts
-off** (or it records their opt-out) and they are never texted again.
+**Consent (important):** texting has stricter rules than email. A marketing
+text blast only goes to a family contact you have marked **Texts: on** in the
+Family list, who is active and has a phone. Only opt in people who agreed to be
+texted. Every message automatically adds "Reply STOP to opt out."
+
+**Opt-out sticks.** **Turn texts off** only pauses marketing consent, and you
+can turn it back on. If someone asks to stop, that is different. On the family
+row (or on the lead, when that is where the number lives), choose **Opt out of
+texts (they asked to stop)**. That sets `sms_opt_out_at` on every lead and
+family row with that phone and turns consent off. You cannot turn texts back
+on for that number from the toggle.
+
+An opted-out number is skipped, and counted as skipped rather than failed, on
+text blasts, feedback survey texts and re-sends, survey test texts, and deposit
+reminder texts. Feedback survey texts still do not require the marketing
+**Texts: on** flag (those are check-ins to families already at Joy). They do
+honor this opt-out.
+
+There is no inbound Quo webhook in the app yet, so a STOP reply that arrives
+only in Quo does not write `sms_opt_out_at` by itself. When someone asks to
+stop, record it with the admin action above. Staff texts (team surveys and
+hire check-ins) go to employee phones and are not checked against this list.
 
 **Required test before every blast.** A family blast is locked until that exact
 message has been test-sent to the owner/admin numbers. Set those numbers in

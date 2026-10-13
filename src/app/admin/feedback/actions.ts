@@ -148,6 +148,7 @@ export async function sendSurveyToAllFamilies(input?: {
     let emailed = 0;
     let texted = 0;
     let skipped = 0;
+    let optedOut = 0;
 
     for (const c of byId.values()) {
       // Decide the channels for this family: eligible, requested, and not
@@ -185,13 +186,19 @@ export async function sendSurveyToAllFamilies(input?: {
         }
       }
       if (sendSmsTo && c.phone) {
+        // sendSurveyText goes through sendSms, which skips any phone that
+        // opted out (including a different leads row with the same number).
+        // Survey texts do not require the marketing "Texts: on" flag. A STOP
+        // opt-out is always honored. See getFamilySurveyTextRecipients.
         const res = await sendSurveyText({
           toPhone: c.phone,
           familyName: c.name,
           residentFirstName: firstName(c.residentName),
           url: url(request.token),
         });
-        if (res.ok) {
+        if (res.skipped) {
+          optedOut++;
+        } else if (res.ok) {
           delivered = true;
           texted++;
           recent.phones.add(c.phone);
@@ -203,11 +210,20 @@ export async function sendSurveyToAllFamilies(input?: {
     revalidatePath("/admin/feedback");
 
     const totalSent = emailed + texted;
+    const optedOutNote = optedOut
+      ? `${optedOut} skipped (opted out of texts)`
+      : "";
     if (totalSent === 0) {
+      const why = [
+        skipped
+          ? `${skipped} family member(s) were surveyed within the last ${SURVEY_MIN_INTERVAL_DAYS} days`
+          : "",
+        optedOut ? `${optedOut} opted out of texts` : "",
+      ].filter(Boolean);
       return {
         ok: true,
-        message: skipped
-          ? `No new surveys sent. ${skipped} family member(s) were surveyed within the last ${SURVEY_MIN_INTERVAL_DAYS} days.`
+        message: why.length
+          ? `No new surveys sent. ${why.join(". ")}.`
           : "No eligible family members were found for the chosen channel.",
       };
     }
@@ -218,7 +234,7 @@ export async function sendSurveyToAllFamilies(input?: {
       ok: true,
       message: `Sent ${parts.join(" and ")}${
         skipped ? `, skipped ${skipped} surveyed in the last ${SURVEY_MIN_INTERVAL_DAYS} days` : ""
-      }.`,
+      }${optedOutNote ? `, ${optedOutNote}` : ""}.`,
     };
   } catch (err) {
     console.error("[sendSurveyToAllFamilies]", err);
@@ -236,6 +252,7 @@ export async function resendSurvey(id: string): Promise<FeedbackActionResult> {
 
     // Re-send on whatever channel(s) this request was created for.
     const targets: string[] = [];
+    let smsSkipped = false;
     if (request.family_email && emailEnabled()) {
       const ok = await sendSurveyInvitation(request);
       if (ok) targets.push(request.family_email);
@@ -247,10 +264,18 @@ export async function resendSurvey(id: string): Promise<FeedbackActionResult> {
         residentFirstName: request.resident_first_name,
         url: `${SITE_URL}/feedback/${request.token}`,
       });
-      if (res.ok) targets.push(request.family_phone);
+      if (res.skipped) smsSkipped = true;
+      else if (res.ok) targets.push(request.family_phone);
     }
 
     if (!targets.length) {
+      if (smsSkipped) {
+        return {
+          ok: false,
+          error:
+            "Skipped. This number opted out of texts, so the survey text was not sent.",
+        };
+      }
       const needsCfg =
         (request.family_email && !emailEnabled()) ||
         (request.family_phone && !smsEnabled());
@@ -263,7 +288,12 @@ export async function resendSurvey(id: string): Promise<FeedbackActionResult> {
     }
     await markRequestSent(request.id);
     revalidatePath("/admin/feedback");
-    return { ok: true, message: `Survey re-sent to ${targets.join(" and ")}.` };
+    return {
+      ok: true,
+      message: `Survey re-sent to ${targets.join(" and ")}${
+        smsSkipped ? ". The text was skipped because this number opted out" : ""
+      }.`,
+    };
   } catch (err) {
     console.error("[resendSurvey]", err);
     return { ok: false, error: "Could not re-send." };
@@ -300,6 +330,11 @@ export async function sendTestSurveyText(input: {
       residentFirstName: null,
       url: `${SITE_URL}/feedback/${request.token}`,
     });
+    if (res.skipped)
+      return {
+        ok: false,
+        error: "Skipped. That number opted out of texts, so the test was not sent.",
+      };
     if (!res.ok)
       return { ok: false, error: res.error ?? "Could not send the text." };
     await markRequestSent(request.id);

@@ -326,7 +326,9 @@ export async function sendSurveyToTeam(surveyId: string): Promise<ActionResult> 
             to,
             `Hi ${first}, it's Joy Senior Living. A quick team check-in (about 2 minutes${
               survey.anonymous ? ", anonymous" : ""
-            }): ${url}\n\nReply STOP to opt out.`
+            }): ${url}\n\nReply STOP to opt out.`,
+            // Staff surveys are not family or lead texts.
+            { honorLeadOptOut: false }
           );
           delivered = delivered || res.ok;
         }

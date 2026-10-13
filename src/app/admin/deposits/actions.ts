@@ -261,6 +261,12 @@ export async function sendDepositReminderText(
   const content = `${BUSINESS.name}: your move-in deposit of ${amount}. Pay securely here: ${dep.invoice_url} (questions? call ${BUSINESS.phone})`;
 
   const res = await sendSms(to, content);
+  if (res.skipped) {
+    return {
+      ok: false,
+      error: "Skipped. This number opted out of texts, so the reminder was not sent.",
+    };
+  }
   if (!res.ok) {
     return { ok: false, error: res.error || "Could not send the text." };
   }

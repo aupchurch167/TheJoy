@@ -7,6 +7,7 @@ import { toMailHref, toTelHref } from "@/lib/settings";
 import { orDash, formatSource } from "@/lib/format";
 import StageSelect from "../StageSelect";
 import SubscriptionButton from "../SubscriptionButton";
+import OptOutTextsButton from "../OptOutTextsButton";
 import {
   PageHeader,
   BackLink,
@@ -116,6 +117,13 @@ export default async function LeadDetailPage({
                 Call
               </ButtonLink>
             )}
+            {lead.phone && (
+              <OptOutTextsButton
+                id={lead.id}
+                name={lead.name}
+                optedOut={!!lead.sms_opt_out_at}
+              />
+            )}
             <SubscriptionButton
               id={lead.id}
               unsubscribed={!!lead.unsubscribed_at}
@@ -172,6 +180,13 @@ export default async function LeadDetailPage({
             ) : (
               "—"
             )}
+          </Row>
+          <Row label="Texts">
+            {lead.sms_opt_out_at
+              ? `Opted out ${dateTime(lead.sms_opt_out_at)}`
+              : lead.phone
+                ? "Not opted out"
+                : "No phone on file"}
           </Row>
           <Row label="Source">{formatSource(lead.source)}</Row>
           <Row label="Received">{dateTime(lead.created_at)}</Row>

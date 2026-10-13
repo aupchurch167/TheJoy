@@ -52,10 +52,31 @@ export function parseSmsNumbers(raw?: string | null): string[] {
   return out;
 }
 
-export type SmsResult = { ok: boolean; error?: string };
+export type SmsResult = {
+  ok: boolean;
+  /**
+   * The number was not texted because some leads row with that phone has
+   * opted out. This is not a carrier or config failure.
+   */
+  skipped?: boolean;
+  error?: string;
+};
+
+export type SendSmsOptions = {
+  /**
+   * When false, do not consult leads.sms_opt_out_at. Staff texts pass false:
+   * they go to employee phones, not family or lead phones.
+   * Default: honor a STOP on any leads row with this number.
+   */
+  honorLeadOptOut?: boolean;
+};
 
 /** Send one SMS. Returns ok:false with a reason instead of throwing. */
-export async function sendSms(to: string, content: string): Promise<SmsResult> {
+export async function sendSms(
+  to: string,
+  content: string,
+  options?: SendSmsOptions
+): Promise<SmsResult> {
   const key = apiKey();
   const fromRaw = fromNumber();
   if (!key || !fromRaw) return { ok: false, error: "SMS is not configured." };
@@ -73,6 +94,16 @@ export async function sendSms(to: string, content: string): Promise<SmsResult> {
 
   const e164 = toE164(to);
   if (!e164) return { ok: false, error: "Invalid phone number." };
+
+  // Phone-level STOP. Any leads row with this number (however it was typed)
+  // blocks the text. Checked here so every lead-facing caller is covered.
+  // Dynamic import avoids a cycle: leads.ts imports toE164 from this file.
+  if (options?.honorLeadOptOut !== false) {
+    const { isPhoneSmsOptedOut } = await import("./leads");
+    if (await isPhoneSmsOptedOut(e164)) {
+      return { ok: false, skipped: true, error: "Opted out of texts." };
+    }
+  }
 
   const payload = JSON.stringify({ from, to: [e164], content });
   // Quo/OpenPhone occasionally returns a transient gateway error (502/503/504)
