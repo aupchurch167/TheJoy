@@ -335,7 +335,7 @@ export type LeadSegment = {
 };
 
 /** Build the shared subscriber WHERE clause (base opt-in rules + segment). */
-function segmentWhere(
+export function segmentWhere(
   audience: Audience,
   seg?: LeadSegment
 ): { where: string; params: unknown[] } {
@@ -613,19 +613,37 @@ export async function markSmsOptOut(id: string): Promise<void> {
 }
 
 /**
+ * Marketing text recipients (family blasts). List and count share this clause
+ * so a later phone-level opt-out can be added once and both stay in step.
+ * Requires explicit sms_consent, ignores STOP (sms_opt_out_at), active family
+ * contacts only, and a non-empty phone.
+ */
+export const SMS_RECIPIENT_WHERE = `
+  audience = 'families'
+  AND active = TRUE
+  AND sms_consent = TRUE
+  AND sms_opt_out_at IS NULL
+  AND phone IS NOT NULL AND phone <> ''
+`;
+
+/**
  * Text-blast recipients: family contacts who are active, have a phone, have
  * given SMS consent, and have not opted out.
  */
 export async function getSmsRecipients(): Promise<Lead[]> {
   return query<Lead>(
     `SELECT * FROM leads
-      WHERE audience = 'families'
-        AND active = TRUE
-        AND sms_consent = TRUE
-        AND sms_opt_out_at IS NULL
-        AND phone IS NOT NULL AND phone <> ''
+      WHERE ${SMS_RECIPIENT_WHERE}
       ORDER BY lower(coalesce(resident_name,'')) ASC`
   );
+}
+
+/** How many family contacts a marketing text would reach right now. */
+export async function countSmsRecipients(): Promise<number> {
+  const rows = await query<{ n: string }>(
+    `SELECT COUNT(*) AS n FROM leads WHERE ${SMS_RECIPIENT_WHERE}`
+  );
+  return Number(rows[0]?.n ?? 0);
 }
 
 /** Remove a subscriber row (used to remove a family member). */

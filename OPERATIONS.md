@@ -102,6 +102,8 @@ See `.env.example` for the full list with comments. The important ones:
   works without them, it just will not send emails yet).
 - `CONNECTEAM_API_KEY` — optional; syncs the staff roster for team feedback
   from Connecteam (see section 12).
+- `JOY_MCP_KEYS` — optional; lets Joy's bots draft emails and texts. See
+  section 15. If it is unset, `/api/mcp` returns 503.
 
 If email keys are missing, leads are still saved and you get no email alert.
 If `DATABASE_URL` is missing, the form tells visitors to call instead of
@@ -873,3 +875,96 @@ When you create a pulse survey you choose **Who gets it**: Everyone, By role
 names). The survey then only goes to that group, and the response rate is
 measured against it. Onboarding and exit surveys always follow the roster
 automatically and have no target picker.
+
+---
+
+## 15. Joy Admin MCP (bots)
+
+Joy's bots (Joy COO, Marketing, Admissions, HR, Data) can draft family emails
+and texts through an MCP server at `/api/mcp`. The server cannot send,
+schedule, or test-send anything. Leads are out of scope. A bot key is not an
+admin login: it does not open `/admin`.
+
+A person still sends from the admin portal. Drafts stay `draft` with no
+schedule until then. The email runner only picks up broadcasts whose status
+is `scheduled`.
+
+### Generate a key
+
+On your own computer (not in Railway, so the raw key never lands in the deploy
+logs):
+
+    node --experimental-strip-types scripts/mcp-keygen.ts
+
+The script prints a random key and its SHA-256 hash. Copy the key into the
+bot's MCP client config. Copy only the hash into Railway.
+
+### Set JOY_MCP_KEYS on Railway
+
+Open the app service, Variables, and set `JOY_MCP_KEYS` to a JSON array. Each
+entry is a name, the hash from the script, and the scopes for that bot. Then
+redeploy. If the variable is missing, `/api/mcp` returns 503.
+
+    [
+      {"name":"joy-coo","hash":"<sha256 hex>","scopes":["*"]},
+      {"name":"marketing","hash":"<sha256 hex>","scopes":["emails","texts","events","read"]},
+      {"name":"admissions","hash":"<sha256 hex>","scopes":["families","partners","read"]},
+      {"name":"hr","hash":"<sha256 hex>","scopes":["team-feedback","read"]},
+      {"name":"data","hash":"<sha256 hex>","scopes":["read"]}
+    ]
+
+The server compares hashes in constant time. It never stores the raw key.
+
+### Scopes
+
+| Bot | Scopes |
+| --- | --- |
+| joy-coo | `*` (everything) |
+| marketing | emails, texts, events, read |
+| admissions | families, partners, read |
+| hr | team-feedback, read |
+| data | read |
+
+Scope names: `emails`, `texts`, `events`, `partners`, `families`, `feedback`,
+`team-feedback`, `read`, and `*` for all of them. Each tool declares the scope
+it needs. `*` passes every check. This release registers email and text draft
+tools (`emails` and `texts`). Events, partners, families, and feedback tools
+come in later releases and will use the scopes above.
+
+Recent calls, including denied ones, are listed under Admin, Settings, MCP
+activity (`/admin/settings/mcp`).
+
+### Connect a client
+
+The endpoint is streamable HTTP and stateless (no session id). Send
+`Authorization: Bearer <key>` on every request.
+
+URL: `https://www.joyseniorcare.com/api/mcp`
+
+Cursor MCP config:
+
+    {
+      "mcpServers": {
+        "joy-admin": {
+          "url": "https://www.joyseniorcare.com/api/mcp",
+          "headers": {
+            "Authorization": "Bearer <key>"
+          }
+        }
+      }
+    }
+
+Email tools draft for families: list, read, create, update (while the status
+is still draft), and a recipient count with opt-outs applied. Audience is
+families. Leads are rejected. Partner broadcasts are not in the database yet,
+so that audience is rejected until it exists.
+
+Text tools draft for families: create, update, list, and a recipient count.
+Recipients are active family contacts with a phone, `sms_consent` on, and no
+SMS opt-out. The line "Reply STOP to opt out." is added when the text would
+send. The draft stores the message without that line, the same way the Texts
+page does.
+
+There is no tool that sends, schedules, or test-sends. Create tools accept an
+optional `idempotency_key` so a retry does not make a second draft. Each key
+is limited to 60 calls a minute.
