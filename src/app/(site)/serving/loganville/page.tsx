@@ -331,7 +331,7 @@ export default async function LoganvillePage() {
         {/* Honest Map (Adam-approved). "Assisted living" appears in this
             section only in the three frames from the draft: the opening
             search sentence, The Retreat's offering line, and the license
-            bullet. No competitor sites. One Enjoy link, Walton URL. */}
+            bullet. No competitor sites. Enjoy links use the Walton URL. */}
         <section className="mt-14 space-y-5">
           <h2 className="font-display text-2xl font-semibold text-ink sm:text-3xl">
             Every option in Loganville, honestly
@@ -373,6 +373,13 @@ export default async function LoganvillePage() {
               and yes (we&apos;re telling you about our competitors on our own
               website). That should tell you something about how we run the
               place.
+            </p>
+            <p>
+              If the small homes are the kind you&apos;re weighing,{" "}
+              <a href={ENJOY_LOGANVILLE_DIRECTORY} className={linkClass}>
+                compare personal care homes in Loganville
+              </a>{" "}
+              before the first phone call.
             </p>
           </div>
         </section>
