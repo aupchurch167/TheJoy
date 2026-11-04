@@ -26,6 +26,7 @@ import {
 } from "@/components/admin/ui";
 import EmailQueue, { type QueueItem } from "./EmailQueue";
 import DraftList from "./DraftList";
+import WriteMyOwnButton from "./WriteMyOwnButton";
 
 export const dynamic = "force-dynamic";
 
@@ -52,9 +53,12 @@ export default async function EmailsPage() {
   await requireAdmin();
 
   const newAction = (
-    <ButtonLink href="/admin/emails/new" size="sm">
-      New email
-    </ButtonLink>
+    <>
+      <WriteMyOwnButton label="New blank email" />
+      <ButtonLink href="/admin/emails/new" size="sm">
+        New email
+      </ButtonLink>
+    </>
   );
 
   if (!hasDatabase()) {
@@ -183,11 +187,14 @@ export default async function EmailsPage() {
         <EmptyState
           icon="✉️"
           title="No emails yet"
-          description="Compose a note to your leads or families. You can preview it, then send now or schedule it."
+          description="Compose a note to your leads or families. Write it yourself, or have it drafted. You can preview it, then send now or schedule it."
           action={
-            <ButtonLink href="/admin/emails/new" variant="primary">
-              New email
-            </ButtonLink>
+            <div className="flex flex-wrap items-center justify-center gap-2">
+              <WriteMyOwnButton label="New blank email" size="md" />
+              <ButtonLink href="/admin/emails/new" variant="primary">
+                New email
+              </ButtonLink>
+            </div>
           }
         />
       ) : (

@@ -7,6 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "test": "node --experimental-strip-types --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --test src/lib/studio-draft.test.ts",
     "migrate": "node scripts/migrate.mjs",
     "import:webflow": "node scripts/import-webflow.mjs",
     "migrate:blog-images": "node scripts/migrate-blog-images.mjs",
