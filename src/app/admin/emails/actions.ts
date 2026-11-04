@@ -28,6 +28,7 @@ import {
   type EmailModel,
   type EmailTheme,
 } from "@/lib/email-model";
+import { studioSendBlockReason } from "@/lib/studio-draft";
 
 // Recipient segment. Empty arrays / blanks are normalized to "no filter".
 const FiltersSchema = z
@@ -499,8 +500,8 @@ export async function sendStudioOrSchedule(input: unknown): Promise<ActionResult
   const parsed = StudioSendSchema.safeParse(input);
   if (!parsed.success)
     return { ok: false, error: parsed.error.issues[0]?.message ?? "Invalid." };
-  if (!parsed.data.subject.trim())
-    return { ok: false, error: "Add a subject before sending." };
+  const blocked = studioSendBlockReason(parsed.data.subject, parsed.data.model);
+  if (blocked) return { ok: false, error: blocked };
   if (!emailEnabled()) {
     return {
       ok: false,

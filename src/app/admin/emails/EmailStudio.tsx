@@ -2,6 +2,7 @@
 
 import {
   useEffect,
+  useRef,
   useMemo,
   useState,
   useTransition,
@@ -26,6 +27,7 @@ import {
   type EmailModel,
   type EmailTheme,
 } from "@/lib/email-model";
+import { blankEmailModel, studioModelHasWords } from "@/lib/studio-draft";
 import type { Broadcast } from "@/lib/broadcasts";
 import { BackLink } from "@/components/admin/ui";
 import ConfirmButton from "@/components/admin/ConfirmButton";
@@ -80,20 +82,7 @@ const OCCASIONS: Occasion[] = [
 ];
 
 function emptyModel(): EmailModel {
-  return {
-    theme: "classic",
-    eyebrow: "",
-    heroTitle: "",
-    heroSub: "",
-    greeting: "Hi {{first_name}},",
-    intro: "",
-    plan: null,
-    cta: null,
-    rsvpUrl: null,
-    photoUrl: null,
-    bodyPhotoUrl: null,
-    closing: "Warmly,\nMellissa and the Joy team",
-  };
+  return blankEmailModel();
 }
 
 /** Older drafts stored an event RSVP as `rsvpUrl`; surface it as an editable CTA. */
@@ -125,7 +114,7 @@ function findPlaceholders(m: EmailModel, subject: string): string[] {
 }
 
 function hasWords(m: EmailModel): boolean {
-  return !!(m.heroTitle?.trim() || m.intro?.trim());
+  return studioModelHasWords(m);
 }
 
 /* ------------------------------------------------------------------ */
@@ -205,7 +194,12 @@ export default function EmailStudio({
   const [model, setModel] = useState<EmailModel>(initialModel);
   const [themeTouched, setThemeTouched] = useState<boolean>(!!broadcast);
   const [linkedEventId, setLinkedEventId] = useState<string | null>(null);
-  const [editWords, setEditWords] = useState(false);
+  // A saved draft with no headline or message opens straight into the editor.
+  const openedBlank = !!broadcast && !hasWords(initialModel);
+  const [manual, setManual] = useState(openedBlank);
+  const [editWords, setEditWords] = useState(openedBlank);
+  const [creatingBlank, setCreatingBlank] = useState(false);
+  const creatingBlankRef = useRef(false);
 
   const [busy, setBusy] = useState(false);
   const [tweaking, setTweaking] = useState<string | null>(null);
@@ -415,6 +409,24 @@ export default function EmailStudio({
     };
   }
 
+  /** Open the word editor on an empty draft. Does not call the AI. */
+  async function writeMyOwn() {
+    setManual(true);
+    setEditWords(true);
+    if (id || creatingBlankRef.current) return;
+    creatingBlankRef.current = true;
+    setCreatingBlank(true);
+    const res = await saveStudioDraft(modelPayload());
+    if (!res.ok) {
+      creatingBlankRef.current = false;
+      setCreatingBlank(false);
+      toast.error(res.error);
+      return;
+    }
+    setId(res.id);
+    router.replace(`/admin/emails/${res.id}`);
+  }
+
   function saveNow(silent = false) {
     startSave(async () => {
       const res = await saveStudioDraft(modelPayload());
@@ -462,6 +474,7 @@ export default function EmailStudio({
 
   const placeholders = findPlaceholders(model, subject);
   const words = hasWords(model);
+  const showCanvas = words || manual || editWords;
 
   /* ================================================================ */
 
@@ -621,6 +634,17 @@ export default function EmailStudio({
                 <p className="mt-1.5 text-[11px] text-ink-faint">
                   Drafts in Joy&apos;s voice. Never sends on its own.
                 </p>
+                <button
+                  type="button"
+                  onClick={writeMyOwn}
+                  disabled={creatingBlank}
+                  className="mt-2 w-full rounded-[10px] border border-line bg-white px-3 py-2.5 text-sm font-bold text-ink transition-colors hover:bg-paper disabled:opacity-60"
+                >
+                  {creatingBlank ? "Creating…" : "Write my own"}
+                </button>
+                <p className="mt-1.5 text-[11px] text-ink-faint">
+                  Starts a blank email. You write the subject and the message.
+                </p>
               </RailSection>
 
               {occasion.planned && (
@@ -731,12 +755,12 @@ export default function EmailStudio({
               }}
             >
               <p className="mx-auto mb-3 max-w-[640px] text-center text-xs text-ink-faint">
-                {words
+                {showCanvas
                   ? "[first name] fills in per recipient. Edit the words below the preview."
                   : "Your email appears here."}
               </p>
 
-              {words ? (
+              {showCanvas ? (
                 <div className="mx-auto max-w-[640px]">
                   <div className="overflow-hidden rounded-[14px] border border-line bg-white shadow-sm">
                     <iframe
@@ -773,6 +797,7 @@ export default function EmailStudio({
                             className={FIELD}
                             value={model.heroTitle ?? ""}
                             onChange={(e) => patch({ heroTitle: e.target.value })}
+                            placeholder="A short headline"
                           />
                         </FieldRow>
                         <FieldRow label="Subtitle (optional)">
@@ -794,6 +819,7 @@ export default function EmailStudio({
                             className={`${FIELD} min-h-[120px] resize-y`}
                             value={model.intro}
                             onChange={(e) => patch({ intro: e.target.value })}
+                            placeholder="Write the message"
                           />
                         </FieldRow>
 
@@ -954,7 +980,7 @@ export default function EmailStudio({
                         </p>
                         <p className="mt-1 text-xs text-ink-faint">
                           Write a brief on the left and press “Write it for me”, or
-                          pick a look and type the words yourself.
+                          press “Write my own” to type the email yourself.
                         </p>
                       </>
                     )}
@@ -1150,6 +1176,7 @@ export default function EmailStudio({
           audience={audience}
           recipients={recipients}
           subject={subject}
+          hasWords={words}
           testSentTo={testSentTo}
           placeholders={placeholders}
           linkedEvent={events.find((e) => e.id === linkedEventId) ?? null}
@@ -1198,6 +1225,7 @@ function ReviewSheet({
   audience,
   recipients,
   subject,
+  hasWords: readyWords,
   testSentTo,
   placeholders,
   linkedEvent,
@@ -1211,6 +1239,7 @@ function ReviewSheet({
   audience: Audience;
   recipients: number | null;
   subject: string;
+  hasWords: boolean;
   testSentTo: string | null;
   placeholders: string[];
   linkedEvent: StudioEvent | null;
@@ -1226,6 +1255,7 @@ function ReviewSheet({
   const [pickAt, setPickAt] = useState("");
   const audienceLabel = audience === "families" ? "families" : "leads";
   const count = recipients ?? 0;
+  const contentReady = !!subject.trim() && readyWords;
 
   async function fire(when?: string) {
     setSending(true);
@@ -1323,6 +1353,14 @@ function ReviewSheet({
               )}
               <Check ok label="First name + unsubscribe included" />
               <Check
+                ok={readyWords}
+                label={
+                  readyWords
+                    ? "Headline or message written"
+                    : "Write a headline or a message"
+                }
+              />
+              <Check
                 ok={placeholders.length === 0}
                 label={
                   placeholders.length === 0
@@ -1346,17 +1384,17 @@ function ReviewSheet({
                 <div className="flex flex-wrap gap-2">
                   <button
                     type="button"
-                    disabled={sending}
+                    disabled={sending || !contentReady}
                     onClick={() => fire(at9(1))}
-                    className="rounded-lg bg-surface px-3 py-1.5 text-sm font-semibold text-ink-soft hover:bg-line"
+                    className="rounded-lg bg-surface px-3 py-1.5 text-sm font-semibold text-ink-soft hover:bg-line disabled:opacity-50"
                   >
                     Tomorrow 9am
                   </button>
                   <button
                     type="button"
-                    disabled={sending}
+                    disabled={sending || !contentReady}
                     onClick={() => fire(nextFriday9())}
-                    className="rounded-lg bg-surface px-3 py-1.5 text-sm font-semibold text-ink-soft hover:bg-line"
+                    className="rounded-lg bg-surface px-3 py-1.5 text-sm font-semibold text-ink-soft hover:bg-line disabled:opacity-50"
                   >
                     Friday 9am
                   </button>
@@ -1370,7 +1408,7 @@ function ReviewSheet({
                   />
                   <button
                     type="button"
-                    disabled={sending || !pickAt}
+                    disabled={sending || !pickAt || !contentReady}
                     onClick={() => fire(new Date(pickAt).toISOString())}
                     className="whitespace-nowrap rounded-lg bg-clay px-3 py-2 text-sm font-bold text-white disabled:opacity-50"
                   >
@@ -1382,7 +1420,7 @@ function ReviewSheet({
               <div className="mt-5 flex gap-2">
                 <button
                   type="button"
-                  disabled={sending || !subject.trim() || count === 0}
+                  disabled={sending || !contentReady || count === 0}
                   onClick={() => fire()}
                   className="flex-[1.4] rounded-[10px] bg-clay px-4 py-3 text-sm font-bold text-white shadow-[0_2px_6px_rgba(1,167,206,0.35)] hover:opacity-95 disabled:opacity-50"
                 >
