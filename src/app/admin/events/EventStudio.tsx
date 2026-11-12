@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { BackLink } from "@/components/admin/ui";
 import ConfirmButton from "@/components/admin/ConfirmButton";
+import AutoTextarea from "./AutoTextarea";
 import Markdown from "@/components/Markdown";
 import { useToast } from "@/components/admin/Toast";
 import { saveEvent, removeRsvp, createEventEmailDraft } from "./actions";
@@ -26,9 +27,18 @@ import {
 /* ------------------------------------------------------------------ */
 
 const LABEL = "text-[11px] font-bold uppercase tracking-[0.08em] text-ink-faint";
+// Phone: 16px type (so iOS does not zoom on focus), roomy padding, 44px tall.
+// Desktop (lg) keeps the previous compact field.
 const FIELD =
-  "w-full rounded-[9px] border border-line bg-white px-3 py-2 text-sm text-ink placeholder:text-ink-faint transition-colors focus:border-clay focus:outline-none focus:ring-2 focus:ring-clay/25";
-const FIELD_LABEL = "mb-1 block text-[11.5px] font-semibold text-ink-soft";
+  "w-full rounded-[9px] border border-line bg-white text-ink placeholder:text-ink-faint transition-colors focus:border-clay focus:outline-none focus:ring-2 focus:ring-clay/25 max-lg:px-4 max-lg:py-3 max-lg:text-base lg:px-3 lg:py-2 lg:text-sm";
+const CONTROL = `${FIELD} max-lg:min-h-11`;
+const FIELD_LABEL =
+  "font-semibold text-ink-soft max-lg:mb-1.5 max-lg:flex max-lg:min-h-11 max-lg:w-full max-lg:items-center max-lg:text-sm lg:mb-1 lg:block lg:text-[11.5px]";
+// Grow past this floor. 10lh / 5lh is the text itself; 1.5rem is py-3, 2px the border.
+const AREA =
+  "max-lg:resize-none max-lg:overflow-hidden lg:resize-y lg:overflow-auto";
+const MIN_10 = "max-lg:min-h-[calc(10lh_+_1.5rem_+_2px)]";
+const MIN_5 = "max-lg:min-h-[calc(5lh_+_1.5rem_+_2px)]";
 
 const THEME_SWATCH: Record<EventTheme, string> = {
   classic: "linear-gradient(135deg,#017391 55%,#01a7ce)",
@@ -291,8 +301,8 @@ export default function EventStudio({
             <div className="mt-4">
               {!created && (
                 <RailSection title="What are you planning?">
-                  <textarea
-                    className={`${FIELD} min-h-[80px] resize-y`}
+                  <AutoTextarea
+                    className={`${FIELD} ${AREA} ${MIN_5} lg:min-h-[80px]`}
                     placeholder="e.g. Fall porch social for families, last Friday of September at 3pm, coffee and pie, maybe 30 people"
                     value={brief}
                     onChange={(e) => setBrief(e.target.value)}
@@ -301,7 +311,7 @@ export default function EventStudio({
                     type="button"
                     onClick={planIt}
                     disabled={planning}
-                    className="mt-2 w-full rounded-[10px] bg-clay px-3 py-2.5 text-sm font-bold text-white shadow-[0_2px_6px_rgba(1,167,206,0.35)] hover:opacity-95 disabled:opacity-60"
+                    className="mt-2 w-full rounded-[10px] bg-clay px-3 font-bold text-white shadow-[0_2px_6px_rgba(1,167,206,0.35)] hover:opacity-95 disabled:opacity-60 max-lg:min-h-11 max-lg:py-3 max-lg:text-base lg:py-2.5 lg:text-sm"
                   >
                     {planning ? "Planning…" : "✦ Plan it for me"}
                   </button>
@@ -315,18 +325,18 @@ export default function EventStudio({
                 <label className="mb-3 block">
                   <span className={FIELD_LABEL}>Event title</span>
                   <input
-                    className={FIELD}
+                    className={CONTROL}
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
                     placeholder="Fall Porch Social"
                   />
                 </label>
-                <div className="mb-3 grid grid-cols-2 gap-2">
+                <div className="mb-3 grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-2">
                   <label className="block">
                     <span className={FIELD_LABEL}>Date (ET)</span>
                     <input
                       type="date"
-                      className={FIELD}
+                      className={CONTROL}
                       value={date}
                       onChange={(e) => setDate(e.target.value)}
                     />
@@ -335,7 +345,7 @@ export default function EventStudio({
                     <span className={FIELD_LABEL}>Time</span>
                     <input
                       type="time"
-                      className={FIELD}
+                      className={CONTROL}
                       value={time}
                       onChange={(e) => setTime(e.target.value)}
                     />
@@ -344,7 +354,7 @@ export default function EventStudio({
                 <label className="mb-3 block">
                   <span className={FIELD_LABEL}>Where</span>
                   <input
-                    className={FIELD}
+                    className={CONTROL}
                     value={location}
                     onChange={(e) => setLocation(e.target.value)}
                   />
@@ -352,7 +362,7 @@ export default function EventStudio({
                 <label className="mb-3 block">
                   <span className={FIELD_LABEL}>Who it&rsquo;s for</span>
                   <select
-                    className={FIELD}
+                    className={CONTROL}
                     value={eventType}
                     onChange={(e) => setEventType(e.target.value as EventType)}
                   >
@@ -368,7 +378,7 @@ export default function EventStudio({
                   <input
                     type="number"
                     min={0}
-                    className={FIELD}
+                    className={CONTROL}
                     value={capacity}
                     onChange={(e) => setCapacity(e.target.value)}
                     placeholder="Leave blank for no limit"
@@ -386,7 +396,7 @@ export default function EventStudio({
                         key={o.label}
                         type="button"
                         onClick={o.set}
-                        className="flex items-center gap-2 text-sm text-ink"
+                        className="flex items-center gap-2 text-ink max-lg:min-h-11 max-lg:px-1 max-lg:text-base lg:text-sm"
                       >
                         <span
                           className="inline-block h-4 w-4 rounded-full border"
@@ -409,8 +419,10 @@ export default function EventStudio({
                 {isPotluck && (
                   <label className="mb-3 block">
                     <span className={FIELD_LABEL}>What should folks bring?</span>
-                    <input
-                      className={FIELD}
+                    <AutoTextarea
+                      grow="always"
+                      className={`${FIELD} ${AREA} ${MIN_5} lg:min-h-[38px]`}
+                      rows={1}
                       value={potluckAsk}
                       onChange={(e) => setPotluckAsk(e.target.value)}
                       placeholder="e.g. a side or dessert to share, we'll have the main dish"
@@ -424,7 +436,7 @@ export default function EventStudio({
                 <label className="block">
                   <span className={FIELD_LABEL}>Heading (optional)</span>
                   <input
-                    className={FIELD}
+                    className={CONTROL}
                     value={bodyHeading}
                     onChange={(e) => setBodyHeading(e.target.value)}
                     placeholder="e.g. Join us on the porch"
@@ -433,8 +445,8 @@ export default function EventStudio({
 
                 <label className="block">
                   <span className={FIELD_LABEL}>Description</span>
-                  <textarea
-                    className={`${FIELD} min-h-[72px] resize-y`}
+                  <AutoTextarea
+                    className={`${FIELD} ${AREA} ${MIN_10} lg:min-h-[72px]`}
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
                     placeholder="The main text on the invite and RSVP page."
@@ -443,7 +455,7 @@ export default function EventStudio({
                     type="button"
                     onClick={writeDescription}
                     disabled={descBusy}
-                    className="mt-1 text-xs font-semibold text-clay-dark hover:underline disabled:opacity-50"
+                    className="mt-1 inline-flex items-center font-semibold text-clay-dark hover:underline disabled:opacity-50 max-lg:min-h-11 max-lg:text-base lg:text-xs"
                   >
                     {descBusy ? "Writing…" : "✦ Write the page text for me"}
                   </button>
@@ -458,8 +470,8 @@ export default function EventStudio({
 
                 <label className="block">
                   <span className={FIELD_LABEL}>What to expect (optional)</span>
-                  <textarea
-                    className={`${FIELD} min-h-[64px] resize-y`}
+                  <AutoTextarea
+                    className={`${FIELD} ${AREA} ${MIN_5} lg:min-h-[64px]`}
                     value={whatToExpect}
                     onChange={(e) => setWhatToExpect(e.target.value)}
                     placeholder="A few short lines: food, music, parking. One per line."
@@ -468,8 +480,8 @@ export default function EventStudio({
 
                 <label className="block">
                   <span className={FIELD_LABEL}>Note under the RSVP form (optional)</span>
-                  <textarea
-                    className={`${FIELD} min-h-[56px] resize-y`}
+                  <AutoTextarea
+                    className={`${FIELD} ${AREA} ${MIN_5} lg:min-h-[56px]`}
                     value={closingNote}
                     onChange={(e) => setClosingNote(e.target.value)}
                     placeholder="Parking, what to bring, who to call."
@@ -484,7 +496,7 @@ export default function EventStudio({
                       type="button"
                       onClick={() => persist(event!.status === "cancelled" ? "published" : event!.status, "Changes saved.")}
                       disabled={saving}
-                      className="w-full rounded-[10px] bg-ink px-3 py-2.5 text-sm font-bold text-white hover:opacity-95 disabled:opacity-60"
+                      className="w-full rounded-[10px] bg-ink px-3 font-bold text-white hover:opacity-95 disabled:opacity-60 max-lg:min-h-11 max-lg:py-3 max-lg:text-base lg:py-2.5 lg:text-sm"
                     >
                       {saving ? "Saving…" : "Save changes"}
                     </button>
@@ -492,6 +504,7 @@ export default function EventStudio({
                       <ConfirmButton
                         variant="secondary"
                         size="sm"
+                        className="max-lg:!min-h-11"
                         title="Cancel this event?"
                         message="The RSVP page will show it as cancelled. RSVPs are kept."
                         confirmLabel="Cancel event"
@@ -506,7 +519,7 @@ export default function EventStudio({
                     type="button"
                     onClick={() => persist("published", "Event created.", true)}
                     disabled={saving}
-                    className="w-full rounded-[10px] bg-ink px-3 py-2.5 text-sm font-bold text-white hover:opacity-95 disabled:opacity-60"
+                    className="w-full rounded-[10px] bg-ink px-3 font-bold text-white hover:opacity-95 disabled:opacity-60 max-lg:min-h-11 max-lg:py-3 max-lg:text-base lg:py-2.5 lg:text-sm"
                   >
                     {saving ? "Creating…" : "Create event"}
                   </button>
@@ -537,7 +550,7 @@ export default function EventStudio({
                         /* clipboard blocked */
                       }
                     }}
-                    className="whitespace-nowrap text-xs font-semibold text-clay-dark hover:underline"
+                    className="inline-flex items-center whitespace-nowrap font-semibold text-clay-dark hover:underline max-lg:min-h-11 max-lg:px-1 max-lg:text-base lg:text-xs"
                   >
                     {copied ? "Copied ✓" : "Copy link"}
                   </button>
@@ -549,7 +562,7 @@ export default function EventStudio({
                     type="button"
                     onClick={() => compose("invite")}
                     disabled={saving}
-                    className="whitespace-nowrap rounded-[10px] bg-clay px-4 py-1.5 text-sm font-bold text-white shadow-[0_2px_6px_rgba(1,167,206,0.35)] hover:opacity-95 disabled:opacity-60"
+                    className="inline-flex items-center whitespace-nowrap rounded-[10px] bg-clay px-4 font-bold text-white shadow-[0_2px_6px_rgba(1,167,206,0.35)] hover:opacity-95 disabled:opacity-60 max-lg:min-h-11 max-lg:text-base lg:py-1.5 lg:text-sm"
                   >
                     Send the invite →
                   </button>
@@ -795,7 +808,7 @@ export default function EventStudio({
                   </div>
                   <Link
                     href={`/admin/events/${id}/attendees`}
-                    className="mt-3 inline-block text-xs font-semibold text-clay-dark hover:underline"
+                    className="mt-3 inline-flex items-center font-semibold text-clay-dark hover:underline max-lg:min-h-11 max-lg:text-base lg:text-xs"
                   >
                     Full list &amp; printable roster →
                   </Link>
@@ -840,7 +853,7 @@ export default function EventStudio({
                       type="button"
                       onClick={() => compose("invite")}
                       disabled={saving}
-                      className="w-full rounded-[9px] border border-line bg-white py-2 text-sm font-semibold text-ink hover:bg-paper disabled:opacity-50"
+                      className="w-full rounded-[9px] border border-line bg-white font-semibold text-ink hover:bg-paper disabled:opacity-50 max-lg:min-h-11 max-lg:py-3 max-lg:text-base lg:py-2 lg:text-sm"
                     >
                       ✉️ Send the invite
                     </button>
@@ -848,7 +861,7 @@ export default function EventStudio({
                       type="button"
                       onClick={() => compose("reminder")}
                       disabled={saving}
-                      className="w-full rounded-[9px] border border-line bg-white py-2 text-sm font-semibold text-ink hover:bg-paper disabled:opacity-50"
+                      className="w-full rounded-[9px] border border-line bg-white font-semibold text-ink hover:bg-paper disabled:opacity-50 max-lg:min-h-11 max-lg:py-3 max-lg:text-base lg:py-2 lg:text-sm"
                     >
                       ⏰ Send a reminder
                     </button>
@@ -856,7 +869,7 @@ export default function EventStudio({
                       type="button"
                       onClick={() => compose("update")}
                       disabled={saving}
-                      className="w-full rounded-[9px] border border-line bg-white py-2 text-sm font-semibold text-ink-soft hover:bg-paper disabled:opacity-50"
+                      className="w-full rounded-[9px] border border-line bg-white font-semibold text-ink-soft hover:bg-paper disabled:opacity-50 max-lg:min-h-11 max-lg:py-3 max-lg:text-base lg:py-2 lg:text-sm"
                     >
                       Send an update
                     </button>
@@ -880,7 +893,7 @@ export default function EventStudio({
               type="button"
               onClick={() => persist(event!.status === "cancelled" ? "published" : event!.status, "Changes saved.")}
               disabled={saving}
-              className="min-h-[44px] flex-1 rounded-[10px] border border-line bg-white text-sm font-semibold text-ink-soft disabled:opacity-60"
+              className="min-h-11 flex-1 rounded-[10px] border border-line bg-white text-base font-semibold text-ink-soft disabled:opacity-60"
             >
               {saving ? "Saving…" : "Save changes"}
             </button>
@@ -888,7 +901,7 @@ export default function EventStudio({
               type="button"
               onClick={() => compose("invite")}
               disabled={saving}
-              className="min-h-[44px] flex-[1.4] rounded-[10px] bg-clay text-sm font-bold text-white shadow-[0_2px_6px_rgba(1,167,206,0.35)] disabled:opacity-60"
+              className="min-h-11 flex-[1.4] rounded-[10px] bg-clay text-base font-bold text-white shadow-[0_2px_6px_rgba(1,167,206,0.35)] disabled:opacity-60"
             >
               Send the invite →
             </button>
@@ -898,7 +911,7 @@ export default function EventStudio({
             type="button"
             onClick={() => persist("published", "Event created.", true)}
             disabled={saving}
-            className="min-h-[44px] w-full rounded-[10px] bg-ink text-sm font-bold text-white disabled:opacity-60"
+            className="min-h-11 w-full rounded-[10px] bg-ink text-base font-bold text-white disabled:opacity-60"
           >
             {saving ? "Creating…" : "Create event"}
           </button>
@@ -925,6 +938,7 @@ function RemoveRsvp({ id, onDone }: { id: string; onDone: () => void }) {
     <ConfirmButton
       variant="ghost"
       size="sm"
+      className="max-lg:!min-h-11 max-lg:!min-w-11 max-lg:!px-0"
       title="Remove this RSVP?"
       message="This deletes their response. They can RSVP again from the link."
       confirmLabel="Remove"
