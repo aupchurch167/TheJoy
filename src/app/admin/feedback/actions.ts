@@ -186,10 +186,9 @@ export async function sendSurveyToAllFamilies(input?: {
         }
       }
       if (sendSmsTo && c.phone) {
-        // sendSurveyText goes through sendSms, which skips any phone that
-        // opted out (including a different leads row with the same number).
-        // Survey texts do not require the marketing "Texts: on" flag. A STOP
-        // opt-out is always honored. See getFamilySurveyTextRecipients.
+        // Recipients already require Texts: on (sms_consent). sendSurveyText
+        // still goes through sendSms, which skips any phone that opted out
+        // (including a different leads row with the same number).
         const res = await sendSurveyText({
           toPhone: c.phone,
           familyName: c.name,

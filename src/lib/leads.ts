@@ -483,18 +483,17 @@ export async function insertFamilyMember(
 }
 
 /**
- * Family contacts eligible for a SURVEY text: active, with a phone, and not
- * opted out (replied STOP). Survey requests are relationship messages to the
- * families we already serve (whose numbers they gave us as their contact), so
- * they do not require the separate marketing text-consent flag. A STOP opt-out
- * is always honored. (Marketing text blasts still use getSmsRecipients, which
- * requires explicit sms_consent.)
+ * Family contacts eligible for a send-to-all SURVEY text: active, with a
+ * phone, with texts turned on (`sms_consent`), and not opted out (replied
+ * STOP). A STOP on any other row with the same number is also excluded.
+ * Re-sends of a survey that was already created do not use this list.
  */
 export async function getFamilySurveyTextRecipients(): Promise<Lead[]> {
   const rows = await query<Lead>(
     `SELECT * FROM leads
       WHERE audience = 'families'
         AND active = TRUE
+        AND sms_consent = TRUE
         AND sms_opt_out_at IS NULL
         AND phone IS NOT NULL AND phone <> ''
       ORDER BY lower(coalesce(resident_name,'')) ASC`

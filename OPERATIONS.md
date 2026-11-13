@@ -591,9 +591,10 @@ on for that number from the toggle.
 
 An opted-out number is skipped, and counted as skipped rather than failed, on
 text blasts, feedback survey texts and re-sends, survey test texts, and deposit
-reminder texts. Feedback survey texts still do not require the marketing
-**Texts: on** flag (those are check-ins to families already at Joy). They do
-honor this opt-out.
+reminder texts. **Send to all families** also skips a contact whose texts are
+off (`sms_consent` is false). A re-send of a survey that was already created,
+and a survey test text, still go out unless that number has opted out. Those
+two do not look at the texts on/off toggle.
 
 There is no inbound Quo webhook in the app yet, so a STOP reply that arrives
 only in Quo does not write `sms_opt_out_at` by itself. When someone asks to
