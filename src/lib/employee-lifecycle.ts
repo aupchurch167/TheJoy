@@ -239,7 +239,9 @@ export async function processScheduledCheckins(now: Date): Promise<number> {
         try {
           const res = await sendSms(
             to,
-            `Hi ${first}, it's Joy Senior Living. A quick check-in (about 2 minutes): ${url}\n\nReply STOP to opt out.`
+            `Hi ${first}, it's Joy Senior Living. A quick check-in (about 2 minutes): ${url}\n\nReply STOP to opt out.`,
+            // Staff check-ins are not family or lead texts.
+            { honorLeadOptOut: false }
           );
           delivered = delivered || res.ok;
         } catch (e) {

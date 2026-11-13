@@ -58,7 +58,7 @@ async function wasTestedRecently(hash: string): Promise<boolean> {
 }
 
 export type TestResult =
-  | { ok: true; sent: number; failed: number; total: number }
+  | { ok: true; sent: number; failed: number; skipped: number; total: number }
   | { ok: false; error: string };
 
 /**
@@ -86,17 +86,27 @@ export async function sendTestToAdmins(input: unknown): Promise<TestResult> {
   const content = fullContent(parsed.data);
   let sent = 0;
   let failed = 0;
+  let skipped = 0;
   const reasons = new Set<string>();
   for (const n of numbers) {
     const res = await sendSms(n, content);
-    if (res.ok) sent++;
-    else {
+    if (res.skipped) {
+      skipped++;
+    } else if (res.ok) {
+      sent++;
+    } else {
       failed++;
       if (res.error) reasons.add(res.error);
     }
     await new Promise((r) => setTimeout(r, 120));
   }
   if (sent === 0) {
+    if (skipped > 0 && failed === 0) {
+      return {
+        ok: false,
+        error: `Skipped. ${skipped} test number${skipped === 1 ? "" : "s"} opted out of texts, so nothing was sent.`,
+      };
+    }
     // Surface the real reason (Quo's own message, a bad number, or a network
     // problem) so the fix is obvious instead of a generic "check your setup".
     const list = [...reasons];
@@ -114,11 +124,11 @@ export async function sendTestToAdmins(input: unknown): Promise<TestResult> {
     return { ok: false, error: `Every test text failed.${why}${advice}` };
   }
   await recordTest(bodyHash(parsed.data));
-  return { ok: true, sent, failed, total: numbers.length };
+  return { ok: true, sent, failed, skipped, total: numbers.length };
 }
 
 export type BlastResult =
-  | { ok: true; sent: number; failed: number; total: number }
+  | { ok: true; sent: number; failed: number; skipped: number; total: number }
   | { ok: false; error: string; needsTest?: boolean };
 
 /** Send a text blast to opted-in, active family contacts. Gated on a test. */
@@ -156,20 +166,26 @@ export async function sendTextBlast(input: unknown): Promise<BlastResult> {
 
   let sent = 0;
   let failed = 0;
+  let skipped = 0;
   for (const r of recipients) {
     const res = await sendSms(r.phone ?? "", content);
-    await recordRecipient(broadcast.id, r.id, {
-      error: res.ok ? undefined : res.error,
-      messageId: broadcast.message_id,
-    });
-    if (res.ok) sent++;
-    else failed++;
+    if (res.skipped) {
+      // Not a failed send, and not recorded as one.
+      skipped++;
+    } else {
+      await recordRecipient(broadcast.id, r.id, {
+        error: res.ok ? undefined : res.error,
+        messageId: broadcast.message_id,
+      });
+      if (res.ok) sent++;
+      else failed++;
+    }
     await new Promise((resolve) => setTimeout(resolve, 120));
   }
 
   await markBroadcastSent(broadcast.id, sent);
   revalidatePath("/admin/texts");
-  return { ok: true, sent, failed, total: recipients.length };
+  return { ok: true, sent, failed, skipped, total: recipients.length };
 }
 
 /** Manually opt a contact out of texts (e.g. they asked to stop). */
@@ -179,6 +195,8 @@ export async function optOutOfTexts(id: string): Promise<{ ok: boolean }> {
     await markSmsOptOut(id);
     revalidatePath("/admin/families");
     revalidatePath("/admin/texts");
+    revalidatePath("/admin/leads", "layout");
+    revalidatePath("/admin/feedback");
     return { ok: true };
   } catch (err) {
     console.error("[optOutOfTexts]", err);

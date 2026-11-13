@@ -111,7 +111,8 @@ export default function SendToAllButton({
     </div>
       {noTextRecipients && (
         <p className="max-w-xs text-right text-xs text-ink-faint">
-          No family has a phone number on file. Add phone numbers under{" "}
+          Nobody is set to get a survey text. Turn texts on for a contact
+          with a phone, under{" "}
           <a
             href="/admin/families"
             className="font-medium text-clay hover:text-clay-dark"
